@@ -23,6 +23,7 @@
 (define-constant ERR-INVALID-OUTCOME (err u104))
 (define-constant ERR-MARKET-STILL-ACTIVE (err u105))
 (define-constant ERR-INVALID-DATES (err u106))
+(define-constant ERR-MARKET-ENDED (err u107))
 
 ;; ============================================
 ;; Data Variables
@@ -148,3 +149,82 @@
     (ok new-market-id)
   )
 )
+
+;; Place a stake on YES outcome
+;; @param market-id: The ID of the market to stake on
+;; @param amount: Amount of STX to stake
+;; @returns: (ok true) on success, error code on failure
+(define-public (place-yes-stake (market-id uint) (amount uint))
+  (let
+    (
+      (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
+      (current-block stacks-block-height)
+      (current-position (default-to 
+        { yes-stake: u0, no-stake: u0, claimed: false }
+        (map-get? user-positions { market-id: market-id, user: tx-sender })
+      ))
+    )
+    ;; Validate market is still active
+    (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-MARKET-ALREADY-RESOLVED)
+    
+    ;; Validate market hasn't ended
+    (asserts! (< current-block (get end-date market)) ERR-MARKET-ENDED)
+    
+    ;; Transfer STX from user to contract
+    (try! (stx-transfer? amount tx-sender (as-contract tx-sender)))
+    
+    ;; Update market's total YES stake
+    (map-set markets
+      { market-id: market-id }
+      (merge market { total-yes-stake: (+ (get total-yes-stake market) amount) })
+    )
+    
+    ;; Update user's position
+    (map-set user-positions
+      { market-id: market-id, user: tx-sender }
+      (merge current-position { yes-stake: (+ (get yes-stake current-position) amount) })
+    )
+    
+    (ok true)
+  )
+)
+
+;; Place a stake on NO outcome
+;; @param market-id: The ID of the market to stake on
+;; @param amount: Amount of STX to stake
+;; @returns: (ok true) on success, error code on failure
+(define-public (place-no-stake (market-id uint) (amount uint))
+  (let
+    (
+      (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
+      (current-block stacks-block-height)
+      (current-position (default-to 
+        { yes-stake: u0, no-stake: u0, claimed: false }
+        (map-get? user-positions { market-id: market-id, user: tx-sender })
+      ))
+    )
+    ;; Validate market is still active
+    (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-MARKET-ALREADY-RESOLVED)
+    
+    ;; Validate market hasn't ended
+    (asserts! (< current-block (get end-date market)) ERR-MARKET-ENDED)
+    
+    ;; Transfer STX from user to contract
+    (try! (stx-transfer? amount tx-sender (as-contract tx-sender)))
+    
+    ;; Update market's total NO stake
+    (map-set markets
+      { market-id: market-id }
+      (merge market { total-no-stake: (+ (get total-no-stake market) amount) })
+    )
+    
+    ;; Update user's position
+    (map-set user-positions
+      { market-id: market-id, user: tx-sender }
+      (merge current-position { no-stake: (+ (get no-stake current-position) amount) })
+    )
+    
+    (ok true)
+  )
+)
+
