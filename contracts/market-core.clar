@@ -106,3 +106,45 @@
     current-counter
   )
 )
+
+;; ============================================
+;; Public Functions
+;; ============================================
+
+;; Create a new prediction market
+;; @param question: The market question (max 256 characters)
+;; @param end-date: Block height when trading closes
+;; @param resolution-date: Block height when market can be resolved
+;; @returns: (ok market-id) on success, error code on failure
+(define-public (create-market (question (string-ascii 256)) (end-date uint) (resolution-date uint))
+  (let
+    (
+      (current-block stacks-block-height)
+      (new-market-id (increment-market-counter))
+    )
+    ;; Validate that end-date is in the future
+    (asserts! (> end-date current-block) ERR-INVALID-DATES)
+    
+    ;; Validate that resolution-date is after end-date
+    (asserts! (> resolution-date end-date) ERR-INVALID-DATES)
+    
+    ;; Create the new market
+    (map-set markets
+      { market-id: new-market-id }
+      {
+        question: question,
+        creator: tx-sender,
+        end-date: end-date,
+        resolution-date: resolution-date,
+        total-yes-stake: u0,
+        total-no-stake: u0,
+        status: MARKET-STATUS-ACTIVE,
+        outcome: OUTCOME-NONE,
+        created-at: current-block
+      }
+    )
+    
+    ;; Return the new market ID
+    (ok new-market-id)
+  )
+)
