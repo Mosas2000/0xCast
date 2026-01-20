@@ -1,10 +1,8 @@
-import { useState } from 'react';
 import './App.css';
 import { APP_NAME, APP_DESCRIPTION } from './constants/contract';
+import { WalletConnect } from './components/WalletConnect';
 
 function App() {
-  const [connected, setConnected] = useState(false);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
@@ -21,12 +19,7 @@ function App() {
               </div>
             </div>
 
-            <button
-              onClick={() => setConnected(!connected)}
-              className="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-all duration-200 shadow-lg shadow-primary-500/20 hover:shadow-primary-500/40"
-            >
-              {connected ? 'Connected' : 'Connect Wallet'}
-            </button>
+            <WalletConnect />
           </div>
         </div>
       </header>
