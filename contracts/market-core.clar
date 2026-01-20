@@ -24,6 +24,9 @@
 (define-constant ERR-MARKET-STILL-ACTIVE (err u105))
 (define-constant ERR-INVALID-DATES (err u106))
 (define-constant ERR-MARKET-ENDED (err u107))
+(define-constant ERR-ALREADY-CLAIMED (err u108))
+(define-constant ERR-NO-WINNINGS (err u109))
+(define-constant ERR-MARKET-NOT-RESOLVED (err u110))
 
 ;; ============================================
 ;; Data Variables
@@ -225,6 +228,91 @@
     )
     
     (ok true)
+  )
+)
+
+;; Resolve a market with the final outcome
+;; @param market-id: The ID of the market to resolve
+;; @param outcome: The final outcome (OUTCOME-YES or OUTCOME-NO)
+;; @returns: (ok true) on success, error code on failure
+(define-public (resolve-market (market-id uint) (outcome uint))
+  (let
+    (
+      (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
+      (current-block stacks-block-height)
+    )
+    ;; Validate only creator can resolve
+    (asserts! (is-eq tx-sender (get creator market)) ERR-NOT-AUTHORIZED)
+    
+    ;; Validate market is still active
+    (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-MARKET-ALREADY-RESOLVED)
+    
+    ;; Validate resolution date has passed
+    (asserts! (>= current-block (get resolution-date market)) ERR-MARKET-NOT-ENDED)
+    
+    ;; Validate outcome is valid (YES or NO)
+    (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
+    
+    ;; Update market status and outcome
+    (map-set markets
+      { market-id: market-id }
+      (merge market { 
+        status: MARKET-STATUS-RESOLVED,
+        outcome: outcome
+      })
+    )
+    
+    (ok true)
+  )
+)
+
+;; Claim winnings from a resolved market
+;; @param market-id: The ID of the market to claim from
+;; @returns: (ok payout-amount) on success, error code on failure
+(define-public (claim-winnings (market-id uint))
+  (let
+    (
+      (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
+      (position (unwrap! (map-get? user-positions { market-id: market-id, user: tx-sender }) ERR-NO-WINNINGS))
+      (total-pool (+ (get total-yes-stake market) (get total-no-stake market)))
+      (outcome (get outcome market))
+    )
+    ;; Validate market is resolved
+    (asserts! (is-eq (get status market) MARKET-STATUS-RESOLVED) ERR-MARKET-NOT-RESOLVED)
+    
+    ;; Validate user hasn't already claimed
+    (asserts! (not (get claimed position)) ERR-ALREADY-CLAIMED)
+    
+    ;; Calculate payout based on outcome
+    (let
+      (
+        (payout (if (is-eq outcome OUTCOME-YES)
+          ;; YES won: calculate proportional share of total pool
+          (if (> (get total-yes-stake market) u0)
+            (/ (* (get yes-stake position) total-pool) (get total-yes-stake market))
+            u0
+          )
+          ;; NO won: calculate proportional share of total pool
+          (if (> (get total-no-stake market) u0)
+            (/ (* (get no-stake position) total-pool) (get total-no-stake market))
+            u0
+          )
+        ))
+      )
+      ;; Validate user has winnings to claim
+      (asserts! (> payout u0) ERR-NO-WINNINGS)
+      
+      ;; Transfer payout from contract to user
+      (try! (as-contract (stx-transfer? payout tx-sender contract-caller)))
+      
+      ;; Mark position as claimed
+      (map-set user-positions
+        { market-id: market-id, user: tx-sender }
+        (merge position { claimed: true })
+      )
+      
+      (ok payout)
+    )
   )
 )
 
