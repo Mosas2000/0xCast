@@ -1,6 +1,7 @@
 import './App.css';
 import { APP_NAME, APP_DESCRIPTION } from './constants/contract';
 import { WalletConnect } from './components/WalletConnect';
+import { CreateMarketForm } from './components/CreateMarketForm';
 
 function App() {
   return (
@@ -50,6 +51,11 @@ function App() {
             <div className="text-3xl font-bold text-white mb-2">0</div>
             <div className="text-slate-400">Total Users</div>
           </div>
+        </div>
+
+        {/* Create Market Section */}
+        <div className="mb-12">
+          <CreateMarketForm />
         </div>
 
         {/* Markets Section */}
