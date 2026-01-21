@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import toast from 'react-hot-toast';
 import { useWallet } from '../hooks/useWallet';
 import { dateToBlockHeight, isFutureDate } from '../utils/blockHeight';
 import { openContractCall } from '@stacks/connect';
@@ -70,6 +71,7 @@ export function CreateMarketForm() {
         }
 
         setIsLoading(true);
+        const loadingToast = toast.loading('Creating market...');
 
         try {
             const endBlockHeight = dateToBlockHeight(new Date(endDate));
@@ -87,6 +89,8 @@ export function CreateMarketForm() {
                 postConditionMode: PostConditionMode.Deny,
                 onFinish: (data) => {
                     console.log('Transaction submitted:', data.txId);
+                    toast.dismiss(loadingToast);
+                    toast.success(`Market created! TX: ${data.txId.slice(0, 8)}...`);
                     setSuccess(`Market created! Transaction ID: ${data.txId}`);
                     setQuestion('');
                     setEndDate('');
@@ -94,13 +98,18 @@ export function CreateMarketForm() {
                     setIsLoading(false);
                 },
                 onCancel: () => {
+                    toast.dismiss(loadingToast);
+                    toast.error('Transaction cancelled');
                     setError('Transaction cancelled');
                     setIsLoading(false);
                 },
             });
         } catch (err) {
             console.error('Error creating market:', err);
-            setError(err instanceof Error ? err.message : 'Failed to create market');
+            const errorMessage = err instanceof Error ? err.message : 'Failed to create market';
+            toast.dismiss(loadingToast);
+            toast.error(`Failed to create market: ${errorMessage}`);
+            setError(errorMessage);
             setIsLoading(false);
         }
     };
