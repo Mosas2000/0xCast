@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import './App.css';
-import { APP_NAME, APP_DESCRIPTION } from './constants/contract';
-import { WalletConnect } from './components/WalletConnect';
+import { APP_NAME } from './constants/contract';
+import { Header } from './components/Header';
 import { CreateMarketForm } from './components/CreateMarketForm';
 import { MarketList } from './components/MarketList';
 import { StakeModal } from './components/StakeModal';
@@ -30,59 +30,38 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
-      <header className="border-b border-slate-700/50 backdrop-blur-sm bg-slate-900/50 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">0x</span>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">{APP_NAME}</h1>
-                <p className="text-xs text-slate-400">{APP_DESCRIPTION}</p>
-              </div>
-            </div>
-
-            <WalletConnect />
-          </div>
-        </div>
-      </header>
+      <Header
+        totalMarkets={markets.length}
+        totalVolume={0}
+        onRefresh={refetch}
+      />
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-12">
+      <main className="container mx-auto px-4 py-12 space-y-16">
         {/* Hero Section */}
-        <div className="text-center mb-16">
+        <section className="text-center">
           <h2 className="text-5xl font-bold text-white mb-4 bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
             Predict the Future
           </h2>
           <p className="text-xl text-slate-300 max-w-2xl mx-auto">
             Create and trade on binary outcome markets using STX. Decentralized, transparent, and trustless.
           </p>
-        </div>
+        </section>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 hover:border-primary-500/50 transition-all duration-200">
-            <div className="text-3xl font-bold text-white mb-2">{markets.length}</div>
-            <div className="text-slate-400">Total Markets</div>
-          </div>
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 hover:border-primary-500/50 transition-all duration-200">
-            <div className="text-3xl font-bold text-white mb-2">0 STX</div>
-            <div className="text-slate-400">Total Volume</div>
-          </div>
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 hover:border-primary-500/50 transition-all duration-200">
-            <div className="text-3xl font-bold text-white mb-2">0</div>
-            <div className="text-slate-400">Total Users</div>
-          </div>
-        </div>
+        {/* Section Divider */}
+        <div className="border-t border-slate-700/30"></div>
 
         {/* Create Market Section */}
-        <div className="mb-12">
+        <section>
+          <h3 className="text-2xl font-bold text-white mb-6">Create Market</h3>
           <CreateMarketForm />
-        </div>
+        </section>
+
+        {/* Section Divider */}
+        <div className="border-t border-slate-700/30"></div>
 
         {/* Markets Section */}
-        <div className="mb-12">
+        <section>
           <h3 className="text-2xl font-bold text-white mb-6">Markets</h3>
           <MarketList
             markets={markets}
@@ -91,7 +70,7 @@ function App() {
             onRefresh={refetch}
             onStake={handleStake}
           />
-        </div>
+        </section>
 
         {/* Stake Modal */}
         <StakeModal
