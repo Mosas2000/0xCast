@@ -9,6 +9,12 @@ import {
     PostConditionMode
 } from '@stacks/transactions';
 import { CONTRACT_ADDRESS, CONTRACT_NAME } from '../constants/contract';
+import { MarketTemplates } from './MarketTemplates';
+import { QuestionSuggestions } from './QuestionSuggestions';
+import { DatePresets } from './DatePresets';
+import { DraftSaver } from './DraftSaver';
+import { MarketValidation } from './MarketValidation';
+import { generateMarketFromTemplate } from '../utils/marketTemplates';
 
 export function CreateMarketForm() {
     const { isConnected } = useWallet();
@@ -18,6 +24,36 @@ export function CreateMarketForm() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [showTemplates, setShowTemplates] = useState(false);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+
+    const handleTemplateSelect = (template: any) => {
+        const generated = generateMarketFromTemplate(template, {});
+        setQuestion(generated.question);
+        setEndDate(generated.endDate.toISOString().split('T')[0]);
+        setResolutionDate(generated.resolutionDate.toISOString().split('T')[0]);
+        setShowTemplates(false);
+    };
+
+    const handleSuggestionSelect = (suggestion: string) => {
+        setQuestion(suggestion);
+        setShowSuggestions(false);
+    };
+
+    const handleDatePresetSelect = (date: Date, type: 'end' | 'resolution') => {
+        const dateString = date.toISOString().split('T')[0];
+        if (type === 'end') {
+            setEndDate(dateString);
+        } else {
+            setResolutionDate(dateString);
+        }
+    };
+
+    const handleDraftRestore = (data: any) => {
+        setQuestion(data.question || '');
+        setEndDate(data.endDate || '');
+        setResolutionDate(data.resolutionDate || '');
+    };
 
     const validateDates = (): boolean => {
         if (!endDate || !resolutionDate) {
