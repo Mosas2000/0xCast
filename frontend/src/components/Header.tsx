@@ -1,5 +1,6 @@
 import { APP_NAME, APP_DESCRIPTION } from '../constants/contract';
 import { WalletConnect } from './WalletConnect';
+import { NotificationBell } from './NotificationBell';
 
 interface HeaderProps {
     totalMarkets: number;
@@ -52,6 +53,9 @@ export function Header({ totalMarkets, totalVolume = 0, onRefresh }: HeaderProps
                                 </svg>
                             </button>
                         )}
+
+                        {/* Notification Bell */}
+                        <NotificationBell />
 
                         {/* Wallet Connect */}
                         <WalletConnect />
