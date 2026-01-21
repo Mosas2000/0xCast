@@ -1,12 +1,31 @@
+import { useState } from 'react';
 import './App.css';
 import { APP_NAME, APP_DESCRIPTION } from './constants/contract';
 import { WalletConnect } from './components/WalletConnect';
 import { CreateMarketForm } from './components/CreateMarketForm';
 import { MarketList } from './components/MarketList';
+import { StakeModal } from './components/StakeModal';
 import { useMarkets } from './hooks/useMarkets';
+import { Market } from './types/market';
 
 function App() {
   const { markets, isLoading, error, refetch } = useMarkets();
+  const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
+  const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
+
+  const handleStake = (marketId: number) => {
+    const market = markets.find(m => m.id === marketId);
+    if (market) {
+      setSelectedMarket(market);
+      setIsStakeModalOpen(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsStakeModalOpen(false);
+    setSelectedMarket(null);
+    refetch(); // Refresh markets after staking
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -70,8 +89,16 @@ function App() {
             isLoading={isLoading}
             error={error}
             onRefresh={refetch}
+            onStake={handleStake}
           />
         </div>
+
+        {/* Stake Modal */}
+        <StakeModal
+          market={selectedMarket}
+          isOpen={isStakeModalOpen}
+          onClose={handleCloseModal}
+        />
       </main>
 
       {/* Footer */}
