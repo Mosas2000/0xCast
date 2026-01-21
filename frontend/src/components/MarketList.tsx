@@ -16,8 +16,11 @@ interface MarketListProps {
 
 type FilterTab = 'all' | 'active' | 'resolved';
 
+const ITEMS_PER_PAGE = 10;
+
 export function MarketList({ markets, isLoading, error, onRefresh, onStake, className = '' }: MarketListProps) {
     const [activeTab, setActiveTab] = useState<FilterTab>('all');
+    const [currentPage, setCurrentPage] = useState(1);
 
     // Filter markets based on active tab
     const filteredMarkets = markets.filter((market) => {
@@ -26,6 +29,32 @@ export function MarketList({ markets, isLoading, error, onRefresh, onStake, clas
         if (activeTab === 'resolved') return market.status === MarketStatus.RESOLVED;
         return true;
     });
+
+    // Pagination
+    const totalPages = Math.ceil(filteredMarkets.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const paginatedMarkets = filteredMarkets.slice(startIndex, endIndex);
+
+    // Reset to page 1 when changing tabs
+    const handleTabChange = (tab: FilterTab) => {
+        setActiveTab(tab);
+        setCurrentPage(1);
+    };
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+
+    const handlePrevPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
 
     // Loading state
     if (isLoading) {
@@ -50,28 +79,28 @@ export function MarketList({ markets, isLoading, error, onRefresh, onStake, clas
             {/* Filter Tabs */}
             <div className="flex space-x-2 mb-6 border-b border-slate-700">
                 <button
-                    onClick={() => setActiveTab('all')}
+                    onClick={() => handleTabChange('all')}
                     className={`px-4 py-2 font-medium transition-colors ${activeTab === 'all'
-                            ? 'text-primary-400 border-b-2 border-primary-400'
-                            : 'text-slate-400 hover:text-slate-300'
+                        ? 'text-primary-400 border-b-2 border-primary-400'
+                        : 'text-slate-400 hover:text-slate-300'
                         }`}
                 >
                     All Markets ({markets.length})
                 </button>
                 <button
-                    onClick={() => setActiveTab('active')}
+                    onClick={() => handleTabChange('active')}
                     className={`px-4 py-2 font-medium transition-colors ${activeTab === 'active'
-                            ? 'text-primary-400 border-b-2 border-primary-400'
-                            : 'text-slate-400 hover:text-slate-300'
+                        ? 'text-primary-400 border-b-2 border-primary-400'
+                        : 'text-slate-400 hover:text-slate-300'
                         }`}
                 >
                     Active ({markets.filter(m => m.status === MarketStatus.ACTIVE).length})
                 </button>
                 <button
-                    onClick={() => setActiveTab('resolved')}
+                    onClick={() => handleTabChange('resolved')}
                     className={`px-4 py-2 font-medium transition-colors ${activeTab === 'resolved'
-                            ? 'text-primary-400 border-b-2 border-primary-400'
-                            : 'text-slate-400 hover:text-slate-300'
+                        ? 'text-primary-400 border-b-2 border-primary-400'
+                        : 'text-slate-400 hover:text-slate-300'
                         }`}
                 >
                     Resolved ({markets.filter(m => m.status === MarketStatus.RESOLVED).length})
@@ -102,16 +131,43 @@ export function MarketList({ markets, isLoading, error, onRefresh, onStake, clas
             )}
 
             {/* Markets Grid */}
-            {filteredMarkets.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredMarkets.map((market) => (
-                        <MarketCard
-                            key={market.id}
-                            market={market}
-                            onStake={onStake}
-                        />
-                    ))}
-                </div>
+            {paginatedMarkets.length > 0 && (
+                <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {paginatedMarkets.map((market) => (
+                            <MarketCard
+                                key={market.id}
+                                market={market}
+                                onStake={onStake}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-center space-x-4 mt-8">
+                            <button
+                                onClick={handlePrevPage}
+                                disabled={currentPage === 1}
+                                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-lg font-medium transition-colors"
+                            >
+                                Previous
+                            </button>
+
+                            <span className="text-slate-300">
+                                Page {currentPage} of {totalPages}
+                            </span>
+
+                            <button
+                                onClick={handleNextPage}
+                                disabled={currentPage === totalPages}
+                                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-lg font-medium transition-colors"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );
