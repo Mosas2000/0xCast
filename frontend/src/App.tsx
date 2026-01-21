@@ -6,6 +6,7 @@ import { CreateMarketForm } from './components/CreateMarketForm';
 import { MarketList } from './components/MarketList';
 import { StakeModal } from './components/StakeModal';
 import { SettingsPanel } from './components/SettingsPanel';
+import { Toaster } from './components/Toaster';
 import { useMarkets } from './hooks/useMarkets';
 import { useSettings } from './hooks/useSettings';
 import { Market } from './types/market';
@@ -33,6 +34,9 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Toast Notifications */}
+      <Toaster />
+
       {/* Header */}
       <Header
         totalMarkets={markets.length}
