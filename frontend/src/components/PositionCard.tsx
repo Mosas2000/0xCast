@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Position, Market, MarketStatus } from '../types/market';
 import { Card } from './Card';
 import { Badge } from './Badge';
@@ -17,7 +18,7 @@ interface PositionCardProps {
     className?: string;
 }
 
-export function PositionCard({ position, market, onClaim, className = '' }: PositionCardProps) {
+export const PositionCard = memo(function PositionCard({ position, market, onClaim, className = '' }: PositionCardProps) {
     const isResolved = market.status === MarketStatus.RESOLVED;
     const isWinner = isWinningPosition(position, market);
     const claimableAmount = calculateClaimableAmount(position, market);
@@ -124,4 +125,4 @@ export function PositionCard({ position, market, onClaim, className = '' }: Posi
             )}
         </Card>
     );
-}
+});

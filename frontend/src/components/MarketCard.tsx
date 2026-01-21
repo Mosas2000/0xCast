@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Market } from '../types/market';
 import { Card } from './Card';
 import { MarketStatus } from './MarketStatus';
@@ -12,7 +13,7 @@ interface MarketCardProps {
     className?: string;
 }
 
-export function MarketCard({ market, onStake, className = '' }: MarketCardProps) {
+export const MarketCard = memo(function MarketCard({ market, onStake, className = '' }: MarketCardProps) {
     const { blockHeight } = useCurrentBlock();
     const isActive = isMarketActive(market.endDate, blockHeight);
 
@@ -79,4 +80,4 @@ export function MarketCard({ market, onStake, className = '' }: MarketCardProps)
             )}
         </Card>
     );
-}
+});
