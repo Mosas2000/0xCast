@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { STACKS_API_URL } from '../constants/contract';
+import { apiClient } from '../utils/apiClient';
 
 interface BlockHeightData {
     blockHeight: number;
@@ -7,8 +7,14 @@ interface BlockHeightData {
     error: string | null;
 }
 
-const API_INFO_URL = `${STACKS_API_URL}/v2/info`;
 const REFRESH_INTERVAL = 30000; // 30 seconds
+
+interface StacksInfoResponse {
+    stacks_tip_height: number;
+    stacks_tip: string;
+    server_version: string;
+    network_id: number;
+}
 
 /**
  * Hook to fetch and track current Stacks block height
