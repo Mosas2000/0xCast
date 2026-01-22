@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { STACKS_API_URL } from '../constants/contract';
 
 interface BlockHeightData {
     blockHeight: number;
@@ -6,7 +7,7 @@ interface BlockHeightData {
     error: string | null;
 }
 
-const STACKS_API_URL = 'https://api.mainnet.hiro.so/v2/info';
+const API_INFO_URL = `${STACKS_API_URL}/v2/info`;
 const REFRESH_INTERVAL = 30000; // 30 seconds
 
 /**
