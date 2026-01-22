@@ -7,15 +7,18 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "interact": "node scripts/interact.js"
   },
   "dependencies": {
     "@stacks/connect": "^8.2.4",
     "@stacks/network": "^7.3.1",
     "@stacks/transactions": "^7.3.1",
+    "@stacks/wallet-sdk": "^7.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-hot-toast": "^2.6.0"
+    "react-hot-toast": "^2.6.0",
+    "toml": "^3.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
