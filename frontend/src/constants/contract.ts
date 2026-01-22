@@ -5,6 +5,12 @@ export const CONTRACT_NAME = 'market-core';
 // Full contract identifier
 export const CONTRACT_IDENTIFIER = `${CONTRACT_ADDRESS}.${CONTRACT_NAME}`;
 
+// First market ID from deployment
+export const FIRST_MARKET_ID = 0;
+
+// Stacks API endpoint
+export const STACKS_API_URL = 'https://api.mainnet.hiro.so';
+
 // Network configuration
 export const NETWORK = 'mainnet';
 
