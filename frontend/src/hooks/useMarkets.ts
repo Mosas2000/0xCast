@@ -4,6 +4,7 @@ import { STACKS_MAINNET } from '@stacks/network';
 import { Market } from '../types/market';
 import { parseMarketData } from '../utils/contractHelpers';
 import { CONTRACT_ADDRESS, CONTRACT_NAME } from '../constants/contract';
+import { useAutoRefresh } from './useAutoRefresh';
 
 export function useMarkets() {
     const [markets, setMarkets] = useState<Market[]>([]);
@@ -78,10 +79,20 @@ export function useMarkets() {
         fetchMarkets();
     }, [fetchMarkets]);
 
+    // Auto-refresh every 30 seconds, pausing when tab is inactive
+    const { isRefreshing, lastRefresh, forceRefresh } = useAutoRefresh({
+        interval: 30000, // 30 seconds
+        enabled: true,
+        onRefresh: fetchMarkets,
+    });
+
     return {
         markets,
-        isLoading,
+        isLoading: isLoading || isRefreshing,
         error,
         refetch: fetchMarkets,
+        forceRefresh,
+        lastRefresh,
+        isRefreshing,
     };
 }
