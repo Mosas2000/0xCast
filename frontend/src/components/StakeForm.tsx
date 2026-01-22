@@ -3,6 +3,7 @@ import { Market, MarketOutcome } from '../types/market';
 import { OutcomeSelector } from './OutcomeSelector';
 import { StakeInput } from './StakeInput';
 import { WinningsPreview } from './WinningsPreview';
+import { TransactionStatus } from './TransactionStatus';
 import { useStake } from '../hooks/useStake';
 import { useWallet } from '../hooks/useWallet';
 import { calculateOdds } from '../utils/contractHelpers';
@@ -69,19 +70,27 @@ export function StakeForm({ market, onSuccess, onCancel, className = '' }: Stake
 
     if (txId) {
         return (
-            <div className={`text-center py-8 ${className}`.trim()}>
-                <div className="mb-4">
-                    <svg className="w-16 h-16 mx-auto text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+            <div className={`py-8 ${className}`.trim()}>
+                <div className="mb-6 text-center">
+                    <div className="mb-4">
+                        <svg className="w-16 h-16 mx-auto text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-2">Stake Submitted!</h3>
+                    <p className="text-slate-400 mb-4">Your transaction has been broadcast to the network</p>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">Stake Submitted!</h3>
-                <p className="text-slate-400 mb-4">Your transaction has been broadcast to the network</p>
-                <p className="text-xs text-slate-500 break-all">Transaction ID: {txId}</p>
+
+                <TransactionStatus 
+                    txId={txId} 
+                    onSuccess={onSuccess}
+                    className="mb-6"
+                />
+
                 {onSuccess && (
                     <button
                         onClick={onSuccess}
-                        className="mt-6 px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+                        className="w-full px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
                     >
                         Done
                     </button>
