@@ -26,7 +26,7 @@ export function useCurrentBlock(): BlockHeightData {
 
         const fetchBlockHeight = async () => {
             try {
-                const response = await fetch(STACKS_API_URL);
+                const response = await fetch(API_INFO_URL);
 
                 if (!response.ok) {
                     throw new Error(`API error: ${response.status}`);
