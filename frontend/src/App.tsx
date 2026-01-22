@@ -7,6 +7,9 @@ import { MarketList } from './components/MarketList';
 import { StakeModal } from './components/StakeModal';
 import { SettingsPanel } from './components/SettingsPanel';
 import { Toaster } from './components/Toaster';
+import { LiveMarketBadge } from './components/LiveMarketBadge';
+import { RefreshButton } from './components/RefreshButton';
+import { ContractInfo } from './components/ContractInfo';
 import { useMarkets } from './hooks/useMarkets';
 import { useSettings } from './hooks/useSettings';
 import { Market } from './types/market';
@@ -60,9 +63,12 @@ function App() {
       <main className="container mx-auto px-4 py-12 space-y-16">
         {/* Hero Section */}
         <section className="text-center">
-          <h2 className="text-5xl font-bold text-white mb-4 bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
-            Predict the Future
-          </h2>
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <h2 className="text-5xl font-bold text-white bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
+              Predict the Future
+            </h2>
+            <LiveMarketBadge />
+          </div>
           <p className="text-xl text-slate-300 max-w-2xl mx-auto">
             Create and trade on binary outcome markets using STX. Decentralized, transparent, and trustless.
           </p>
