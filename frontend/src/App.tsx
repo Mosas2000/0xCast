@@ -85,7 +85,10 @@ function App() {
 
         {/* Section Divider */}
         <div className="border-t border-slate-700/30"></div>
-
+div className="flex items-center justify-between mb-6">
+            <h3 className="text-2xl font-bold text-white">Markets</h3>
+            <RefreshButton onRefresh={refetch} isLoading={isLoading} />
+          </div
         {/* Markets Section */}
         <section>
           <h3 className="text-2xl font-bold text-white mb-6">Markets</h3>
@@ -108,20 +111,26 @@ function App() {
         {/* Settings Panel */}
         <SettingsPanel
           isOpen={isSettingsOpen}
-          onClose={() => setIsSettingsOpen(false)}
-        />
-      </main>
+          onClose={() => setIsSettingsOpen(false)}12">
+          {/* Contract Info Section */}
+          <div className="mb-8">
+            <ContractInfo />
+          </div>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-700/50 mt-20">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between">
+          {/* Footer Links */}
+          <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-slate-700/30">
             <div className="text-slate-400 text-sm mb-4 md:mb-0">
               © 2026 {APP_NAME}. Built on Stacks.
             </div>
             <div className="flex items-center space-x-6">
               <a href="#" className="text-slate-400 hover:text-primary-400 transition-colors text-sm">
                 Docs
+              </a>
+              <a href="#" className="text-slate-400 hover:text-primary-400 transition-colors text-sm">
+                GitHub
+              </a>
+              <a href="https://explorer.hiro.so/address/SP31PKQVQZVZCK3FM3NH67CGD6G1FMR17VQVS2W5T?chain=mainnet" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-primary-400 transition-colors text-sm">
+                Explorer
               </a>
               <a href="#" className="text-slate-400 hover:text-primary-400 transition-colors text-sm">
                 GitHub
