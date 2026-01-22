@@ -1,15 +1,112 @@
+import { useState, useEffect } from 'react';
 import { TransactionStatus as TxStatus } from '../types/transaction';
 import { LoadingSpinner } from './LoadingSpinner';
+import { STACKS_API_URL } from '../constants/contract';
 
 interface TransactionStatusProps {
     txId: string;
-    status: TxStatus;
+    status?: TxStatus;
     confirmations?: number;
     className?: string;
+    onSuccess?: () => void;
+    onError?: (error: string) => void;
 }
 
-export function TransactionStatus({ txId, status, confirmations = 0, className = '' }: TransactionStatusProps) {
-    const explorerUrl = `https://explorer.hiro.so/txid/${txId}?chain=mainnet`;
+interface TxApiResponse {
+    tx_status: 'success' | 'pending' | 'abort_by_response' | 'abort_by_post_condition';
+    block_height?: number;
+    tx_result?: {
+        repr: string;
+    };
+}
+
+export function TransactionStatus({ 
+    txId, 
+    status: initialStatus, 
+    confirmations = 0, 
+    className = '',
+    onSuccess,
+    onError 
+}: TransactionStatusProps) {
+    const [status, setStatus] = useState<TxStatus>(initialStatus || TxStatus.PENDING);
+    const [blockHeight, setBlockHeight] = useState<number | undefined>();
+    const [elapsed, setElapsed] = useState(0);
+    const [errorMsg, setErrorMsg] = useState<string>('');
+
+    useEffect(() => {
+        // If status is already provided and not pending, don't poll
+        if (initialStatus && initialStatus !== TxStatus.PENDING) {
+            return;
+        }
+
+        let pollInterval: NodeJS.Timeout;
+        let elapsedInterval: NodeJS.Timeout;
+        let attempts = 0;
+        const MAX_ATTEMPTS = 120; // 10 minutes
+
+        const checkTransaction = async () => {
+            try {
+                const response = await fetch(`${STACKS_API_URL}/extended/v1/tx/${txId}`);
+                
+                if (!response.ok) {
+                    if (response.status === 404 && attempts < MAX_ATTEMPTS) {
+                        attempts++;
+                        return;
+                    }
+                    throw new Error(`Transaction not found`);
+                }
+
+                const data: TxApiResponse = await response.json();
+                
+                if (data.tx_status === 'success') {
+                    setStatus(TxStatus.SUCCESS);
+                    setBlockHeight(data.block_height);
+                    clearInterval(pollInterval);
+                    clearInterval(elapsedInterval);
+                    onSuccess?.();
+                } else if (data.tx_status === 'abort_by_response' || data.tx_status === 'abort_by_post_condition') {
+                    const error = data.tx_result?.repr || 'Transaction aborted';
+                    setStatus(TxStatus.FAILED);
+                    setErrorMsg(error);
+                    clearInterval(pollInterval);
+                    clearInterval(elapsedInterval);
+                    onError?.(error);
+                } else if (data.tx_status === 'pending') {
+                    setStatus(TxStatus.PENDING);
+                    attempts++;
+                    
+                    if (attempts >= MAX_ATTEMPTS) {
+                        clearInterval(pollInterval);
+                        clearInterval(elapsedInterval);
+                        setStatus(TxStatus.FAILED);
+                        setErrorMsg('Transaction timeout');
+                    }
+                }
+            } catch (error) {
+                attempts++;
+                
+                if (attempts >= MAX_ATTEMPTS) {
+                    clearInterval(pollInterval);
+                    clearInterval(elapsedInterval);
+                    const msg = error instanceof Error ? error.message : 'Failed to check status';
+                    setStatus(TxStatus.FAILED);
+                    setErrorMsg(msg);
+                    onError?.(msg);
+                }
+            }
+        };
+
+        checkTransaction();
+        pollInterval = setInterval(checkTransaction, 5000);
+        elapsedInterval = setInterval(() => setElapsed(prev => prev + 1), 1000);
+
+        return () => {
+            clearInterval(pollInterval);
+            clearInterval(elapsedInterval);
+        };
+    }, [txId, initialStatus, onSuccess, onError]);
+
+    const explorerUrl = `https://explorer.stacks.co/txid/${txId}?chain=mainnet`;
 
     return (
         <div className={`flex items-center space-x-3 ${className}`.trim()}>
@@ -44,14 +141,23 @@ export function TransactionStatus({ txId, status, confirmations = 0, className =
 
             {/* Status Text */}
             <div className="flex-1">
-                <p className={`text-sm font-medium ${status === TxStatus.SUCCESS ? 'text-green-400' :
-                        status === TxStatus.FAILED ? 'text-red-400' :
-                            'text-slate-400'
-                    }`}>
-                    {status === TxStatus.PENDING && 'Transaction Pending...'}
-                    {status === TxStatus.SUCCESS && `Confirmed (${confirmations} blocks)`}
-                    {status === TxStatus.FAILED && 'Transaction Failed'}
-                </p>
+                <div className="flex items-center gap-2">
+                    <p className={`text-sm font-medium ${status === TxStatus.SUCCESS ? 'text-green-400' :
+                            status === TxStatus.FAILED ? 'text-red-400' :
+                                'text-slate-400'
+                        }`}>
+                        {status === TxStatus.PENDING && 'Transaction Pending...'}
+                        {status === TxStatus.SUCCESS && `Confirmed${blockHeight ? ` (block #${blockHeight.toLocaleString()})` : ''}`}
+                        {status === TxStatus.FAILED && 'Transaction Failed'}
+                    </p>
+                    {status === TxStatus.PENDING && elapsed > 0 && (
+                        <span className="text-xs text-slate-500">{elapsed}s</span>
+                    )}
+                </div>
+
+                {status === TxStatus.FAILED && errorMsg && (
+                    <p className="text-xs text-red-400 mt-1">{errorMsg}</p>
+                )}
 
                 <a
                     href={explorerUrl}
