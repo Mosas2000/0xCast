@@ -1,9 +1,10 @@
-import { memo } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { Market } from '../types/market';
 import { Card } from './Card';
 import { MarketStatus } from './MarketStatus';
 import { MarketOdds } from './MarketOdds';
 import { MarketPool } from './MarketPool';
+import { ActivityIndicatorLive } from './ActivityIndicatorLive';
 import { isMarketActive } from '../utils/calculations';
 import { useCurrentBlock } from '../hooks/useCurrentBlock';
 
@@ -16,6 +17,14 @@ interface MarketCardProps {
 export const MarketCard = memo(function MarketCard({ market, onStake, className = '' }: MarketCardProps) {
     const { blockHeight } = useCurrentBlock();
     const isActive = isMarketActive(market.endDate, blockHeight);
+    const [isHighlighted, setIsHighlighted] = useState(false);
+
+    // Highlight card briefly when data changes
+    useEffect(() => {
+        setIsHighlighted(true);
+        const timer = setTimeout(() => setIsHighlighted(false), 2000);
+        return () => clearTimeout(timer);
+    }, [market.totalYesStake, market.totalNoStake]);
 
     const handleStakeClick = () => {
         if (onStake && isActive) {
@@ -24,7 +33,12 @@ export const MarketCard = memo(function MarketCard({ market, onStake, className 
     };
 
     return (
-        <Card className={className}>
+        <Card className={`transition-all duration-500 ${isHighlighted ? 'ring-2 ring-blue-500/50 shadow-lg shadow-blue-500/20' : ''} ${className}`.trim()}>
+            {/* Live Activity Indicator */}
+            <div className="mb-3">
+                <ActivityIndicatorLive />
+            </div>
+
             {/* Header */}
             <div className="mb-4">
                 <div className="flex items-start justify-between mb-2">
