@@ -32,13 +32,7 @@ export function useCurrentBlock(): BlockHeightData {
 
         const fetchBlockHeight = async () => {
             try {
-                const response = await fetch(API_INFO_URL);
-
-                if (!response.ok) {
-                    throw new Error(`API error: ${response.status}`);
-                }
-
-                const data = await response.json();
+                const data = await apiClient.get<StacksInfoResponse>('/v2/info');
 
                 if (isMounted) {
                     setBlockHeight(data.stacks_tip_height);
