@@ -1,6 +1,8 @@
-import { APP_NAME, APP_DESCRIPTION } from '../constants/contract';
+import { APP_NAME, APP_DESCRIPTION, CONTRACT_ADDRESS } from '../constants/contract';
 import { WalletConnect } from './WalletConnect';
 import { NotificationBell } from './NotificationBell';
+import { NetworkStatus } from './NetworkStatus';
+import { useCurrentBlock } from '../hooks/useCurrentBlock';
 
 interface HeaderProps {
     totalMarkets: number;
@@ -9,9 +11,28 @@ interface HeaderProps {
 }
 
 export function Header({ totalMarkets, totalVolume = 0, onRefresh }: HeaderProps) {
+    const { blockHeight } = useCurrentBlock();
+
     return (
         <header className="border-b border-slate-700/50 backdrop-blur-sm bg-slate-900/50 sticky top-0 z-50">
             <div className="container mx-auto px-4 py-4">
+                {/* Top Row - Network Status and Contract Info */}
+                <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-700/30">
+                    <NetworkStatus />
+                    <a
+                        href={`https://explorer.hiro.so/address/${CONTRACT_ADDRESS}?chain=mainnet`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-slate-400 hover:text-primary-400 transition-colors flex items-center gap-1"
+                    >
+                        <span>Contract: {CONTRACT_ADDRESS.slice(0, 10)}...{CONTRACT_ADDRESS.slice(-6)}</span>
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                    </a>
+                </div>
+
+                {/* Main Header Row */}
                 <div className="flex items-center justify-between">
                     {/* Logo and Title */}
                     <div className="flex items-center space-x-3">
@@ -33,6 +54,9 @@ export function Header({ totalMarkets, totalVolume = 0, onRefresh }: HeaderProps
                             </div>
                             <div className="text-slate-400">
                                 <span className="font-medium text-white">{totalVolume.toFixed(2)}</span> STX Volume
+                            </div>
+                            <div className="text-slate-400">
+                                Block <span className="font-medium text-white">{blockHeight.toLocaleString()}</span>
                             </div>
                         </div>
 
