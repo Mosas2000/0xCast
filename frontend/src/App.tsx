@@ -10,6 +10,8 @@ import { Toaster } from './components/Toaster';
 import { LiveMarketBadge } from './components/LiveMarketBadge';
 import { RefreshButton } from './components/RefreshButton';
 import { ContractInfo } from './components/ContractInfo';
+import { Footer } from './components/Footer';
+import { ScrollToTop } from './components/ScrollToTop';
 import { useMarkets } from './hooks/useMarkets';
 import { useSettings } from './hooks/useSettings';
 import { Market } from './types/market';
@@ -141,7 +143,13 @@ div className="flex items-center justify-between mb-6">
             </div>
           </div>
         </div>
-      </footer>
+      </footer> */}
+
+      {/* New Footer */}
+      <Footer />
+
+      {/* Scroll to Top Button */}
+      <ScrollToTop />
     </div>
   );
 }
