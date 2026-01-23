@@ -1,7 +1,12 @@
 import { useWallet } from '../hooks/useWallet';
+import { useWalletBalance } from '../hooks/useWalletBalance';
 
 export function WalletConnect() {
     const { address, isConnected, connect, disconnect } = useWallet();
+    const { balanceFormatted, isLoading: balanceLoading } = useWalletBalance({ 
+        address, 
+        enabled: isConnected 
+    });
 
     const shortenAddress = (addr: string) => {
         return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
@@ -11,11 +16,16 @@ export function WalletConnect() {
         return (
             <div className="flex items-center space-x-3">
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg px-4 py-2">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-3">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <span className="text-sm font-mono text-slate-300">
-                            {shortenAddress(address)}
-                        </span>
+                        <div className="flex flex-col">
+                            <span className="text-sm font-mono text-slate-300" title={address}>
+                                {shortenAddress(address)}
+                            </span>
+                            <span className="text-xs font-semibold text-primary-400">
+                                {balanceLoading ? '...' : `${balanceFormatted} STX`}
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <button
