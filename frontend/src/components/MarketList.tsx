@@ -5,6 +5,8 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { EmptyState } from './EmptyState';
 import { ErrorDisplay } from './ErrorDisplay';
 import { LastUpdated } from './LastUpdated';
+import { FilterSidebar } from './FilterSidebar';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 interface MarketListProps {
     markets: Market[];
@@ -24,6 +26,8 @@ const ITEMS_PER_PAGE = 10;
 export function MarketList({ markets, isLoading, error, onRefresh, onStake, isRefreshing = false, lastRefresh = null, className = '' }: MarketListProps) {
     const [activeTab, setActiveTab] = useState<FilterTab>('all');
     const [currentPage, setCurrentPage] = useState(1);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const isMobile = useIsMobile();
 
     // Filter markets based on active tab
     const filteredMarkets = markets.filter((market) => {
@@ -90,11 +94,11 @@ export function MarketList({ markets, isLoading, error, onRefresh, onStake, isRe
             )}
 
             {/* Filter Tabs and Last Updated */}
-            <div className="flex items-center justify-between mb-6 border-b border-slate-700 pb-2">
-                <div className="flex space-x-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 border-b border-slate-700 pb-2">
+                <div className="flex space-x-2 overflow-x-auto">
                 <button
                     onClick={() => handleTabChange('all')}
-                    className={`px-4 py-2 font-medium transition-colors ${activeTab === 'all'
+                    className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${activeTab === 'all'
                         ? 'text-primary-400 border-b-2 border-primary-400'
                         : 'text-slate-400 hover:text-slate-300'
                         }`}
@@ -103,7 +107,7 @@ export function MarketList({ markets, isLoading, error, onRefresh, onStake, isRe
                 </button>
                 <button
                     onClick={() => handleTabChange('active')}
-                    className={`px-4 py-2 font-medium transition-colors ${activeTab === 'active'
+                    className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${activeTab === 'active'
                         ? 'text-primary-400 border-b-2 border-primary-400'
                         : 'text-slate-400 hover:text-slate-300'
                         }`}
@@ -112,7 +116,7 @@ export function MarketList({ markets, isLoading, error, onRefresh, onStake, isRe
                 </button>
                 <button
                     onClick={() => handleTabChange('resolved')}
-                    className={`px-4 py-2 font-medium transition-colors ${activeTab === 'resolved'
+                    className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${activeTab === 'resolved'
                         ? 'text-primary-400 border-b-2 border-primary-400'
                         : 'text-slate-400 hover:text-slate-300'
                         }`}
@@ -121,8 +125,21 @@ export function MarketList({ markets, isLoading, error, onRefresh, onStake, isRe
                 </button>
                 </div>
 
-                {/* Last Updated Indicator */}
-                <LastUpdated timestamp={lastRefresh} />
+                <div className="flex items-center gap-3">
+                    {/* Filters Button */}
+                    <button
+                        onClick={() => setIsFilterOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg font-medium transition-colors"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                        {!isMobile && <span>Filters</span>}
+                    </button>
+
+                    {/* Last Updated Indicator */}
+                    <LastUpdated timestamp={lastRefresh} />
+                </div>
             </div>
 
             {/* Empty state */}
@@ -187,6 +204,22 @@ export function MarketList({ markets, isLoading, error, onRefresh, onStake, isRe
                     )}
                 </>
             )}
+
+            {/* Filter Sidebar */}
+            <FilterSidebar
+                isOpen={isFilterOpen}
+                onClose={() => setIsFilterOpen(false)}
+                onApply={() => {
+                    // Filter logic will be handled by the useFilters hook
+                    // For now, just close the sidebar
+                    setIsFilterOpen(false);
+                }}
+                statusCounts={{
+                    active: markets.filter(m => m.status === MarketStatus.ACTIVE).length,
+                    ended: 0, // Will be calculated based on actual data
+                    resolved: markets.filter(m => m.status === MarketStatus.RESOLVED).length,
+                }}
+            />
         </div>
     );
 }
