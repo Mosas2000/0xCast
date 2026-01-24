@@ -15,6 +15,40 @@
 - **Transparent Resolution**: Market outcomes are resolved on-chain with full transparency
 - **Automated Payouts**: Winners automatically claim their rewards through smart contracts
 - **Built on Stacks**: Leverages Bitcoin's security through Stacks' Proof of Transfer consensus
+- **Progressive Web App**: Install on mobile and desktop with offline support
+- **Mobile Optimized**: Touch-friendly interface with pull-to-refresh and bottom navigation
+
+## Progressive Web App (PWA)
+
+0xCast is a fully-featured PWA that works offline and can be installed on your device.
+
+### PWA Features
+- Install on mobile and desktop
+- Offline support with cached data
+- Background sync for pending transactions
+- Push notifications (coming soon)
+- Pull-to-refresh on mobile
+- Touch-optimized interface
+
+### Installation
+
+**Desktop:**
+1. Look for the install icon in your browser's address bar
+2. Click "Install" to add 0xCast to your applications
+
+**Mobile:**
+1. Open in your mobile browser
+2. Tap the menu or share icon
+3. Select "Add to Home Screen" or "Install App"
+
+### Offline Mode
+
+When offline, you can:
+- View cached markets
+- Browse your positions
+- Queue transactions (will sync when online)
+
+Pending transactions will automatically sync when you reconnect.
 
 ## Multi-Outcome Markets
 

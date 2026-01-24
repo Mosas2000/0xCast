@@ -12,6 +12,10 @@ import { RefreshButton } from './components/RefreshButton';
 import { ContractInfo } from './components/ContractInfo';
 import { Footer } from './components/Footer';
 import { ScrollToTop } from './components/ScrollToTop';
+import { InstallPrompt } from './components/InstallPrompt';
+import { OfflineIndicator } from './components/OfflineIndicator';
+import { MobileBottomNav } from './components/MobileBottomNav';
+import { PullToRefresh } from './components/PullToRefresh';
 import { useMarkets } from './hooks/useMarkets';
 import { useSettings } from './hooks/useSettings';
 import { Market } from './types/market';
@@ -38,16 +42,24 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Toast Notifications */}
-      <Toaster />
+    <>
+      {/* PWA Components */}
+      <InstallPrompt />
+      <OfflineIndicator />
+      
+      <PullToRefresh onRefresh={async () => {
+        await refetch();
+      }}>
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pb-20 md:pb-0">
+          {/* Toast Notifications */}
+          <Toaster />
 
-      {/* Header */}
-      <Header
-        totalMarkets={markets.length}
-        totalVolume={0}
-        onRefresh={refetch}
-      />
+          {/* Header */}
+          <Header
+            totalMarkets={markets.length}
+            totalVolume={0}
+            onRefresh={refetch}
+          />
 
       {/* Settings Button (Fixed Position) */}
       <button
@@ -150,7 +162,12 @@ div className="flex items-center justify-between mb-6">
 
       {/* Scroll to Top Button */}
       <ScrollToTop />
-    </div>
+        </div>
+      </PullToRefresh>
+      
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
+    </>
   );
 }
 
