@@ -161,3 +161,47 @@
     (ok new-id)
   )
 )
+
+;; Stake on specific outcome
+(define-public (stake-on-outcome
+  (market-id uint)
+  (outcome-index uint)
+  (amount uint))
+  
+  (let
+    (
+      (market (unwrap! (map-get? multi-markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
+      (current-stakes (get outcome-stakes market))
+      (user-position (default-to { stake: u0, claimed: false }
+        (map-get? user-multi-positions 
+          { market-id: market-id, user: tx-sender, outcome-index: outcome-index })))
+      (updated-stakes (update-stake-at-index current-stakes outcome-index amount))
+    )
+    
+    ;; Validations
+    (asserts! (< outcome-index (get outcome-count market)) ERR-INVALID-OUTCOME)
+    (asserts! (< block-height (get end-date market)) ERR-MARKET-ENDED)
+    (asserts! (is-eq (get status market) u0) (err u108))
+    (asserts! (> amount u0) (err u109))
+    
+    ;; Transfer STX from user to contract
+    (try! (stx-transfer? amount tx-sender (as-contract tx-sender)))
+    
+    ;; Update market stakes
+    (map-set multi-markets
+      { market-id: market-id }
+      (merge market { outcome-stakes: updated-stakes })
+    )
+    
+    ;; Update user position
+    (map-set user-multi-positions
+      { market-id: market-id, user: tx-sender, outcome-index: outcome-index }
+      {
+        stake: (+ (get stake user-position) amount),
+        claimed: false
+      }
+    )
+    
+    (ok true)
+  )
+)
