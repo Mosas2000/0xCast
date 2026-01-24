@@ -9,10 +9,32 @@
 ## Features
 
 - **Decentralized Market Creation**: Anyone can create prediction markets for binary outcome events
+- **Multi-Outcome Markets**: Support for markets with 3-10 possible outcomes, not just binary
 - **STX-Based Trading**: All trades are conducted using STX tokens
+- **Dynamic Odds Calculation**: Real-time odds based on pool distribution
 - **Transparent Resolution**: Market outcomes are resolved on-chain with full transparency
 - **Automated Payouts**: Winners automatically claim their rewards through smart contracts
 - **Built on Stacks**: Leverages Bitcoin's security through Stacks' Proof of Transfer consensus
+
+## Multi-Outcome Markets
+
+0xCast now supports markets with 3-10 possible outcomes!
+
+### Creating Multi-Outcome Markets
+- Choose 3-10 unique outcomes
+- Each outcome tracked separately
+- Proportional payout based on winning outcome
+
+### Example Markets
+- "Who will win the championship?" (Multiple teams)
+- "What price range will BTC be?" (Multiple ranges)
+- "Which project will launch first?" (Multiple projects)
+
+### Technical Details
+- Contract: `market-multi.clar`
+- Maximum outcomes: 10
+- Minimum outcomes: 3
+- Payout calculation: Proportional to total pool
 
 ## Project Structure
 
