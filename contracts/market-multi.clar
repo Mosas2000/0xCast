@@ -90,3 +90,28 @@
     )
   )
 )
+
+;; Helper: Get total pool size
+(define-private (calculate-total-pool (stakes (list 10 uint)))
+  (fold + stakes u0)
+)
+
+;; Helper: Get stake at specific index
+(define-private (get-stake-at-index
+  (stakes (list 10 uint))
+  (index uint))
+  
+  (default-to u0 (element-at stakes index))
+)
+
+;; Helper: Calculate payout for winner
+(define-private (calculate-payout
+  (user-stake uint)
+  (winning-outcome-total uint)
+  (total-pool uint))
+  
+  (if (is-eq winning-outcome-total u0)
+    u0
+    (/ (* user-stake total-pool) winning-outcome-total)
+  )
+)
