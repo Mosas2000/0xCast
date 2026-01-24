@@ -68,3 +68,25 @@
 (define-private (get-empty-stakes)
   (list u0 u0 u0 u0 u0 u0 u0 u0 u0 u0)
 )
+
+;; Helper: Update stake at specific index
+(define-private (update-stake-at-index
+  (current-stakes (list 10 uint))
+  (target-index uint)
+  (additional-amount uint))
+  
+  (map + current-stakes
+    (list
+      (if (is-eq target-index u0) additional-amount u0)
+      (if (is-eq target-index u1) additional-amount u0)
+      (if (is-eq target-index u2) additional-amount u0)
+      (if (is-eq target-index u3) additional-amount u0)
+      (if (is-eq target-index u4) additional-amount u0)
+      (if (is-eq target-index u5) additional-amount u0)
+      (if (is-eq target-index u6) additional-amount u0)
+      (if (is-eq target-index u7) additional-amount u0)
+      (if (is-eq target-index u8) additional-amount u0)
+      (if (is-eq target-index u9) additional-amount u0)
+    )
+  )
+)
