@@ -46,3 +46,12 @@
     created-at: uint
   }
 )
+
+;; User positions in multi-outcome markets
+(define-map user-multi-positions
+  { market-id: uint, user: principal, outcome-index: uint }
+  {
+    stake: uint,
+    claimed: bool
+  }
+)
