@@ -26,3 +26,23 @@
 ;; ========================================
 ;; Counter for market IDs
 (define-data-var market-counter uint u0)
+
+;; ========================================
+;; Data Maps
+;; ========================================
+;; Multi-outcome market storage
+(define-map multi-markets
+  { market-id: uint }
+  {
+    question: (string-utf8 256),
+    creator: principal,
+    outcome-names: (list 10 (string-utf8 100)),
+    outcome-stakes: (list 10 uint),
+    outcome-count: uint,
+    end-date: uint,
+    resolution-date: uint,
+    status: uint,
+    winning-outcome: (optional uint),
+    created-at: uint
+  }
+)
