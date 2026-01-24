@@ -55,3 +55,16 @@
     claimed: bool
   }
 )
+
+;; ========================================
+;; Helper Functions
+;; ========================================
+;; Helper: Initialize empty outcome names list
+(define-private (get-empty-list)
+  (list "" "" "" "" "" "" "" "" "" "")
+)
+
+;; Helper: Initialize empty stakes list
+(define-private (get-empty-stakes)
+  (list u0 u0 u0 u0 u0 u0 u0 u0 u0 u0)
+)
