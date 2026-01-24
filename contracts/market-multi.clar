@@ -115,3 +115,49 @@
     (/ (* user-stake total-pool) winning-outcome-total)
   )
 )
+
+;; ========================================
+;; Public Functions
+;; ========================================
+;; Create multi-outcome market
+(define-public (create-multi-market 
+  (question (string-utf8 256))
+  (outcomes (list 10 (string-utf8 100)))
+  (end-date uint)
+  (resolution-date uint))
+  
+  (let
+    (
+      (new-id (+ (var-get market-counter) u1))
+      (outcome-count (len outcomes))
+    )
+    
+    ;; Validations
+    (asserts! (>= outcome-count MIN-OUTCOMES) ERR-INSUFFICIENT-OUTCOMES)
+    (asserts! (<= outcome-count MAX-OUTCOMES) ERR-TOO-MANY-OUTCOMES)
+    (asserts! (< end-date resolution-date) (err u106))
+    (asserts! (> end-date block-height) (err u107))
+    
+    ;; Create market
+    (map-set multi-markets
+      { market-id: new-id }
+      {
+        question: question,
+        creator: tx-sender,
+        outcome-names: outcomes,
+        outcome-stakes: (get-empty-stakes),
+        outcome-count: outcome-count,
+        end-date: end-date,
+        resolution-date: resolution-date,
+        status: u0,
+        winning-outcome: none,
+        created-at: block-height
+      }
+    )
+    
+    ;; Increment counter
+    (var-set market-counter new-id)
+    
+    (ok new-id)
+  )
+)
