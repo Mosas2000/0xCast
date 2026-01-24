@@ -279,3 +279,46 @@
     )
   )
 )
+
+;; ========================================
+;; Read-Only Functions
+;; ========================================
+;; Read-only: Get market details
+(define-read-only (get-multi-market (market-id uint))
+  (map-get? multi-markets { market-id: market-id })
+)
+
+;; Read-only: Get user position
+(define-read-only (get-user-multi-position 
+  (market-id uint) 
+  (user principal) 
+  (outcome-index uint))
+  (map-get? user-multi-positions 
+    { market-id: market-id, user: user, outcome-index: outcome-index })
+)
+
+;; Read-only: Get market counter
+(define-read-only (get-multi-market-counter)
+  (ok (var-get market-counter))
+)
+
+;; Read-only: Get outcome odds
+(define-read-only (get-outcome-odds 
+  (market-id uint) 
+  (outcome-index uint))
+  (match (map-get? multi-markets { market-id: market-id })
+    market
+      (let
+        (
+          (stakes (get outcome-stakes market))
+          (total (calculate-total-pool stakes))
+          (outcome-stake (get-stake-at-index stakes outcome-index))
+        )
+        (if (is-eq total u0)
+          (ok u0)
+          (ok (/ (* outcome-stake u10000) total)) ;; Return as basis points (0-10000)
+        )
+      )
+    ERR-MARKET-NOT-FOUND
+  )
+)
