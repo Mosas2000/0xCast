@@ -205,3 +205,32 @@
     (ok true)
   )
 )
+
+;; Resolve market with winning outcome
+(define-public (resolve-multi-market
+  (market-id uint)
+  (winning-outcome-index uint))
+  
+  (let
+    (
+      (market (unwrap! (map-get? multi-markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
+    )
+    
+    ;; Validations
+    (asserts! (is-eq tx-sender (get creator market)) ERR-NOT-AUTHORIZED)
+    (asserts! (< winning-outcome-index (get outcome-count market)) ERR-INVALID-OUTCOME)
+    (asserts! (>= block-height (get resolution-date market)) (err u110))
+    (asserts! (is-eq (get status market) u0) (err u111))
+    
+    ;; Update market status
+    (map-set multi-markets
+      { market-id: market-id }
+      (merge market {
+        status: u1,
+        winning-outcome: (some winning-outcome-index)
+      })
+    )
+    
+    (ok true)
+  )
+)
