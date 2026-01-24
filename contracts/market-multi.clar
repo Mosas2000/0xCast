@@ -136,7 +136,7 @@
     (asserts! (>= outcome-count MIN-OUTCOMES) ERR-INSUFFICIENT-OUTCOMES)
     (asserts! (<= outcome-count MAX-OUTCOMES) ERR-TOO-MANY-OUTCOMES)
     (asserts! (< end-date resolution-date) (err u106))
-    (asserts! (> end-date block-height) (err u107))
+    (asserts! (> end-date stacks-block-height) (err u107))
     
     ;; Create market
     (map-set multi-markets
@@ -151,7 +151,7 @@
         resolution-date: resolution-date,
         status: u0,
         winning-outcome: none,
-        created-at: block-height
+        created-at: stacks-block-height
       }
     )
     
@@ -180,7 +180,7 @@
     
     ;; Validations
     (asserts! (< outcome-index (get outcome-count market)) ERR-INVALID-OUTCOME)
-    (asserts! (< block-height (get end-date market)) ERR-MARKET-ENDED)
+    (asserts! (< stacks-block-height (get end-date market)) ERR-MARKET-ENDED)
     (asserts! (is-eq (get status market) u0) (err u108))
     (asserts! (> amount u0) (err u109))
     
@@ -219,7 +219,7 @@
     ;; Validations
     (asserts! (is-eq tx-sender (get creator market)) ERR-NOT-AUTHORIZED)
     (asserts! (< winning-outcome-index (get outcome-count market)) ERR-INVALID-OUTCOME)
-    (asserts! (>= block-height (get resolution-date market)) (err u110))
+    (asserts! (>= stacks-block-height (get resolution-date market)) (err u110))
     (asserts! (is-eq (get status market) u0) (err u111))
     
     ;; Update market status
