@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>0xCast - Offline</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      text-align: center;
+      max-width: 500px;
+    }
+    
+    .icon {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 2rem;
+      background: #6366f1;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .icon svg {
+      width: 60px;
+      height: 60px;
+      color: white;
+    }
+    
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: white;
+    }
+    
+    p {
+      font-size: 1.125rem;
+      line-height: 1.75;
+      color: #cbd5e1;
+      margin-bottom: 2rem;
+    }
+    
+    button {
+      background: #6366f1;
+      color: white;
+      border: none;
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    button:hover {
+      background: #4f46e5;
+    }
+    
+    .cached-data {
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid #334155;
+    }
+    
+    .cached-data p {
+      font-size: 0.875rem;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414" />
+      </svg>
+    </div>
+    
+    <h1>You're Offline</h1>
+    <p>
+      No internet connection detected. Some features may be limited, but you can still view cached markets and positions.
+    </p>
+    
+    <button onclick="window.location.reload()">
+      Try Again
+    </button>
+    
+    <div class="cached-data">
+      <p>
+        Tip: Your pending transactions will sync automatically when you're back online.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
