@@ -234,3 +234,48 @@
     (ok true)
   )
 )
+
+;; Claim winnings for resolved market
+(define-public (claim-multi-winnings
+  (market-id uint)
+  (outcome-index uint))
+  
+  (let
+    (
+      (market (unwrap! (map-get? multi-markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
+      (user-position (unwrap! 
+        (map-get? user-multi-positions 
+          { market-id: market-id, user: tx-sender, outcome-index: outcome-index })
+        (err u112)))
+      (winning-outcome (unwrap! (get winning-outcome market) (err u113)))
+      (all-stakes (get outcome-stakes market))
+      (total-pool (calculate-total-pool all-stakes))
+      (winning-stake (get-stake-at-index all-stakes winning-outcome))
+      (user-stake (get stake user-position))
+    )
+    
+    ;; Validations
+    (asserts! (is-eq (get status market) u1) (err u114))
+    (asserts! (is-eq outcome-index winning-outcome) (err u115))
+    (asserts! (not (get claimed user-position)) (err u116))
+    (asserts! (> user-stake u0) (err u117))
+    
+    ;; Calculate payout
+    (let
+      (
+        (payout (calculate-payout user-stake winning-stake total-pool))
+      )
+      
+      ;; Transfer winnings
+      (try! (as-contract (stx-transfer? payout tx-sender tx-sender)))
+      
+      ;; Mark as claimed
+      (map-set user-multi-positions
+        { market-id: market-id, user: tx-sender, outcome-index: outcome-index }
+        (merge user-position { claimed: true })
+      )
+      
+      (ok payout)
+    )
+  )
+)
