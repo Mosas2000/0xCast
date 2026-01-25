@@ -1,4 +1,5 @@
-import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import { openDB } from 'idb';
+import type { DBSchema, IDBPDatabase } from 'idb';
 
 interface OfflineDBSchema extends DBSchema {
   markets: {
@@ -123,7 +124,6 @@ class OfflineDB {
   // Position operations
   async cachePosition(position: OfflineDBSchema['positions']['value']) {
     const db = await this.init();
-    const key = `${position.marketId}-${position.userAddress}`;
     await db.put('positions', {
       ...position,
       cachedAt: Date.now()

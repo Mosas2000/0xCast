@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { cvToJSON, callReadOnlyFunction, uintCV } from '@stacks/transactions';
+import { cvToJSON, fetchCallReadOnlyFunction, uintCV } from '@stacks/transactions';
 import { STACKS_MAINNET } from '@stacks/network';
-import { Market } from '../types/market';
+import type { Market } from '../types/market';
 import { parseMarketData } from '../utils/contractHelpers';
 import { CONTRACT_ADDRESS, CONTRACT_NAME, STACKS_API_URL } from '../constants/contract';
 
@@ -33,7 +33,7 @@ export function useMarket(marketId: number): UseMarketResult {
         setError(null);
 
         try {
-            const result = await callReadOnlyFunction({
+            const result = await fetchCallReadOnlyFunction({
                 network: STACKS_MAINNET,
                 contractAddress: CONTRACT_ADDRESS,
                 contractName: CONTRACT_NAME,

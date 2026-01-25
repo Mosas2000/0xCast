@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Notification } from '../types/notification';
+import type { Notification } from '../types/notification';
 
 const STORAGE_KEY = 'oxcast_notifications';
 const MAX_NOTIFICATIONS = 50;

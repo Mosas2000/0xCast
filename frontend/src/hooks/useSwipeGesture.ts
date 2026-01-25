@@ -1,4 +1,5 @@
-import { useState, TouchEvent } from 'react';
+import { useState } from 'react';
+import type { TouchEvent } from 'react';
 
 interface SwipeHandlers {
   onTouchStart: (e: TouchEvent) => void;

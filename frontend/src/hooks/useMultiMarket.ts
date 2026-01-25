@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { cvToJSON, hexToCV } from '@stacks/transactions';
-import { MultiMarket } from '../types/multiMarket';
-import { STACKS_MAINNET } from '../constants/network';
+import { STACKS_MAINNET } from '@stacks/network';
+import type { MultiMarket } from '../types/multiMarket';
 import { CONTRACT_ADDRESS } from '../constants/contract';
 
 export function useMultiMarket(marketId: number) {

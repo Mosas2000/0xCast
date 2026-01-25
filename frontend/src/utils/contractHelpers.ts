@@ -1,4 +1,5 @@
-import { Market, Position, MarketStatus, MarketOutcome } from '../types/market';
+import type { Market, Position } from '../types/market';
+import { MarketStatus, MarketOutcome } from '../types/market';
 import { microStxToStx } from '../constants/markets';
 
 /**

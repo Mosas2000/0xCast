@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { cvToJSON, callReadOnlyFunction, uintCV, principalCV } from '@stacks/transactions';
-import { Position } from '../types/market';
+import { cvToJSON, fetchCallReadOnlyFunction, uintCV, principalCV } from '@stacks/transactions';
+import { STACKS_MAINNET } from '@stacks/network';
+import type { Position } from '../types/market';
 import { parsePosition } from '../utils/contractHelpers';
-import { CONTRACT_ADDRESS, CONTRACT_NAME, STACKS_MAINNET } from '../constants/contract';
+import { CONTRACT_ADDRESS, CONTRACT_NAME } from '../constants/contract';
 
 interface UseUserPositionResult {
     position: Position | null;
@@ -33,7 +34,7 @@ export function useUserPosition(marketId: number, userAddress: string | null): U
         setError(null);
 
         try {
-            const result = await callReadOnlyFunction({
+            const result = await fetchCallReadOnlyFunction({
                 network: STACKS_MAINNET,
                 contractAddress: CONTRACT_ADDRESS,
                 contractName: CONTRACT_NAME,

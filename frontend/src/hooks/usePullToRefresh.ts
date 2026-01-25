@@ -1,4 +1,5 @@
-import { useState, TouchEvent } from 'react';
+import { useState } from 'react';
+import type { TouchEvent } from 'react';
 
 export function usePullToRefresh(onRefresh: () => Promise<void>) {
   const [pullDistance, setPullDistance] = useState(0);

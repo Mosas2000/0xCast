@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { cvToJSON, callReadOnlyFunction, uintCV } from '@stacks/transactions';
-import { CONTRACT_ADDRESS, CONTRACT_NAME, STACKS_MAINNET } from '../constants/contract';
+import { cvToJSON, fetchCallReadOnlyFunction, uintCV } from '@stacks/transactions';
+import { STACKS_MAINNET } from '@stacks/network';
+import { CONTRACT_ADDRESS, CONTRACT_NAME } from '../constants/contract';
 
 export interface ContractEvent {
     id: string;
@@ -37,7 +38,7 @@ export function useContractEvents({
 
     const checkForNewMarkets = useCallback(async () => {
         try {
-            const result = await callReadOnlyFunction({
+            const result = await fetchCallReadOnlyFunction({
                 network: STACKS_MAINNET,
                 contractAddress: CONTRACT_ADDRESS,
                 contractName: CONTRACT_NAME,
@@ -85,7 +86,7 @@ export function useContractEvents({
             // Check the most recent market for stake changes
             const recentMarketId = lastMarketCount - 1;
             
-            const result = await callReadOnlyFunction({
+            const result = await fetchCallReadOnlyFunction({
                 network: STACKS_MAINNET,
                 contractAddress: CONTRACT_ADDRESS,
                 contractName: CONTRACT_NAME,
