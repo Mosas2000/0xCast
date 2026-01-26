@@ -1,5 +1,5 @@
 import { memo, useState, useEffect } from 'react';
-import { Market } from '../types/market';
+import type { Market } from '../types/market';
 import { Card } from './Card';
 import { MarketStatus } from './MarketStatus';
 import { MarketOdds } from './MarketOdds';

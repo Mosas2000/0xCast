@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Market, MarketOutcome } from '../types/market';
+import type { Market } from '../types/market';
+import { MarketOutcome } from '../types/market';
 import { OutcomeSelector } from './OutcomeSelector';
 import { StakeInput } from './StakeInput';
 import { WinningsPreview } from './WinningsPreview';

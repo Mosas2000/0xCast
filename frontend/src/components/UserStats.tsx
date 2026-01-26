@@ -1,4 +1,4 @@
-import { Position, Market } from '../types/market';
+import type { Position, Market } from '../types/market';
 import { microStxToStx } from '../constants/markets';
 import { isWinningPosition } from '../utils/positionCalculations';
 

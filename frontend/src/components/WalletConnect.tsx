@@ -38,10 +38,19 @@ export function WalletConnect() {
         );
     }
 
+    const handleConnect = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Connect button clicked');
+        connect();
+    };
+
     return (
         <button
-            onClick={connect}
-            className="px-6 py-2.5 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-lg font-medium transition-all duration-200 shadow-lg shadow-primary-500/20 hover:shadow-primary-500/40"
+            onClick={handleConnect}
+            type="button"
+            className="px-6 py-2.5 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-lg font-medium transition-all duration-200 shadow-lg shadow-primary-500/20 hover:shadow-primary-500/40 cursor-pointer"
+            style={{ pointerEvents: 'auto' }}
         >
             Connect Wallet
         </button>

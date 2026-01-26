@@ -1,4 +1,5 @@
-import { Market, MarketStatus } from '../types/market';
+import type { Market } from '../types/market';
+import { MarketStatus } from '../types/market';
 import { getTotalPoolSize } from './contractHelpers';
 
 /**

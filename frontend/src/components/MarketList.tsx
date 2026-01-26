@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Market, MarketStatus } from '../types/market';
+import type { Market } from '../types/market';
+import { MarketStatus } from '../types/market';
 import { MarketCard } from './MarketCard';
 import { LoadingSpinner } from './LoadingSpinner';
 import { EmptyState } from './EmptyState';

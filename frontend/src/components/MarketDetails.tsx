@@ -1,4 +1,4 @@
-import { Market } from '../types/market';
+import type { Market } from '../types/market';
 import { microStxToStx } from '../constants/markets';
 import { blockHeightToDate } from '../utils/blockHeight';
 

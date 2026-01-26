@@ -41,3 +41,4 @@ export interface TransactionStatus {
     error: string | null;
     txId: string | null;
 }
+

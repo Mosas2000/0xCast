@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Position } from '../types/market';
+import type { Position } from '../types/market';
 import { useUserPosition } from './useUserPosition';
 import { useWallet } from './useWallet';
 import { microStxToStx } from '../constants/markets';

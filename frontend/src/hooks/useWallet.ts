@@ -17,19 +17,28 @@ export function useWallet() {
     }, []);
 
     const connect = () => {
-        showConnect({
-            appDetails: {
-                name: '0xCast',
-                icon: window.location.origin + '/vite.svg',
-            },
-            redirectTo: '/',
-            onFinish: () => {
-                const userData = userSession.loadUserData();
-                setAddress(userData.profile.stxAddress.mainnet);
-                setIsConnected(true);
-            },
-            userSession,
-        });
+        console.log('Connect function called');
+        try {
+            showConnect({
+                appDetails: {
+                    name: '0xCast',
+                    icon: window.location.origin + '/vite.svg',
+                },
+                redirectTo: '/',
+                onFinish: () => {
+                    console.log('Connection finished');
+                    const userData = userSession.loadUserData();
+                    setAddress(userData.profile.stxAddress.mainnet);
+                    setIsConnected(true);
+                },
+                onCancel: () => {
+                    console.log('Connection cancelled');
+                },
+                userSession,
+            });
+        } catch (error) {
+            console.error('Error connecting wallet:', error);
+        }
     };
 
     const disconnect = () => {

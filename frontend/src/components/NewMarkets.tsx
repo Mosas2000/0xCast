@@ -1,4 +1,4 @@
-import { Market } from '../types/market';
+import type { Market } from '../types/market';
 import { MarketCard } from './MarketCard';
 import { EmptyState } from './EmptyState';
 import { Badge } from './Badge';

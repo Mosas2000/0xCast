@@ -1,4 +1,4 @@
-import { Market } from '../types/market';
+import type { Market } from '../types/market';
 
 interface MarketParticipantsProps {
     market: Market;

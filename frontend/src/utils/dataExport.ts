@@ -1,4 +1,4 @@
-import { Position, Market } from '../types/market';
+import type { Position, Market } from '../types/market';
 import { Transaction } from '../types/transaction';
 
 /**

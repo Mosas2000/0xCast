@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Market } from '../types/market';
+import type { Market } from '../types/market';
 
 /**
  * Hook for searching markets by question text

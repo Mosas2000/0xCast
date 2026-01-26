@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Market } from '../types/market';
+import type { Market } from '../types/market';
 import { Modal } from './Modal';
 import { StakeForm } from './StakeForm';
 import { useTransactionStatus, TxStatus } from '../hooks/useTransactionStatus';

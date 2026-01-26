@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { Position, Market, MarketStatus } from '../types/market';
+import type { Position, Market } from '../types/market';
+import { MarketStatus } from '../types/market';
 import { microStxToStx } from '../constants/markets';
 import { isWinningPosition, calculateClaimableAmount } from '../utils/positionCalculations';
 
