@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { AppConfig, UserSession, showConnect, type AuthOptions } from '@stacks/connect';
+import { AppConfig, UserSession } from '@stacks/connect';
+import { openAuthRequestPopup } from '@stacks/connect';
 
 const appConfig = new AppConfig(['store_write', 'publish_data']);
 const userSession = new UserSession({ appConfig });
@@ -21,7 +22,7 @@ export function useWallet() {
         console.log('User session:', userSession);
         
         try {
-            const authOptions: AuthOptions = {
+            await userSession.authenticate({
                 appDetails: {
                     name: '0xCast',
                     icon: `${window.location.origin}/vite.svg`,
@@ -40,11 +41,7 @@ export function useWallet() {
                 onCancel: () => {
                     console.log('Connection cancelled by user');
                 },
-                userSession,
-            };
-
-            console.log('Calling showConnect with options:', authOptions);
-            await showConnect(authOptions);
+            });
         } catch (error) {
             console.error('Error connecting wallet:', error);
             alert(`Failed to connect wallet: ${error instanceof Error ? error.message : 'Unknown error'}`);
