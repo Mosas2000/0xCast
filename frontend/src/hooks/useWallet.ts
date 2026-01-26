@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AppConfig, UserSession, showConnect } from '@stacks/connect';
+import { AppConfig, UserSession, showConnect, type AuthOptions } from '@stacks/connect';
 
 const appConfig = new AppConfig(['store_write', 'publish_data']);
 const userSession = new UserSession({ appConfig });
@@ -16,28 +16,38 @@ export function useWallet() {
         }
     }, []);
 
-    const connect = () => {
+    const connect = async () => {
         console.log('Connect function called');
+        console.log('User session:', userSession);
+        
         try {
-            showConnect({
+            const authOptions: AuthOptions = {
                 appDetails: {
                     name: '0xCast',
-                    icon: window.location.origin + '/vite.svg',
+                    icon: `${window.location.origin}/vite.svg`,
                 },
-                redirectTo: '/',
-                onFinish: () => {
-                    console.log('Connection finished');
-                    const userData = userSession.loadUserData();
-                    setAddress(userData.profile.stxAddress.mainnet);
-                    setIsConnected(true);
+                onFinish: (payload) => {
+                    console.log('Connection finished', payload);
+                    if (userSession.isUserSignedIn()) {
+                        const userData = userSession.loadUserData();
+                        console.log('User data:', userData);
+                        const mainnetAddress = userData.profile.stxAddress.mainnet;
+                        console.log('Mainnet address:', mainnetAddress);
+                        setAddress(mainnetAddress);
+                        setIsConnected(true);
+                    }
                 },
                 onCancel: () => {
-                    console.log('Connection cancelled');
+                    console.log('Connection cancelled by user');
                 },
                 userSession,
-            });
+            };
+
+            console.log('Calling showConnect with options:', authOptions);
+            await showConnect(authOptions);
         } catch (error) {
             console.error('Error connecting wallet:', error);
+            alert(`Failed to connect wallet: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     };
 

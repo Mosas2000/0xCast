@@ -38,11 +38,19 @@ export function WalletConnect() {
         );
     }
 
-    const handleConnect = (e: React.MouseEvent) => {
+    const handleConnect = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
         console.log('Connect button clicked');
-        connect();
+        
+        // Check if wallet extension is available
+        if (!(window as any).StacksProvider && !(window as any).HiroWalletProvider) {
+            alert('No Stacks wallet detected!\n\nPlease install:\n• Hiro Wallet: https://wallet.hiro.so/\n• Xverse: https://www.xverse.app/');
+            window.open('https://wallet.hiro.so/', '_blank');
+            return;
+        }
+        
+        await connect();
     };
 
     return (
