@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AppConfig, UserSession } from '@stacks/connect';
-import { openAuthRequestPopup } from '@stacks/connect';
+import { AppConfig, UserSession, showConnect } from '@stacks/connect';
 
 const appConfig = new AppConfig(['store_write', 'publish_data']);
 const userSession = new UserSession({ appConfig });
@@ -22,13 +21,13 @@ export function useWallet() {
         console.log('User session:', userSession);
         
         try {
-            await userSession.authenticate({
+            showConnect({
                 appDetails: {
                     name: '0xCast',
                     icon: `${window.location.origin}/vite.svg`,
                 },
-                onFinish: (payload) => {
-                    console.log('Connection finished', payload);
+                onFinish: () => {
+                    console.log('Connection finished');
                     if (userSession.isUserSignedIn()) {
                         const userData = userSession.loadUserData();
                         console.log('User data:', userData);
@@ -41,6 +40,7 @@ export function useWallet() {
                 onCancel: () => {
                     console.log('Connection cancelled by user');
                 },
+                userSession,
             });
         } catch (error) {
             console.error('Error connecting wallet:', error);
