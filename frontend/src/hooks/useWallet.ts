@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import * as StacksConnect from '@stacks/connect';
+import { AppConfig, UserSession, showConnect as stacksShowConnect } from '@stacks/connect';
 
-const appConfig = new StacksConnect.AppConfig(['store_write', 'publish_data']);
-const userSession = new StacksConnect.UserSession({ appConfig });
+const appConfig = new AppConfig(['store_write', 'publish_data']);
+const userSession = new UserSession({ appConfig });
 
 export function useWallet() {
     const [address, setAddress] = useState<string | null>(null);
@@ -18,10 +18,10 @@ export function useWallet() {
 
     const connect = async () => {
         console.log('Connect function called');
-        console.log('Available StacksConnect methods:', Object.keys(StacksConnect));
+        console.log('showConnect function:', stacksShowConnect);
         
         try {
-            StacksConnect.showConnect({
+            stacksShowConnect({
                 appDetails: {
                     name: '0xCast',
                     icon: `${window.location.origin}/vite.svg`,
