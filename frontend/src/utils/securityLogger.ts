@@ -1,12 +1,14 @@
 /**
  * Utility for logging security-relevant events.
  */
-export enum SecuritySeverity {
-    LOW = 'LOW',
-    MEDIUM = 'MEDIUM',
-    HIGH = 'HIGH',
-    CRITICAL = 'CRITICAL'
-}
+export const SecuritySeverity = {
+    LOW: 'LOW',
+    MEDIUM: 'MEDIUM',
+    HIGH: 'HIGH',
+    CRITICAL: 'CRITICAL'
+} as const;
+
+export type SecuritySeverity = typeof SecuritySeverity[keyof typeof SecuritySeverity];
 
 export interface SecurityEvent {
     type: string;
