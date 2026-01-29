@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { TimeSeriesDataPoint, LineChartData } from '../../types/analytics';
+import type { TimeSeriesDataPoint, LineChartData } from '../../types/analytics';
 import { formatTimestamp } from '../../utils/analytics';
 
 export function useChartData(
