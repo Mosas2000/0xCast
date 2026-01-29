@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { UserStats } from '../../types/analytics';
+import type { UserStats } from '../../types/analytics';
 import { generateMockUserStats } from '../../utils/analytics/mockData';
 
 export function useUserAnalytics(address: string | null) {
