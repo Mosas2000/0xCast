@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { TimeSeriesDataPoint } from '../../types/analytics';
+import type { TimeSeriesDataPoint } from '../../types/analytics';
 
 export function useDataAggregation(
     data: TimeSeriesDataPoint[],
