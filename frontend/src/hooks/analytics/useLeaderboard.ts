@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Leaderboard, LeaderboardMetric } from '../../types/analytics';
+import type { Leaderboard, LeaderboardMetric } from '../../types/analytics';
 
 export function useLeaderboard(
     metric: LeaderboardMetric = 'volume',
