@@ -50,6 +50,28 @@ export function getRelativeTime(timestamp: number): string {
 }
 
 /**
+ * Get human-friendly date label (Today, Yesterday, or full date)
+ * @param timestamp - Unix timestamp in milliseconds
+ * @returns Human-friendly label
+ */
+export function getHumanFriendlyDate(timestamp: number): string {
+    const now = new Date();
+    const date = new Date(timestamp);
+
+    const isToday = now.toLocaleDateString() === date.toLocaleDateString();
+
+    if (isToday) return 'Today';
+
+    const yesterday = new Date();
+    yesterday.setDate(now.getDate() - 1);
+    const isYesterday = yesterday.toLocaleDateString() === date.toLocaleDateString();
+
+    if (isYesterday) return 'Yesterday';
+
+    return formatDate(timestamp, 'short');
+}
+
+/**
  * Format block height with thousands separator
  * @param block - Block height number
  * @returns Formatted block string
