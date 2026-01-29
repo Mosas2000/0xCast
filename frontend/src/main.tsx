@@ -13,10 +13,14 @@ if (import.meta.env.PROD) {
   });
 }
 
+import { WalletProvider } from './components/wallet/WalletProvider'
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
-      <App />
+      <WalletProvider>
+        <App />
+      </WalletProvider>
     </ErrorBoundary>
   </StrictMode>,
 )
