@@ -4,3 +4,4 @@ export * from './user';
 export * from './platform';
 export * from './charts';
 export * from './leaderboard';
+export * from './errors';
