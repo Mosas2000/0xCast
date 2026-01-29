@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { PlatformMetrics } from '../../types/analytics';
+import type { PlatformMetrics } from '../../types/analytics';
 
 export interface Insight {
     type: 'positive' | 'negative' | 'neutral';
