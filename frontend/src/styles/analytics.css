@@ -1,0 +1,21 @@
+:root {
+    --analytics-bg: #f8fafc;
+    --analytics-card: #ffffff;
+    --analytics-primary: #6366f1;
+    --analytics-secondary: #818cf8;
+}
+
+.analytics-dashboard-container {
+    font-family: 'Inter', sans-serif;
+}
+
+@media (max-width: 640px) {
+    .metric-card-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chart-container-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
