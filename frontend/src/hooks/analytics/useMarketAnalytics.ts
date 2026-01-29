@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MarketAnalytics } from '../../types/analytics';
+import type { MarketAnalytics } from '../../types/analytics';
 import { generateMockMarketAnalytics } from '../../utils/analytics/mockData';
 
 export function useMarketAnalytics(marketId: number) {
