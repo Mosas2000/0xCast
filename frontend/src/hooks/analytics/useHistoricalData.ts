@@ -1,5 +1,5 @@
 import { useAnalytics } from './useAnalytics';
-import { TimeSeriesDataPoint } from '../../types/analytics';
+import type { TimeSeriesDataPoint } from '../../types/analytics';
 
 export function useHistoricalData(
     type: 'volume' | 'tvl' | 'users',
