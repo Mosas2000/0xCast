@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TimeSeriesDataPoint } from '../../types/analytics';
+import type { TimeSeriesDataPoint } from '../../types/analytics';
 
 export function useVolumeData(timeRange: string = '7d') {
     const [data, setData] = useState<TimeSeriesDataPoint[]>([]);
