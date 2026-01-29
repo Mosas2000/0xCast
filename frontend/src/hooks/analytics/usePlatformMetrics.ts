@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PlatformMetrics } from '../../types/analytics';
+import type { PlatformMetrics } from '../../types/analytics';
 import { generateMockPlatformMetrics } from '../../utils/analytics/mockData';
 
 export function usePlatformMetrics(timeRange: string = '24h') {
