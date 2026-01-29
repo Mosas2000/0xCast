@@ -13,6 +13,14 @@ epoch = "latest"
 path = "contracts/market-multi.clar"
 epoch = "latest"
 
+[contracts.governance-token]
+path = "contracts/governance-token.clar"
+epoch = "latest"
+
+[contracts.governance-core]
+path = "contracts/governance-core.clar"
+epoch = "latest"
+
 [repl.analysis]
 passes = ["check_checker"]
 check_checker = { trusted_sender = false, trusted_caller = false, callee_filter = false }
