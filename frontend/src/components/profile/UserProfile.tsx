@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UserStats } from './UserStats';
 import { FollowSystem } from './FollowSystem';
+import { SocialLinks } from './SocialLinks';
 
 interface UserProfileProps {
     address: string;
@@ -12,6 +13,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ address, initialName, 
     const [isEditing, setIsEditing] = useState(false);
     const [name, setName] = useState(initialName || 'Anonymous');
     const [bio, setBio] = useState(initialBio || 'No bio provided yet.');
+    const [website, setWebsite] = useState('');
 
     const handleSave = () => {
         setIsEditing(false);
