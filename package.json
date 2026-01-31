@@ -14,7 +14,11 @@
     "lifecycle": "tsx scripts/market-lifecycle.ts",
     "stress-test": "tsx scripts/stress-test.ts",
     "analytics": "tsx scripts/analytics-report.ts",
-    "check-markets": "tsx scripts/check-markets.ts"
+    "check-markets": "tsx scripts/check-markets.ts",
+    "liquidity": "tsx scripts/liquidity-operations.ts",
+    "governance": "tsx scripts/governance-operations.ts",
+    "multi-market": "tsx scripts/multi-outcome-trading.ts",
+    "oracle": "tsx scripts/oracle-operations.ts"
   },
   "author": "",
   "license": "ISC",

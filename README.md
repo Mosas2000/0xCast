@@ -14,6 +14,9 @@
 - **Dynamic Odds Calculation**: Real-time odds based on pool distribution
 - **Transparent Resolution**: Market outcomes are resolved on-chain with full transparency
 - **Automated Payouts**: Winners automatically claim their rewards through smart contracts
+- **Liquidity Pools**: AMM-based liquidity provision with LP rewards
+- **Governance System**: On-chain governance with proposals and voting
+- **Oracle Integration**: External data feeds for automated market resolution
 - **Built on Stacks**: Leverages Bitcoin's security through Stacks' Proof of Transfer consensus
 - **Progressive Web App**: Install on mobile and desktop with offline support
 - **Mobile Optimized**: Touch-friendly interface with pull-to-refresh and bottom navigation
@@ -124,6 +127,51 @@ Start local console:
 ```bash
 clarinet console
 ```
+
+## Economic Transactions
+
+0xCast includes comprehensive scripts for generating economic activity across all platform features.
+
+### Available Scripts
+
+```bash
+# Market Operations (Binary)
+npm run bulk-markets      # Create multiple markets
+npm run auto-trade        # Automated trading
+npm run lifecycle         # Full market lifecycle
+npm run stress-test       # Performance testing
+npm run analytics         # Analytics reports
+
+# Liquidity Pool Operations
+npm run liquidity         # Create/manage liquidity pools
+
+# Governance Operations
+npm run governance        # Create proposals, vote, execute
+
+# Multi-Outcome Markets
+npm run multi-market      # Create and trade on multi-outcome markets
+
+# Oracle Operations
+npm run oracle            # Submit price feeds and event data
+```
+
+### Quick Start
+
+```bash
+# Create 5 markets across different categories
+npm run bulk-markets
+
+# Add liquidity to markets
+npm run liquidity
+
+# Run automated trading
+npm run auto-trade
+
+# View analytics
+npm run analytics
+```
+
+For detailed usage instructions, see [Economic Transaction Guide](docs/ECONOMIC_TRANSACTIONS.md).
 
 ## Deployment
 
