@@ -147,7 +147,8 @@
         created-at: current-block
       }
     )
-    
+    ;; Emit event for market creation
+    (print {event: "market-created", market-id: new-market-id, creator: tx-sender, question: question, end-date: end-date, resolution-date: resolution-date})
     ;; Return the new market ID
     (ok new-market-id)
   )
@@ -181,13 +182,13 @@
       { market-id: market-id }
       (merge market { total-yes-stake: (+ (get total-yes-stake market) amount) })
     )
-    
     ;; Update user's position
     (map-set user-positions
       { market-id: market-id, user: tx-sender }
       (merge current-position { yes-stake: (+ (get yes-stake current-position) amount) })
     )
-    
+    ;; Emit event for YES stake
+    (print {event: "yes-stake", market-id: market-id, user: tx-sender, amount: amount})
     (ok true)
   )
 )
@@ -220,13 +221,13 @@
       { market-id: market-id }
       (merge market { total-no-stake: (+ (get total-no-stake market) amount) })
     )
-    
     ;; Update user's position
     (map-set user-positions
       { market-id: market-id, user: tx-sender }
       (merge current-position { no-stake: (+ (get no-stake current-position) amount) })
     )
-    
+    ;; Emit event for NO stake
+    (print {event: "no-stake", market-id: market-id, user: tx-sender, amount: amount})
     (ok true)
   )
 )
@@ -261,7 +262,8 @@
         outcome: outcome
       })
     )
-    
+    ;; Emit event for market resolution
+    (print {event: "market-resolved", market-id: market-id, resolver: tx-sender, outcome: outcome})
     (ok true)
   )
 )
@@ -310,7 +312,8 @@
         { market-id: market-id, user: tx-sender }
         (merge position { claimed: true })
       )
-      
+      ;; Emit event for claim
+      (print {event: "claim-winnings", market-id: market-id, user: tx-sender, payout: payout})
       (ok payout)
     )
   )
