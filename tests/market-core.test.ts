@@ -24,6 +24,7 @@ describe("market-core contract tests", () => {
                     Cl.stringAscii(question),
                     Cl.uint(endDate),
                     Cl.uint(resolutionDate),
+                    Cl.uint(1), // CATEGORY-CRYPTO
                 ],
                 deployer
             );
@@ -53,11 +54,168 @@ describe("market-core contract tests", () => {
                     Cl.stringAscii(question),
                     Cl.uint(endDate),
                     Cl.uint(resolutionDate),
+                    Cl.uint(1),
                 ],
                 deployer
             );
 
             expect(result).toBeErr(Cl.uint(106)); // ERR-INVALID-DATES
+        });
+    });
+
+    describe("Market Categories", () => {
+        it("should store category in market data", () => {
+            const currentBlock = simnet.blockHeight;
+            const endDate = currentBlock + 100;
+            const resolutionDate = currentBlock + 200;
+
+            simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Crypto category market"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1), // CATEGORY-CRYPTO
+                ],
+                deployer
+            );
+
+            const market = simnet.callReadOnlyFn(
+                contractName,
+                "get-market",
+                [Cl.uint(0)],
+                deployer
+            );
+
+            const marketData = market.result;
+            expect(marketData).toBeSome(
+                Cl.tuple({
+                    question: Cl.stringAscii("Crypto category market"),
+                    creator: Cl.standardPrincipal(deployer),
+                    category: Cl.uint(1),
+                    "end-date": Cl.uint(endDate),
+                    "resolution-date": Cl.uint(resolutionDate),
+                    "total-yes-stake": Cl.uint(0),
+                    "total-no-stake": Cl.uint(0),
+                    status: Cl.uint(0),
+                    outcome: Cl.uint(0),
+                    "created-at": Cl.uint(simnet.blockHeight - 1),
+                })
+            );
+        });
+
+        it("should reject category 0", () => {
+            const currentBlock = simnet.blockHeight;
+            const { result } = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Invalid category test"),
+                    Cl.uint(currentBlock + 100),
+                    Cl.uint(currentBlock + 200),
+                    Cl.uint(0),
+                ],
+                deployer
+            );
+            expect(result).toBeErr(Cl.uint(111)); // ERR-INVALID-CATEGORY
+        });
+
+        it("should reject category above 5", () => {
+            const currentBlock = simnet.blockHeight;
+            const { result } = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Invalid category test"),
+                    Cl.uint(currentBlock + 100),
+                    Cl.uint(currentBlock + 200),
+                    Cl.uint(6),
+                ],
+                deployer
+            );
+            expect(result).toBeErr(Cl.uint(111)); // ERR-INVALID-CATEGORY
+        });
+
+        it("should index markets by category for filtering", () => {
+            const currentBlock = simnet.blockHeight;
+            const endDate = currentBlock + 100;
+            const resolutionDate = currentBlock + 200;
+
+            // Create 2 crypto markets and 1 sports market
+            simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Crypto market 1"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1), // CATEGORY-CRYPTO
+                ],
+                deployer
+            );
+
+            simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Sports market 1"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(2), // CATEGORY-SPORTS
+                ],
+                deployer
+            );
+
+            simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Crypto market 2"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1), // CATEGORY-CRYPTO
+                ],
+                deployer
+            );
+
+            // Verify category counts
+            const cryptoCount = simnet.callReadOnlyFn(
+                contractName,
+                "get-market-category-count",
+                [Cl.uint(1)],
+                deployer
+            );
+            expect(cryptoCount.result).toBeUint(2);
+
+            const sportsCount = simnet.callReadOnlyFn(
+                contractName,
+                "get-market-category-count",
+                [Cl.uint(2)],
+                deployer
+            );
+            expect(sportsCount.result).toBeUint(1);
+
+            // Verify category index lookups
+            const cryptoFirst = simnet.callReadOnlyFn(
+                contractName,
+                "get-market-by-category",
+                [Cl.uint(1), Cl.uint(0)],
+                deployer
+            );
+            expect(cryptoFirst.result).toBeSome(
+                Cl.tuple({ "market-id": Cl.uint(0) })
+            );
+
+            const cryptoSecond = simnet.callReadOnlyFn(
+                contractName,
+                "get-market-by-category",
+                [Cl.uint(1), Cl.uint(1)],
+                deployer
+            );
+            expect(cryptoSecond.result).toBeSome(
+                Cl.tuple({ "market-id": Cl.uint(2) })
+            );
         });
     });
 
@@ -75,6 +233,7 @@ describe("market-core contract tests", () => {
                     Cl.stringAscii("Test market for YES stake"),
                     Cl.uint(endDate),
                     Cl.uint(resolutionDate),
+                    Cl.uint(1),
                 ],
                 deployer
             );
@@ -104,6 +263,7 @@ describe("market-core contract tests", () => {
                     Cl.stringAscii("Test market for NO stake"),
                     Cl.uint(endDate),
                     Cl.uint(resolutionDate),
+                    Cl.uint(1),
                 ],
                 deployer
             );
@@ -133,6 +293,7 @@ describe("market-core contract tests", () => {
                     Cl.stringAscii("Short duration market"),
                     Cl.uint(endDate),
                     Cl.uint(resolutionDate),
+                    Cl.uint(1),
                 ],
                 deployer
             );
@@ -177,6 +338,7 @@ describe("market-core contract tests", () => {
                     Cl.stringAscii("Market to resolve YES"),
                     Cl.uint(endDate),
                     Cl.uint(resolutionDate),
+                    Cl.uint(1),
                 ],
                 deployer
             );
@@ -208,6 +370,7 @@ describe("market-core contract tests", () => {
                     Cl.stringAscii("Market to resolve NO"),
                     Cl.uint(endDate),
                     Cl.uint(resolutionDate),
+                    Cl.uint(1),
                 ],
                 deployer
             );
@@ -239,6 +402,7 @@ describe("market-core contract tests", () => {
                     Cl.stringAscii("Market for auth test"),
                     Cl.uint(endDate),
                     Cl.uint(resolutionDate),
+                    Cl.uint(1),
                 ],
                 deployer
             );
@@ -270,6 +434,7 @@ describe("market-core contract tests", () => {
                     Cl.stringAscii("Early resolution test"),
                     Cl.uint(endDate),
                     Cl.uint(resolutionDate),
+                    Cl.uint(1),
                 ],
                 deployer
             );
@@ -298,6 +463,7 @@ describe("market-core contract tests", () => {
                     Cl.stringAscii("Invalid outcome test"),
                     Cl.uint(endDate),
                     Cl.uint(resolutionDate),
+                    Cl.uint(1),
                 ],
                 deployer
             );
@@ -331,6 +497,7 @@ describe("market-core contract tests", () => {
                     Cl.stringAscii("Unresolved claim test"),
                     Cl.uint(endDate),
                     Cl.uint(resolutionDate),
+                    Cl.uint(1),
                 ],
                 deployer
             );
@@ -369,6 +536,7 @@ describe("market-core contract tests", () => {
                     Cl.stringAscii("Will ETH flip BTC?"),
                     Cl.uint(endDate),
                     Cl.uint(resolutionDate),
+                    Cl.uint(1),
                 ],
                 deployer
             );

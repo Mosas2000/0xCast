@@ -15,6 +15,13 @@
 (define-constant OUTCOME-YES u1)
 (define-constant OUTCOME-NO u2)
 
+;; Category Constants
+(define-constant CATEGORY-CRYPTO u1)
+(define-constant CATEGORY-SPORTS u2)
+(define-constant CATEGORY-POLITICS u3)
+(define-constant CATEGORY-ECONOMICS u4)
+(define-constant CATEGORY-OTHER u5)
+
 ;; Error Constants
 (define-constant ERR-NOT-AUTHORIZED (err u100))
 (define-constant ERR-MARKET-NOT-FOUND (err u101))
@@ -27,6 +34,7 @@
 (define-constant ERR-ALREADY-CLAIMED (err u108))
 (define-constant ERR-NO-WINNINGS (err u109))
 (define-constant ERR-MARKET-NOT-RESOLVED (err u110))
+(define-constant ERR-INVALID-CATEGORY (err u111))
 
 ;; ============================================
 ;; Data Variables
@@ -46,6 +54,7 @@
   {
     question: (string-ascii 256),
     creator: principal,
+    category: uint,            ;; Market category (1-5)
     end-date: uint,           ;; Block height when market closes for trading
     resolution-date: uint,    ;; Block height when market can be resolved
     total-yes-stake: uint,    ;; Total STX staked on YES outcome
@@ -54,6 +63,18 @@
     outcome: uint,            ;; OUTCOME-NONE, OUTCOME-YES, or OUTCOME-NO
     created-at: uint          ;; Block height when market was created
   }
+)
+
+;; Index map for category-based market lookups
+(define-map market-categories
+  { category: uint, index: uint }
+  { market-id: uint }
+)
+
+;; Counter for markets per category
+(define-map category-counters
+  { category: uint }
+  { count: uint }
 )
 
 ;; User positions in markets
@@ -99,6 +120,16 @@
   )
 )
 
+;; Get count of markets in a category
+(define-read-only (get-market-category-count (category uint))
+  (default-to u0 (get count (map-get? category-counters { category: category })))
+)
+
+;; Get market-id by category and index
+(define-read-only (get-market-by-category (category uint) (index uint))
+  (map-get? market-categories { category: category, index: index })
+)
+
 ;; ============================================
 ;; Private Functions
 ;; ============================================
@@ -120,11 +151,12 @@
 ;; @param end-date: Block height when trading closes
 ;; @param resolution-date: Block height when market can be resolved
 ;; @returns: (ok market-id) on success, error code on failure
-(define-public (create-market (question (string-ascii 256)) (end-date uint) (resolution-date uint))
+(define-public (create-market (question (string-ascii 256)) (end-date uint) (resolution-date uint) (category uint))
   (let
     (
       (current-block stacks-block-height)
       (new-market-id (increment-market-counter))
+      (cat-count (get-market-category-count category))
     )
     ;; Validate that end-date is in the future
     (asserts! (> end-date current-block) ERR-INVALID-DATES)
@@ -132,12 +164,16 @@
     ;; Validate that resolution-date is after end-date
     (asserts! (> resolution-date end-date) ERR-INVALID-DATES)
     
+    ;; Validate category is within allowed range (1-5)
+    (asserts! (and (>= category u1) (<= category u5)) ERR-INVALID-CATEGORY)
+    
     ;; Create the new market
     (map-set markets
       { market-id: new-market-id }
       {
         question: question,
         creator: tx-sender,
+        category: category,
         end-date: end-date,
         resolution-date: resolution-date,
         total-yes-stake: u0,
@@ -146,6 +182,16 @@
         outcome: OUTCOME-NONE,
         created-at: current-block
       }
+    )
+    
+    ;; Index market under its category
+    (map-set market-categories
+      { category: category, index: cat-count }
+      { market-id: new-market-id }
+    )
+    (map-set category-counters
+      { category: category }
+      { count: (+ cat-count u1) }
     )
     
     ;; Return the new market ID
