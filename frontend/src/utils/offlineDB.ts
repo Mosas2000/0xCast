@@ -143,7 +143,11 @@ class OfflineDB {
       ...tx,
       status: 'pending'
     });
-    console.log('Transaction queued:', id);
+    // ...existing code...
+    // Use DevUtils for structured logging in development
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { DevUtils } = require('./devUtils');
+    DevUtils.log('Transaction queued:', id);
     return id;
   }
   
