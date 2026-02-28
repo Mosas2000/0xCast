@@ -1,0 +1,41 @@
+<svg width="512" height="512" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logo-grad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    <linearGradient id="text-shine" x1="12" y1="16" x2="52" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="50%" stop-color="#e0e7ff"/>
+      <stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#logo-grad)"/>
+  <!-- "0" character — sketched oval with slight tilt -->
+  <path
+    d="M20 32c0-7.5 2.8-13 6.5-13s6.5 5.5 6.5 13-2.8 13-6.5 13S20 39.5 20 32z"
+    stroke="url(#text-shine)"
+    stroke-width="3"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+    transform="rotate(-4 26.5 32)"
+  />
+  <!-- "X" character — crossed strokes with hand-drawn feel -->
+  <path
+    d="M36 20c1.2 1.8 5.4 9.2 7.5 12.2-2.4 3.2-6.3 9.8-7.5 11.8"
+    stroke="url(#text-shine)"
+    stroke-width="3"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  />
+  <path
+    d="M50 20c-1.2 1.8-5.4 9.2-7.5 12.2 2.4 3.2 6.3 9.8 7.5 11.8"
+    stroke="url(#text-shine)"
+    stroke-width="3"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  />
+</svg>
