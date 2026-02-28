@@ -13,3 +13,8 @@ costs-reports.json
 node_modules
 .env
 *.json
+!vercel.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!tsconfig.*.json
