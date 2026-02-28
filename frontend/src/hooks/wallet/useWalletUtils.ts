@@ -1,6 +1,6 @@
 import { useWallet } from '../components/wallet/WalletProvider';
 import { openSTXTransfer } from '@stacks/connect';
-import { StacksMainnet, StacksTestnet } from '@stacks/network';
+import { STACKS_MAINNET, STACKS_TESTNET } from '@stacks/network';
 
 export const useWalletUtils = () => {
     const { address, network, userSession } = useWallet();
@@ -35,7 +35,7 @@ export const useWalletUtils = () => {
     return {
         transferSTX,
         truncateAddress,
-        isMainnet: network instanceof StacksMainnet,
-        isTestnet: network instanceof StacksTestnet,
+        isMainnet: network === STACKS_MAINNET,
+        isTestnet: network === STACKS_TESTNET,
     };
 };

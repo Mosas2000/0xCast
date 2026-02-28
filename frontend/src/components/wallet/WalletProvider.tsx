@@ -1,13 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserSession, AppConfig, showConnect, UserData } from '@stacks/connect';
-import { StacksMainnet, StacksTestnet, StacksMocknet } from '@stacks/network';
+import { STACKS_MAINNET, STACKS_TESTNET, STACKS_DEVNET } from '@stacks/network';
 
 interface WalletContextType {
     userSession: UserSession;
     userData: UserData | null;
     isConnected: boolean;
     address: string | null;
-    network: StacksMainnet | StacksTestnet | StacksMocknet;
+    network: typeof STACKS_MAINNET | typeof STACKS_TESTNET | typeof STACKS_DEVNET;
     connect: () => void;
     disconnect: () => void;
     setTestnet: (isTestnet: boolean) => void;
@@ -20,7 +20,7 @@ const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [userData, setUserData] = useState<UserData | null>(null);
-    const [network, setNetwork] = useState<StacksMainnet | StacksTestnet | StacksMocknet>(new StacksMainnet());
+    const [network, setNetwork] = useState<typeof STACKS_MAINNET | typeof STACKS_TESTNET | typeof STACKS_DEVNET>(STACKS_MAINNET);
 
     useEffect(() => {
         if (userSession.isUserSignedIn()) {
@@ -50,7 +50,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const setTestnet = (isTestnet: boolean) => {
-        setNetwork(isTestnet ? new StacksTestnet() : new StacksMainnet());
+        setNetwork(isTestnet ? STACKS_TESTNET : STACKS_MAINNET);
     };
 
     const isConnected = !!userData;
