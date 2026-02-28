@@ -22,7 +22,7 @@ export const SocialFeed: React.FC = () => {
             id: 'f1',
             user: 'StacksGuru',
             action: 'posted a new prediction',
-            content: 'I'm calling it: STX will outperform other L2s by the end of Q1.The liquidity flow is unmistakable.',
+            content: "I'm calling it: STX will outperform other L2s by the end of Q1. The liquidity flow is unmistakable.",
       timestamp: '15m ago',
             avatar: 'https://i.pravatar.cc/150?u=guru',
             likes: 45,
