@@ -81,6 +81,8 @@ describe("market-core contract tests", () => {
                 deployer
             );
 
+            const createdAtBlock = simnet.blockHeight - 1;
+
             const market = simnet.callReadOnlyFn(
                 contractName,
                 "get-market",
@@ -100,7 +102,7 @@ describe("market-core contract tests", () => {
                     "total-no-stake": Cl.uint(0),
                     status: Cl.uint(0),
                     outcome: Cl.uint(0),
-                    "created-at": Cl.uint(simnet.blockHeight - 1),
+                    "created-at": Cl.uint(createdAtBlock),
                     "resolved-by": Cl.none(),
                     "resolution-source": Cl.stringAscii(""),
                 })
