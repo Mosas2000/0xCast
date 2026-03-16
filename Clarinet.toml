@@ -9,42 +9,22 @@ cache_dir = "./.cache"
 path = "contracts/market-core.clar"
 epoch = "latest"
 
-[contracts.market-multi]
-path = "contracts/market-multi.clar"
+[contracts.access-control]
+path = "contracts/access-control.clar"
+epoch = "latest"
+
+[contracts.market-fees]
+path = "contracts/market-fees.clar"
 epoch = "latest"
 
 [contracts.governance-token]
 path = "contracts/governance-token.clar"
 epoch = "latest"
 
-[contracts.governance-core]
-path = "contracts/governance-core.clar"
-epoch = "latest"
-
 [contracts.oracle-integration]
 path = "contracts/oracle-integration.clar"
-epoch = "latest"
-
-[contracts.oracle-reputation]
-path = "contracts/oracle-reputation.clar"
-epoch = "latest"
-
-[contracts.liquidity-pool]
-path = "contracts/liquidity-pool.clar"
-epoch = "latest"
-
-[contracts.liquidity-rewards]
-path = "contracts/liquidity-rewards.clar"
 epoch = "latest"
 
 [repl.analysis]
 passes = ["check_checker"]
 check_checker = { trusted_sender = false, trusted_caller = false, callee_filter = false }
-
-# Check-checker settings:
-# trusted_sender: if true, inputs are trusted after tx_sender has been checked.
-# trusted_caller: if true, inputs are trusted after contract-caller has been checked.
-# callee_filter: if true, untrusted data may be passed into a private function without a
-# warning, if it gets checked inside. This check will also propagate up to the
-# caller.
-# More informations: https://www.hiro.so/blog/new-safety-checks-in-clarinet
