@@ -101,6 +101,8 @@ describe("market-core contract tests", () => {
                     status: Cl.uint(0),
                     outcome: Cl.uint(0),
                     "created-at": Cl.uint(simnet.blockHeight - 1),
+                    "resolved-by": Cl.none(),
+                    "resolution-source": Cl.stringAscii(""),
                 })
             );
         });
