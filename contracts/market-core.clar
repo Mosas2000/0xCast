@@ -9,6 +9,8 @@
 ;; Market Status Constants
 (define-constant MARKET-STATUS-ACTIVE u0)
 (define-constant MARKET-STATUS-RESOLVED u1)
+(define-constant MARKET-STATUS-DISPUTED u2)
+(define-constant MARKET-STATUS-REFUNDED u3)
 
 ;; Market Outcome Constants
 (define-constant OUTCOME-NONE u0)
@@ -35,6 +37,14 @@
 (define-constant ERR-NO-WINNINGS (err u109))
 (define-constant ERR-MARKET-NOT-RESOLVED (err u110))
 (define-constant ERR-INVALID-CATEGORY (err u111))
+(define-constant ERR-MARKET-ABANDONED (err u112))
+(define-constant ERR-ALREADY-REFUNDED (err u113))
+(define-constant ERR-MARKET-IN-DISPUTE (err u114))
+(define-constant ERR-REFUND-NOT-ALLOWED (err u115))
+
+;; Auto-resolve fallback: blocks after resolution-date before auto-resolve kicks in
+;; ~7 days in blocks (7 * 144 = 1008)
+(define-data-var abandonment-period uint u1008)
 
 ;; ============================================
 ;; Data Variables
@@ -54,14 +64,16 @@
   {
     question: (string-ascii 256),
     creator: principal,
-    category: uint,            ;; Market category (1-5)
-    end-date: uint,           ;; Block height when market closes for trading
-    resolution-date: uint,    ;; Block height when market can be resolved
-    total-yes-stake: uint,    ;; Total STX staked on YES outcome
-    total-no-stake: uint,     ;; Total STX staked on NO outcome
-    status: uint,             ;; MARKET-STATUS-ACTIVE or MARKET-STATUS-RESOLVED
-    outcome: uint,            ;; OUTCOME-NONE, OUTCOME-YES, or OUTCOME-NO
-    created-at: uint          ;; Block height when market was created
+    category: uint,
+    end-date: uint,
+    resolution-date: uint,
+    total-yes-stake: uint,
+    total-no-stake: uint,
+    status: uint,
+    outcome: uint,
+    created-at: uint,
+    resolved-by: (optional principal),
+    resolution-source: (string-ascii 20)
   }
 )
 
@@ -180,7 +192,9 @@
         total-no-stake: u0,
         status: MARKET-STATUS-ACTIVE,
         outcome: OUTCOME-NONE,
-        created-at: current-block
+        created-at: current-block,
+        resolved-by: none,
+        resolution-source: ""
       }
     )
     
@@ -302,9 +316,11 @@
     ;; Update market status and outcome
     (map-set markets
       { market-id: market-id }
-      (merge market { 
+      (merge market {
         status: MARKET-STATUS-RESOLVED,
-        outcome: outcome
+        outcome: outcome,
+        resolved-by: (some tx-sender),
+        resolution-source: "creator"
       })
     )
     
@@ -361,4 +377,133 @@
     )
   )
 )
+
+;; Resolve a market via oracle data
+(define-public (oracle-resolve (market-id uint) (outcome uint))
+  (let
+    (
+      (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
+      (current-block stacks-block-height)
+    )
+    (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-MARKET-ALREADY-RESOLVED)
+    (asserts! (>= current-block (get resolution-date market)) ERR-MARKET-NOT-ENDED)
+    (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
+    (map-set markets
+      { market-id: market-id }
+      (merge market {
+        status: MARKET-STATUS-RESOLVED,
+        outcome: outcome,
+        resolved-by: (some tx-sender),
+        resolution-source: "oracle"
+      })
+    )
+    (ok true)
+  )
+)
+
+;; Mark a market as disputed (called when dispute is filed)
+(define-public (mark-disputed (market-id uint))
+  (let
+    (
+      (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
+    )
+    (asserts! (is-eq (get status market) MARKET-STATUS-RESOLVED) ERR-MARKET-NOT-RESOLVED)
+    (map-set markets
+      { market-id: market-id }
+      (merge market { status: MARKET-STATUS-DISPUTED })
+    )
+    (ok true)
+  )
+)
+
+;; Re-resolve after dispute is settled
+(define-public (resolve-after-dispute (market-id uint) (outcome uint))
+  (let
+    (
+      (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
+    )
+    (asserts! (is-eq (get status market) MARKET-STATUS-DISPUTED) ERR-MARKET-IN-DISPUTE)
+    (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
+    (map-set markets
+      { market-id: market-id }
+      (merge market {
+        status: MARKET-STATUS-RESOLVED,
+        outcome: outcome,
+        resolved-by: (some tx-sender),
+        resolution-source: "dispute"
+      })
+    )
+    (ok true)
+  )
+)
+
+;; Emergency refund for abandoned or irresolvable markets
+(define-public (emergency-refund (market-id uint))
+  (let
+    (
+      (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
+      (position (unwrap! (map-get? user-positions { market-id: market-id, user: tx-sender }) ERR-NO-WINNINGS))
+      (current-block stacks-block-height)
+      (user-total (+ (get yes-stake position) (get no-stake position)))
+    )
+    (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-REFUND-NOT-ALLOWED)
+    (asserts! (>= current-block (+ (get resolution-date market) (var-get abandonment-period))) ERR-REFUND-NOT-ALLOWED)
+    (asserts! (not (get claimed position)) ERR-ALREADY-CLAIMED)
+    (asserts! (> user-total u0) ERR-NO-WINNINGS)
+    (try! (as-contract (stx-transfer? user-total tx-sender contract-caller)))
+    (map-set user-positions
+      { market-id: market-id, user: tx-sender }
+      (merge position { claimed: true })
+    )
+    (ok user-total)
+  )
+)
+
+;; Admin: force refund status on a market
+(define-public (admin-force-refund (market-id uint))
+  (let
+    (
+      (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
+    )
+    (asserts! (is-eq tx-sender (get creator market)) ERR-NOT-AUTHORIZED)
+    (map-set markets
+      { market-id: market-id }
+      (merge market {
+        status: MARKET-STATUS-REFUNDED,
+        resolution-source: "refund"
+      })
+    )
+    (ok true)
+  )
+)
+
+;; Claim refund from a market that was force-refunded
+(define-public (claim-refund (market-id uint))
+  (let
+    (
+      (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
+      (position (unwrap! (map-get? user-positions { market-id: market-id, user: tx-sender }) ERR-NO-WINNINGS))
+      (user-total (+ (get yes-stake position) (get no-stake position)))
+    )
+    (asserts! (is-eq (get status market) MARKET-STATUS-REFUNDED) ERR-REFUND-NOT-ALLOWED)
+    (asserts! (not (get claimed position)) ERR-ALREADY-CLAIMED)
+    (asserts! (> user-total u0) ERR-NO-WINNINGS)
+    (try! (as-contract (stx-transfer? user-total tx-sender contract-caller)))
+    (map-set user-positions
+      { market-id: market-id, user: tx-sender }
+      (merge position { claimed: true })
+    )
+    (ok user-total)
+  )
+)
+
+(define-read-only (get-abandonment-period)
+  (var-get abandonment-period))
+
+(define-read-only (is-market-abandoned (market-id uint))
+  (match (map-get? markets { market-id: market-id })
+    market (and
+      (is-eq (get status market) MARKET-STATUS-ACTIVE)
+      (>= stacks-block-height (+ (get resolution-date market) (var-get abandonment-period))))
+    false))
 
