@@ -306,8 +306,8 @@
       { market-id: market-id }
       (merge dispute
         (if (is-eq vote VOTE-YES)
-          { yes-votes: (+ (get yes-votes dispute) u1), total-voters: (+ (get total-voters dispute) u1) }
-          { no-votes: (+ (get no-votes dispute) u1), total-voters: (+ (get total-voters dispute) u1) })))
+          { yes-votes: (+ (get yes-votes dispute) u1), no-votes: (get no-votes dispute), total-voters: (+ (get total-voters dispute) u1) }
+          { yes-votes: (get yes-votes dispute), no-votes: (+ (get no-votes dispute) u1), total-voters: (+ (get total-voters dispute) u1) })))
     (print {event: "dispute-vote", market-id: market-id, voter: tx-sender, vote: vote})
     (ok true)))
 

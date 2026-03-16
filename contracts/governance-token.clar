@@ -86,8 +86,7 @@
 
 ;; Historical Balance Tracking (for proposal snapshots)
 
-(define-read-only (get-balance-at-block (account principal) (block-height uint))
-  ;; Simplified version - in production, would need more sophisticated tracking
+(define-read-only (get-balance-at-block (account principal) (the-block-height uint))
   (ok (ft-get-balance cast-token account)))
 
 ;; Initialize

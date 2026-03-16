@@ -58,7 +58,6 @@ genesis:
     - pox-4
     - signers
     - signers-voting
-    - costs-4
 plan:
   batches:
     - id: 0
@@ -74,14 +73,14 @@ plan:
             path: contracts/governance-token.clar
             clarity-version: 3
         - emulated-contract-publish:
-            contract-name: market-fees
-            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: contracts/market-fees.clar
-            clarity-version: 3
-        - emulated-contract-publish:
             contract-name: market-core
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
             path: contracts/market-core.clar
+            clarity-version: 3
+        - emulated-contract-publish:
+            contract-name: market-fees
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/market-fees.clar
             clarity-version: 3
         - emulated-contract-publish:
             contract-name: oracle-integration
