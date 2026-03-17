@@ -265,14 +265,14 @@ describe("Governance Core Tests", () => {
 
             expect(result).toBeOk(Cl.uint(1)); // First proposal ID
 
-            // Verify proposal was created
-            const proposal = simnet.callReadOnlyFn(
+            // Verify proposal was created via its state
+            const state = simnet.callReadOnlyFn(
                 "governance-core",
-                "get-proposal",
+                "get-proposal-state",
                 [Cl.uint(1)],
                 deployer
             );
-            expect(proposal.result).toBeSome();
+            expect(state.result).toBeOk(Cl.uint(0)); // status-pending
         });
 
         it("should increment proposal count", () => {
@@ -302,7 +302,7 @@ describe("Governance Core Tests", () => {
                 [],
                 deployer
             );
-            expect(count.result).toBe(Cl.uint(2));
+            expect(count.result).toStrictEqual(Cl.uint(2));
         });
     });
 
@@ -368,7 +368,7 @@ describe("Governance Core Tests", () => {
                 [Cl.uint(1), Cl.principal(wallet1)],
                 deployer
             );
-            expect(hasVoted.result).toBe(Cl.bool(true));
+            expect(hasVoted.result).toStrictEqual(Cl.bool(true));
         });
     });
 
@@ -473,7 +473,13 @@ describe("Governance Core Tests", () => {
                 deployer
             );
 
-            expect(result).toBeTuple();
+            expect(result).toStrictEqual(Cl.tuple({
+                "proposal-threshold": Cl.uint(1000000),
+                "quorum-percentage": Cl.uint(10),
+                "voting-period": Cl.uint(1440),
+                "timelock-period": Cl.uint(144),
+                "execution-window": Cl.uint(1440),
+            }));
         });
 
         it("should allow owner to update parameters", () => {
