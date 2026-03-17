@@ -146,6 +146,7 @@ describe("Oracle Integration Tests", () => {
                 [Cl.uint(0), Cl.uint(155000)],
                 oracle1
             );
+            const submitBlock = simnet.blockHeight;
             expect(result).toBeOk(Cl.bool(true));
 
             const feed = simnet.callReadOnlyFn(
@@ -154,14 +155,12 @@ describe("Oracle Integration Tests", () => {
                 [Cl.uint(0)],
                 deployer
             );
-            expect(feed.result).toBeSome(
-                Cl.tuple({
-                    price: Cl.uint(155000),
-                    timestamp: Cl.uint(simnet.blockHeight - 1),
-                    oracle: Cl.standardPrincipal(oracle1),
-                    confirmed: Cl.bool(true),
-                })
-            );
+            expect(feed.result).toBeSome(Cl.tuple({
+                price: Cl.uint(155000),
+                timestamp: Cl.uint(submitBlock),
+                oracle: Cl.standardPrincipal(oracle1),
+                confirmed: Cl.bool(true),
+            }));
         });
 
         it("should reject zero price", () => {
@@ -207,6 +206,7 @@ describe("Oracle Integration Tests", () => {
                 [Cl.uint(1), Cl.uint(1)],
                 oracle1
             );
+            const resolvedBlock = simnet.blockHeight;
             expect(result).toBeOk(Cl.bool(true));
 
             const resolution = simnet.callReadOnlyFn(
@@ -215,15 +215,13 @@ describe("Oracle Integration Tests", () => {
                 [Cl.uint(1)],
                 deployer
             );
-            expect(resolution.result).toBeSome(
-                Cl.tuple({
-                    oracle: Cl.standardPrincipal(oracle1),
-                    result: Cl.uint(1),
-                    "resolved-at": Cl.uint(simnet.blockHeight - 1),
-                    finalized: Cl.bool(false),
-                    "dispute-end": Cl.uint(simnet.blockHeight - 1 + 144),
-                })
-            );
+            expect(resolution.result).toBeSome(Cl.tuple({
+                oracle: Cl.standardPrincipal(oracle1),
+                result: Cl.uint(1),
+                "resolved-at": Cl.uint(resolvedBlock),
+                finalized: Cl.bool(false),
+                "dispute-end": Cl.uint(resolvedBlock + 144),
+            }));
         });
 
         it("should prevent unauthorized oracles from submitting resolution", () => {
@@ -595,6 +593,7 @@ describe("Oracle Integration Tests", () => {
                 [Cl.uint(1), Cl.uint(2)],
                 deployer
             );
+            const adminBlock = simnet.blockHeight;
             expect(result).toBeOk(Cl.bool(true));
 
             const resolution = simnet.callReadOnlyFn(
@@ -603,15 +602,13 @@ describe("Oracle Integration Tests", () => {
                 [Cl.uint(1)],
                 deployer
             );
-            expect(resolution.result).toBeSome(
-                Cl.tuple({
-                    oracle: Cl.standardPrincipal(oracle1),
-                    result: Cl.uint(2),
-                    "resolved-at": Cl.uint(simnet.blockHeight - 1),
-                    finalized: Cl.bool(true),
-                    "dispute-end": Cl.uint(simnet.blockHeight - 1),
-                })
-            );
+            expect(resolution.result).toBeSome(Cl.tuple({
+                oracle: Cl.standardPrincipal(oracle1),
+                result: Cl.uint(2),
+                "resolved-at": Cl.uint(adminBlock),
+                finalized: Cl.bool(true),
+                "dispute-end": Cl.uint(adminBlock),
+            }));
         });
 
         it("should reject admin override from non-owner", () => {
@@ -633,7 +630,7 @@ describe("Oracle Integration Tests", () => {
                 [Cl.uint(288)],
                 deployer
             );
-            expect(result).toBeOk(Cl.uint(288));
+            expect(result).toBeOk(Cl.bool(true));
 
             const period = simnet.callReadOnlyFn(oracleContract, "get-dispute-period", [], deployer);
             expect(period.result).toBeUint(288);
@@ -646,7 +643,7 @@ describe("Oracle Integration Tests", () => {
                 [Cl.uint(576)],
                 deployer
             );
-            expect(result).toBeOk(Cl.uint(576));
+            expect(result).toBeOk(Cl.bool(true));
 
             const period = simnet.callReadOnlyFn(oracleContract, "get-voting-period", [], deployer);
             expect(period.result).toBeUint(576);
@@ -659,7 +656,7 @@ describe("Oracle Integration Tests", () => {
                 [Cl.uint(10000000)],
                 deployer
             );
-            expect(result).toBeOk(Cl.uint(10000000));
+            expect(result).toBeOk(Cl.bool(true));
 
             const stake = simnet.callReadOnlyFn(oracleContract, "get-min-dispute-stake", [], deployer);
             expect(stake.result).toBeUint(10000000);

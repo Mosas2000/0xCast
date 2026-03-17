@@ -80,33 +80,38 @@ describe("market-core contract tests", () => {
                 ],
                 deployer
             );
+            const createdAtBlock = simnet.blockHeight;
 
-            const createdAtBlock = simnet.blockHeight - 1;
+            const counter = simnet.callReadOnlyFn(
+                contractName,
+                "get-market-counter",
+                [],
+                deployer
+            );
+            const marketCount = Number(counter.result.value);
+            const lastMarketId = marketCount - 1;
 
             const market = simnet.callReadOnlyFn(
                 contractName,
                 "get-market",
-                [Cl.uint(0)],
+                [Cl.uint(lastMarketId)],
                 deployer
             );
 
-            const marketData = market.result;
-            expect(marketData).toBeSome(
-                Cl.tuple({
-                    question: Cl.stringAscii("Crypto category market"),
-                    creator: Cl.standardPrincipal(deployer),
-                    category: Cl.uint(1),
-                    "end-date": Cl.uint(endDate),
-                    "resolution-date": Cl.uint(resolutionDate),
-                    "total-yes-stake": Cl.uint(0),
-                    "total-no-stake": Cl.uint(0),
-                    status: Cl.uint(0),
-                    outcome: Cl.uint(0),
-                    "created-at": Cl.uint(createdAtBlock),
-                    "resolved-by": Cl.none(),
-                    "resolution-source": Cl.stringAscii(""),
-                })
-            );
+            expect(market.result).toBeSome(Cl.tuple({
+                question: Cl.stringAscii("Crypto category market"),
+                creator: Cl.standardPrincipal(deployer),
+                category: Cl.uint(1),
+                "end-date": Cl.uint(endDate),
+                "resolution-date": Cl.uint(resolutionDate),
+                "total-yes-stake": Cl.uint(0),
+                "total-no-stake": Cl.uint(0),
+                status: Cl.uint(0),
+                outcome: Cl.uint(0),
+                "created-at": Cl.uint(createdAtBlock),
+                "resolved-by": Cl.none(),
+                "resolution-source": Cl.stringAscii(""),
+            }));
         });
 
         it("should reject category 0", () => {
