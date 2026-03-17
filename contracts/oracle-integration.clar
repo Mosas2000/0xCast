@@ -34,6 +34,7 @@
 (define-data-var dispute-quorum uint u3) ;; minimum votes needed
 (define-data-var oracle-fee uint u5000000)
 (define-data-var dispute-counter uint u0)
+(define-data-var slashed-balance uint u0)
 
 ;; Oracle Registry
 (define-map registered-oracles principal bool)
@@ -135,6 +136,9 @@
 
 (define-read-only (get-dispute-counter)
   (var-get dispute-counter))
+
+(define-read-only (get-slashed-balance)
+  (var-get slashed-balance))
 
 (define-read-only (is-resolution-finalized (market-id uint))
   (match (map-get? market-resolutions market-id)
@@ -359,6 +363,17 @@
               dispute-end: stacks-block-height
             }))
           (try! (contract-call? .market-core resolve-after-dispute market-id final-result))
+
+          (let (
+            (stake (get stake dispute))
+            (slash-amount (try! (contract-call? .market-fees record-slash market-id stake)))
+            (refund (- stake slash-amount))
+          )
+            (var-set slashed-balance (+ (var-get slashed-balance) slash-amount))
+            (if (> refund u0)
+              (try! (as-contract (stx-transfer? refund tx-sender (get disputer dispute))))
+              true))
+
           (let ((oracle (get oracle resolution))
                 (stats (get-oracle-stats oracle)))
             (map-set oracle-stats oracle (merge stats {
@@ -418,3 +433,12 @@
   (begin
     (asserts! (is-eq tx-sender contract-owner) err-owner-only)
     (ok (var-set oracle-fee new-fee))))
+
+(define-public (withdraw-slashed)
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (let ((bal (var-get slashed-balance)))
+      (asserts! (> bal u0) err-market-not-found)
+      (var-set slashed-balance u0)
+      (try! (as-contract (stx-transfer? bal tx-sender contract-owner)))
+      (ok bal))))
