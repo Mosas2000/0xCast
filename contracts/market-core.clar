@@ -41,6 +41,14 @@
 (define-constant ERR-ALREADY-REFUNDED (err u113))
 (define-constant ERR-MARKET-IN-DISPUTE (err u114))
 (define-constant ERR-REFUND-NOT-ALLOWED (err u115))
+(define-constant ERR-MARKET-NOT-FINALIZED (err u116))
+(define-constant ERR-FINALIZATION-NOT-READY (err u117))
+
+;; Dispute window for any resolution (~24 hours in blocks)
+(define-constant DISPUTE-PERIOD u144)
+
+;; Only the oracle integration contract may invoke oracle/dispute entrypoints
+(define-constant ORACLE-INTEGRATION .oracle-integration)
 
 ;; Auto-resolve fallback: blocks after resolution-date before auto-resolve kicks in
 ;; ~7 days in blocks (7 * 144 = 1008)
@@ -72,6 +80,9 @@
     status: uint,
     outcome: uint,
     created-at: uint,
+    resolved-at: uint,
+    finalizes-at: uint,
+    finalized: bool,
     resolved-by: (optional principal),
     resolution-source: (string-ascii 20)
   }
@@ -193,6 +204,9 @@
         status: MARKET-STATUS-ACTIVE,
         outcome: OUTCOME-NONE,
         created-at: current-block,
+        resolved-at: u0,
+        finalizes-at: u0,
+        finalized: false,
         resolved-by: none,
         resolution-source: ""
       }
@@ -319,6 +333,9 @@
       (merge market {
         status: MARKET-STATUS-RESOLVED,
         outcome: outcome,
+        resolved-at: current-block,
+        finalizes-at: (+ current-block DISPUTE-PERIOD),
+        finalized: false,
         resolved-by: (some tx-sender),
         resolution-source: "creator"
       })
@@ -341,6 +358,9 @@
     )
     ;; Validate market is resolved
     (asserts! (is-eq (get status market) MARKET-STATUS-RESOLVED) ERR-MARKET-NOT-RESOLVED)
+
+    ;; Validate market is finalized (dispute window passed and/or dispute settled)
+    (asserts! (get finalized market) ERR-MARKET-NOT-FINALIZED)
     
     ;; Validate user hasn't already claimed
     (asserts! (not (get claimed position)) ERR-ALREADY-CLAIMED)
@@ -385,6 +405,7 @@
       (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
       (current-block stacks-block-height)
     )
+    (asserts! (is-eq contract-caller ORACLE-INTEGRATION) ERR-NOT-AUTHORIZED)
     (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-MARKET-ALREADY-RESOLVED)
     (asserts! (>= current-block (get resolution-date market)) ERR-MARKET-NOT-ENDED)
     (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
@@ -393,7 +414,10 @@
       (merge market {
         status: MARKET-STATUS-RESOLVED,
         outcome: outcome,
-        resolved-by: (some tx-sender),
+        resolved-at: current-block,
+        finalizes-at: (+ current-block DISPUTE-PERIOD),
+        finalized: false,
+        resolved-by: (some contract-caller),
         resolution-source: "oracle"
       })
     )
@@ -407,7 +431,9 @@
     (
       (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
     )
+    (asserts! (is-eq contract-caller ORACLE-INTEGRATION) ERR-NOT-AUTHORIZED)
     (asserts! (is-eq (get status market) MARKET-STATUS-RESOLVED) ERR-MARKET-NOT-RESOLVED)
+    (asserts! (not (get finalized market)) ERR-MARKET-NOT-FINALIZED)
     (map-set markets
       { market-id: market-id }
       (merge market { status: MARKET-STATUS-DISPUTED })
@@ -422,6 +448,7 @@
     (
       (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
     )
+    (asserts! (is-eq contract-caller ORACLE-INTEGRATION) ERR-NOT-AUTHORIZED)
     (asserts! (is-eq (get status market) MARKET-STATUS-DISPUTED) ERR-MARKET-IN-DISPUTE)
     (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
     (map-set markets
@@ -429,8 +456,56 @@
       (merge market {
         status: MARKET-STATUS-RESOLVED,
         outcome: outcome,
-        resolved-by: (some tx-sender),
+        resolved-at: stacks-block-height,
+        finalizes-at: stacks-block-height,
+        finalized: true,
+        resolved-by: (some contract-caller),
         resolution-source: "dispute"
+      })
+    )
+    (ok true)
+  )
+)
+
+;; Finalize a resolved market after the dispute window ends (no active dispute)
+(define-public (finalize-market (market-id uint))
+  (let
+    (
+      (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
+      (current-block stacks-block-height)
+    )
+    (asserts! (is-eq (get status market) MARKET-STATUS-RESOLVED) ERR-MARKET-NOT-RESOLVED)
+    (asserts! (not (get finalized market)) ERR-MARKET-ALREADY-RESOLVED)
+    (asserts! (> current-block (get finalizes-at market)) ERR-FINALIZATION-NOT-READY)
+    (map-set markets
+      { market-id: market-id }
+      (merge market { finalized: true })
+    )
+    (ok true)
+  )
+)
+
+;; Community resolution fallback (used when oracle data unavailable)
+(define-public (community-resolve (market-id uint) (outcome uint))
+  (let
+    (
+      (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
+      (current-block stacks-block-height)
+    )
+    (asserts! (is-eq contract-caller ORACLE-INTEGRATION) ERR-NOT-AUTHORIZED)
+    (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-MARKET-ALREADY-RESOLVED)
+    (asserts! (>= current-block (get resolution-date market)) ERR-MARKET-NOT-ENDED)
+    (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
+    (map-set markets
+      { market-id: market-id }
+      (merge market {
+        status: MARKET-STATUS-RESOLVED,
+        outcome: outcome,
+        resolved-at: current-block,
+        finalizes-at: current-block,
+        finalized: true,
+        resolved-by: (some contract-caller),
+        resolution-source: "community"
       })
     )
     (ok true)
