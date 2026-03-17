@@ -76,6 +76,7 @@
     category: uint,
     end-date: uint,
     resolution-date: uint,
+    resolution-deadline: uint,
     total-yes-stake: uint,
     total-no-stake: uint,
     status: uint,
@@ -185,6 +186,7 @@
       (current-block stacks-block-height)
       (new-market-id (increment-market-counter))
       (cat-count (get-market-category-count category))
+      (resolution-deadline (+ resolution-date (var-get abandonment-period)))
     )
     ;; Validate that end-date is in the future
     (asserts! (> end-date current-block) ERR-INVALID-DATES)
@@ -204,6 +206,7 @@
         category: category,
         end-date: end-date,
         resolution-date: resolution-date,
+        resolution-deadline: resolution-deadline,
         total-yes-stake: u0,
         total-no-stake: u0,
         status: MARKET-STATUS-ACTIVE,
