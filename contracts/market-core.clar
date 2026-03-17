@@ -587,7 +587,7 @@
       (user-total (+ (get yes-stake position) (get no-stake position)))
     )
     (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-REFUND-NOT-ALLOWED)
-    (asserts! (>= current-block (get resolution-deadline market)) ERR-REFUND-NOT-ALLOWED)
+    (asserts! (> current-block (get resolution-deadline market)) ERR-REFUND-NOT-ALLOWED)
     (asserts! (not (get claimed position)) ERR-ALREADY-CLAIMED)
     (asserts! (> user-total u0) ERR-NO-WINNINGS)
     (try! (as-contract (stx-transfer? user-total tx-sender contract-caller)))
@@ -644,6 +644,6 @@
   (match (map-get? markets { market-id: market-id })
     market (and
       (is-eq (get status market) MARKET-STATUS-ACTIVE)
-      (>= stacks-block-height (get resolution-deadline market)))
+      (> stacks-block-height (get resolution-deadline market)))
     false))
 
