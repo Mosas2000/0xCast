@@ -80,29 +80,41 @@ describe("market-core contract tests", () => {
                 ],
                 deployer
             );
+            const createdAtBlock = simnet.blockHeight;
+
+            const counter = simnet.callReadOnlyFn(
+                contractName,
+                "get-market-counter",
+                [],
+                deployer
+            );
+            const marketCount = Number(counter.result.value);
+            const lastMarketId = marketCount - 1;
 
             const market = simnet.callReadOnlyFn(
                 contractName,
                 "get-market",
-                [Cl.uint(0)],
+                [Cl.uint(lastMarketId)],
                 deployer
             );
 
-            const marketData = market.result;
-            expect(marketData).toBeSome(
-                Cl.tuple({
-                    question: Cl.stringAscii("Crypto category market"),
-                    creator: Cl.standardPrincipal(deployer),
-                    category: Cl.uint(1),
-                    "end-date": Cl.uint(endDate),
-                    "resolution-date": Cl.uint(resolutionDate),
-                    "total-yes-stake": Cl.uint(0),
-                    "total-no-stake": Cl.uint(0),
-                    status: Cl.uint(0),
-                    outcome: Cl.uint(0),
-                    "created-at": Cl.uint(simnet.blockHeight - 1),
-                })
-            );
+            expect(market.result).toBeSome(Cl.tuple({
+                question: Cl.stringAscii("Crypto category market"),
+                creator: Cl.standardPrincipal(deployer),
+                category: Cl.uint(1),
+                "end-date": Cl.uint(endDate),
+                "resolution-date": Cl.uint(resolutionDate),
+                "total-yes-stake": Cl.uint(0),
+                "total-no-stake": Cl.uint(0),
+                status: Cl.uint(0),
+                outcome: Cl.uint(0),
+                "created-at": Cl.uint(createdAtBlock),
+                "resolved-at": Cl.uint(0),
+                "finalizes-at": Cl.uint(0),
+                finalized: Cl.bool(false),
+                "resolved-by": Cl.none(),
+                "resolution-source": Cl.stringAscii(""),
+            }));
         });
 
         it("should reject category 0", () => {
@@ -580,6 +592,16 @@ describe("market-core contract tests", () => {
                 deployer
             );
             expect(resolveResult.result).toBeOk(Cl.bool(true));
+
+            // 4b. Wait out dispute window and finalize (claims gated until finalized)
+            simnet.mineEmptyBlocks(150);
+            const finalizeResult = simnet.callPublicFn(
+                contractName,
+                "finalize-market",
+                [Cl.uint(0)],
+                deployer
+            );
+            expect(finalizeResult.result).toBeOk(Cl.bool(true));
 
             // 5. Loser (wallet1) tries to claim - should fail with no winnings
             const loserClaim = simnet.callPublicFn(

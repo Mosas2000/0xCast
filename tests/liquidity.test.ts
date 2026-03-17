@@ -25,7 +25,7 @@ describe("Liquidity Pool Tests", () => {
             [Cl.uint(marketId)],
             deployer
         );
-        expect(pool.result).toBeSome();
+        expect(pool.result).not.toEqual(Cl.none());
     });
 
     it("should allow adding liquidity", () => {
@@ -46,7 +46,7 @@ describe("Liquidity Pool Tests", () => {
             [Cl.uint(marketId), Cl.principal(lp1)],
             deployer
         );
-        expect(lpBalance.result).toBe(Cl.uint(50000000));
+        expect(lpBalance.result).toStrictEqual(Cl.uint(50000000));
     });
 
     it("should allow removing liquidity", () => {
@@ -75,7 +75,7 @@ describe("Liquidity Pool Tests", () => {
             deployer
         );
         // Rough calculation check: (100000 * 0.997 * 1000000) / (1000000 + 100000 * 0.997)
-        expect(result).toBe(Cl.uint(90661));
+        expect(result).toStrictEqual(Cl.uint(90661));
     });
 });
 

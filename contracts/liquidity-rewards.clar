@@ -33,10 +33,10 @@
 
 (define-public (update-pool (market-id uint))
   (let ((pool (default-to 
-                {acc-reward-per-share: u0, last-update-block: block-height, reward-multiplier: u1}
+                {acc-reward-per-share: u0, last-update-block: stacks-block-height, reward-multiplier: u1}
                 (map-get? pool-rewards market-id))))
     (ok (map-set pool-rewards market-id (merge pool {
-      last-update-block: block-height
+      last-update-block: stacks-block-height
     })))))
 
 (define-public (claim-rewards (market-id uint))

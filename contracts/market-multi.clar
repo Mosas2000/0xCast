@@ -242,9 +242,10 @@
   
   (let
     (
+      (claimer tx-sender)
       (market (unwrap! (map-get? multi-markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
-      (user-position (unwrap! 
-        (map-get? user-multi-positions 
+      (user-position (unwrap!
+        (map-get? user-multi-positions
           { market-id: market-id, user: tx-sender, outcome-index: outcome-index })
         (err u112)))
       (winning-outcome (unwrap! (get winning-outcome market) (err u113)))
@@ -267,7 +268,7 @@
       )
       
       ;; Transfer winnings
-      (try! (as-contract (stx-transfer? payout tx-sender tx-sender)))
+      (try! (as-contract (stx-transfer? payout tx-sender claimer)))
       
       ;; Mark as claimed
       (map-set user-multi-positions
