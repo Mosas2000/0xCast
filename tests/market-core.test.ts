@@ -567,7 +567,7 @@ describe("market-core contract tests", () => {
                 [Cl.uint(0)],
                 wallet2
             );
-            expect(result).toBeOk(Cl.bool(true));
+            expect(result).toBeOk({ type: "true" } as any);
 
             const market = simnet.callReadOnlyFn(contractName, "get-market", [Cl.uint(0)], deployer);
             expect(market.result).toHaveProperty("type", "some");
@@ -582,7 +582,7 @@ describe("market-core contract tests", () => {
             expect(marketTuple["total-no-stake"]).toEqual({ type: "uint", value: 0n });
             expect(marketTuple.status).toEqual({ type: "uint", value: 3n });
             expect(marketTuple.outcome).toEqual({ type: "uint", value: 0n });
-            expect(marketTuple.finalized).toEqual({ type: "bool", value: true });
+            expect(marketTuple.finalized).toEqual({ type: "true" });
             expect(marketTuple["resolved-by"]).toEqual({
                 type: "some",
                 value: { type: "address", value: wallet2 },
