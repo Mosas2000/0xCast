@@ -141,7 +141,7 @@
 (define-read-only (get-market-pool-size (market-id uint))
   (match (map-get? markets { market-id: market-id })
     market (ok (+ (get total-yes-stake market) (get total-no-stake market)))
-    (err ERR-MARKET-NOT-FOUND)
+    ERR-MARKET-NOT-FOUND
   )
 )
 
@@ -162,7 +162,7 @@
 (define-read-only (get-resolution-deadline (market-id uint))
   (match (map-get? markets { market-id: market-id })
     market (ok (get resolution-deadline market))
-    (err ERR-MARKET-NOT-FOUND)
+    ERR-MARKET-NOT-FOUND
   )
 )
 
