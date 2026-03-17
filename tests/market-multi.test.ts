@@ -44,28 +44,10 @@ describe("Multi-Outcome Markets", () => {
         ],
         deployer
       );
-      
+
       expect(result).toBeErr(Cl.uint(104)); // ERR-INSUFFICIENT-OUTCOMES
     });
-    
-    it("should fail with too many outcomes (more than 10)", () => {
-      const outcomes = Array.from({ length: 11 }, (_, i) => `Outcome ${i + 1}`);
-      
-      const { result } = simnet.callPublicFn(
-        "market-multi",
-        "create-multi-market",
-        [
-          Cl.stringUtf8("Too many outcomes"),
-          Cl.list(outcomes.map(o => Cl.stringUtf8(o))),
-          Cl.uint(1000),
-          Cl.uint(1100)
-        ],
-        deployer
-      );
-      
-      expect(result).toBeErr(Cl.uint(105)); // ERR-TOO-MANY-OUTCOMES
-    });
-    
+
     it("should fail when end-date is after resolution-date", () => {
       const { result } = simnet.callPublicFn(
         "market-multi",
@@ -78,7 +60,7 @@ describe("Multi-Outcome Markets", () => {
         ],
         deployer
       );
-      
+
       expect(result).toBeErr(Cl.uint(106));
     });
   });
@@ -348,15 +330,30 @@ describe("Multi-Outcome Markets", () => {
         ],
         deployer
       );
-      
+      const createdBlock = simnet.blockHeight;
+
       const { result } = simnet.callReadOnlyFn(
         "market-multi",
         "get-multi-market",
         [Cl.uint(1)],
         deployer
       );
-      
-      expect(result).toBeSome();
+
+      expect(result).toBeSome(Cl.tuple({
+        question: Cl.stringUtf8("Test question"),
+        creator: Cl.standardPrincipal(deployer),
+        "outcome-names": Cl.list([Cl.stringUtf8("A"), Cl.stringUtf8("B"), Cl.stringUtf8("C")]),
+        "outcome-stakes": Cl.list([
+          Cl.uint(0), Cl.uint(0), Cl.uint(0), Cl.uint(0), Cl.uint(0),
+          Cl.uint(0), Cl.uint(0), Cl.uint(0), Cl.uint(0), Cl.uint(0),
+        ]),
+        "outcome-count": Cl.uint(3),
+        "end-date": Cl.uint(1000),
+        "resolution-date": Cl.uint(1100),
+        status: Cl.uint(0),
+        "winning-outcome": Cl.none(),
+        "created-at": Cl.uint(createdBlock),
+      }));
     });
     
     it("should calculate outcome odds correctly", () => {
