@@ -104,6 +104,7 @@ describe("market-core contract tests", () => {
                 category: Cl.uint(1),
                 "end-date": Cl.uint(endDate),
                 "resolution-date": Cl.uint(resolutionDate),
+                "resolution-deadline": Cl.uint(resolutionDate + 1008),
                 "total-yes-stake": Cl.uint(0),
                 "total-no-stake": Cl.uint(0),
                 status: Cl.uint(0),
