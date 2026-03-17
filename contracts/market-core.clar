@@ -43,6 +43,7 @@
 (define-constant ERR-REFUND-NOT-ALLOWED (err u115))
 (define-constant ERR-MARKET-NOT-FINALIZED (err u116))
 (define-constant ERR-FINALIZATION-NOT-READY (err u117))
+(define-constant ERR-MARKET-NOT-DISPUTED (err u118))
 
 ;; Only the oracle integration contract may invoke oracle/dispute entrypoints
 (define-constant ORACLE-INTEGRATION .oracle-integration)
@@ -444,7 +445,7 @@
     )
     (asserts! (is-eq contract-caller ORACLE-INTEGRATION) ERR-NOT-AUTHORIZED)
     (asserts! (is-eq (get status market) MARKET-STATUS-RESOLVED) ERR-MARKET-NOT-RESOLVED)
-    (asserts! (not (get finalized market)) ERR-MARKET-NOT-FINALIZED)
+    (asserts! (not (get finalized market)) ERR-MARKET-ALREADY-RESOLVED)
     (map-set markets
       { market-id: market-id }
       (merge market { status: MARKET-STATUS-DISPUTED })
@@ -460,7 +461,7 @@
       (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
     )
     (asserts! (is-eq contract-caller ORACLE-INTEGRATION) ERR-NOT-AUTHORIZED)
-    (asserts! (is-eq (get status market) MARKET-STATUS-DISPUTED) ERR-MARKET-IN-DISPUTE)
+    (asserts! (is-eq (get status market) MARKET-STATUS-DISPUTED) ERR-MARKET-NOT-DISPUTED)
     (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
     (map-set markets
       { market-id: market-id }
