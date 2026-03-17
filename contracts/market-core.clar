@@ -381,6 +381,7 @@
       (position (unwrap! (map-get? user-positions { market-id: market-id, user: tx-sender }) ERR-NO-WINNINGS))
       (total-pool (+ (get total-yes-stake market) (get total-no-stake market)))
       (outcome (get outcome market))
+      (recipient tx-sender)
     )
     ;; Validate market is resolved
     (asserts! (is-eq (get status market) MARKET-STATUS-RESOLVED) ERR-MARKET-NOT-RESOLVED)
@@ -411,7 +412,7 @@
       (asserts! (> payout u0) ERR-NO-WINNINGS)
       
       ;; Transfer payout from contract to user
-      (try! (as-contract (stx-transfer? payout tx-sender contract-caller)))
+      (try! (as-contract (stx-transfer? payout tx-sender recipient)))
       
       ;; Mark position as claimed
       (map-set user-positions
@@ -585,12 +586,13 @@
       (position (unwrap! (map-get? user-positions { market-id: market-id, user: tx-sender }) ERR-NO-WINNINGS))
       (current-block stacks-block-height)
       (user-total (+ (get yes-stake position) (get no-stake position)))
+      (recipient tx-sender)
     )
     (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-REFUND-NOT-ALLOWED)
     (asserts! (> current-block (get resolution-deadline market)) ERR-REFUND-NOT-ALLOWED)
     (asserts! (not (get claimed position)) ERR-ALREADY-CLAIMED)
     (asserts! (> user-total u0) ERR-NO-WINNINGS)
-    (try! (as-contract (stx-transfer? user-total tx-sender contract-caller)))
+    (try! (as-contract (stx-transfer? user-total tx-sender recipient)))
     (map-set user-positions
       { market-id: market-id, user: tx-sender }
       (merge position { claimed: true })
@@ -624,11 +626,12 @@
       (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
       (position (unwrap! (map-get? user-positions { market-id: market-id, user: tx-sender }) ERR-NO-WINNINGS))
       (user-total (+ (get yes-stake position) (get no-stake position)))
+      (recipient tx-sender)
     )
     (asserts! (is-eq (get status market) MARKET-STATUS-REFUNDED) ERR-REFUND-NOT-ALLOWED)
     (asserts! (not (get claimed position)) ERR-ALREADY-CLAIMED)
     (asserts! (> user-total u0) ERR-NO-WINNINGS)
-    (try! (as-contract (stx-transfer? user-total tx-sender contract-caller)))
+    (try! (as-contract (stx-transfer? user-total tx-sender recipient)))
     (map-set user-positions
       { market-id: market-id, user: tx-sender }
       (merge position { claimed: true })
