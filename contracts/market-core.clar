@@ -338,6 +338,9 @@
     
     ;; Validate resolution date has passed
     (asserts! (>= current-block (get resolution-date market)) ERR-MARKET-NOT-ENDED)
+
+    ;; Prevent late resolutions after the deadline (market is considered abandoned)
+    (asserts! (<= current-block (get resolution-deadline market)) ERR-MARKET-ABANDONED)
     
     ;; Validate outcome is valid (YES or NO)
     (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
@@ -423,6 +426,9 @@
     (asserts! (is-eq contract-caller ORACLE-INTEGRATION) ERR-NOT-AUTHORIZED)
     (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-MARKET-ALREADY-RESOLVED)
     (asserts! (>= current-block (get resolution-date market)) ERR-MARKET-NOT-ENDED)
+
+    ;; Do not allow oracle resolution after the deadline; the fallback refund path applies.
+    (asserts! (<= current-block (get resolution-deadline market)) ERR-MARKET-ABANDONED)
     (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
     (map-set markets
       { market-id: market-id }
@@ -517,6 +523,9 @@
     (asserts! (is-eq contract-caller ORACLE-INTEGRATION) ERR-NOT-AUTHORIZED)
     (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-MARKET-ALREADY-RESOLVED)
     (asserts! (>= current-block (get resolution-date market)) ERR-MARKET-NOT-ENDED)
+
+    ;; Do not allow fallback resolutions after the deadline; the refund path applies.
+    (asserts! (<= current-block (get resolution-deadline market)) ERR-MARKET-ABANDONED)
     (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
     (map-set markets
       { market-id: market-id }
@@ -528,6 +537,32 @@
         finalized: true,
         resolved-by: (some contract-caller),
         resolution-source: "community"
+      })
+    )
+    (ok true)
+  )
+)
+
+;; Mark a market as refunded once the resolution deadline has passed.
+;; This is the "auto-resolution" fallback for abandoned markets.
+(define-public (trigger-auto-refund (market-id uint))
+  (let
+    (
+      (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
+      (current-block stacks-block-height)
+    )
+    (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-REFUND-NOT-ALLOWED)
+    (asserts! (> current-block (get resolution-deadline market)) ERR-REFUND-NOT-ALLOWED)
+    (map-set markets
+      { market-id: market-id }
+      (merge market {
+        status: MARKET-STATUS-REFUNDED,
+        outcome: OUTCOME-NONE,
+        resolved-at: current-block,
+        finalizes-at: current-block,
+        finalized: true,
+        resolved-by: (some tx-sender),
+        resolution-source: "deadline-refund"
       })
     )
     (ok true)
