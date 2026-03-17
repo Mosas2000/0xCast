@@ -178,6 +178,14 @@
   )
 )
 
+;; Enforce that a resolution attempt occurs on/before a market's stored deadline.
+(define-private (assert-within-resolution-deadline (current-block uint) (deadline uint))
+  (if (<= current-block deadline)
+    (ok true)
+    ERR-MARKET-ABANDONED
+  )
+)
+
 ;; ============================================
 ;; Public Functions
 ;; ============================================
@@ -340,7 +348,7 @@
     (asserts! (>= current-block (get resolution-date market)) ERR-MARKET-NOT-ENDED)
 
     ;; Prevent late resolutions after the deadline (market is considered abandoned)
-    (asserts! (<= current-block (get resolution-deadline market)) ERR-MARKET-ABANDONED)
+    (try! (assert-within-resolution-deadline current-block (get resolution-deadline market)))
     
     ;; Validate outcome is valid (YES or NO)
     (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
@@ -428,7 +436,7 @@
     (asserts! (>= current-block (get resolution-date market)) ERR-MARKET-NOT-ENDED)
 
     ;; Do not allow oracle resolution after the deadline; the fallback refund path applies.
-    (asserts! (<= current-block (get resolution-deadline market)) ERR-MARKET-ABANDONED)
+    (try! (assert-within-resolution-deadline current-block (get resolution-deadline market)))
     (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
     (map-set markets
       { market-id: market-id }
@@ -525,7 +533,7 @@
     (asserts! (>= current-block (get resolution-date market)) ERR-MARKET-NOT-ENDED)
 
     ;; Do not allow fallback resolutions after the deadline; the refund path applies.
-    (asserts! (<= current-block (get resolution-deadline market)) ERR-MARKET-ABANDONED)
+    (try! (assert-within-resolution-deadline current-block (get resolution-deadline market)))
     (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
     (map-set markets
       { market-id: market-id }
