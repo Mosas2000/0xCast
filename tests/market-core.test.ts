@@ -668,6 +668,33 @@ describe("market-core contract tests", () => {
             expect(result).toBeErr(Cl.uint(115)); // ERR-REFUND-NOT-ALLOWED
         });
 
+        it("should allow creator resolution at exactly the deadline", () => {
+            const currentBlock = simnet.blockHeight;
+            const endDate = currentBlock + 5;
+            const resolutionDate = currentBlock + 10;
+            const resolutionDeadline = resolutionDate + 1008;
+
+            const { result: createResult } = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Resolve boundary"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+            expect(createResult).toBeOk(Cl.uint(0));
+
+            // Mine to (deadline - 1) so the resolve-market tx executes at exactly deadline.
+            const mineToBeforeDeadline = Math.max(0, (resolutionDeadline - 1) - simnet.blockHeight);
+            simnet.mineEmptyBlocks(mineToBeforeDeadline);
+
+            const { result } = simnet.callPublicFn(contractName, "resolve-market", [Cl.uint(0), Cl.uint(1)], deployer);
+            expect(result).toBeOk({ type: "true" } as any);
+        });
+
         it("should allow anyone to trigger auto-refund after the resolution deadline", () => {
             const currentBlock = simnet.blockHeight;
             const endDate = currentBlock + 5;
