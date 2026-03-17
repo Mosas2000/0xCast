@@ -11,23 +11,44 @@ const wallet4 = accounts.get("wallet_4")!;
 const oracleContract = "oracle-integration";
 const marketContract = "market-core";
 
+type TestMarket = {
+    marketId: number;
+    endDate: number;
+    resolutionDate: number;
+};
+
 function registerOracle() {
     simnet.callPublicFn(oracleContract, "register-oracle", [Cl.principal(oracle1)], deployer);
 }
 
-function createTestMarket() {
+function createTestMarket(): TestMarket {
     const currentBlock = simnet.blockHeight;
-    simnet.callPublicFn(
+    const endDate = currentBlock + 5;
+    const resolutionDate = currentBlock + 10;
+    const { result } = simnet.callPublicFn(
         marketContract,
         "create-market",
         [
             Cl.stringAscii("Will BTC hit 150k?"),
-            Cl.uint(currentBlock + 5),
-            Cl.uint(currentBlock + 10),
+            Cl.uint(endDate),
+            Cl.uint(resolutionDate),
             Cl.uint(1),
         ],
         deployer
     );
+
+    // Each test runs in a fresh simnet instance, so the first market is always `u0`.
+    expect(result).toBeOk(Cl.uint(0));
+    const marketId = Number((result as any).value.value);
+    return { marketId, endDate, resolutionDate };
+}
+
+function mineUntil(targetBlock: number) {
+    const current = simnet.blockHeight;
+    const blocksToMine = Math.max(0, targetBlock - current);
+    if (blocksToMine > 0) {
+        simnet.mineEmptyBlocks(blocksToMine);
+    }
 }
 
 describe("Oracle Integration Tests", () => {
@@ -195,15 +216,20 @@ describe("Oracle Integration Tests", () => {
     });
 
     describe("Resolution Submission", () => {
+        let marketId: number;
+
         beforeEach(() => {
             registerOracle();
+            const market = createTestMarket();
+            marketId = market.marketId;
+            mineUntil(market.resolutionDate);
         });
 
         it("should allow registered oracle to submit resolution", () => {
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "submit-resolution",
-                [Cl.uint(1), Cl.uint(1)],
+                [Cl.uint(marketId), Cl.uint(1)],
                 oracle1
             );
             const resolvedBlock = simnet.blockHeight;
@@ -212,7 +238,7 @@ describe("Oracle Integration Tests", () => {
             const resolution = simnet.callReadOnlyFn(
                 oracleContract,
                 "get-market-resolution",
-                [Cl.uint(1)],
+                [Cl.uint(marketId)],
                 deployer
             );
             expect(resolution.result).toBeSome(Cl.tuple({
@@ -228,19 +254,19 @@ describe("Oracle Integration Tests", () => {
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "submit-resolution",
-                [Cl.uint(1), Cl.uint(1)],
+                [Cl.uint(marketId), Cl.uint(1)],
                 wallet2
             );
             expect(result).toBeErr(Cl.uint(301));
         });
 
         it("should prevent double resolution", () => {
-            simnet.callPublicFn(oracleContract, "submit-resolution", [Cl.uint(1), Cl.uint(1)], oracle1);
+            simnet.callPublicFn(oracleContract, "submit-resolution", [Cl.uint(marketId), Cl.uint(1)], oracle1);
 
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "submit-resolution",
-                [Cl.uint(1), Cl.uint(2)],
+                [Cl.uint(marketId), Cl.uint(2)],
                 oracle1
             );
             expect(result).toBeErr(Cl.uint(303));
@@ -250,14 +276,14 @@ describe("Oracle Integration Tests", () => {
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "submit-resolution",
-                [Cl.uint(1), Cl.uint(0)],
+                [Cl.uint(marketId), Cl.uint(0)],
                 oracle1
             );
             expect(result).toBeErr(Cl.uint(304));
         });
 
         it("should update oracle stats on resolution", () => {
-            simnet.callPublicFn(oracleContract, "submit-resolution", [Cl.uint(1), Cl.uint(1)], oracle1);
+            simnet.callPublicFn(oracleContract, "submit-resolution", [Cl.uint(marketId), Cl.uint(1)], oracle1);
 
             const stats = simnet.callReadOnlyFn(
                 oracleContract,
@@ -274,12 +300,17 @@ describe("Oracle Integration Tests", () => {
     });
 
     describe("Auto-Resolution with Oracle", () => {
+        let marketId: number;
+
         beforeEach(() => {
             registerOracle();
+            const market = createTestMarket();
+            marketId = market.marketId;
+            mineUntil(market.resolutionDate);
             simnet.callPublicFn(
                 oracleContract,
                 "configure-oracle-source",
-                [Cl.uint(0), Cl.stringAscii("redstone"), Cl.stringAscii("BTC/USD"), Cl.uint(150000)],
+                [Cl.uint(marketId), Cl.stringAscii("redstone"), Cl.stringAscii("BTC/USD"), Cl.uint(150000)],
                 deployer
             );
         });
@@ -290,7 +321,7 @@ describe("Oracle Integration Tests", () => {
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "auto-resolve-with-oracle",
-                [Cl.uint(0)],
+                [Cl.uint(marketId)],
                 oracle1
             );
             expect(result).toBeOk(Cl.uint(1));
@@ -302,7 +333,7 @@ describe("Oracle Integration Tests", () => {
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "auto-resolve-with-oracle",
-                [Cl.uint(0)],
+                [Cl.uint(marketId)],
                 oracle1
             );
             expect(result).toBeOk(Cl.uint(2));
@@ -310,16 +341,21 @@ describe("Oracle Integration Tests", () => {
     });
 
     describe("Resolution Finalization", () => {
+        let marketId: number;
+
         beforeEach(() => {
             registerOracle();
-            simnet.callPublicFn(oracleContract, "submit-resolution", [Cl.uint(1), Cl.uint(1)], oracle1);
+            const market = createTestMarket();
+            marketId = market.marketId;
+            mineUntil(market.resolutionDate);
+            simnet.callPublicFn(oracleContract, "submit-resolution", [Cl.uint(marketId), Cl.uint(1)], oracle1);
         });
 
         it("should reject finalization during dispute period", () => {
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "finalize-resolution",
-                [Cl.uint(1)],
+                [Cl.uint(marketId)],
                 deployer
             );
             expect(result).toBeErr(Cl.uint(315));
@@ -331,7 +367,7 @@ describe("Oracle Integration Tests", () => {
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "finalize-resolution",
-                [Cl.uint(1)],
+                [Cl.uint(marketId)],
                 deployer
             );
             expect(result).toBeOk(Cl.uint(1));
@@ -339,7 +375,7 @@ describe("Oracle Integration Tests", () => {
             const isFinalized = simnet.callReadOnlyFn(
                 oracleContract,
                 "is-resolution-finalized",
-                [Cl.uint(1)],
+                [Cl.uint(marketId)],
                 deployer
             );
             expect(isFinalized.result).toBeBool(true);
@@ -347,7 +383,7 @@ describe("Oracle Integration Tests", () => {
 
         it("should update oracle successful resolution count", () => {
             simnet.mineEmptyBlocks(150);
-            simnet.callPublicFn(oracleContract, "finalize-resolution", [Cl.uint(1)], deployer);
+            simnet.callPublicFn(oracleContract, "finalize-resolution", [Cl.uint(marketId)], deployer);
 
             const stats = simnet.callReadOnlyFn(
                 oracleContract,
@@ -364,16 +400,21 @@ describe("Oracle Integration Tests", () => {
     });
 
     describe("Dispute Mechanism", () => {
+        let marketId: number;
+
         beforeEach(() => {
             registerOracle();
-            simnet.callPublicFn(oracleContract, "submit-resolution", [Cl.uint(1), Cl.uint(1)], oracle1);
+            const market = createTestMarket();
+            marketId = market.marketId;
+            mineUntil(market.resolutionDate);
+            simnet.callPublicFn(oracleContract, "submit-resolution", [Cl.uint(marketId), Cl.uint(1)], oracle1);
         });
 
         it("should allow submitting a dispute with sufficient stake", () => {
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "submit-dispute",
-                [Cl.uint(1), Cl.stringUtf8("Oracle submitted wrong result"), Cl.uint(5000000)],
+                [Cl.uint(marketId), Cl.stringUtf8("Oracle submitted wrong result"), Cl.uint(5000000)],
                 wallet2
             );
             expect(result).toBeOk(Cl.uint(0));
@@ -383,7 +424,7 @@ describe("Oracle Integration Tests", () => {
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "submit-dispute",
-                [Cl.uint(1), Cl.stringUtf8("Low stake dispute"), Cl.uint(1000000)],
+                [Cl.uint(marketId), Cl.stringUtf8("Low stake dispute"), Cl.uint(1000000)],
                 wallet2
             );
             expect(result).toBeErr(Cl.uint(307));
@@ -393,14 +434,14 @@ describe("Oracle Integration Tests", () => {
             simnet.callPublicFn(
                 oracleContract,
                 "submit-dispute",
-                [Cl.uint(1), Cl.stringUtf8("First dispute"), Cl.uint(5000000)],
+                [Cl.uint(marketId), Cl.stringUtf8("First dispute"), Cl.uint(5000000)],
                 wallet2
             );
 
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "submit-dispute",
-                [Cl.uint(1), Cl.stringUtf8("Second dispute"), Cl.uint(5000000)],
+                [Cl.uint(marketId), Cl.stringUtf8("Second dispute"), Cl.uint(5000000)],
                 wallet3
             );
             expect(result).toBeErr(Cl.uint(308));
@@ -412,7 +453,7 @@ describe("Oracle Integration Tests", () => {
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "submit-dispute",
-                [Cl.uint(1), Cl.stringUtf8("Late dispute"), Cl.uint(5000000)],
+                [Cl.uint(marketId), Cl.stringUtf8("Late dispute"), Cl.uint(5000000)],
                 wallet2
             );
             expect(result).toBeErr(Cl.uint(305));
@@ -422,7 +463,7 @@ describe("Oracle Integration Tests", () => {
             simnet.callPublicFn(
                 oracleContract,
                 "submit-dispute",
-                [Cl.uint(1), Cl.stringUtf8("Disputing"), Cl.uint(5000000)],
+                [Cl.uint(marketId), Cl.stringUtf8("Disputing"), Cl.uint(5000000)],
                 wallet2
             );
 
@@ -441,13 +482,18 @@ describe("Oracle Integration Tests", () => {
     });
 
     describe("Dispute Voting", () => {
+        let marketId: number;
+
         beforeEach(() => {
             registerOracle();
-            simnet.callPublicFn(oracleContract, "submit-resolution", [Cl.uint(1), Cl.uint(1)], oracle1);
+            const market = createTestMarket();
+            marketId = market.marketId;
+            mineUntil(market.resolutionDate);
+            simnet.callPublicFn(oracleContract, "submit-resolution", [Cl.uint(marketId), Cl.uint(1)], oracle1);
             simnet.callPublicFn(
                 oracleContract,
                 "submit-dispute",
-                [Cl.uint(1), Cl.stringUtf8("Wrong result"), Cl.uint(5000000)],
+                [Cl.uint(marketId), Cl.stringUtf8("Wrong result"), Cl.uint(5000000)],
                 wallet2
             );
         });
@@ -456,7 +502,7 @@ describe("Oracle Integration Tests", () => {
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "vote-on-dispute",
-                [Cl.uint(1), Cl.uint(1)],
+                [Cl.uint(marketId), Cl.uint(1)],
                 wallet3
             );
             expect(result).toBeOk(Cl.bool(true));
@@ -466,19 +512,19 @@ describe("Oracle Integration Tests", () => {
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "vote-on-dispute",
-                [Cl.uint(1), Cl.uint(2)],
+                [Cl.uint(marketId), Cl.uint(2)],
                 wallet3
             );
             expect(result).toBeOk(Cl.bool(true));
         });
 
         it("should prevent double voting", () => {
-            simnet.callPublicFn(oracleContract, "vote-on-dispute", [Cl.uint(1), Cl.uint(1)], wallet3);
+            simnet.callPublicFn(oracleContract, "vote-on-dispute", [Cl.uint(marketId), Cl.uint(1)], wallet3);
 
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "vote-on-dispute",
-                [Cl.uint(1), Cl.uint(2)],
+                [Cl.uint(marketId), Cl.uint(2)],
                 wallet3
             );
             expect(result).toBeErr(Cl.uint(310));
@@ -488,7 +534,7 @@ describe("Oracle Integration Tests", () => {
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "vote-on-dispute",
-                [Cl.uint(1), Cl.uint(3)],
+                [Cl.uint(marketId), Cl.uint(3)],
                 wallet3
             );
             expect(result).toBeErr(Cl.uint(304));
@@ -500,7 +546,7 @@ describe("Oracle Integration Tests", () => {
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "vote-on-dispute",
-                [Cl.uint(1), Cl.uint(1)],
+                [Cl.uint(marketId), Cl.uint(1)],
                 wallet3
             );
             expect(result).toBeErr(Cl.uint(311));
@@ -508,44 +554,49 @@ describe("Oracle Integration Tests", () => {
     });
 
     describe("Dispute Resolution", () => {
+        let marketId: number;
+
         beforeEach(() => {
             registerOracle();
-            simnet.callPublicFn(oracleContract, "submit-resolution", [Cl.uint(1), Cl.uint(1)], oracle1);
+            const market = createTestMarket();
+            marketId = market.marketId;
+            mineUntil(market.resolutionDate);
+            simnet.callPublicFn(oracleContract, "submit-resolution", [Cl.uint(marketId), Cl.uint(1)], oracle1);
             simnet.callPublicFn(
                 oracleContract,
                 "submit-dispute",
-                [Cl.uint(1), Cl.stringUtf8("Wrong result"), Cl.uint(5000000)],
+                [Cl.uint(marketId), Cl.stringUtf8("Wrong result"), Cl.uint(5000000)],
                 wallet2
             );
         });
 
         it("should uphold dispute when YES votes exceed NO votes", () => {
-            simnet.callPublicFn(oracleContract, "vote-on-dispute", [Cl.uint(1), Cl.uint(1)], wallet3);
-            simnet.callPublicFn(oracleContract, "vote-on-dispute", [Cl.uint(1), Cl.uint(1)], wallet4);
-            simnet.callPublicFn(oracleContract, "vote-on-dispute", [Cl.uint(1), Cl.uint(2)], deployer);
+            simnet.callPublicFn(oracleContract, "vote-on-dispute", [Cl.uint(marketId), Cl.uint(1)], wallet3);
+            simnet.callPublicFn(oracleContract, "vote-on-dispute", [Cl.uint(marketId), Cl.uint(1)], wallet4);
+            simnet.callPublicFn(oracleContract, "vote-on-dispute", [Cl.uint(marketId), Cl.uint(2)], deployer);
 
             simnet.mineEmptyBlocks(300);
 
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "resolve-dispute",
-                [Cl.uint(1)],
+                [Cl.uint(marketId)],
                 deployer
             );
             expect(result).toBeOk(Cl.uint(1));
         });
 
         it("should reject dispute when NO votes exceed YES votes", () => {
-            simnet.callPublicFn(oracleContract, "vote-on-dispute", [Cl.uint(1), Cl.uint(2)], wallet3);
-            simnet.callPublicFn(oracleContract, "vote-on-dispute", [Cl.uint(1), Cl.uint(2)], wallet4);
-            simnet.callPublicFn(oracleContract, "vote-on-dispute", [Cl.uint(1), Cl.uint(1)], deployer);
+            simnet.callPublicFn(oracleContract, "vote-on-dispute", [Cl.uint(marketId), Cl.uint(2)], wallet3);
+            simnet.callPublicFn(oracleContract, "vote-on-dispute", [Cl.uint(marketId), Cl.uint(2)], wallet4);
+            simnet.callPublicFn(oracleContract, "vote-on-dispute", [Cl.uint(marketId), Cl.uint(1)], deployer);
 
             simnet.mineEmptyBlocks(300);
 
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "resolve-dispute",
-                [Cl.uint(1)],
+                [Cl.uint(marketId)],
                 deployer
             );
             expect(result).toBeOk(Cl.uint(2));
@@ -553,21 +604,21 @@ describe("Oracle Integration Tests", () => {
             const isFinalized = simnet.callReadOnlyFn(
                 oracleContract,
                 "is-resolution-finalized",
-                [Cl.uint(1)],
+                [Cl.uint(marketId)],
                 deployer
             );
             expect(isFinalized.result).toBeBool(true);
         });
 
         it("should reject resolution before voting period ends", () => {
-            simnet.callPublicFn(oracleContract, "vote-on-dispute", [Cl.uint(1), Cl.uint(1)], wallet3);
-            simnet.callPublicFn(oracleContract, "vote-on-dispute", [Cl.uint(1), Cl.uint(1)], wallet4);
-            simnet.callPublicFn(oracleContract, "vote-on-dispute", [Cl.uint(1), Cl.uint(2)], deployer);
+            simnet.callPublicFn(oracleContract, "vote-on-dispute", [Cl.uint(marketId), Cl.uint(1)], wallet3);
+            simnet.callPublicFn(oracleContract, "vote-on-dispute", [Cl.uint(marketId), Cl.uint(1)], wallet4);
+            simnet.callPublicFn(oracleContract, "vote-on-dispute", [Cl.uint(marketId), Cl.uint(2)], deployer);
 
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "resolve-dispute",
-                [Cl.uint(1)],
+                [Cl.uint(marketId)],
                 deployer
             );
             expect(result).toBeErr(Cl.uint(311));
@@ -575,13 +626,18 @@ describe("Oracle Integration Tests", () => {
     });
 
     describe("Admin Dispute Override", () => {
+        let marketId: number;
+
         beforeEach(() => {
             registerOracle();
-            simnet.callPublicFn(oracleContract, "submit-resolution", [Cl.uint(1), Cl.uint(1)], oracle1);
+            const market = createTestMarket();
+            marketId = market.marketId;
+            mineUntil(market.resolutionDate);
+            simnet.callPublicFn(oracleContract, "submit-resolution", [Cl.uint(marketId), Cl.uint(1)], oracle1);
             simnet.callPublicFn(
                 oracleContract,
                 "submit-dispute",
-                [Cl.uint(1), Cl.stringUtf8("Admin override test"), Cl.uint(5000000)],
+                [Cl.uint(marketId), Cl.stringUtf8("Admin override test"), Cl.uint(5000000)],
                 wallet2
             );
         });
@@ -590,7 +646,7 @@ describe("Oracle Integration Tests", () => {
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "admin-resolve-dispute",
-                [Cl.uint(1), Cl.uint(2)],
+                [Cl.uint(marketId), Cl.uint(2)],
                 deployer
             );
             const adminBlock = simnet.blockHeight;
@@ -599,7 +655,7 @@ describe("Oracle Integration Tests", () => {
             const resolution = simnet.callReadOnlyFn(
                 oracleContract,
                 "get-market-resolution",
-                [Cl.uint(1)],
+                [Cl.uint(marketId)],
                 deployer
             );
             expect(resolution.result).toBeSome(Cl.tuple({
@@ -615,7 +671,7 @@ describe("Oracle Integration Tests", () => {
             const { result } = simnet.callPublicFn(
                 oracleContract,
                 "admin-resolve-dispute",
-                [Cl.uint(1), Cl.uint(2)],
+                [Cl.uint(marketId), Cl.uint(2)],
                 wallet3
             );
             expect(result).toBeErr(Cl.uint(300));
