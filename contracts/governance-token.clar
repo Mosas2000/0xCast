@@ -20,9 +20,9 @@
 ;; Data Maps
 (define-map token-balances principal uint)
 (define-map token-supplies-at-block uint uint)
-(define-map delegated-voting-power 
-  principal 
-  (optional principal))
+(define-map delegated-voting-power
+  principal
+  principal)
 
 ;; SIP-010 Functions
 
@@ -68,15 +68,14 @@
 ;; Voting Power Functions
 
 (define-read-only (get-voting-power (account principal))
-  (let ((delegate (unwrap! (map-get? delegated-voting-power account) (ok (ft-get-balance cast-token account)))))
-    (if (is-some delegate)
-      (ok (ft-get-balance cast-token (unwrap-panic delegate)))
-      (ok (ft-get-balance cast-token account)))))
+  (match (map-get? delegated-voting-power account)
+    delegate (ok (ft-get-balance cast-token delegate))
+    (ok (ft-get-balance cast-token account))))
 
 (define-public (delegate-voting-power (delegate principal))
   (begin
     (asserts! (not (is-eq tx-sender delegate)) err-invalid-amount)
-    (ok (map-set delegated-voting-power tx-sender (some delegate)))))
+    (ok (map-set delegated-voting-power tx-sender delegate))))
 
 (define-public (revoke-delegation)
   (ok (map-delete delegated-voting-power tx-sender)))
