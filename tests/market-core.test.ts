@@ -553,6 +553,7 @@ describe("market-core contract tests", () => {
                 deployer
             );
             expect(createResult).toBeOk(Cl.uint(0));
+            const createdAtBlock = simnet.blockHeight;
 
             simnet.callPublicFn(contractName, "place-yes-stake", [Cl.uint(0), Cl.uint(1_000_000)], wallet1);
 
@@ -566,6 +567,7 @@ describe("market-core contract tests", () => {
                 wallet2
             );
             expect(result).toBeOk(Cl.bool(true));
+            const resolvedAtBlock = simnet.blockHeight;
 
             const market = simnet.callReadOnlyFn(contractName, "get-market", [Cl.uint(0)], deployer);
             expect(market.result).toBeSome(
@@ -580,9 +582,9 @@ describe("market-core contract tests", () => {
                     "total-no-stake": Cl.uint(0),
                     status: Cl.uint(3),
                     outcome: Cl.uint(0),
-                    "created-at": Cl.uint(currentBlock),
-                    "resolved-at": Cl.uint(simnet.blockHeight),
-                    "finalizes-at": Cl.uint(simnet.blockHeight),
+                    "created-at": Cl.uint(createdAtBlock),
+                    "resolved-at": Cl.uint(resolvedAtBlock),
+                    "finalizes-at": Cl.uint(resolvedAtBlock),
                     finalized: Cl.bool(true),
                     "resolved-by": Cl.some(Cl.standardPrincipal(wallet2)),
                     "resolution-source": Cl.stringAscii("deadline-refund"),
