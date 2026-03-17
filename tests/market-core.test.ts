@@ -641,6 +641,33 @@ describe("market-core contract tests", () => {
             expect(afterDeadline.result).toBeOk(Cl.uint(stakeAmount));
         });
 
+        it("should reject auto-refund trigger at exactly the deadline", () => {
+            const currentBlock = simnet.blockHeight;
+            const endDate = currentBlock + 5;
+            const resolutionDate = currentBlock + 10;
+            const resolutionDeadline = resolutionDate + 1008;
+
+            const { result: createResult } = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Auto-refund boundary"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+            expect(createResult).toBeOk(Cl.uint(0));
+
+            // Mine to (deadline - 1) so the trigger-auto-refund tx executes at exactly deadline.
+            const mineToBeforeDeadline = Math.max(0, (resolutionDeadline - 1) - simnet.blockHeight);
+            simnet.mineEmptyBlocks(mineToBeforeDeadline);
+
+            const { result } = simnet.callPublicFn(contractName, "trigger-auto-refund", [Cl.uint(0)], wallet1);
+            expect(result).toBeErr(Cl.uint(115)); // ERR-REFUND-NOT-ALLOWED
+        });
+
         it("should allow anyone to trigger auto-refund after the resolution deadline", () => {
             const currentBlock = simnet.blockHeight;
             const endDate = currentBlock + 5;
