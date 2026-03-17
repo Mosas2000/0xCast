@@ -201,8 +201,11 @@
 (define-public (submit-resolution (market-id uint) (result uint))
   (let ((oracle tx-sender))
     (asserts! (is-registered-oracle oracle) err-unauthorized-oracle)
+    (asserts! (contract-call? .market-core market-exists market-id) err-market-not-found)
     (asserts! (is-none (map-get? market-resolutions market-id)) err-already-resolved)
     (asserts! (or (is-eq result u1) (is-eq result u2)) err-invalid-result)
+
+    (try! (contract-call? .market-core oracle-resolve market-id result))
     (map-set market-resolutions market-id {
       oracle: oracle,
       result: result,
@@ -225,9 +228,11 @@
     (feed (unwrap! (map-get? price-feeds { market-id: market-id }) err-market-not-found))
   )
     (asserts! (is-registered-oracle oracle) err-unauthorized-oracle)
+    (asserts! (contract-call? .market-core market-exists market-id) err-market-not-found)
     (asserts! (is-none (map-get? market-resolutions market-id)) err-already-resolved)
     (asserts! (get confirmed feed) err-invalid-price)
     (let ((result (if (>= (get price feed) (get threshold-price source)) u1 u2)))
+      (try! (contract-call? .market-core oracle-resolve market-id result))
       (map-set market-resolutions market-id {
         oracle: oracle,
         result: result,
@@ -249,6 +254,8 @@
     (asserts! (> stacks-block-height (get dispute-end resolution)) err-dispute-period-active)
     (asserts! (is-none (map-get? disputes { market-id: market-id })) err-dispute-active)
     (map-set market-resolutions market-id (merge resolution { finalized: true }))
+
+    (try! (contract-call? .market-core finalize-market market-id))
     (let ((oracle (get oracle resolution))
           (stats (get-oracle-stats oracle)))
       (map-set oracle-stats oracle (merge stats {
@@ -370,7 +377,9 @@
 (define-public (set-dispute-period (new-period uint))
   (begin
     (asserts! (is-eq tx-sender contract-owner) err-owner-only)
-    (ok (var-set dispute-period new-period))))
+    (var-set dispute-period new-period)
+    (try! (contract-call? .market-core set-dispute-period new-period))
+    (ok true)))
 
 (define-public (set-voting-period (new-period uint))
   (begin
