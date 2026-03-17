@@ -574,6 +574,37 @@ describe("market-core contract tests", () => {
             expect(deadline.result).toBeErr(Cl.uint(101)); // ERR-MARKET-NOT-FOUND
         });
 
+        it("should report abandoned only strictly after the deadline", () => {
+            const currentBlock = simnet.blockHeight;
+            const endDate = currentBlock + 5;
+            const resolutionDate = currentBlock + 10;
+            const resolutionDeadline = resolutionDate + 1008;
+
+            const { result: createResult } = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Abandonment boundary"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+            expect(createResult).toBeOk(Cl.uint(0));
+
+            // At exactly the deadline, it should not yet be considered abandoned.
+            const mineToDeadline = Math.max(0, resolutionDeadline - simnet.blockHeight);
+            simnet.mineEmptyBlocks(mineToDeadline);
+            const atDeadline = simnet.callReadOnlyFn(contractName, "is-market-abandoned", [Cl.uint(0)], deployer);
+            expect(atDeadline.result).toEqual({ type: "false" });
+
+            // One block after the deadline, it should be abandoned.
+            simnet.mineEmptyBlocks(1);
+            const afterDeadline = simnet.callReadOnlyFn(contractName, "is-market-abandoned", [Cl.uint(0)], deployer);
+            expect(afterDeadline.result).toEqual({ type: "true" });
+        });
+
         it("should allow anyone to trigger auto-refund after the resolution deadline", () => {
             const currentBlock = simnet.blockHeight;
             const endDate = currentBlock + 5;
