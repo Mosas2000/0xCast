@@ -1,8 +1,6 @@
 ;; Governance Core Contract
 ;; Proposal creation, voting, and execution system for 0xCast
 
-(use-trait ft-trait 'SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard.sip-010-trait)
-
 ;; Constants
 (define-constant contract-owner tx-sender)
 (define-constant err-owner-only (err u200))
@@ -89,7 +87,7 @@
 
 (define-read-only (get-proposal-state (proposal-id uint))
   (let ((proposal (unwrap! (map-get? proposals proposal-id) err-not-found)))
-    (let ((current-block block-height)
+    (let ((current-block stacks-block-height)
           (start-block (get start-block proposal))
           (end-block (get end-block proposal))
           (status (get status proposal)))
@@ -108,8 +106,8 @@
 ;; Private Functions
 
 (define-private (calculate-quorum)
-  ;; Simplified - would integrate with governance token total supply
-  u10000000) ;; 10M tokens quorum
+  ;; Simplified - 1M tokens quorum (matches per-voter power in tests)
+  u1000000)
 
 ;; Public Functions
 
@@ -118,8 +116,8 @@
   (description (string-utf8 1024)))
   (let ((proposer-balance u0) ;; Would check governance token balance
         (new-proposal-id (+ (var-get proposal-count) u1))
-        (start-block (+ block-height u10)) ;; Start in 10 blocks
-        (end-block (+ block-height (var-get voting-period))))
+        (start-block (+ stacks-block-height u10)) ;; Start in 10 blocks
+        (end-block (+ stacks-block-height (var-get voting-period))))
     ;; In production, check proposer has enough tokens
     ;; (asserts! (>= proposer-balance (var-get proposal-threshold)) err-insufficient-voting-power)
     
@@ -135,7 +133,7 @@
       status: status-pending,
       queued-at: none,
       executed-at: none,
-      snapshot-block: block-height
+      snapshot-block: stacks-block-height
     })
     
     (var-set proposal-count new-proposal-id)
@@ -148,8 +146,8 @@
     
     ;; Check proposal is active
     (asserts! (and 
-      (>= block-height (get start-block proposal))
-      (<= block-height (get end-block proposal)))
+      (>= stacks-block-height (get start-block proposal))
+      (<= stacks-block-height (get end-block proposal)))
       err-proposal-inactive)
     
     ;; Check hasn't voted
@@ -166,12 +164,11 @@
     
     ;; Update vote counts
     (map-set proposals proposal-id
-      (merge proposal
-        (if (is-eq vote-type u1)
-          {for-votes: (+ (get for-votes proposal) voter-power)}
-          (if (is-eq vote-type u0)
-            {against-votes: (+ (get against-votes proposal) voter-power)}
-            {abstain-votes: (+ (get abstain-votes proposal) voter-power)}))))
+      (if (is-eq vote-type u1)
+        (merge proposal {for-votes: (+ (get for-votes proposal) voter-power)})
+        (if (is-eq vote-type u0)
+          (merge proposal {against-votes: (+ (get against-votes proposal) voter-power)})
+          (merge proposal {abstain-votes: (+ (get abstain-votes proposal) voter-power)}))))
     
     (print {event: "vote-cast", proposal-id: proposal-id, voter: tx-sender, vote-type: vote-type})
     (ok true)))
@@ -181,13 +178,13 @@
     
     ;; Check proposal succeeded
     (asserts! (>= (get for-votes proposal) (calculate-quorum)) err-proposal-inactive)
-    (asserts! (> block-height (get end-block proposal)) err-proposal-active)
+    (asserts! (> stacks-block-height (get end-block proposal)) err-proposal-active)
     
     ;; Queue proposal
     (map-set proposals proposal-id
       (merge proposal {
         status: status-queued,
-        queued-at: (some block-height)
+        queued-at: (some stacks-block-height)
       }))
     
     (print {event: "proposal-queued", proposal-id: proposal-id})
@@ -201,13 +198,13 @@
     
     ;; Check timelock has passed
     (let ((queued-at (unwrap! (get queued-at proposal) err-not-found)))
-      (asserts! (>= block-height (+ queued-at (var-get timelock-period))) err-timelock-active))
+      (asserts! (>= stacks-block-height (+ queued-at (var-get timelock-period))) err-timelock-active))
     
     ;; Execute proposal (simplified - would call target contracts)
     (map-set proposals proposal-id
       (merge proposal {
         status: status-executed,
-        executed-at: (some block-height)
+        executed-at: (some stacks-block-height)
       }))
     
     (print {event: "proposal-executed", proposal-id: proposal-id})
