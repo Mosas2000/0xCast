@@ -280,6 +280,7 @@
     (asserts! (is-none (map-get? disputes { market-id: market-id })) err-already-disputed)
     (asserts! (>= stake (var-get min-dispute-stake)) err-insufficient-stake)
     (try! (stx-transfer? stake tx-sender (as-contract tx-sender)))
+
     (var-set dispute-counter (+ current-id u1))
     (map-set disputes
       { market-id: market-id }
@@ -295,6 +296,7 @@
         no-votes: u0,
         total-voters: u0
       })
+
     (let ((oracle (get oracle resolution))
           (stats (get-oracle-stats oracle)))
       (map-set oracle-stats oracle (merge stats {
@@ -303,7 +305,9 @@
 
     (try! (contract-call? .market-core mark-disputed market-id))
     (print {event: "dispute-submitted", market-id: market-id, disputer: tx-sender, stake: stake})
-    (ok current-id)))
+    (ok current-id)
+  )
+)
 
 ;; Vote on a dispute
 (define-public (vote-on-dispute (market-id uint) (vote uint))
@@ -322,7 +326,9 @@
           { yes-votes: (+ (get yes-votes dispute) u1), no-votes: (get no-votes dispute), total-voters: (+ (get total-voters dispute) u1) }
           { yes-votes: (get yes-votes dispute), no-votes: (+ (get no-votes dispute) u1), total-voters: (+ (get total-voters dispute) u1) })))
     (print {event: "dispute-vote", market-id: market-id, voter: tx-sender, vote: vote})
-    (ok true)))
+    (ok true)
+  )
+)
 
 ;; Resolve dispute after voting period ends
 (define-public (resolve-dispute (market-id uint))
@@ -380,7 +386,9 @@
               successful-resolutions: (+ (get successful-resolutions stats) u1)
             })))
           (print {event: "dispute-rejected", market-id: market-id, final-result: final-result})
-          (ok DISPUTE-STATUS-REJECTED)))))
+          (ok DISPUTE-STATUS-REJECTED))))
+  )
+)
 
 ;; Admin: override dispute resolution
 (define-public (admin-resolve-dispute (market-id uint) (final-result uint))
