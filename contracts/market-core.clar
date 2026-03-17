@@ -44,15 +44,15 @@
 (define-constant ERR-MARKET-NOT-FINALIZED (err u116))
 (define-constant ERR-FINALIZATION-NOT-READY (err u117))
 
-;; Dispute window for any resolution (~24 hours in blocks)
-(define-constant DISPUTE-PERIOD u144)
-
 ;; Only the oracle integration contract may invoke oracle/dispute entrypoints
 (define-constant ORACLE-INTEGRATION .oracle-integration)
 
 ;; Auto-resolve fallback: blocks after resolution-date before auto-resolve kicks in
 ;; ~7 days in blocks (7 * 144 = 1008)
 (define-data-var abandonment-period uint u1008)
+
+;; Dispute window for any resolution (~24 hours in blocks)
+(define-data-var dispute-period uint u144)
 
 ;; ============================================
 ;; Data Variables
@@ -151,6 +151,10 @@
 ;; Get market-id by category and index
 (define-read-only (get-market-by-category (category uint) (index uint))
   (map-get? market-categories { category: category, index: index })
+)
+
+(define-read-only (get-dispute-period)
+  (var-get dispute-period)
 )
 
 ;; ============================================
@@ -334,7 +338,7 @@
         status: MARKET-STATUS-RESOLVED,
         outcome: outcome,
         resolved-at: current-block,
-        finalizes-at: (+ current-block DISPUTE-PERIOD),
+        finalizes-at: (+ current-block (var-get dispute-period)),
         finalized: false,
         resolved-by: (some tx-sender),
         resolution-source: "creator"
@@ -415,13 +419,20 @@
         status: MARKET-STATUS-RESOLVED,
         outcome: outcome,
         resolved-at: current-block,
-        finalizes-at: (+ current-block DISPUTE-PERIOD),
+        finalizes-at: (+ current-block (var-get dispute-period)),
         finalized: false,
         resolved-by: (some contract-caller),
         resolution-source: "oracle"
       })
     )
     (ok true)
+  )
+)
+
+(define-public (set-dispute-period (new-period uint))
+  (begin
+    (asserts! (is-eq contract-caller ORACLE-INTEGRATION) ERR-NOT-AUTHORIZED)
+    (ok (var-set dispute-period new-period))
   )
 )
 
