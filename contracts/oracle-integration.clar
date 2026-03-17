@@ -366,7 +366,7 @@
 
           (let (
             (stake (get stake dispute))
-            (slash-amount (try! (contract-call? .market-fees record-slash market-id stake)))
+            (slash-amount (unwrap-panic (contract-call? .market-fees record-slash market-id stake)))
             (refund (- stake slash-amount))
           )
             (var-set slashed-balance (+ (var-get slashed-balance) slash-amount))
@@ -380,7 +380,7 @@
               successful-resolutions: (+ (get successful-resolutions stats) u1)
             })))
           (print {event: "dispute-rejected", market-id: market-id, final-result: final-result})
-          (ok DISPUTE-STATUS-REJECTED)))))))
+          (ok DISPUTE-STATUS-REJECTED)))))
 
 ;; Admin: override dispute resolution
 (define-public (admin-resolve-dispute (market-id uint) (final-result uint))
