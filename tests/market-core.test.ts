@@ -536,6 +536,44 @@ describe("market-core contract tests", () => {
     });
 
     describe("Resolution Deadline", () => {
+        it("should expose stored resolution deadline via getter", () => {
+            const currentBlock = simnet.blockHeight;
+            const endDate = currentBlock + 5;
+            const resolutionDate = currentBlock + 10;
+            const expectedDeadline = resolutionDate + 1008;
+
+            const { result: createResult } = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Deadline getter"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+            expect(createResult).toBeOk(Cl.uint(0));
+
+            const deadline = simnet.callReadOnlyFn(
+                contractName,
+                "get-resolution-deadline",
+                [Cl.uint(0)],
+                deployer
+            );
+            expect(deadline.result).toBeOk(Cl.uint(expectedDeadline));
+        });
+
+        it("should return err when getting deadline for unknown market", () => {
+            const deadline = simnet.callReadOnlyFn(
+                contractName,
+                "get-resolution-deadline",
+                [Cl.uint(999)],
+                deployer
+            );
+            expect(deadline.result).toBeErr(Cl.uint(101)); // ERR-MARKET-NOT-FOUND
+        });
+
         it("should allow anyone to trigger auto-refund after the resolution deadline", () => {
             const currentBlock = simnet.blockHeight;
             const endDate = currentBlock + 5;
