@@ -296,6 +296,8 @@
       (map-set oracle-stats oracle (merge stats {
         disputed-resolutions: (+ (get disputed-resolutions stats) u1)
       })))
+
+    (try! (contract-call? .market-core mark-disputed market-id))
     (print {event: "dispute-submitted", market-id: market-id, disputer: tx-sender, stake: stake})
     (ok current-id)))
 
@@ -327,28 +329,43 @@
     (asserts! (is-eq (get status dispute) DISPUTE-STATUS-ACTIVE) err-voting-closed)
     (asserts! (> stacks-block-height (get voting-end dispute)) err-voting-closed)
     (asserts! (>= (get total-voters dispute) (var-get dispute-quorum)) err-voting-closed)
-    (let ((upheld (> (get yes-votes dispute) (get no-votes dispute))))
+    (let (
+      (upheld (> (get yes-votes dispute) (get no-votes dispute)))
+      (original-result (get result resolution))
+      (final-result (if upheld
+        (if (is-eq original-result u1) u2 u1)
+        original-result))
+    )
       (if upheld
         (begin
           (map-set disputes { market-id: market-id }
             (merge dispute { status: DISPUTE-STATUS-UPHELD }))
           (map-set market-resolutions market-id
-            (merge resolution { finalized: false, dispute-end: stacks-block-height }))
+            (merge resolution {
+              result: final-result,
+              finalized: true,
+              dispute-end: stacks-block-height
+            }))
+          (try! (contract-call? .market-core resolve-after-dispute market-id final-result))
           (try! (as-contract (stx-transfer? (get stake dispute) tx-sender (get disputer dispute))))
-          (print {event: "dispute-upheld", market-id: market-id})
+          (print {event: "dispute-upheld", market-id: market-id, final-result: final-result})
           (ok DISPUTE-STATUS-UPHELD))
         (begin
           (map-set disputes { market-id: market-id }
             (merge dispute { status: DISPUTE-STATUS-REJECTED }))
           (map-set market-resolutions market-id
-            (merge resolution { finalized: true }))
+            (merge resolution {
+              finalized: true,
+              dispute-end: stacks-block-height
+            }))
+          (try! (contract-call? .market-core resolve-after-dispute market-id final-result))
           (let ((oracle (get oracle resolution))
                 (stats (get-oracle-stats oracle)))
             (map-set oracle-stats oracle (merge stats {
               successful-resolutions: (+ (get successful-resolutions stats) u1)
             })))
-          (print {event: "dispute-rejected", market-id: market-id})
-          (ok DISPUTE-STATUS-REJECTED))))))
+          (print {event: "dispute-rejected", market-id: market-id, final-result: final-result})
+          (ok DISPUTE-STATUS-REJECTED)))))))
 
 ;; Admin: override dispute resolution
 (define-public (admin-resolve-dispute (market-id uint) (final-result uint))
@@ -368,6 +385,7 @@
         finalized: true,
         dispute-end: stacks-block-height
       })
+      (try! (contract-call? .market-core resolve-after-dispute market-id final-result))
       (try! (as-contract (stx-transfer? (get stake dispute) tx-sender (get disputer dispute))))
       (print {event: "admin-dispute-resolved", market-id: market-id, final-result: final-result})
       (ok true))))
