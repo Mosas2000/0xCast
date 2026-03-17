@@ -68,9 +68,24 @@ plan:
             path: contracts/access-control.clar
             clarity-version: 3
         - emulated-contract-publish:
+            contract-name: governance-core
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/governance-core.clar
+            clarity-version: 3
+        - emulated-contract-publish:
             contract-name: governance-token
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
             path: contracts/governance-token.clar
+            clarity-version: 3
+        - emulated-contract-publish:
+            contract-name: liquidity-pool
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/liquidity-pool.clar
+            clarity-version: 3
+        - emulated-contract-publish:
+            contract-name: liquidity-rewards
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/liquidity-rewards.clar
             clarity-version: 3
         - emulated-contract-publish:
             contract-name: market-core
@@ -83,8 +98,18 @@ plan:
             path: contracts/market-fees.clar
             clarity-version: 3
         - emulated-contract-publish:
+            contract-name: market-multi
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/market-multi.clar
+            clarity-version: 3
+        - emulated-contract-publish:
             contract-name: oracle-integration
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
             path: contracts/oracle-integration.clar
+            clarity-version: 3
+        - emulated-contract-publish:
+            contract-name: oracle-reputation
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/oracle-reputation.clar
             clarity-version: 3
       epoch: "3.2"
