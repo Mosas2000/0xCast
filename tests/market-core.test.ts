@@ -109,6 +109,9 @@ describe("market-core contract tests", () => {
                 status: Cl.uint(0),
                 outcome: Cl.uint(0),
                 "created-at": Cl.uint(createdAtBlock),
+                "resolved-at": Cl.uint(0),
+                "finalizes-at": Cl.uint(0),
+                finalized: Cl.bool(false),
                 "resolved-by": Cl.none(),
                 "resolution-source": Cl.stringAscii(""),
             }));
@@ -589,6 +592,16 @@ describe("market-core contract tests", () => {
                 deployer
             );
             expect(resolveResult.result).toBeOk(Cl.bool(true));
+
+            // 4b. Wait out dispute window and finalize (claims gated until finalized)
+            simnet.mineEmptyBlocks(150);
+            const finalizeResult = simnet.callPublicFn(
+                contractName,
+                "finalize-market",
+                [Cl.uint(0)],
+                deployer
+            );
+            expect(finalizeResult.result).toBeOk(Cl.bool(true));
 
             // 5. Loser (wallet1) tries to claim - should fail with no winnings
             const loserClaim = simnet.callPublicFn(
