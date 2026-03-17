@@ -24,7 +24,7 @@
 
 (define-read-only (get-reputation (oracle principal))
   (default-to 
-    {score: (var-get base-reputation), reliability: u100, last-update: block-height}
+    {score: (var-get base-reputation), reliability: u100, last-update: stacks-block-height}
     (map-get? oracle-reputation oracle)))
 
 ;; Public Functions
@@ -42,7 +42,7 @@
         (map-set oracle-reputation oracle {
           score: new-score,
           reliability: (if success u100 u50), ;; Simplified reliability logic
-          last-update: block-height
+          last-update: stacks-block-height
         })
         (ok true)))))
 
