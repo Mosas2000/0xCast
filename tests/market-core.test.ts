@@ -605,6 +605,42 @@ describe("market-core contract tests", () => {
             expect(afterDeadline.result).toEqual({ type: "true" });
         });
 
+        it("should allow emergency refund only strictly after the deadline", () => {
+            const currentBlock = simnet.blockHeight;
+            const endDate = currentBlock + 5;
+            const resolutionDate = currentBlock + 10;
+            const resolutionDeadline = resolutionDate + 1008;
+
+            const { result: createResult } = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Emergency refund boundary"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+            expect(createResult).toBeOk(Cl.uint(0));
+
+            const stakeAmount = 1_000_000;
+            const stake = simnet.callPublicFn(contractName, "place-yes-stake", [Cl.uint(0), Cl.uint(stakeAmount)], wallet1);
+            expect(stake.result).toBeOk({ type: "true" } as any);
+
+            // Mine to (deadline - 1) so the emergency-refund tx executes at exactly deadline.
+            const mineToBeforeDeadline = Math.max(0, (resolutionDeadline - 1) - simnet.blockHeight);
+            simnet.mineEmptyBlocks(mineToBeforeDeadline);
+
+            const atDeadline = simnet.callPublicFn(contractName, "emergency-refund", [Cl.uint(0)], wallet1);
+            expect(atDeadline.result).toBeErr(Cl.uint(115)); // ERR-REFUND-NOT-ALLOWED
+
+            // One block later, the tx executes at (deadline + 1) and should succeed.
+            simnet.mineEmptyBlocks(1);
+            const afterDeadline = simnet.callPublicFn(contractName, "emergency-refund", [Cl.uint(0)], wallet1);
+            expect(afterDeadline.result).toBeOk(Cl.uint(stakeAmount));
+        });
+
         it("should allow anyone to trigger auto-refund after the resolution deadline", () => {
             const currentBlock = simnet.blockHeight;
             const endDate = currentBlock + 5;
