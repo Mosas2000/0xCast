@@ -421,6 +421,7 @@ npm run analytics
 - **Amount Limits**: Set reasonable limits for automated operations
 - **Testnet First**: Test all workflows on testnet before mainnet
 - **Monitoring**: Regularly check transaction status and wallet balance
+- **Resolution Deadline / Abandoned Markets**: Markets have a stored `resolution-deadline` (computed as `resolution-date + abandonment-period`, default `u1008`). If a market is not resolved by its deadline, anyone can call `trigger-auto-refund` and users can recover funds via `claim-refund`. Creator/oracle/community resolutions are rejected after the deadline.
 
 ---
 
