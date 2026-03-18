@@ -857,6 +857,73 @@ describe("market-core contract tests", () => {
         });
     });
 
+    describe("Payout Transfers", () => {
+        it("should allow claiming winnings after resolution and finalization", () => {
+            const currentBlock = simnet.blockHeight;
+            const endDate = currentBlock + 10;
+            const resolutionDate = currentBlock + 20;
+
+            const createResult = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Payout happy path"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+            expect(createResult.result).toBeOk(Cl.uint(0));
+
+            const yesStake = simnet.callPublicFn(
+                contractName,
+                "place-yes-stake",
+                [Cl.uint(0), Cl.uint(3_000_000)],
+                wallet1
+            );
+            expect(yesStake.result).toBeOk({ type: "true" } as any);
+
+            const noStake = simnet.callPublicFn(
+                contractName,
+                "place-no-stake",
+                [Cl.uint(0), Cl.uint(1_000_000)],
+                wallet2
+            );
+            expect(noStake.result).toBeOk({ type: "true" } as any);
+
+            // Mine until resolution is allowed.
+            const blocksToMine = Math.max(0, resolutionDate - simnet.blockHeight);
+            simnet.mineEmptyBlocks(blocksToMine);
+
+            const resolve = simnet.callPublicFn(
+                contractName,
+                "resolve-market",
+                [Cl.uint(0), Cl.uint(1)],
+                deployer
+            );
+            expect(resolve.result).toBeOk({ type: "true" } as any);
+
+            // Wait out dispute window then finalize.
+            simnet.mineEmptyBlocks(150);
+            const finalize = simnet.callPublicFn(
+                contractName,
+                "finalize-market",
+                [Cl.uint(0)],
+                deployer
+            );
+            expect(finalize.result).toBeOk({ type: "true" } as any);
+
+            const claim = simnet.callPublicFn(
+                contractName,
+                "claim-winnings",
+                [Cl.uint(0)],
+                wallet1
+            );
+            expect(claim.result).toBeOk(Cl.uint(4_000_000));
+        });
+    });
+
     describe("Complete Flow", () => {
         it("should handle complete market lifecycle: create → stake → resolve → claim", () => {
             // 1. Create market
