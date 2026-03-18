@@ -695,6 +695,46 @@ describe("market-core contract tests", () => {
             expect(result).toBeOk({ type: "true" } as any);
         });
 
+        it("should allow users to claim refunds after auto-refund", () => {
+            const currentBlock = simnet.blockHeight;
+            const endDate = currentBlock + 5;
+            const resolutionDate = currentBlock + 10;
+            const resolutionDeadline = resolutionDate + 1008;
+
+            const { result: createResult } = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Refund claims after deadline"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+            expect(createResult).toBeOk(Cl.uint(0));
+
+            const yesAmount = 1_000_000;
+            const noAmount = 2_000_000;
+            const yesStake = simnet.callPublicFn(contractName, "place-yes-stake", [Cl.uint(0), Cl.uint(yesAmount)], wallet1);
+            expect(yesStake.result).toBeOk({ type: "true" } as any);
+            const noStake = simnet.callPublicFn(contractName, "place-no-stake", [Cl.uint(0), Cl.uint(noAmount)], wallet2);
+            expect(noStake.result).toBeOk({ type: "true" } as any);
+
+            // Mine up to the deadline; the trigger tx will execute one block after.
+            const mineToDeadline = Math.max(0, resolutionDeadline - simnet.blockHeight);
+            simnet.mineEmptyBlocks(mineToDeadline);
+
+            const trigger = simnet.callPublicFn(contractName, "trigger-auto-refund", [Cl.uint(0)], wallet2);
+            expect(trigger.result).toBeOk({ type: "true" } as any);
+
+            const refund1 = simnet.callPublicFn(contractName, "claim-refund", [Cl.uint(0)], wallet1);
+            expect(refund1.result).toBeOk(Cl.uint(yesAmount));
+
+            const refund2 = simnet.callPublicFn(contractName, "claim-refund", [Cl.uint(0)], wallet2);
+            expect(refund2.result).toBeOk(Cl.uint(noAmount));
+        });
+
         it("should allow anyone to trigger auto-refund after the resolution deadline", () => {
             const currentBlock = simnet.blockHeight;
             const endDate = currentBlock + 5;
