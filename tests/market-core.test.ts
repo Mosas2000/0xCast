@@ -104,6 +104,7 @@ describe("market-core contract tests", () => {
                 category: Cl.uint(1),
                 "end-date": Cl.uint(endDate),
                 "resolution-date": Cl.uint(resolutionDate),
+                "resolution-deadline": Cl.uint(resolutionDate + 1008),
                 "total-yes-stake": Cl.uint(0),
                 "total-no-stake": Cl.uint(0),
                 status: Cl.uint(0),
@@ -531,6 +532,395 @@ describe("market-core contract tests", () => {
             );
 
             expect(result).toBeErr(Cl.uint(110)); // ERR-MARKET-NOT-RESOLVED
+        });
+    });
+
+    describe("Resolution Deadline", () => {
+        it("should expose stored resolution deadline via getter", () => {
+            const currentBlock = simnet.blockHeight;
+            const endDate = currentBlock + 5;
+            const resolutionDate = currentBlock + 10;
+            const expectedDeadline = resolutionDate + 1008;
+
+            const { result: createResult } = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Deadline getter"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+            expect(createResult).toBeOk(Cl.uint(0));
+
+            const deadline = simnet.callReadOnlyFn(
+                contractName,
+                "get-resolution-deadline",
+                [Cl.uint(0)],
+                deployer
+            );
+            expect(deadline.result).toBeOk(Cl.uint(expectedDeadline));
+        });
+
+        it("should return err when getting deadline for unknown market", () => {
+            const deadline = simnet.callReadOnlyFn(
+                contractName,
+                "get-resolution-deadline",
+                [Cl.uint(999)],
+                deployer
+            );
+            expect(deadline.result).toBeErr(Cl.uint(101)); // ERR-MARKET-NOT-FOUND
+        });
+
+        it("should report abandoned only strictly after the deadline", () => {
+            const currentBlock = simnet.blockHeight;
+            const endDate = currentBlock + 5;
+            const resolutionDate = currentBlock + 10;
+            const resolutionDeadline = resolutionDate + 1008;
+
+            const { result: createResult } = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Abandonment boundary"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+            expect(createResult).toBeOk(Cl.uint(0));
+
+            // At exactly the deadline, it should not yet be considered abandoned.
+            const mineToDeadline = Math.max(0, resolutionDeadline - simnet.blockHeight);
+            simnet.mineEmptyBlocks(mineToDeadline);
+            const atDeadline = simnet.callReadOnlyFn(contractName, "is-market-abandoned", [Cl.uint(0)], deployer);
+            expect(atDeadline.result).toEqual({ type: "false" });
+
+            // One block after the deadline, it should be abandoned.
+            simnet.mineEmptyBlocks(1);
+            const afterDeadline = simnet.callReadOnlyFn(contractName, "is-market-abandoned", [Cl.uint(0)], deployer);
+            expect(afterDeadline.result).toEqual({ type: "true" });
+        });
+
+        it("should allow emergency refund only strictly after the deadline", () => {
+            const currentBlock = simnet.blockHeight;
+            const endDate = currentBlock + 5;
+            const resolutionDate = currentBlock + 10;
+            const resolutionDeadline = resolutionDate + 1008;
+
+            const { result: createResult } = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Emergency refund boundary"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+            expect(createResult).toBeOk(Cl.uint(0));
+
+            const stakeAmount = 1_000_000;
+            const stake = simnet.callPublicFn(contractName, "place-yes-stake", [Cl.uint(0), Cl.uint(stakeAmount)], wallet1);
+            expect(stake.result).toBeOk({ type: "true" } as any);
+
+            // Mine to (deadline - 1) so the emergency-refund tx executes at exactly deadline.
+            const mineToBeforeDeadline = Math.max(0, (resolutionDeadline - 1) - simnet.blockHeight);
+            simnet.mineEmptyBlocks(mineToBeforeDeadline);
+
+            const atDeadline = simnet.callPublicFn(contractName, "emergency-refund", [Cl.uint(0)], wallet1);
+            expect(atDeadline.result).toBeErr(Cl.uint(115)); // ERR-REFUND-NOT-ALLOWED
+
+            // One block later, the tx executes at (deadline + 1) and should succeed.
+            simnet.mineEmptyBlocks(1);
+            const afterDeadline = simnet.callPublicFn(contractName, "emergency-refund", [Cl.uint(0)], wallet1);
+            expect(afterDeadline.result).toBeOk(Cl.uint(stakeAmount));
+        });
+
+        it("should reject auto-refund trigger at exactly the deadline", () => {
+            const currentBlock = simnet.blockHeight;
+            const endDate = currentBlock + 5;
+            const resolutionDate = currentBlock + 10;
+            const resolutionDeadline = resolutionDate + 1008;
+
+            const { result: createResult } = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Auto-refund boundary"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+            expect(createResult).toBeOk(Cl.uint(0));
+
+            // Mine to (deadline - 1) so the trigger-auto-refund tx executes at exactly deadline.
+            const mineToBeforeDeadline = Math.max(0, (resolutionDeadline - 1) - simnet.blockHeight);
+            simnet.mineEmptyBlocks(mineToBeforeDeadline);
+
+            const { result } = simnet.callPublicFn(contractName, "trigger-auto-refund", [Cl.uint(0)], wallet1);
+            expect(result).toBeErr(Cl.uint(115)); // ERR-REFUND-NOT-ALLOWED
+        });
+
+        it("should allow creator resolution at exactly the deadline", () => {
+            const currentBlock = simnet.blockHeight;
+            const endDate = currentBlock + 5;
+            const resolutionDate = currentBlock + 10;
+            const resolutionDeadline = resolutionDate + 1008;
+
+            const { result: createResult } = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Resolve boundary"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+            expect(createResult).toBeOk(Cl.uint(0));
+
+            // Mine to (deadline - 1) so the resolve-market tx executes at exactly deadline.
+            const mineToBeforeDeadline = Math.max(0, (resolutionDeadline - 1) - simnet.blockHeight);
+            simnet.mineEmptyBlocks(mineToBeforeDeadline);
+
+            const { result } = simnet.callPublicFn(contractName, "resolve-market", [Cl.uint(0), Cl.uint(1)], deployer);
+            expect(result).toBeOk({ type: "true" } as any);
+        });
+
+        it("should allow users to claim refunds after auto-refund", () => {
+            const currentBlock = simnet.blockHeight;
+            const endDate = currentBlock + 5;
+            const resolutionDate = currentBlock + 10;
+            const resolutionDeadline = resolutionDate + 1008;
+
+            const { result: createResult } = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Refund claims after deadline"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+            expect(createResult).toBeOk(Cl.uint(0));
+
+            const yesAmount = 1_000_000;
+            const noAmount = 2_000_000;
+            const yesStake = simnet.callPublicFn(contractName, "place-yes-stake", [Cl.uint(0), Cl.uint(yesAmount)], wallet1);
+            expect(yesStake.result).toBeOk({ type: "true" } as any);
+            const noStake = simnet.callPublicFn(contractName, "place-no-stake", [Cl.uint(0), Cl.uint(noAmount)], wallet2);
+            expect(noStake.result).toBeOk({ type: "true" } as any);
+
+            // Mine up to the deadline; the trigger tx will execute one block after.
+            const mineToDeadline = Math.max(0, resolutionDeadline - simnet.blockHeight);
+            simnet.mineEmptyBlocks(mineToDeadline);
+
+            const trigger = simnet.callPublicFn(contractName, "trigger-auto-refund", [Cl.uint(0)], wallet2);
+            expect(trigger.result).toBeOk({ type: "true" } as any);
+
+            const refund1 = simnet.callPublicFn(contractName, "claim-refund", [Cl.uint(0)], wallet1);
+            expect(refund1.result).toBeOk(Cl.uint(yesAmount));
+
+            const refund2 = simnet.callPublicFn(contractName, "claim-refund", [Cl.uint(0)], wallet2);
+            expect(refund2.result).toBeOk(Cl.uint(noAmount));
+        });
+
+        it("should allow anyone to trigger auto-refund after the resolution deadline", () => {
+            const currentBlock = simnet.blockHeight;
+            const endDate = currentBlock + 5;
+            const resolutionDate = currentBlock + 10;
+
+            const { result: createResult } = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Abandoned market auto-refund"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+            expect(createResult).toBeOk(Cl.uint(0));
+
+            simnet.callPublicFn(contractName, "place-yes-stake", [Cl.uint(0), Cl.uint(1_000_000)], wallet1);
+
+            // Mine up to the resolution deadline (the triggering tx will be mined after this)
+            const resolutionDeadline = resolutionDate + 1008;
+            const blocksToMine = Math.max(0, resolutionDeadline - simnet.blockHeight);
+            simnet.mineEmptyBlocks(blocksToMine);
+
+            const { result } = simnet.callPublicFn(
+                contractName,
+                "trigger-auto-refund",
+                [Cl.uint(0)],
+                wallet2
+            );
+            expect(result).toBeOk({ type: "true" } as any);
+
+            const market = simnet.callReadOnlyFn(contractName, "get-market", [Cl.uint(0)], deployer);
+            expect(market.result).toHaveProperty("type", "some");
+            const marketTuple = (market.result as any).value.value as Record<string, any>;
+            expect(marketTuple.question).toEqual({ type: "ascii", value: "Abandoned market auto-refund" });
+            expect(marketTuple.creator).toEqual({ type: "address", value: deployer });
+            expect(marketTuple.category).toEqual({ type: "uint", value: 1n });
+            expect(marketTuple["end-date"]).toEqual({ type: "uint", value: BigInt(endDate) });
+            expect(marketTuple["resolution-date"]).toEqual({ type: "uint", value: BigInt(resolutionDate) });
+            expect(marketTuple["resolution-deadline"]).toEqual({ type: "uint", value: BigInt(resolutionDate + 1008) });
+            expect(marketTuple["total-yes-stake"]).toEqual({ type: "uint", value: 1_000_000n });
+            expect(marketTuple["total-no-stake"]).toEqual({ type: "uint", value: 0n });
+            expect(marketTuple.status).toEqual({ type: "uint", value: 3n });
+            expect(marketTuple.outcome).toEqual({ type: "uint", value: 0n });
+            expect(marketTuple.finalized).toEqual({ type: "true" });
+            expect(marketTuple["resolved-by"]).toEqual({
+                type: "some",
+                value: { type: "address", value: wallet2 },
+            });
+            expect(marketTuple["resolution-source"]).toEqual({ type: "ascii", value: "deadline-refund" });
+
+            // Block heights are environment-dependent; just assert they were populated.
+            expect(marketTuple["created-at"].type).toBe("uint");
+            expect(marketTuple["created-at"].value).toBeGreaterThan(0n);
+            expect(marketTuple["resolved-at"].type).toBe("uint");
+            expect(marketTuple["resolved-at"].value).toBeGreaterThan(0n);
+            expect(marketTuple["finalizes-at"]).toEqual(marketTuple["resolved-at"]);
+        });
+
+        it("should reject auto-refund trigger before the deadline", () => {
+            const currentBlock = simnet.blockHeight;
+            const endDate = currentBlock + 5;
+            const resolutionDate = currentBlock + 10;
+
+            simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Too early auto-refund"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+
+            simnet.mineEmptyBlocks(12);
+
+            const { result } = simnet.callPublicFn(
+                contractName,
+                "trigger-auto-refund",
+                [Cl.uint(0)],
+                wallet1
+            );
+            expect(result).toBeErr(Cl.uint(115)); // ERR-REFUND-NOT-ALLOWED
+        });
+
+        it("should reject creator resolution after the deadline", () => {
+            const currentBlock = simnet.blockHeight;
+            const endDate = currentBlock + 5;
+            const resolutionDate = currentBlock + 10;
+
+            simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Late resolution blocked"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+
+            // Mine to after deadline
+            const resolutionDeadline = resolutionDate + 1008;
+            const blocksToMine = Math.max(0, resolutionDeadline - simnet.blockHeight);
+            simnet.mineEmptyBlocks(blocksToMine);
+
+            const { result } = simnet.callPublicFn(
+                contractName,
+                "resolve-market",
+                [Cl.uint(0), Cl.uint(1)],
+                deployer
+            );
+
+            expect(result).toBeErr(Cl.uint(112)); // ERR-MARKET-ABANDONED
+        });
+    });
+
+    describe("Payout Transfers", () => {
+        it("should allow claiming winnings after resolution and finalization", () => {
+            const currentBlock = simnet.blockHeight;
+            const endDate = currentBlock + 10;
+            const resolutionDate = currentBlock + 20;
+
+            const createResult = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Payout happy path"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+            expect(createResult.result).toBeOk(Cl.uint(0));
+
+            const yesStake = simnet.callPublicFn(
+                contractName,
+                "place-yes-stake",
+                [Cl.uint(0), Cl.uint(3_000_000)],
+                wallet1
+            );
+            expect(yesStake.result).toBeOk({ type: "true" } as any);
+
+            const noStake = simnet.callPublicFn(
+                contractName,
+                "place-no-stake",
+                [Cl.uint(0), Cl.uint(1_000_000)],
+                wallet2
+            );
+            expect(noStake.result).toBeOk({ type: "true" } as any);
+
+            // Mine until resolution is allowed.
+            const blocksToMine = Math.max(0, resolutionDate - simnet.blockHeight);
+            simnet.mineEmptyBlocks(blocksToMine);
+
+            const resolve = simnet.callPublicFn(
+                contractName,
+                "resolve-market",
+                [Cl.uint(0), Cl.uint(1)],
+                deployer
+            );
+            expect(resolve.result).toBeOk({ type: "true" } as any);
+
+            // Wait out dispute window then finalize.
+            simnet.mineEmptyBlocks(150);
+            const finalize = simnet.callPublicFn(
+                contractName,
+                "finalize-market",
+                [Cl.uint(0)],
+                deployer
+            );
+            expect(finalize.result).toBeOk({ type: "true" } as any);
+
+            const claim = simnet.callPublicFn(
+                contractName,
+                "claim-winnings",
+                [Cl.uint(0)],
+                wallet1
+            );
+            expect(claim.result).toBeOk(Cl.uint(4_000_000));
         });
     });
 

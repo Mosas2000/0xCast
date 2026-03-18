@@ -76,6 +76,7 @@
     category: uint,
     end-date: uint,
     resolution-date: uint,
+    resolution-deadline: uint,
     total-yes-stake: uint,
     total-no-stake: uint,
     status: uint,
@@ -140,7 +141,7 @@
 (define-read-only (get-market-pool-size (market-id uint))
   (match (map-get? markets { market-id: market-id })
     market (ok (+ (get total-yes-stake market) (get total-no-stake market)))
-    (err ERR-MARKET-NOT-FOUND)
+    ERR-MARKET-NOT-FOUND
   )
 )
 
@@ -158,6 +159,13 @@
   (var-get dispute-period)
 )
 
+(define-read-only (get-resolution-deadline (market-id uint))
+  (match (map-get? markets { market-id: market-id })
+    market (ok (get resolution-deadline market))
+    ERR-MARKET-NOT-FOUND
+  )
+)
+
 ;; ============================================
 ;; Private Functions
 ;; ============================================
@@ -167,6 +175,14 @@
   (let ((current-counter (var-get market-counter)))
     (var-set market-counter (+ current-counter u1))
     current-counter
+  )
+)
+
+;; Enforce that a resolution attempt occurs on/before a market's stored deadline.
+(define-private (assert-within-resolution-deadline (current-block uint) (deadline uint))
+  (if (<= current-block deadline)
+    (ok true)
+    ERR-MARKET-ABANDONED
   )
 )
 
@@ -185,6 +201,7 @@
       (current-block stacks-block-height)
       (new-market-id (increment-market-counter))
       (cat-count (get-market-category-count category))
+      (resolution-deadline (+ resolution-date (var-get abandonment-period)))
     )
     ;; Validate that end-date is in the future
     (asserts! (> end-date current-block) ERR-INVALID-DATES)
@@ -204,6 +221,7 @@
         category: category,
         end-date: end-date,
         resolution-date: resolution-date,
+        resolution-deadline: resolution-deadline,
         total-yes-stake: u0,
         total-no-stake: u0,
         status: MARKET-STATUS-ACTIVE,
@@ -328,6 +346,9 @@
     
     ;; Validate resolution date has passed
     (asserts! (>= current-block (get resolution-date market)) ERR-MARKET-NOT-ENDED)
+
+    ;; Prevent late resolutions after the deadline (market is considered abandoned)
+    (try! (assert-within-resolution-deadline current-block (get resolution-deadline market)))
     
     ;; Validate outcome is valid (YES or NO)
     (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
@@ -360,6 +381,7 @@
       (position (unwrap! (map-get? user-positions { market-id: market-id, user: tx-sender }) ERR-NO-WINNINGS))
       (total-pool (+ (get total-yes-stake market) (get total-no-stake market)))
       (outcome (get outcome market))
+      (recipient tx-sender)
     )
     ;; Validate market is resolved
     (asserts! (is-eq (get status market) MARKET-STATUS-RESOLVED) ERR-MARKET-NOT-RESOLVED)
@@ -390,7 +412,7 @@
       (asserts! (> payout u0) ERR-NO-WINNINGS)
       
       ;; Transfer payout from contract to user
-      (try! (as-contract (stx-transfer? payout tx-sender contract-caller)))
+      (try! (as-contract (stx-transfer? payout tx-sender recipient)))
       
       ;; Mark position as claimed
       (map-set user-positions
@@ -413,6 +435,9 @@
     (asserts! (is-eq contract-caller ORACLE-INTEGRATION) ERR-NOT-AUTHORIZED)
     (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-MARKET-ALREADY-RESOLVED)
     (asserts! (>= current-block (get resolution-date market)) ERR-MARKET-NOT-ENDED)
+
+    ;; Do not allow oracle resolution after the deadline; the fallback refund path applies.
+    (try! (assert-within-resolution-deadline current-block (get resolution-deadline market)))
     (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
     (map-set markets
       { market-id: market-id }
@@ -507,6 +532,9 @@
     (asserts! (is-eq contract-caller ORACLE-INTEGRATION) ERR-NOT-AUTHORIZED)
     (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-MARKET-ALREADY-RESOLVED)
     (asserts! (>= current-block (get resolution-date market)) ERR-MARKET-NOT-ENDED)
+
+    ;; Do not allow fallback resolutions after the deadline; the refund path applies.
+    (try! (assert-within-resolution-deadline current-block (get resolution-deadline market)))
     (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
     (map-set markets
       { market-id: market-id }
@@ -524,6 +552,32 @@
   )
 )
 
+;; Mark a market as refunded once the resolution deadline has passed.
+;; This is the "auto-resolution" fallback for abandoned markets.
+(define-public (trigger-auto-refund (market-id uint))
+  (let
+    (
+      (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
+      (current-block stacks-block-height)
+    )
+    (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-REFUND-NOT-ALLOWED)
+    (asserts! (> current-block (get resolution-deadline market)) ERR-REFUND-NOT-ALLOWED)
+    (map-set markets
+      { market-id: market-id }
+      (merge market {
+        status: MARKET-STATUS-REFUNDED,
+        outcome: OUTCOME-NONE,
+        resolved-at: current-block,
+        finalizes-at: current-block,
+        finalized: true,
+        resolved-by: (some tx-sender),
+        resolution-source: "deadline-refund"
+      })
+    )
+    (ok true)
+  )
+)
+
 ;; Emergency refund for abandoned or irresolvable markets
 (define-public (emergency-refund (market-id uint))
   (let
@@ -532,12 +586,13 @@
       (position (unwrap! (map-get? user-positions { market-id: market-id, user: tx-sender }) ERR-NO-WINNINGS))
       (current-block stacks-block-height)
       (user-total (+ (get yes-stake position) (get no-stake position)))
+      (recipient tx-sender)
     )
     (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-REFUND-NOT-ALLOWED)
-    (asserts! (>= current-block (+ (get resolution-date market) (var-get abandonment-period))) ERR-REFUND-NOT-ALLOWED)
+    (asserts! (> current-block (get resolution-deadline market)) ERR-REFUND-NOT-ALLOWED)
     (asserts! (not (get claimed position)) ERR-ALREADY-CLAIMED)
     (asserts! (> user-total u0) ERR-NO-WINNINGS)
-    (try! (as-contract (stx-transfer? user-total tx-sender contract-caller)))
+    (try! (as-contract (stx-transfer? user-total tx-sender recipient)))
     (map-set user-positions
       { market-id: market-id, user: tx-sender }
       (merge position { claimed: true })
@@ -571,11 +626,12 @@
       (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
       (position (unwrap! (map-get? user-positions { market-id: market-id, user: tx-sender }) ERR-NO-WINNINGS))
       (user-total (+ (get yes-stake position) (get no-stake position)))
+      (recipient tx-sender)
     )
     (asserts! (is-eq (get status market) MARKET-STATUS-REFUNDED) ERR-REFUND-NOT-ALLOWED)
     (asserts! (not (get claimed position)) ERR-ALREADY-CLAIMED)
     (asserts! (> user-total u0) ERR-NO-WINNINGS)
-    (try! (as-contract (stx-transfer? user-total tx-sender contract-caller)))
+    (try! (as-contract (stx-transfer? user-total tx-sender recipient)))
     (map-set user-positions
       { market-id: market-id, user: tx-sender }
       (merge position { claimed: true })
@@ -591,6 +647,6 @@
   (match (map-get? markets { market-id: market-id })
     market (and
       (is-eq (get status market) MARKET-STATUS-ACTIVE)
-      (>= stacks-block-height (+ (get resolution-date market) (var-get abandonment-period))))
+      (> stacks-block-height (get resolution-deadline market)))
     false))
 
