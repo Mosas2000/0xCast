@@ -1,0 +1,32 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with subtle gradient -->
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#111111;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="blueGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Main circle -->
+  <circle cx="24" cy="24" r="23" fill="url(#bgGrad)" stroke="#1e293b" stroke-width="1"/>
+  
+  <!-- 0x symbol - sharp, clean -->
+  <text x="8" y="30" font-family="SF Mono, Monaco, Consolas, monospace" font-size="16" font-weight="700" fill="url(#blueGlow)" filter="url(#glow)">0x</text>
+  
+  <!-- Cast icon - upward arrow representing prediction/casting -->
+  <path d="M32 32 L32 20 M32 20 L27 25 M32 20 L37 25" stroke="url(#blueGlow)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+  
+  <!-- Subtle shine effect -->
+  <ellipse cx="18" cy="14" rx="8" ry="4" fill="white" opacity="0.05"/>
+</svg>

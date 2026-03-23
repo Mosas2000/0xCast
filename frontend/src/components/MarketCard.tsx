@@ -1,97 +1,92 @@
-import { memo, useState, useEffect } from 'react';
-import { Market } from '../types/market';
-import { Card } from './Card';
-import { MarketStatus } from './MarketStatus';
-import { MarketOdds } from './MarketOdds';
-import { MarketPool } from './MarketPool';
-import { ActivityIndicatorLive } from './ActivityIndicatorLive';
-import { isMarketActive } from '../utils/calculations';
-import { useCurrentBlock } from '../hooks/useCurrentBlock';
+import { Link } from 'react-router-dom';
+import type { Market } from '../types/market';
+import { MarketStatus } from '../types/market';
+import { calculateOdds, formatStx, getStatusLabel } from '../utils/helpers';
 
 interface MarketCardProps {
-    market: Market;
-    onStake?: (marketId: number) => void;
-    className?: string;
+  market: Market;
 }
 
-export const MarketCard = memo(function MarketCard({ market, onStake, className = '' }: MarketCardProps) {
-    const { blockHeight } = useCurrentBlock();
-    const isActive = isMarketActive(market.endDate, blockHeight);
-    const [isHighlighted, setIsHighlighted] = useState(false);
+export function MarketCard({ market }: MarketCardProps) {
+  const odds = calculateOdds(market.totalYesStake, market.totalNoStake);
+  const totalPool = market.totalYesStake + market.totalNoStake;
+  const isActive = market.status === MarketStatus.ACTIVE;
 
-    // Highlight card briefly when data changes
-    useEffect(() => {
-        setIsHighlighted(true);
-        const timer = setTimeout(() => setIsHighlighted(false), 2000);
-        return () => clearTimeout(timer);
-    }, [market.totalYesStake, market.totalNoStake]);
+  return (
+    <Link to={`/trade/${market.id}`} style={{ textDecoration: 'none', display: 'block', height: '100%' }}>
+      <div style={{
+        height: '100%',
+        padding: 32,
+        background: '#111',
+        borderRadius: 20,
+        border: '1px solid #262626',
+        display: 'flex',
+        flexDirection: 'column',
+        transition: 'border-color 0.2s, transform 0.2s',
+        cursor: 'pointer'
+      }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+          <span style={{
+            padding: '6px 12px',
+            borderRadius: 9999,
+            background: isActive ? 'rgba(34, 197, 94, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+            color: isActive ? '#4ade80' : '#60a5fa',
+            fontSize: 12,
+            fontWeight: 600
+          }}>
+            {getStatusLabel(market.status)}
+          </span>
+          <span style={{ fontSize: 12, color: '#525252', fontFamily: 'monospace' }}>
+            #{market.id}
+          </span>
+        </div>
 
-    const handleStakeClick = () => {
-        if (onStake && isActive) {
-            onStake(market.id);
-        }
-    };
+        {/* Question */}
+        <h3 style={{
+          fontSize: 17,
+          fontWeight: 600,
+          color: '#fff',
+          lineHeight: 1.5,
+          marginBottom: 24,
+          flex: 1,
+          overflow: 'hidden',
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical'
+        }}>
+          {market.question}
+        </h3>
 
-    return (
-        <Card className={`transition-all duration-500 ${isHighlighted ? 'ring-2 ring-blue-500/50 shadow-lg shadow-blue-500/20' : ''} ${className}`.trim()}>
-            {/* Live Activity Indicator */}
-            <div className="mb-3">
-                <ActivityIndicatorLive />
-            </div>
+        {/* Odds */}
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: '#4ade80' }}>Yes {odds.yes}%</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: '#f87171' }}>No {odds.no}%</span>
+          </div>
+          <div style={{ height: 8, borderRadius: 4, background: '#262626', display: 'flex', overflow: 'hidden' }}>
+            <div style={{ height: '100%', background: '#22c55e', width: `${odds.yes}%`, transition: 'width 0.3s' }} />
+            <div style={{ height: '100%', background: '#ef4444', width: `${odds.no}%`, transition: 'width 0.3s' }} />
+          </div>
+        </div>
 
-            {/* Header */}
-            <div className="mb-4">
-                <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-white flex-1 pr-4">
-                        {market.question}
-                    </h3>
-                    <MarketStatus
-                        status={market.status}
-                        endBlock={market.endDate}
-                        currentBlock={blockHeight}
-                        resolutionBlock={market.resolutionDate}
-                    />
-                </div>
+        {/* Footer */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          paddingTop: 20,
+          borderTop: '1px solid #262626'
+        }}>
+          <div>
+            <p style={{ fontSize: 12, color: '#525252', marginBottom: 4 }}>Total Pool</p>
+            <p style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>{formatStx(totalPool)}</p>
+          </div>
+          <span style={{ fontSize: 14, fontWeight: 600, color: '#3b82f6' }}>
 
-                <p className="text-xs text-slate-500">
-                    Market #{market.id} · Created by {market.creator.slice(0, 8)}...{market.creator.slice(-4)}
-                </p>
-            </div>
-
-            {/* Pool Info */}
-            <div className="mb-4 p-4 bg-slate-900/50 rounded-lg">
-                <MarketPool
-                    totalYesStake={market.totalYesStake}
-                    totalNoStake={market.totalNoStake}
-                />
-            </div>
-
-            {/* Odds */}
-            <div className="mb-4">
-                <MarketOdds
-                    yesStake={market.totalYesStake}
-                    noStake={market.totalNoStake}
-                />
-            </div>
-
-            {/* Action Button */}
-            {isActive && onStake && (
-                <button
-                    onClick={handleStakeClick}
-                    className="w-full px-4 py-3 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-lg font-medium transition-all duration-200 shadow-lg shadow-primary-500/20 hover:shadow-primary-500/40"
-                >
-                    Stake Now
-                </button>
-            )}
-
-            {/* Resolved Outcome */}
-            {market.status === 1 && (
-                <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/50 rounded-lg">
-                    <p className="text-sm text-blue-400 font-medium">
-                        Resolved: {market.outcome === 1 ? 'YES' : market.outcome === 2 ? 'NO' : 'Unknown'}
-                    </p>
-                </div>
-            )}
-        </Card>
-    );
-});
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+}
