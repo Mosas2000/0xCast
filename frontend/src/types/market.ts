@@ -1,43 +1,44 @@
-// Market status enum matching contract constants
-export enum MarketStatus {
-    ACTIVE = 0,
-    RESOLVED = 1,
-}
+export const MarketStatus = {
+  ACTIVE: 0,
+  RESOLVED: 1,
+  DISPUTED: 2,
+  REFUNDED: 3,
+} as const;
 
-// Market outcome enum matching contract constants
-export enum MarketOutcome {
-    NONE = 0,
-    YES = 1,
-    NO = 2,
-}
+export type MarketStatus = typeof MarketStatus[keyof typeof MarketStatus];
 
-// Main Market interface
+export const MarketOutcome = {
+  NONE: 0,
+  YES: 1,
+  NO: 2,
+} as const;
+
+export type MarketOutcome = typeof MarketOutcome[keyof typeof MarketOutcome];
+
 export interface Market {
-    id: number;
-    question: string;
-    creator: string;
-    endDate: number; // Block height
-    resolutionDate: number; // Block height
-    totalYesStake: number; // In microSTX
-    totalNoStake: number; // In microSTX
-    status: MarketStatus;
-    outcome: MarketOutcome;
-    createdAt: number; // Block height
+  id: number;
+  question: string;
+  creator: string;
+  endDate: number;
+  resolutionDate: number;
+  totalYesStake: number;
+  totalNoStake: number;
+  status: MarketStatus;
+  outcome: MarketOutcome;
+  createdAt: number;
 }
 
-// User position in a market
 export interface Position {
-    marketId: number;
-    user: string;
-    yesStake: number; // In microSTX
-    noStake: number; // In microSTX
-    claimed: boolean;
+  marketId: number;
+  user: string;
+  yesStake: number;
+  noStake: number;
+  claimed: boolean;
 }
 
-// Transaction status for UI feedback
 export interface TransactionStatus {
-    pending: boolean;
-    success: boolean;
-    error: string | null;
-    txId: string | null;
+  pending: boolean;
+  success: boolean;
+  error: string | null;
+  txId: string | null;
 }

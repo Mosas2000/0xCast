@@ -1,216 +1,147 @@
 # 0xCast
 
-**0xCast is a decentralized prediction market platform built on Stacks, allowing users to create and trade on binary outcome markets using STX.**
+<div align="center">
+  <img src="frontend/public/logo.svg" alt="0xCast Logo" width="80" height="80">
+  
+  **Decentralized Prediction Markets on Bitcoin**
+  
+  [![Built on Stacks](https://img.shields.io/badge/Built%20on-Stacks-5546FF)](https://www.stacks.co/)
+  [![Secured by Bitcoin](https://img.shields.io/badge/Secured%20by-Bitcoin-F7931A)](https://bitcoin.org/)
+</div>
 
 ## Overview
 
-0xCast leverages the power of the Stacks blockchain and Clarity smart contracts to create a trustless, transparent prediction market protocol. Users can create markets on any binary outcome event, purchase shares representing their predictions, and claim winnings when markets resolve.
+0xCast is a decentralized prediction market platform built on Stacks, enabling users to create and trade on binary outcome markets using STX. Leveraging the security of Bitcoin through Stacks' Proof of Transfer consensus, 0xCast provides a trustless, transparent environment for speculation on crypto and financial events.
 
 ## Features
 
-- **Decentralized Market Creation**: Anyone can create prediction markets for binary outcome events
-- **Multi-Outcome Markets**: Support for markets with 3-10 possible outcomes, not just binary
-- **STX-Based Trading**: All trades are conducted using STX tokens
-- **Dynamic Odds Calculation**: Real-time odds based on pool distribution
-- **Transparent Resolution**: Market outcomes are resolved on-chain with full transparency
-- **Automated Payouts**: Winners automatically claim their rewards through smart contracts
-- **Liquidity Pools**: AMM-based liquidity provision with LP rewards
-- **Governance System**: On-chain governance with proposals and voting
-- **Oracle Integration**: External data feeds for automated market resolution
-- **Built on Stacks**: Leverages Bitcoin's security through Stacks' Proof of Transfer consensus
-- **Progressive Web App**: Install on mobile and desktop with offline support
-- **Mobile Optimized**: Touch-friendly interface with pull-to-refresh and bottom navigation
+### Core Platform
+- **Binary Prediction Markets** - Create Yes/No markets on any outcome
+- **STX-Based Trading** - All trades conducted using native STX tokens
+- **Dynamic Odds** - Real-time odds calculated based on pool distribution
+- **Transparent Resolution** - All outcomes resolved on-chain with full transparency
+- **Automated Payouts** - Winners claim rewards through smart contracts
 
-## Progressive Web App (PWA)
+### Advanced Features
+- **Liquidity Pools** - AMM-based liquidity provision with LP rewards
+- **Governance System** - On-chain governance with proposals and voting
+- **Oracle Integration** - External data feeds for automated market resolution
+- **Access Control** - Role-based permissions for oracles and administrators
+- **Dispute Resolution** - Community-driven dispute mechanism for contested outcomes
 
-0xCast is a fully-featured PWA that works offline and can be installed on your device.
+## Tech Stack
 
-### PWA Features
-- Install on mobile and desktop
-- Offline support with cached data
-- Background sync for pending transactions
-- Push notifications (coming soon)
-- Pull-to-refresh on mobile
-- Touch-optimized interface
+### Smart Contracts (Clarity)
+| Contract | Description |
+|----------|-------------|
+| `market-core` | Core prediction market logic |
+| `access-control` | Role-based permissions |
+| `market-fees` | Fee collection and distribution |
+| `governance-token` | SIP-010 governance token (CAST) |
+| `governance-core` | Proposal and voting system |
+| `oracle-integration` | Price feeds and resolution |
+| `liquidity-pool` | AMM for market liquidity |
+| `liquidity-rewards` | LP incentive distribution |
+| `oracle-reputation` | Oracle performance tracking |
+
+### Frontend
+- **React 19** + TypeScript
+- **Vite** for fast builds
+- **Tailwind CSS** for styling
+- **@stacks/connect** for wallet integration
+- **React Router** for navigation
+
+## Getting Started
+
+### Prerequisites
+- [Node.js](https://nodejs.org/) v18+
+- [Clarinet](https://github.com/hirosystems/clarinet) for contract development
+- [Stacks Wallet](https://www.hiro.so/wallet) for testing
 
 ### Installation
 
-**Desktop:**
-1. Look for the install icon in your browser's address bar
-2. Click "Install" to add 0xCast to your applications
+```bash
+# Clone the repository
+git clone https://github.com/your-username/0xCast.git
+cd 0xCast
 
-**Mobile:**
-1. Open in your mobile browser
-2. Tap the menu or share icon
-3. Select "Add to Home Screen" or "Install App"
+# Install frontend dependencies
+cd frontend
+npm install
 
-### Offline Mode
+# Start development server
+npm run dev
+```
 
-When offline, you can:
-- View cached markets
-- Browse your positions
-- Queue transactions (will sync when online)
+### Contract Development
 
-Pending transactions will automatically sync when you reconnect.
+```bash
+# Check contract syntax
+clarinet check
 
-## Multi-Outcome Markets
+# Run tests
+clarinet test
 
-0xCast now supports markets with 3-10 possible outcomes!
+# Start local console
+clarinet console
+```
 
-### Creating Multi-Outcome Markets
-- Choose 3-10 unique outcomes
-- Each outcome tracked separately
-- Proportional payout based on winning outcome
+### Building for Production
 
-### Example Markets
-- "Who will win the championship?" (Multiple teams)
-- "What price range will BTC be?" (Multiple ranges)
-- "Which project will launch first?" (Multiple projects)
+```bash
+cd frontend
+npm run build
+```
 
-### Technical Details
-- Contract: `market-multi.clar`
-- Maximum outcomes: 10
-- Minimum outcomes: 3
-- Payout calculation: Proportional to total pool
+## Deployment
+
+### Frontend (Vercel)
+
+The frontend is configured for seamless Vercel deployment:
+
+```bash
+cd frontend
+vercel
+```
+
+Or connect your GitHub repository to Vercel for automatic deployments.
+
+### Contracts (Stacks)
+
+```bash
+# Deploy to testnet
+clarinet deployments generate --testnet
+clarinet deployments apply --testnet
+
+# Deploy to mainnet
+clarinet deployments generate --mainnet
+clarinet deployments apply --mainnet
+```
 
 ## Project Structure
 
 ```
 0xCast/
 ├── contracts/          # Clarity smart contracts
-├── tests/             # Contract test files
-├── settings/          # Network configuration files
-│   ├── Devnet.toml   # Local development network
-│   ├── Testnet.toml  # Stacks testnet configuration
-│   └── Mainnet.toml  # Stacks mainnet configuration
-├── Clarinet.toml      # Clarinet project configuration
-└── README.md          # This file
+├── tests/              # Contract test files
+├── frontend/           # React frontend application
+│   ├── src/
+│   │   ├── components/ # Reusable UI components
+│   │   ├── pages/      # Page components
+│   │   ├── hooks/      # Custom React hooks
+│   │   ├── utils/      # Helper functions
+│   │   └── types/      # TypeScript types
+│   └── public/         # Static assets
+├── scripts/            # Utility scripts
+├── settings/           # Network configurations
+└── docs/               # Documentation
 ```
 
-## Getting Started
+## Contract Addresses
 
-### Prerequisites
-
-- [Clarinet](https://github.com/hirosystems/clarinet) - Clarity development environment
-- Node.js and npm (for testing)
-
-### Installation
-
-1. Clone the repository:
-```bash
-cd /Users/macosbigsur/Documents/Code/Stacks-project/0xCast
-```
-
-2. Verify Clarinet installation:
-```bash
-clarinet --version
-```
-
-### Development
-
-Create a new contract:
-```bash
-clarinet contract new <contract-name>
-```
-
-Check contract syntax:
-```bash
-clarinet check
-```
-
-Run tests:
-```bash
-clarinet test
-```
-
-Start local console:
-```bash
-clarinet console
-```
-
-## Economic Transactions
-
-0xCast includes comprehensive scripts for generating economic activity across all platform features.
-
-### Available Scripts
-
-```bash
-# Market Operations (Binary)
-npm run bulk-markets      # Create multiple markets
-npm run auto-trade        # Automated trading
-npm run lifecycle         # Full market lifecycle
-npm run stress-test       # Performance testing
-npm run analytics         # Analytics reports
-
-# Liquidity Pool Operations
-npm run liquidity         # Create/manage liquidity pools
-
-# Governance Operations
-npm run governance        # Create proposals, vote, execute
-
-# Multi-Outcome Markets
-npm run multi-market      # Create and trade on multi-outcome markets
-
-# Oracle Operations
-npm run oracle            # Submit price feeds and event data
-```
-
-### Quick Start
-
-```bash
-# Create 5 markets across different categories
-npm run bulk-markets
-
-# Add liquidity to markets
-npm run liquidity
-
-# Run automated trading
-npm run auto-trade
-
-# View analytics
-npm run analytics
-```
-
-For detailed usage instructions, see [Economic Transaction Guide](docs/ECONOMIC_TRANSACTIONS.md).
-
-## Deployment
-
-### Testnet Deployment
-
-1. Update your mnemonic in `settings/Testnet.toml`
-2. Deploy to testnet:
-```bash
-clarinet deployments generate --testnet
-clarinet deployments apply --testnet
-```
-
-### Mainnet Deployment
-
-1. Update your mnemonic in `settings/Mainnet.toml`
-2. Deploy to mainnet:
-```bash
-clarinet deployments generate --mainnet
-clarinet deployments apply --mainnet
-```
-
-> ⚠️ **Warning**: Ensure you have sufficient STX for deployment fees and thoroughly test on testnet before mainnet deployment.
-
-## Technology Stack
-
-- **Blockchain**: Stacks
-- **Smart Contract Language**: Clarity
-- **Development Framework**: Clarinet
-- **Testing**: Vitest
-
-## Roadmap
-
-- [ ] Core prediction market contract
-- [ ] Market creation and management
-- [ ] Share trading mechanism
-- [ ] Market resolution system
-- [ ] Frontend dApp interface
-- [ ] Oracle integration
-- [ ] Governance features
+| Network | Contract | Address |
+|---------|----------|---------|
+| Mainnet | market-core | `SP31PKQVQZVZCK3FM3NH67CGD6G1FMR17VQVS2W5T` |
 
 ## Contributing
 
@@ -224,9 +155,4 @@ MIT License - see LICENSE file for details
 
 - [Stacks Documentation](https://docs.stacks.co/)
 - [Clarity Language Reference](https://docs.stacks.co/clarity/overview)
-- [Clarinet Documentation](https://docs.hiro.so/clarinet)
 - [Stacks Explorer](https://explorer.stacks.co/)
-
-## Contact
-
-For questions and support, please open an issue in the repository.
