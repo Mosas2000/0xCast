@@ -13,6 +13,7 @@ export function Header() {
     { path: '/', label: 'Home' },
     { path: '/markets', label: 'Markets' },
     { path: '/portfolio', label: 'Portfolio' },
+    { path: '/token', label: 'OXC Token' },
   ];
 
   return (
