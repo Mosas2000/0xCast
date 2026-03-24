@@ -8,7 +8,7 @@ export const OXC_TOKEN = {
   // Contract addresses (consolidated MVP contract)
   contracts: {
     mainnet: {
-      oxcast: 'SP000000000000000000002Q6VF78.oxcast', // Placeholder - update after deployment
+      oxcast: 'SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60.oxcast',
     },
     testnet: {
       oxcast: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.oxcast',
@@ -37,7 +37,7 @@ export const NETWORK_CONFIG = {
 } as const;
 
 // Current network (change to 'mainnet' for production)
-export const CURRENT_NETWORK: 'mainnet' | 'testnet' = 'testnet';
+export const CURRENT_NETWORK: 'mainnet' | 'testnet' = 'mainnet';
 
 // Token distribution
 export const TOKEN_DISTRIBUTION = [

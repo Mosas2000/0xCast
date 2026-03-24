@@ -9,10 +9,10 @@ plan:
     - id: 0
       transactions:
         - contract-publish:
-            contract-name: market-core
-            expected-sender: SP31PKQVQZVZCK3FM3NH67CGD6G1FMR17VQVS2W5T
-            cost: 734940
-            path: contracts/market-core.clar
+            contract-name: oxcast
+            expected-sender: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
+            cost: 112510
+            path: contracts/oxcast.clar
             anchor-block-only: true
             clarity-version: 3
       epoch: "3.2"
