@@ -20,7 +20,7 @@ interface Proposal {
 }
 
 export function GovernancePage() {
-  const { isConnected, connect, address } = useWallet();
+  const { isConnected, connect } = useWallet();
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [isVoting, setIsVoting] = useState(false);
 

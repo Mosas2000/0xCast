@@ -1,9 +1,7 @@
 import { Link } from 'react-router-dom';
-import { useWallet } from '../components/WalletProvider';
-import { OXC_TOKEN, TOKEN_DISTRIBUTION, TOKEN_UTILITIES, formatOXC } from '../config/token';
+import { OXC_TOKEN, TOKEN_DISTRIBUTION, TOKEN_UTILITIES } from '../config/token';
 
 export function TokenPage() {
-  const { address } = useWallet();
 
   return (
     <div style={{ 

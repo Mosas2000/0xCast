@@ -24,6 +24,14 @@ export const OXC_TOKEN = {
   },
 } as const;
 
+// Alias for simpler access
+export const OXC_CONFIG = {
+  name: OXC_TOKEN.name,
+  symbol: OXC_TOKEN.symbol,
+  decimals: OXC_TOKEN.decimals,
+  totalSupply: OXC_TOKEN.totalSupply,
+} as const;
+
 // Token distribution
 export const TOKEN_DISTRIBUTION = [
   { name: 'Community & Ecosystem', percentage: 40, amount: 40_000_000, vesting: '4-year linear' },
