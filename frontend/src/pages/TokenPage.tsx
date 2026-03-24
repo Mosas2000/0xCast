@@ -1,7 +1,8 @@
+import { Link } from 'react-router-dom';
 import { useWallet } from '../components/WalletProvider';
 import { OXC_TOKEN, TOKEN_DISTRIBUTION, TOKEN_UTILITIES, formatOXC } from '../config/token';
 
-export default function TokenPage() {
+export function TokenPage() {
   const { address } = useWallet();
 
   return (
@@ -222,48 +223,107 @@ export default function TokenPage() {
             Stake your OXC tokens to earn rewards and participate in governance
           </p>
           
-          {address ? (
-            <div style={{
-              padding: 32,
-              background: 'rgba(255, 255, 255, 0.02)',
-              borderRadius: 16,
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+          <div style={{
+            padding: 32,
+            background: 'rgba(255, 255, 255, 0.02)',
+            borderRadius: 16,
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+          }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(3, 1fr)', 
+              gap: 24,
+              marginBottom: 32
             }}>
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(3, 1fr)', 
-                gap: 24,
-                marginBottom: 32
-              }}>
-                <div>
-                  <div style={{ fontSize: 14, color: '#9CA3AF', marginBottom: 4 }}>Your Balance</div>
-                  <div style={{ fontSize: 24, fontWeight: 600 }}>0.00 OXC</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 14, color: '#9CA3AF', marginBottom: 4 }}>Staked</div>
-                  <div style={{ fontSize: 24, fontWeight: 600 }}>0.00 OXC</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 14, color: '#9CA3AF', marginBottom: 4 }}>Rewards</div>
-                  <div style={{ fontSize: 24, fontWeight: 600, color: '#10B981' }}>0.00 OXC</div>
-                </div>
+              <div>
+                <div style={{ fontSize: 14, color: '#9CA3AF', marginBottom: 4 }}>Current APY</div>
+                <div style={{ fontSize: 24, fontWeight: 600, color: '#22C55E' }}>12.5%</div>
               </div>
-              <p style={{ color: '#6B7280', fontSize: 14 }}>
-                Token contracts not yet deployed. Staking will be available after mainnet launch.
-              </p>
+              <div>
+                <div style={{ fontSize: 14, color: '#9CA3AF', marginBottom: 4 }}>Total Staked</div>
+                <div style={{ fontSize: 24, fontWeight: 600 }}>15M OXC</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, color: '#9CA3AF', marginBottom: 4 }}>Lock Period</div>
+                <div style={{ fontSize: 24, fontWeight: 600 }}>7 Days</div>
+              </div>
             </div>
-          ) : (
-            <div style={{
-              padding: 32,
-              background: 'rgba(255, 255, 255, 0.02)',
-              borderRadius: 16,
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+            <Link 
+              to="/staking"
+              style={{ 
+                display: 'inline-block',
+                padding: '16px 48px',
+                backgroundColor: '#3B82F6',
+                color: '#FFFFFF',
+                borderRadius: 12,
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: 16,
+                transition: 'all 0.2s',
+              }}
+            >
+              Go to Staking
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Governance Section */}
+      <section style={{ 
+        padding: '80px 24px',
+        background: 'rgba(255, 255, 255, 0.02)'
+      }}>
+        <div style={{ maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
+          <h2 style={{ fontSize: 36, fontWeight: 700, marginBottom: 16 }}>
+            Governance
+          </h2>
+          <p style={{ color: '#9CA3AF', fontSize: 18, marginBottom: 32 }}>
+            Shape the future of 0xCast by voting on proposals
+          </p>
+          
+          <div style={{
+            padding: 32,
+            background: 'rgba(0, 0, 0, 0.3)',
+            borderRadius: 16,
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+          }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(3, 1fr)', 
+              gap: 24,
+              marginBottom: 32
             }}>
-              <p style={{ color: '#9CA3AF', marginBottom: 16 }}>
-                Connect your wallet to view your OXC balance and stake
-              </p>
+              <div>
+                <div style={{ fontSize: 14, color: '#9CA3AF', marginBottom: 4 }}>Active Proposals</div>
+                <div style={{ fontSize: 24, fontWeight: 600, color: '#3B82F6' }}>3</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, color: '#9CA3AF', marginBottom: 4 }}>Total Proposals</div>
+                <div style={{ fontSize: 24, fontWeight: 600 }}>24</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, color: '#9CA3AF', marginBottom: 4 }}>Passed</div>
+                <div style={{ fontSize: 24, fontWeight: 600, color: '#22C55E' }}>18</div>
+              </div>
             </div>
-          )}
+            <Link 
+              to="/governance"
+              style={{ 
+                display: 'inline-block',
+                padding: '16px 48px',
+                backgroundColor: '#1F1F1F',
+                color: '#FFFFFF',
+                borderRadius: 12,
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: 16,
+                transition: 'all 0.2s',
+                border: '1px solid #3F3F3F',
+              }}
+            >
+              View Proposals
+            </Link>
+          </div>
         </div>
       </section>
 
