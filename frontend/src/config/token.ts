@@ -5,21 +5,13 @@ export const OXC_TOKEN = {
   decimals: 6,
   totalSupply: 100_000_000_000_000n, // 100M with 6 decimals
   
-  // Contract addresses
+  // Contract addresses (consolidated MVP contract)
   contracts: {
     mainnet: {
-      token: 'SP31PKQVQZVZCK3FM3NH67CGD6G1FMR17VQVS2W5T.oxc-token',
-      staking: 'SP31PKQVQZVZCK3FM3NH67CGD6G1FMR17VQVS2W5T.oxc-staking',
-      governance: 'SP31PKQVQZVZCK3FM3NH67CGD6G1FMR17VQVS2W5T.oxc-governance',
-      vesting: 'SP31PKQVQZVZCK3FM3NH67CGD6G1FMR17VQVS2W5T.oxc-vesting',
-      treasury: 'SP31PKQVQZVZCK3FM3NH67CGD6G1FMR17VQVS2W5T.oxc-treasury',
+      oxcast: 'SP000000000000000000002Q6VF78.oxcast', // Placeholder - update after deployment
     },
     testnet: {
-      token: 'ST31PKQVQZVZCK3FM3NH67CGD6G1FMR17VQV0E5K9.oxc-token',
-      staking: 'ST31PKQVQZVZCK3FM3NH67CGD6G1FMR17VQV0E5K9.oxc-staking',
-      governance: 'ST31PKQVQZVZCK3FM3NH67CGD6G1FMR17VQV0E5K9.oxc-governance',
-      vesting: 'ST31PKQVQZVZCK3FM3NH67CGD6G1FMR17VQV0E5K9.oxc-vesting',
-      treasury: 'ST31PKQVQZVZCK3FM3NH67CGD6G1FMR17VQV0E5K9.oxc-treasury',
+      oxcast: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.oxcast',
     },
   },
 } as const;
@@ -31,6 +23,21 @@ export const OXC_CONFIG = {
   decimals: OXC_TOKEN.decimals,
   totalSupply: OXC_TOKEN.totalSupply,
 } as const;
+
+// Network configuration
+export const NETWORK_CONFIG = {
+  mainnet: {
+    url: 'https://stacks-node-api.mainnet.stacks.co',
+    explorer: 'https://explorer.stacks.co',
+  },
+  testnet: {
+    url: 'https://stacks-node-api.testnet.stacks.co',
+    explorer: 'https://explorer.stacks.co/?chain=testnet',
+  },
+} as const;
+
+// Current network (change to 'mainnet' for production)
+export const CURRENT_NETWORK: 'mainnet' | 'testnet' = 'testnet';
 
 // Token distribution
 export const TOKEN_DISTRIBUTION = [
