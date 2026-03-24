@@ -7,6 +7,8 @@ import { MarketsPage } from './pages/MarketsPage';
 import { TradePage } from './pages/TradePage';
 import { PortfolioPage } from './pages/PortfolioPage';
 import { TokenPage } from './pages/TokenPage';
+import { StakingPage } from './pages/StakingPage';
+import { GovernancePage } from './pages/GovernancePage';
 
 function App() {
   return (
@@ -21,6 +23,8 @@ function App() {
               <Route path="/trade/:id" element={<TradePage />} />
               <Route path="/portfolio" element={<PortfolioPage />} />
               <Route path="/token" element={<TokenPage />} />
+              <Route path="/staking" element={<StakingPage />} />
+              <Route path="/governance" element={<GovernancePage />} />
             </Routes>
           </main>
           <Footer />
