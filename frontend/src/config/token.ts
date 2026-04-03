@@ -1,3 +1,12 @@
+// Import unified contract configuration
+import { 
+  TOKEN_CONTRACT, 
+  CURRENT_NETWORK,
+  getContractIdentifier,
+  CONTRACT_NAMES,
+  type NetworkType,
+} from './contracts';
+
 // OXC Token Configuration
 export const OXC_TOKEN = {
   name: '0xCast Token',
@@ -5,14 +14,19 @@ export const OXC_TOKEN = {
   decimals: 6,
   totalSupply: 100_000_000_000_000n, // 100M with 6 decimals
   
-  // Contract addresses (consolidated MVP contract)
+  // Contract addresses (uses unified config)
   contracts: {
     mainnet: {
-      oxcast: 'SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60.oxcast',
+      oxcast: getContractIdentifier(CONTRACT_NAMES.OXCAST, 'mainnet'),
     },
     testnet: {
-      oxcast: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.oxcast',
+      oxcast: getContractIdentifier(CONTRACT_NAMES.OXCAST, 'testnet'),
     },
+  },
+  
+  // Current contract identifier
+  get currentContract() {
+    return TOKEN_CONTRACT.identifier;
   },
 } as const;
 
@@ -24,20 +38,12 @@ export const OXC_CONFIG = {
   totalSupply: OXC_TOKEN.totalSupply,
 } as const;
 
-// Network configuration
-export const NETWORK_CONFIG = {
-  mainnet: {
-    url: 'https://stacks-node-api.mainnet.stacks.co',
-    explorer: 'https://explorer.stacks.co',
-  },
-  testnet: {
-    url: 'https://stacks-node-api.testnet.stacks.co',
-    explorer: 'https://explorer.stacks.co/?chain=testnet',
-  },
-} as const;
+// Network configuration (re-exported from unified source)
+export { API_URLS, EXPLORER_URLS, getApiUrl, getNodeUrl } from './network';
 
-// Current network (change to 'mainnet' for production)
-export const CURRENT_NETWORK: 'mainnet' | 'testnet' = 'mainnet';
+// Re-export network from unified source
+export { CURRENT_NETWORK } from './contracts';
+export type { NetworkType } from './contracts';
 
 // Token distribution
 export const TOKEN_DISTRIBUTION = [
