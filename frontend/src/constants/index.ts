@@ -1,13 +1,26 @@
-// Contract deployed on Stacks Mainnet
-export const CONTRACT_ADDRESS = 'SP31PKQVQZVZCK3FM3NH67CGD6G1FMR17VQVS2W5T';
-export const CONTRACT_NAME = 'market-core';
-export const CONTRACT_IDENTIFIER = `${CONTRACT_ADDRESS}.${CONTRACT_NAME}`;
+// Re-export contract configuration from unified source
+import { 
+  MARKET_CONTRACT, 
+  CURRENT_NETWORK,
+  getContractAddress,
+  getContractIdentifier,
+  CONTRACT_NAMES,
+} from '../config/contracts';
+import { getApiUrl } from '../config/network';
 
-// Stacks API endpoint
-export const STACKS_API_URL = 'https://api.mainnet.hiro.so';
+// Contract deployed on Stacks (uses unified config)
+export const CONTRACT_ADDRESS = MARKET_CONTRACT.address;
+export const CONTRACT_NAME = MARKET_CONTRACT.name;
+export const CONTRACT_IDENTIFIER = MARKET_CONTRACT.identifier;
 
-// Network configuration
-export const NETWORK = 'mainnet';
+// Stacks API endpoint (uses unified config)
+export const STACKS_API_URL = getApiUrl();
+
+// Network configuration (uses unified config)
+export const NETWORK = CURRENT_NETWORK;
+
+// Re-export for convenience
+export { getContractAddress, getContractIdentifier, CONTRACT_NAMES };
 
 // App constants
 export const APP_NAME = '0xCast';
