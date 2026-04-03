@@ -8,17 +8,21 @@ import {
   PostConditionMode,
   Pc,
 } from '@stacks/transactions';
-import { OXC_TOKEN, CURRENT_NETWORK } from '../config/token';
+import { 
+  TOKEN_CONTRACT,
+  CONTRACT_NAMES,
+  getContractPrincipal as getContract,
+} from '../config/contracts';
+import { getNodeUrl } from '../config/network';
 import { useWallet } from '../components/WalletProvider';
 
-// Get contract principal based on network
-const getContractPrincipal = () => {
-  const contracts = OXC_TOKEN.contracts[CURRENT_NETWORK];
-  return contracts.oxcast;
+// Get OXC token contract configuration
+const getTokenContract = () => {
+  return getContract(CONTRACT_NAMES.OXCAST);
 };
 
-// Contract name
-const CONTRACT_NAME = 'oxcast';
+// Contract name for OXC operations
+const CONTRACT_NAME = TOKEN_CONTRACT.name;
 
 export function useContract() {
   const { address, isConnected } = useWallet();
@@ -28,11 +32,11 @@ export function useContract() {
     async (question: string, durationBlocks: number) => {
       if (!isConnected || !address) throw new Error('Wallet not connected');
 
-      const contractAddress = getContractPrincipal().split('.')[0];
+      const contract = getTokenContract();
       
       await openContractCall({
-        contractAddress,
-        contractName: CONTRACT_NAME,
+        contractAddress: contract.address,
+        contractName: contract.name,
         functionName: 'create-market',
         functionArgs: [
           stringAsciiCV(question),
@@ -56,7 +60,7 @@ export function useContract() {
     async (marketId: number, outcome: 'yes' | 'no', amountMicroStx: bigint) => {
       if (!isConnected || !address) throw new Error('Wallet not connected');
 
-      const contractAddress = getContractPrincipal().split('.')[0];
+      const contract = getTokenContract();
       const outcomeValue = outcome === 'yes' ? 1 : 2;
 
       // Post condition: user sends STX
@@ -65,8 +69,8 @@ export function useContract() {
       ];
 
       await openContractCall({
-        contractAddress,
-        contractName: CONTRACT_NAME,
+        contractAddress: contract.address,
+        contractName: contract.name,
         functionName: 'predict',
         functionArgs: [
           uintCV(marketId),
@@ -91,11 +95,11 @@ export function useContract() {
     async (marketId: number) => {
       if (!isConnected || !address) throw new Error('Wallet not connected');
 
-      const contractAddress = getContractPrincipal().split('.')[0];
+      const contract = getTokenContract();
 
       await openContractCall({
-        contractAddress,
-        contractName: CONTRACT_NAME,
+        contractAddress: contract.address,
+        contractName: contract.name,
         functionName: 'claim-winnings',
         functionArgs: [uintCV(marketId)],
         postConditionMode: PostConditionMode.Allow,
@@ -116,16 +120,15 @@ export function useContract() {
     async (amountMicroOxc: bigint) => {
       if (!isConnected || !address) throw new Error('Wallet not connected');
 
-      const contractPrincipal = getContractPrincipal();
-      const contractAddress = contractPrincipal.split('.')[0];
+      const contract = getTokenContract();
 
       const postConditions = [
-        Pc.principal(address).willSendEq(amountMicroOxc).ft(contractPrincipal, 'oxc-token'),
+        Pc.principal(address).willSendEq(amountMicroOxc).ft(contract.identifier, 'oxc-token'),
       ];
 
       await openContractCall({
-        contractAddress,
-        contractName: CONTRACT_NAME,
+        contractAddress: contract.address,
+        contractName: contract.name,
         functionName: 'stake',
         functionArgs: [uintCV(Number(amountMicroOxc))],
         postConditionMode: PostConditionMode.Deny,
@@ -146,11 +149,11 @@ export function useContract() {
     async (amountMicroOxc: bigint) => {
       if (!isConnected || !address) throw new Error('Wallet not connected');
 
-      const contractAddress = getContractPrincipal().split('.')[0];
+      const contract = getTokenContract();
 
       await openContractCall({
-        contractAddress,
-        contractName: CONTRACT_NAME,
+        contractAddress: contract.address,
+        contractName: contract.name,
         functionName: 'unstake',
         functionArgs: [uintCV(Number(amountMicroOxc))],
         postConditionMode: PostConditionMode.Allow,
@@ -171,11 +174,10 @@ export function useContract() {
     async (recipient: string, amountMicroOxc: bigint, memo?: string) => {
       if (!isConnected || !address) throw new Error('Wallet not connected');
 
-      const contractPrincipal = getContractPrincipal();
-      const contractAddress = contractPrincipal.split('.')[0];
+      const contract = getTokenContract();
 
       const postConditions = [
-        Pc.principal(address).willSendEq(amountMicroOxc).ft(contractPrincipal, 'oxc-token'),
+        Pc.principal(address).willSendEq(amountMicroOxc).ft(contract.identifier, 'oxc-token'),
       ];
 
       const functionArgs = [
@@ -186,8 +188,8 @@ export function useContract() {
       ];
 
       await openContractCall({
-        contractAddress,
-        contractName: CONTRACT_NAME,
+        contractAddress: contract.address,
+        contractName: contract.name,
         functionName: 'transfer',
         functionArgs: functionArgs as any,
         postConditionMode: PostConditionMode.Deny,
