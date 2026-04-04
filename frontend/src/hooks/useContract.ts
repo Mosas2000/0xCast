@@ -1,4 +1,24 @@
-// Contract interaction hook for 0xCast MVP
+/**
+ * Contract interaction hook for 0xCast MVP
+ * 
+ * This module provides hooks and utilities for interacting with Stacks smart contracts.
+ * 
+ * BigInt Handling:
+ * - All token amounts are handled as BigInt to preserve precision
+ * - Use safeBigIntToNumber() when converting to uintCV (validates against MAX_SAFE_INTEGER)
+ * - Use parseToMicroAmount() to convert user input strings to BigInt
+ * - Use formatMicroAmount() to display BigInt amounts to users
+ * - Use validateTransactionAmount() to check amounts before transactions
+ * 
+ * Exports:
+ * - MAX_SAFE_INTEGER: Maximum safe value for Number conversion
+ * - MAX_SAFE_OXC_AMOUNT: Maximum safe OXC token amount (with 6 decimals)
+ * - safeBigIntToNumber: Safe BigInt to Number conversion
+ * - isSafeBigInt: Check if BigInt is within safe range
+ * - formatMicroAmount: Format BigInt micro-amount for display
+ * - parseToMicroAmount: Parse string to BigInt micro-amount
+ * - validateTransactionAmount: Validate amount for transaction
+ */
 import { useCallback } from 'react';
 import { openContractCall } from '@stacks/connect';
 import {
