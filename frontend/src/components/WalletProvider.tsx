@@ -1,36 +1,106 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { connect as stacksConnect } from '@stacks/connect';
 
+/**
+ * WalletProvider context type
+ * Manages wallet connection state with verification on mount
+ */
 interface WalletContextType {
+  /** Whether wallet is currently connected */
   isConnected: boolean;
+  /** Connected wallet address (SP/ST format) */
   address: string | null;
+  /** Connect to wallet (opens Hiro Wallet) */
   connect: () => void;
+  /** Disconnect wallet and clear state */
   disconnect: () => void;
+  /** Whether initial connection verification is in progress */
+  isVerifying: boolean;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
+// LocalStorage key for persisting wallet address
 const STORAGE_KEY = '0xcast-wallet-address';
 
+/**
+ * WalletProvider component
+ * 
+ * Provides wallet connection state management with:
+ * - Persistent storage of wallet address
+ * - Address validation on mount
+ * - Stale connection cleanup
+ * - Verification status tracking
+ * 
+ * On mount, checks localStorage for a saved address and validates it.
+ * Invalid addresses are cleared automatically.
+ */
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(true);
 
-  useEffect(() => {
-    // Check localStorage for saved address
-    const savedAddress = localStorage.getItem(STORAGE_KEY);
-    if (savedAddress) {
-      setIsConnected(true);
-      setAddress(savedAddress);
+  // Clear stale wallet connection data
+  const clearWalletData = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    setIsConnected(false);
+    setAddress(null);
+  }, []);
+
+  // Verify stored wallet connection is still valid
+  const verifyConnection = useCallback(async (savedAddress: string): Promise<boolean> => {
+    try {
+      // Basic validation: Check if address format is valid
+      if (!savedAddress || savedAddress.length === 0) {
+        return false;
+      }
+      
+      // Check if it's a valid Stacks address (starts with SP or ST)
+      if (!savedAddress.startsWith('SP') && !savedAddress.startsWith('ST')) {
+        return false;
+      }
+      
+      // Address format is valid - we'll trust it until a transaction fails
+      // Note: Stacks Connect doesn't provide account verification API
+      // The wallet extension handles account switching internally
+      return true;
+    } catch (error) {
+      console.error('Error verifying connection:', error);
+      return false;
     }
   }, []);
 
+  useEffect(() => {
+    // Verify saved connection on mount
+    const verifySavedConnection = async () => {
+      const savedAddress = localStorage.getItem(STORAGE_KEY);
+      
+      if (!savedAddress) {
+        // No saved address, mark verification complete
+        setIsVerifying(false);
+        return;
+      }
+
+      // Verify the saved address is still valid
+      const isValid = await verifyConnection(savedAddress);
+      
+      if (isValid) {
+        setIsConnected(true);
+        setAddress(savedAddress);
+      } else {
+        // Clear stale data
+        clearWalletData();
+      }
+      
+      setIsVerifying(false);
+    };
+
+    verifySavedConnection();
+  }, [verifyConnection, clearWalletData]);
+
   const connect = useCallback(async () => {
-    console.log('Attempting to connect wallet...');
-    
     try {
       const result = await stacksConnect();
-      console.log('Connect result:', result);
       
       if (result && result.addresses && result.addresses.length > 0) {
         // Find the Stacks address (not BTC)
@@ -42,7 +112,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           setIsConnected(true);
           setAddress(stacksAddress.address);
           localStorage.setItem(STORAGE_KEY, stacksAddress.address);
-          console.log('Connected with address:', stacksAddress.address);
         }
       }
     } catch (error) {
@@ -51,13 +120,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const disconnect = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
-    setIsConnected(false);
-    setAddress(null);
-  }, []);
+    clearWalletData();
+  }, [clearWalletData]);
 
   return (
-    <WalletContext.Provider value={{ isConnected, address, connect, disconnect }}>
+    <WalletContext.Provider value={{ isConnected, address, connect, disconnect, isVerifying }}>
       {children}
     </WalletContext.Provider>
   );
