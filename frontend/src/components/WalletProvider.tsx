@@ -1,16 +1,26 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { connect as stacksConnect } from '@stacks/connect';
 
+/**
+ * WalletProvider context type
+ * Manages wallet connection state with verification on mount
+ */
 interface WalletContextType {
+  /** Whether wallet is currently connected */
   isConnected: boolean;
+  /** Connected wallet address (SP/ST format) */
   address: string | null;
+  /** Connect to wallet (opens Hiro Wallet) */
   connect: () => void;
+  /** Disconnect wallet and clear state */
   disconnect: () => void;
+  /** Whether initial connection verification is in progress */
   isVerifying: boolean;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
+// LocalStorage key for persisting wallet address
 const STORAGE_KEY = '0xcast-wallet-address';
 
 export function WalletProvider({ children }: { children: ReactNode }) {
