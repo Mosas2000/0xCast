@@ -88,6 +88,10 @@ export function useMarkets() {
       setMarkets(fetchedMarkets);
       setError(null);
     } catch (err) {
+      // Ignore abort errors - these are expected during cleanup
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
       // Only log and set error if still mounted
       if (!isMountedRef.current) return;
       console.error('Error fetching markets:', err);
