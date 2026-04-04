@@ -98,7 +98,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }, [clearWalletData]);
 
   return (
-    <WalletContext.Provider value={{ isConnected, address, connect, disconnect }}>
+    <WalletContext.Provider value={{ isConnected, address, connect, disconnect, isVerifying }}>
       {children}
     </WalletContext.Provider>
   );
