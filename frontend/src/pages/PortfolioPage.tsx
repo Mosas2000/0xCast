@@ -202,7 +202,16 @@ export function PortfolioPage() {
 
                       {isWinner && !position.claimed && (
                         <div className="mt-8 pt-6 border-t border-neutral-800">
-                          <button className="btn btn-success w-full">Claim Winnings</button>
+                          <button 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleClaimWinnings(position.marketId);
+                            }}
+                            disabled={claimingMarketId === position.marketId}
+                            className="btn btn-success w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {claimingMarketId === position.marketId ? 'Claiming...' : 'Claim Winnings'}
+                          </button>
                         </div>
                       )}
                     </div>
