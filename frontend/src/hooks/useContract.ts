@@ -248,7 +248,7 @@ export function useContract() {
 
       // Construct function arguments with proper Clarity types
       const functionArgs = [
-        uintCV(Number(amountMicroOxc)),
+        uintCV(safeBigIntToNumber(amountMicroOxc, 'amountMicroOxc')),
         principalCV(address),
         principalCV(recipient),
         buildMemoCV(memo),
