@@ -28,11 +28,19 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   // Verify stored wallet connection is still valid
   const verifyConnection = useCallback(async (savedAddress: string): Promise<boolean> => {
     try {
-      // Attempt to verify the connection with Hiro wallet
-      // Note: Stacks Connect doesn't provide a direct verification API
-      // We rely on the user initiating a new connection if state is stale
-      // For now, we'll accept saved address but mark it as unverified
-      // The user will know if it's invalid when they try to transact
+      // Basic validation: Check if address format is valid
+      if (!savedAddress || savedAddress.length === 0) {
+        return false;
+      }
+      
+      // Check if it's a valid Stacks address (starts with SP or ST)
+      if (!savedAddress.startsWith('SP') && !savedAddress.startsWith('ST')) {
+        return false;
+      }
+      
+      // Address format is valid - we'll trust it until a transaction fails
+      // Note: Stacks Connect doesn't provide account verification API
+      // The wallet extension handles account switching internally
       return true;
     } catch (error) {
       console.error('Error verifying connection:', error);
