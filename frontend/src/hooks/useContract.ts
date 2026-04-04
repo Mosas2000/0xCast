@@ -23,6 +23,23 @@ const getTokenContract = () => {
   return getContract(CONTRACT_NAMES.OXCAST);
 };
 
+// Maximum memo length per SIP-010 standard
+const MAX_MEMO_LENGTH = 34;
+
+/**
+ * Build optional memo Clarity value for token transfers
+ * @param memo - Optional memo string
+ * @returns someCV(bufferCV(...)) if memo provided, noneCV() otherwise
+ */
+const buildMemoCV = (memo?: string) => {
+  if (!memo) return noneCV();
+  const buffer = Buffer.from(memo);
+  if (buffer.length > MAX_MEMO_LENGTH) {
+    throw new Error(`Memo exceeds maximum length of ${MAX_MEMO_LENGTH} bytes`);
+  }
+  return someCV(bufferCV(buffer));
+};
+
 export function useContract() {
   const { address, isConnected } = useWallet();
 
