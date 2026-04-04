@@ -194,11 +194,6 @@ export function useContract() {
       if (!recipient) throw new Error('Recipient address is required');
       if (amountMicroOxc <= 0n) throw new Error('Amount must be greater than zero');
 
-      // Validate memo length (SIP-010 allows up to 34 bytes)
-      if (memo && Buffer.from(memo).length > 34) {
-        throw new Error('Memo exceeds maximum length of 34 bytes');
-      }
-
       const contract = getTokenContract();
 
       const postConditions = [
@@ -206,12 +201,11 @@ export function useContract() {
       ];
 
       // Construct function arguments with proper Clarity types
-      // Memo must use someCV(bufferCV(...)) or noneCV() for optional values
       const functionArgs = [
         uintCV(Number(amountMicroOxc)),
         principalCV(address),
         principalCV(recipient),
-        memo ? someCV(bufferCV(Buffer.from(memo))) : noneCV(),
+        buildMemoCV(memo),
       ];
 
       await openContractCall({
