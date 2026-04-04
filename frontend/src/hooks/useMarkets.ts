@@ -54,6 +54,10 @@ export function useMarkets() {
       }
 
       const results = await Promise.all(marketPromises);
+      
+      // Check if component is still mounted before processing results
+      if (!isMountedRef.current) return;
+      
       const fetchedMarkets: Market[] = [];
       
       results.forEach((result, index) => {
@@ -68,13 +72,21 @@ export function useMarkets() {
         }
       });
 
+      // Final mount check before state updates
+      if (!isMountedRef.current) return;
+      
       setMarkets(fetchedMarkets);
       setError(null);
     } catch (err) {
+      // Only log and set error if still mounted
+      if (!isMountedRef.current) return;
       console.error('Error fetching markets:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch markets');
     } finally {
-      setIsLoading(false);
+      // Only update loading state if still mounted
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
