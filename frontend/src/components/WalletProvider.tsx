@@ -99,11 +99,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }, [verifyConnection, clearWalletData]);
 
   const connect = useCallback(async () => {
-    console.log('Attempting to connect wallet...');
-    
     try {
       const result = await stacksConnect();
-      console.log('Connect result:', result);
       
       if (result && result.addresses && result.addresses.length > 0) {
         // Find the Stacks address (not BTC)
@@ -115,7 +112,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           setIsConnected(true);
           setAddress(stacksAddress.address);
           localStorage.setItem(STORAGE_KEY, stacksAddress.address);
-          console.log('Connected with address:', stacksAddress.address);
         }
       }
     } catch (error) {
