@@ -20,6 +20,12 @@ export function useMarkets() {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const fetchMarkets = useCallback(async () => {
+    // Cancel any in-flight request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+    
     try {
       const network = getNetwork();
       const counterResult = await fetchCallReadOnlyFunction({
