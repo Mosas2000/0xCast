@@ -62,6 +62,21 @@ export function PortfolioPage() {
     fetchPositions();
   }, [address, markets]);
 
+  const handleClaimWinnings = async (marketId: number) => {
+    if (!isConnected || claimingMarketId) return;
+    
+    setClaimingMarketId(marketId);
+    try {
+      await claimWinnings(marketId);
+      // Refetch positions after claiming
+      // The useEffect will automatically update when markets change
+    } catch (error) {
+      console.error('Error claiming winnings:', error);
+    } finally {
+      setClaimingMarketId(null);
+    }
+  };
+
   if (!isConnected) {
     return (
       <div className="pt-[72px] min-h-screen flex items-center justify-center">
