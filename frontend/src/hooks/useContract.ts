@@ -22,7 +22,12 @@ import { useWallet } from '../components/WalletProvider';
 export type OptionalClarityValue = ReturnType<typeof someCV> | ReturnType<typeof noneCV>;
 
 // Maximum safe integer for JavaScript Number type
-const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER;
+// Values larger than this will lose precision when converted to Number
+export const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER;
+
+// For OXC tokens with 6 decimals, this is the maximum safe amount in tokens
+// MAX_SAFE_INTEGER / 10^6 = ~9,007,199,254 tokens
+export const MAX_SAFE_OXC_AMOUNT = Math.floor(MAX_SAFE_INTEGER / 1_000_000);
 
 /**
  * Safely convert BigInt to number for uintCV, checking for precision loss
