@@ -112,6 +112,11 @@ export function PortfolioPage() {
       await claimWinnings(marketId);
       setClaimSuccess(marketId);
       
+      // Refresh positions after successful claim
+      setTimeout(() => {
+        refetchPositions();
+      }, 2000); // Wait 2s for blockchain to update
+      
       // Auto-hide success message after 5 seconds
       setTimeout(() => setClaimSuccess(null), 5000);
     } catch (error) {
