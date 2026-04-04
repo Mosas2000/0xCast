@@ -143,5 +143,12 @@ export function useMarkets() {
     };
   }, [fetchMarkets]);
 
-  return { markets, isLoading, error, refetch: fetchMarkets };
+  return { 
+    markets, 
+    isLoading, 
+    error, 
+    refetch: fetchMarkets,
+    // Expose refresh interval for testing/debugging
+    refreshIntervalMs: REFRESH_INTERVAL_MS,
+  };
 }
