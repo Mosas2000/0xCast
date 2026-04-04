@@ -487,31 +487,34 @@ export function StakingPage() {
             ) : (
               <>
                 <div style={rewardsCardStyle}>
-                  <div style={rewardsTitleStyle}>Pending Rewards</div>
+                  <div style={rewardsTitleStyle}>Staking Rewards</div>
                   <div style={rewardsValueStyle}>
-                    {formatOXC(stakingData.pendingRewards)} OXC
+                    Coming Soon
                   </div>
+                  <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '16px' }}>
+                    Rewards distribution will be enabled in a future contract update.
+                  </p>
                   <button 
-                    style={{ ...primaryButtonStyle, backgroundColor: '#22C55E' }}
+                    style={{ ...primaryButtonStyle, backgroundColor: '#374151', cursor: 'not-allowed' }}
                     onClick={handleClaimRewards}
-                    disabled={isLoading || stakingData.pendingRewards === 0n}
+                    disabled={true}
                   >
-                    {isLoading ? 'Claiming...' : 'Claim Rewards'}
+                    Claim Rewards (Coming Soon)
                   </button>
                 </div>
                 <div style={{ ...infoBoxStyle, marginTop: '24px', marginBottom: '0' }}>
                   <div style={infoRowStyle}>
                     <span style={infoLabelStyle}>Your Stake</span>
-                    <span style={infoValueStyle}>{formatOXC(stakingData.userStaked)} OXC</span>
+                    <span style={infoValueStyle}>{formatOxcAmount(stakingData.userStaked)} OXC</span>
                   </div>
                   <div style={infoRowStyle}>
-                    <span style={infoLabelStyle}>Current APY</span>
-                    <span style={{ ...infoValueStyle, color: '#22C55E' }}>{stakingData.apy}%</span>
+                    <span style={infoLabelStyle}>Est. APY</span>
+                    <span style={{ ...infoValueStyle, color: '#22C55E' }}>{estimatedApy}%</span>
                   </div>
                   <div style={infoRowLastStyle}>
-                    <span style={infoLabelStyle}>Estimated Daily</span>
-                    <span style={infoValueStyle}>
-                      ~{(Number(formatOXC(stakingData.userStaked)) * stakingData.apy / 100 / 365).toFixed(2)} OXC
+                    <span style={infoLabelStyle}>Lock Status</span>
+                    <span style={{ ...infoValueStyle, color: lockStatus.isLocked ? '#F59E0B' : '#22C55E' }}>
+                      {lockStatus.message}
                     </span>
                   </div>
                 </div>
