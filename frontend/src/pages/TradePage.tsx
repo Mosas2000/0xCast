@@ -58,6 +58,11 @@ export function TradePage() {
     fetchMarket();
   }, [fetchMarket]);
 
+  // Clear success messages when starting new trade
+  const resetTradeState = useCallback(() => {
+    setTradeSuccess(false);
+  }, []);
+
   const handleTrade = async () => {
     if (!market || !selectedOutcome || !stakeAmount) return;
     
@@ -65,7 +70,7 @@ export function TradePage() {
     if (isNaN(amount) || amount < MIN_STAKE || amount > MAX_STAKE) return;
 
     // Reset success state before new trade
-    setTradeSuccess(false);
+    resetTradeState();
     
     const onSuccess = () => {
       // Update UI state instead of reloading page
