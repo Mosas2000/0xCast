@@ -439,7 +439,7 @@ export function StakingPage() {
               <>
                 <div style={labelStyle}>
                   <span>Amount to Unstake</span>
-                  <span>Staked: {formatOXC(stakingData.userStaked)} OXC</span>
+                  <span>Staked: {formatOxcAmount(stakingData.userStaked)} OXC</span>
                 </div>
                 <div style={inputContainerStyle}>
                   <input
@@ -448,30 +448,40 @@ export function StakingPage() {
                     placeholder="0.00"
                     value={unstakeAmount}
                     onChange={(e) => setUnstakeAmount(e.target.value)}
-                    disabled={isLoading}
+                    disabled={isLoading || lockStatus.isLocked}
                   />
-                  <button style={maxButtonStyle} onClick={setMaxUnstake}>
+                  <button style={maxButtonStyle} onClick={setMaxUnstake} disabled={lockStatus.isLocked}>
                     MAX
                   </button>
                 </div>
                 <div style={infoBoxStyle}>
                   <div style={infoRowStyle}>
                     <span style={infoLabelStyle}>Currently Staked</span>
-                    <span style={infoValueStyle}>{formatOXC(stakingData.userStaked)} OXC</span>
+                    <span style={infoValueStyle}>{formatOxcAmount(stakingData.userStaked)} OXC</span>
                   </div>
                   <div style={infoRowLastStyle}>
-                    <span style={infoLabelStyle}>Pending Rewards</span>
-                    <span style={{ ...infoValueStyle, color: '#22C55E' }}>
-                      {formatOXC(stakingData.pendingRewards)} OXC
+                    <span style={infoLabelStyle}>Lock Status</span>
+                    <span style={{ ...infoValueStyle, color: lockStatus.isLocked ? '#EF4444' : '#22C55E' }}>
+                      {lockStatus.message}
                     </span>
                   </div>
                 </div>
+                {lockStatus.isLocked && (
+                  <div style={{ color: '#F59E0B', fontSize: '14px', marginBottom: '16px', padding: '12px', backgroundColor: '#1a1505', borderRadius: '8px' }}>
+                    ⏳ Your tokens are locked. {lockStatus.message}
+                  </div>
+                )}
+                {actionError && (
+                  <div style={{ color: '#EF4444', fontSize: '14px', marginBottom: '16px', padding: '12px', backgroundColor: '#1a0505', borderRadius: '8px' }}>
+                    {actionError}
+                  </div>
+                )}
                 <button 
                   style={primaryButtonStyle} 
                   onClick={handleUnstake}
-                  disabled={isLoading || !unstakeAmount}
+                  disabled={isLoading || !unstakeAmount || lockStatus.isLocked}
                 >
-                  {isLoading ? 'Unstaking...' : 'Unstake OXC'}
+                  {isLoading ? 'Unstaking...' : lockStatus.isLocked ? 'Tokens Locked' : 'Unstake OXC'}
                 </button>
               </>
             ) : (
