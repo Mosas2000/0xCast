@@ -365,10 +365,32 @@ export function GovernancePage() {
 
         {/* Active Proposals */}
         <h2 style={sectionTitleStyle}>Active Proposals</h2>
-        {proposals.filter(p => p.status === 'active').map(proposal => {
-          const forPercentage = calculatePercentage(proposal.votesFor, proposal.totalVotes);
-          const againstPercentage = calculatePercentage(proposal.votesAgainst, proposal.totalVotes);
-          const quorumReached = proposal.totalVotes >= proposal.quorum;
+        {isLoading ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#9CA3AF' }}>
+            Loading proposals...
+          </div>
+        ) : proposals.filter(p => p.status === 'active').length === 0 ? (
+          <div style={{ 
+            backgroundColor: '#0A0A0A', 
+            border: '1px solid #1F1F1F', 
+            borderRadius: '16px', 
+            padding: '48px', 
+            textAlign: 'center', 
+            marginBottom: '32px' 
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📋</div>
+            <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#FFFFFF', marginBottom: '8px' }}>
+              No Active Proposals
+            </h3>
+            <p style={{ color: '#9CA3AF', maxWidth: '400px', margin: '0 auto' }}>
+              There are currently no active governance proposals. 
+              Governance features will be enabled when the governance contract is deployed.
+            </p>
+          </div>
+        ) : proposals.filter(p => p.status === 'active').map(proposal => {
+          const forPercentage = calculateVotePercentage(proposal.votesFor, proposal.totalVotes);
+          const againstPercentage = calculateVotePercentage(proposal.votesAgainst, proposal.totalVotes);
+          const quorumReached = isQuorumReached(proposal.totalVotes, proposal.quorum);
 
           return (
             <div
@@ -397,13 +419,13 @@ export function GovernancePage() {
                 </div>
                 <div style={voteStatsStyle}>
                   <span style={{ color: '#22C55E' }}>
-                    For: {formatOXC(proposal.votesFor)} ({forPercentage}%)
+                    For: {formatVotingPower(proposal.votesFor)} ({forPercentage}%)
                   </span>
                   <span style={{ color: quorumReached ? '#22C55E' : '#F59E0B' }}>
-                    Quorum: {quorumReached ? '✓ Reached' : `${calculatePercentage(proposal.totalVotes, proposal.quorum)}%`}
+                    Quorum: {quorumReached ? '✓ Reached' : `${calculateVotePercentage(proposal.totalVotes, proposal.quorum)}%`}
                   </span>
                   <span style={{ color: '#EF4444' }}>
-                    Against: {formatOXC(proposal.votesAgainst)} ({againstPercentage}%)
+                    Against: {formatVotingPower(proposal.votesAgainst)} ({againstPercentage}%)
                   </span>
                 </div>
               </div>
