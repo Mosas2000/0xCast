@@ -10,7 +10,6 @@ import {
   someCV,
   noneCV,
   bufferCV,
-  ClarityValue,
 } from '@stacks/transactions';
 import { 
   CONTRACT_NAMES,
