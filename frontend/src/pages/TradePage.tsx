@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { cvToJSON, fetchCallReadOnlyFunction, uintCV } from '@stacks/transactions';
 import { STACKS_MAINNET } from '@stacks/network';
@@ -9,6 +9,16 @@ import { CONTRACT_ADDRESS, CONTRACT_NAME, MIN_STAKE, MAX_STAKE } from '../consta
 import { useWallet } from '../components/WalletProvider';
 import { useStake } from '../hooks/useStake';
 
+/**
+ * TradePage Component
+ * 
+ * Displays market details and allows users to place predictions.
+ * After a successful trade:
+ * - Updates UI state without page reload
+ * - Shows transaction ID with explorer link
+ * - Resets form for next trade
+ * - Auto-refreshes market data
+ */
 export function TradePage() {
   const { id } = useParams<{ id: string }>();
   const marketId = id ? parseInt(id, 10) : null;
@@ -21,40 +31,48 @@ export function TradePage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedOutcome, setSelectedOutcome] = useState<'yes' | 'no' | null>(null);
   const [stakeAmount, setStakeAmount] = useState<string>('10');
+  const [tradeSuccess, setTradeSuccess] = useState(false);
 
-  useEffect(() => {
-    async function fetchMarket() {
-      if (marketId === null) {
-        setError('Invalid market ID');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const result = await fetchCallReadOnlyFunction({
-          network: STACKS_MAINNET,
-          contractAddress: CONTRACT_ADDRESS,
-          contractName: CONTRACT_NAME,
-          functionName: 'get-market',
-          functionArgs: [uintCV(marketId)],
-          senderAddress: CONTRACT_ADDRESS,
-        });
-
-        const jsonResult = cvToJSON(result);
-        if (jsonResult.type === 'some' && jsonResult.value) {
-          setMarket(parseMarketData(marketId, jsonResult.value));
-        } else {
-          setError('Market not found');
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch market');
-      } finally {
-        setIsLoading(false);
-      }
+  // Fetch market data from contract
+  const fetchMarket = useCallback(async () => {
+    if (marketId === null) {
+      setError('Invalid market ID');
+      setIsLoading(false);
+      return;
     }
 
-    fetchMarket();
+    try {
+      const result = await fetchCallReadOnlyFunction({
+        network: STACKS_MAINNET,
+        contractAddress: CONTRACT_ADDRESS,
+        contractName: CONTRACT_NAME,
+        functionName: 'get-market',
+        functionArgs: [uintCV(marketId)],
+        senderAddress: CONTRACT_ADDRESS,
+      });
+
+      const jsonResult = cvToJSON(result);
+      if (jsonResult.type === 'some' && jsonResult.value) {
+        setMarket(parseMarketData(marketId, jsonResult.value));
+      } else {
+        setError('Market not found');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch market');
+    } finally {
+      setIsLoading(false);
+    }
   }, [marketId]);
+
+  // Initial market data fetch on mount
+  useEffect(() => {
+    fetchMarket();
+  }, [fetchMarket]);
+
+  // Clear success messages when starting new trade or changing selection
+  const resetTradeState = useCallback(() => {
+    setTradeSuccess(false);
+  }, []);
 
   const handleTrade = async () => {
     if (!market || !selectedOutcome || !stakeAmount) return;
@@ -62,14 +80,31 @@ export function TradePage() {
     const amount = parseFloat(stakeAmount);
     if (isNaN(amount) || amount < MIN_STAKE || amount > MAX_STAKE) return;
 
+    // Reset success state before new trade
+    resetTradeState();
+    
     const onSuccess = () => {
-      window.location.reload();
+      // Update UI state instead of reloading page
+      setTradeSuccess(true);
+      setSelectedOutcome(null);
+      setStakeAmount('10');
+      
+      // Refetch market data after delay to allow blockchain confirmation
+      // Note: Transaction may take longer to confirm, but UI shows txId immediately
+      setTimeout(() => {
+        fetchMarket();
+      }, 2000);
     };
 
-    if (selectedOutcome === 'yes') {
-      await placeYesStake(market.id, amount, onSuccess);
-    } else {
-      await placeNoStake(market.id, amount, onSuccess);
+    try {
+      if (selectedOutcome === 'yes') {
+        await placeYesStake(market.id, amount, onSuccess);
+      } else {
+        await placeNoStake(market.id, amount, onSuccess);
+      }
+    } catch (err) {
+      // Error handling is done by useStake hook
+      console.error('Trade failed:', err);
     }
   };
 
@@ -236,7 +271,10 @@ export function TradePage() {
                     <label className="block text-sm text-neutral-400 mb-4">Select Outcome</label>
                     <div className="grid grid-cols-2 gap-4">
                       <button
-                        onClick={() => setSelectedOutcome('yes')}
+                        onClick={() => {
+                          setSelectedOutcome('yes');
+                          resetTradeState();
+                        }}
                         className={`p-4 rounded-xl border-2 transition-all ${
                           selectedOutcome === 'yes'
                             ? 'border-emerald-500 bg-emerald-500/10'
@@ -247,7 +285,10 @@ export function TradePage() {
                         <span className="text-xs text-neutral-500">{odds.yes}%</span>
                       </button>
                       <button
-                        onClick={() => setSelectedOutcome('no')}
+                        onClick={() => {
+                          setSelectedOutcome('no');
+                          resetTradeState();
+                        }}
                         className={`p-4 rounded-xl border-2 transition-all ${
                           selectedOutcome === 'no'
                             ? 'border-rose-500 bg-rose-500/10'
@@ -302,13 +343,30 @@ export function TradePage() {
                     </div>
                   )}
 
-                  {/* Success */}
+                  {/* Success - Transaction submitted */}
                   {txId && (
                     <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
-                      Transaction submitted!{' '}
-                      <a href={`https://explorer.hiro.so/txid/${txId}?chain=mainnet`} target="_blank" rel="noopener noreferrer" className="underline">
+                      <p className="font-semibold mb-1">Transaction submitted!</p>
+                      <p className="text-xs text-emerald-400/80 mb-2">Your stake is being processed on the blockchain.</p>
+                      <a 
+                        href={`https://explorer.hiro.so/txid/${txId}?chain=mainnet`} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="inline-flex items-center gap-1 underline hover:no-underline"
+                      >
                         View on Explorer
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
                       </a>
+                    </div>
+                  )}
+
+                  {/* Success - Trade complete */}
+                  {tradeSuccess && !txId && (
+                    <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
+                      <p className="font-semibold">Stake placed successfully!</p>
+                      <p className="text-xs text-emerald-400/80">Market data will refresh shortly.</p>
                     </div>
                   )}
 
