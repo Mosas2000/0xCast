@@ -15,6 +15,7 @@ const STORAGE_KEY = '0xcast-wallet-address';
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(true);
 
   useEffect(() => {
     // Check localStorage for saved address
