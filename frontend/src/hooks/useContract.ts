@@ -174,6 +174,8 @@ export function useContract() {
   const transferTokens = useCallback(
     async (recipient: string, amountMicroOxc: bigint, memo?: string) => {
       if (!isConnected || !address) throw new Error('Wallet not connected');
+      if (!recipient) throw new Error('Recipient address is required');
+      if (amountMicroOxc <= 0n) throw new Error('Amount must be greater than zero');
 
       // Validate memo length (SIP-010 allows up to 34 bytes)
       if (memo && Buffer.from(memo).length > 34) {
