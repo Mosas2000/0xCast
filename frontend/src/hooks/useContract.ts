@@ -170,9 +170,15 @@ export function useContract() {
 
   // Transfer OXC tokens to another address
   // memo: optional message to include with transfer (wrapped in someCV/noneCV)
+  // Memo is limited to 34 bytes per SIP-010 standard
   const transferTokens = useCallback(
     async (recipient: string, amountMicroOxc: bigint, memo?: string) => {
       if (!isConnected || !address) throw new Error('Wallet not connected');
+
+      // Validate memo length (SIP-010 allows up to 34 bytes)
+      if (memo && Buffer.from(memo).length > 34) {
+        throw new Error('Memo exceeds maximum length of 34 bytes');
+      }
 
       const contract = getTokenContract();
 
