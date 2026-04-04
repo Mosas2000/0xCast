@@ -94,10 +94,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const disconnect = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
-    setIsConnected(false);
-    setAddress(null);
-  }, []);
+    clearWalletData();
+  }, [clearWalletData]);
 
   return (
     <WalletContext.Provider value={{ isConnected, address, connect, disconnect }}>
