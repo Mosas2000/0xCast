@@ -168,7 +168,8 @@ export function useContract() {
     [isConnected, address]
   );
 
-  // Transfer OXC tokens
+  // Transfer OXC tokens to another address
+  // memo: optional message to include with transfer (wrapped in someCV/noneCV)
   const transferTokens = useCallback(
     async (recipient: string, amountMicroOxc: bigint, memo?: string) => {
       if (!isConnected || !address) throw new Error('Wallet not connected');
@@ -179,6 +180,8 @@ export function useContract() {
         Pc.principal(address).willSendEq(amountMicroOxc).ft(contract.identifier as `${string}.${string}`, 'oxc-token'),
       ];
 
+      // Construct function arguments with proper Clarity types
+      // Memo must use someCV(bufferCV(...)) or noneCV() for optional values
       const functionArgs = [
         uintCV(Number(amountMicroOxc)),
         principalCV(address),
