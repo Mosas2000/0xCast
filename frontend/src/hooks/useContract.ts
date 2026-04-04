@@ -137,7 +137,7 @@ export function useContract() {
         functionArgs: [
           uintCV(marketId),
           uintCV(outcomeValue),
-          uintCV(Number(amountMicroStx)),
+          uintCV(safeBigIntToNumber(amountMicroStx, 'amountMicroStx')),
         ],
         postConditionMode: PostConditionMode.Deny,
         postConditions,
