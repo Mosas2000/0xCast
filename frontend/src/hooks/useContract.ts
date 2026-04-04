@@ -21,6 +21,29 @@ import { useWallet } from '../components/WalletProvider';
 // Type for optional Clarity values (someCV or noneCV)
 export type OptionalClarityValue = ReturnType<typeof someCV> | ReturnType<typeof noneCV>;
 
+// Maximum safe integer for JavaScript Number type
+const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER;
+
+/**
+ * Safely convert BigInt to number for uintCV, checking for precision loss
+ * @param value - BigInt value to convert
+ * @param paramName - Parameter name for error messages
+ * @returns number value if safe, throws error if would lose precision
+ * @throws Error if value exceeds MAX_SAFE_INTEGER
+ */
+export const safeBigIntToNumber = (value: bigint, paramName: string = 'value'): number => {
+  if (value > BigInt(MAX_SAFE_INTEGER)) {
+    throw new Error(
+      `${paramName} (${value}) exceeds maximum safe integer (${MAX_SAFE_INTEGER}). ` +
+      'This amount is too large for precise conversion.'
+    );
+  }
+  if (value < 0n) {
+    throw new Error(`${paramName} must be non-negative, got ${value}`);
+  }
+  return Number(value);
+};
+
 // Get OXC token contract configuration
 const getTokenContract = () => {
   return getContract(CONTRACT_NAMES.OXCAST);
