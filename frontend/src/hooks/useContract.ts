@@ -7,6 +7,9 @@ import {
   principalCV,
   PostConditionMode,
   Pc,
+  someCV,
+  noneCV,
+  bufferCV,
 } from '@stacks/transactions';
 import { 
   CONTRACT_NAMES,
@@ -15,9 +18,49 @@ import {
 import { getNodeUrl } from '../config/network';
 import { useWallet } from '../components/WalletProvider';
 
+// Type for optional Clarity values (someCV or noneCV)
+export type OptionalClarityValue = ReturnType<typeof someCV> | ReturnType<typeof noneCV>;
+
 // Get OXC token contract configuration
 const getTokenContract = () => {
   return getContract(CONTRACT_NAMES.OXCAST);
+};
+
+// Maximum memo length per SIP-010 standard
+export const MAX_MEMO_LENGTH = 34;
+
+/**
+ * Validate memo string length before transfer
+ * @param memo - Memo string to validate
+ * @returns true if memo is valid, false otherwise
+ */
+export const isValidMemo = (memo?: string): boolean => {
+  if (!memo) return true;
+  return Buffer.from(memo).length <= MAX_MEMO_LENGTH;
+};
+
+/**
+ * Get remaining bytes available for memo
+ * @param memo - Current memo string
+ * @returns Number of bytes remaining (can be negative if over limit)
+ */
+export const getMemoRemainingBytes = (memo: string): number => {
+  return MAX_MEMO_LENGTH - Buffer.from(memo).length;
+};
+
+/**
+ * Build optional memo Clarity value for token transfers
+ * @param memo - Optional memo string
+ * @returns someCV(bufferCV(...)) if memo provided, noneCV() otherwise
+ * @throws Error if memo exceeds MAX_MEMO_LENGTH bytes
+ */
+export const buildMemoCV = (memo?: string) => {
+  if (!memo) return noneCV();
+  const buffer = Buffer.from(memo);
+  if (buffer.length > MAX_MEMO_LENGTH) {
+    throw new Error(`Memo exceeds maximum length of ${MAX_MEMO_LENGTH} bytes`);
+  }
+  return someCV(bufferCV(buffer));
 };
 
 export function useContract() {
@@ -165,10 +208,14 @@ export function useContract() {
     [isConnected, address]
   );
 
-  // Transfer OXC tokens
+  // Transfer OXC tokens to another address
+  // memo: optional message to include with transfer (wrapped in someCV/noneCV)
+  // Memo is limited to 34 bytes per SIP-010 standard
   const transferTokens = useCallback(
     async (recipient: string, amountMicroOxc: bigint, memo?: string) => {
       if (!isConnected || !address) throw new Error('Wallet not connected');
+      if (!recipient) throw new Error('Recipient address is required');
+      if (amountMicroOxc <= 0n) throw new Error('Amount must be greater than zero');
 
       const contract = getTokenContract();
 
@@ -176,18 +223,19 @@ export function useContract() {
         Pc.principal(address).willSendEq(amountMicroOxc).ft(contract.identifier as `${string}.${string}`, 'oxc-token'),
       ];
 
+      // Construct function arguments with proper Clarity types
       const functionArgs = [
         uintCV(Number(amountMicroOxc)),
         principalCV(address),
         principalCV(recipient),
-        memo ? { type: 'some', value: Buffer.from(memo) } : { type: 'none' },
+        buildMemoCV(memo),
       ];
 
       await openContractCall({
         contractAddress: contract.address,
         contractName: contract.name,
         functionName: 'transfer',
-        functionArgs: functionArgs as any,
+        functionArgs: functionArgs,
         postConditionMode: PostConditionMode.Deny,
         postConditions,
         onFinish: (data) => {
