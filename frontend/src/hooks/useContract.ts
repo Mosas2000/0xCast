@@ -10,6 +10,7 @@ import {
   someCV,
   noneCV,
   bufferCV,
+  ClarityValue,
 } from '@stacks/transactions';
 import { 
   CONTRACT_NAMES,
@@ -17,6 +18,9 @@ import {
 } from '../config/contracts';
 import { getNodeUrl } from '../config/network';
 import { useWallet } from '../components/WalletProvider';
+
+// Type for optional Clarity values (someCV or noneCV)
+export type OptionalClarityValue = ReturnType<typeof someCV> | ReturnType<typeof noneCV>;
 
 // Get OXC token contract configuration
 const getTokenContract = () => {
