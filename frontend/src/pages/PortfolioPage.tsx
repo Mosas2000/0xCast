@@ -213,6 +213,18 @@ export function PortfolioPage() {
 
                       {isWinner && !position.claimed && (
                         <div className="mt-8 pt-6 border-t border-neutral-800">
+                          {claimSuccess === position.marketId && (
+                            <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm">
+                              ✓ Winnings claimed successfully! Transaction submitted.
+                            </div>
+                          )}
+                          
+                          {claimError && claimingMarketId === position.marketId && (
+                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+                              ✗ {claimError}
+                            </div>
+                          )}
+                          
                           <button 
                             onClick={(e) => {
                               e.preventDefault();
