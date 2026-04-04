@@ -70,6 +70,19 @@ export const formatMicroAmount = (microAmount: bigint): string => {
   return fractionalStr ? `${integerPart}.${fractionalStr}` : integerPart.toString();
 };
 
+/**
+ * Parse a token amount string to micro-units BigInt
+ * @param amount - Amount string (e.g., "100.5")
+ * @returns BigInt micro-amount
+ */
+export const parseToMicroAmount = (amount: string): bigint => {
+  const parts = amount.split('.');
+  const integerPart = BigInt(parts[0] || '0');
+  const fractionalStr = (parts[1] || '').padEnd(6, '0').slice(0, 6);
+  const fractionalPart = BigInt(fractionalStr);
+  return integerPart * 1_000_000n + fractionalPart;
+};
+
 // Get OXC token contract configuration
 const getTokenContract = () => {
   return getContract(CONTRACT_NAMES.OXCAST);
