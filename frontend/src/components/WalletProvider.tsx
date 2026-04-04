@@ -23,6 +23,18 @@ const WalletContext = createContext<WalletContextType | undefined>(undefined);
 // LocalStorage key for persisting wallet address
 const STORAGE_KEY = '0xcast-wallet-address';
 
+/**
+ * WalletProvider component
+ * 
+ * Provides wallet connection state management with:
+ * - Persistent storage of wallet address
+ * - Address validation on mount
+ * - Stale connection cleanup
+ * - Verification status tracking
+ * 
+ * On mount, checks localStorage for a saved address and validates it.
+ * Invalid addresses are cleared automatically.
+ */
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState<string | null>(null);
