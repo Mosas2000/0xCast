@@ -68,12 +68,21 @@ export function PortfolioPage() {
     if (!isConnected || claimingMarketId) return;
     
     setClaimingMarketId(marketId);
+    setClaimError(null);
+    setClaimSuccess(null);
+    
     try {
       await claimWinnings(marketId);
-      // Refetch positions after claiming
-      // The useEffect will automatically update when markets change
+      setClaimSuccess(marketId);
+      
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => setClaimSuccess(null), 5000);
     } catch (error) {
       console.error('Error claiming winnings:', error);
+      setClaimError(error instanceof Error ? error.message : 'Failed to claim winnings');
+      
+      // Auto-hide error after 5 seconds
+      setTimeout(() => setClaimError(null), 5000);
     } finally {
       setClaimingMarketId(null);
     }
