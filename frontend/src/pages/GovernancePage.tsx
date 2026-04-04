@@ -52,11 +52,6 @@ export function GovernancePage() {
     }
   };
 
-  const calculatePercentage = (votes: bigint, total: bigint): number => {
-    if (total === 0n) return 0;
-    return Number((votes * 100n) / total);
-  };
-
   const containerStyle: React.CSSProperties = {
     minHeight: '100vh',
     backgroundColor: '#000000',
@@ -548,7 +543,7 @@ export function GovernancePage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                   <span style={{ color: '#9CA3AF', fontSize: '14px' }}>Total Votes</span>
                   <span style={{ color: '#FFFFFF', fontSize: '14px' }}>
-                    {formatOXC(selectedProposal.totalVotes)} OXC
+                    {formatVotingPower(selectedProposal.totalVotes)} OXC
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
