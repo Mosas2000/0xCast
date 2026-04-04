@@ -64,11 +64,12 @@ export function TradePage() {
     }
   }, [marketId]);
 
+  // Initial market data fetch on mount
   useEffect(() => {
     fetchMarket();
   }, [fetchMarket]);
 
-  // Clear success messages when starting new trade
+  // Clear success messages when starting new trade or changing selection
   const resetTradeState = useCallback(() => {
     setTradeSuccess(false);
   }, []);
