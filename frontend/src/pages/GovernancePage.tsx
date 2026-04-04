@@ -464,9 +464,23 @@ export function GovernancePage() {
 
         {/* Past Proposals */}
         <h2 style={{ ...sectionTitleStyle, marginTop: '48px' }}>Past Proposals</h2>
-        {proposals.filter(p => p.status !== 'active').map(proposal => {
-          const forPercentage = calculatePercentage(proposal.votesFor, proposal.totalVotes);
-          const againstPercentage = calculatePercentage(proposal.votesAgainst, proposal.totalVotes);
+        {proposals.filter(p => p.status !== 'active').length === 0 ? (
+          <div style={{ 
+            backgroundColor: '#0A0A0A', 
+            border: '1px solid #1F1F1F', 
+            borderRadius: '16px', 
+            padding: '32px', 
+            textAlign: 'center', 
+            marginBottom: '32px',
+            opacity: 0.8
+          }}>
+            <p style={{ color: '#9CA3AF' }}>
+              No past proposals yet.
+            </p>
+          </div>
+        ) : proposals.filter(p => p.status !== 'active').map(proposal => {
+          const forPercentage = calculateVotePercentage(proposal.votesFor, proposal.totalVotes);
+          const againstPercentage = calculateVotePercentage(proposal.votesAgainst, proposal.totalVotes);
 
           return (
             <div
@@ -493,10 +507,10 @@ export function GovernancePage() {
                 </div>
                 <div style={voteStatsStyle}>
                   <span style={{ color: '#22C55E' }}>
-                    For: {formatOXC(proposal.votesFor)} ({forPercentage}%)
+                    For: {formatVotingPower(proposal.votesFor)} ({forPercentage}%)
                   </span>
                   <span style={{ color: '#EF4444' }}>
-                    Against: {formatOXC(proposal.votesAgainst)} ({againstPercentage}%)
+                    Against: {formatVotingPower(proposal.votesAgainst)} ({againstPercentage}%)
                   </span>
                 </div>
               </div>
