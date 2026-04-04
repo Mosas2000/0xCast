@@ -1,80 +1,68 @@
 import { useState } from 'react';
 import { useWallet } from '../components/WalletProvider';
-import { OXC_CONFIG, formatOXC, parseOXC } from '../config/token';
+import { OXC_CONFIG } from '../config/token';
+import { useStakingData } from '../hooks/useStakingData';
+import { useStakingActions } from '../hooks/useStakingActions';
+import { 
+  formatOxcAmount, 
+  parseOxcInput, 
+  calculateEstimatedApy,
+  formatLockStatus,
+} from '../utils/stakingHelpers';
 
 type StakingTab = 'stake' | 'unstake' | 'rewards';
 
 export function StakingPage() {
-  const { isConnected, connect } = useWallet();
+  const { isConnected, connect, address } = useWallet();
+  const { stakingData, isLoading: dataLoading, refetch } = useStakingData(address);
+  const { stake, unstake, isLoading: actionLoading, error: actionError, txId } = useStakingActions();
+  
   const [activeTab, setActiveTab] = useState<StakingTab>('stake');
   const [stakeAmount, setStakeAmount] = useState('');
   const [unstakeAmount, setUnstakeAmount] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Mock data - would be fetched from contracts
-  const stakingData = {
-    totalStaked: 15000000n * BigInt(10 ** OXC_CONFIG.decimals),
-    userStaked: 5000n * BigInt(10 ** OXC_CONFIG.decimals),
-    userBalance: 10000n * BigInt(10 ** OXC_CONFIG.decimals),
-    pendingRewards: 125n * BigInt(10 ** OXC_CONFIG.decimals),
-    apy: 12.5,
-    minStake: 100n * BigInt(10 ** OXC_CONFIG.decimals),
-    lockPeriod: 7,
-    totalStakers: 1247,
-  };
+  const isLoading = dataLoading || actionLoading;
+  
+  // Calculate derived values
+  const estimatedApy = calculateEstimatedApy(stakingData.userStaked, stakingData.totalStaked);
+  const lockStatus = formatLockStatus(stakingData.currentBlock, stakingData.userLockedUntil);
+  const minStake = 1000000n; // 1 OXC minimum
+  const lockPeriodDays = 7; // ~7 days lock period
 
   const handleStake = async () => {
     if (!stakeAmount || isLoading) return;
-    setIsLoading(true);
-    try {
-      const amount = parseOXC(stakeAmount);
-      console.log('Staking:', amount);
-      // Would call contract here
-      await new Promise(resolve => setTimeout(resolve, 2000));
+    const amount = parseOxcInput(stakeAmount);
+    if (amount < minStake) return;
+    
+    await stake(amount, () => {
       setStakeAmount('');
-    } catch (error) {
-      console.error('Stake error:', error);
-    } finally {
-      setIsLoading(false);
-    }
+      refetch();
+    });
   };
 
   const handleUnstake = async () => {
-    if (!unstakeAmount || isLoading) return;
-    setIsLoading(true);
-    try {
-      const amount = parseOXC(unstakeAmount);
-      console.log('Unstaking:', amount);
-      // Would call contract here
-      await new Promise(resolve => setTimeout(resolve, 2000));
+    if (!unstakeAmount || isLoading || lockStatus.isLocked) return;
+    const amount = parseOxcInput(unstakeAmount);
+    if (amount <= 0n) return;
+    
+    await unstake(amount, () => {
       setUnstakeAmount('');
-    } catch (error) {
-      console.error('Unstake error:', error);
-    } finally {
-      setIsLoading(false);
-    }
+      refetch();
+    });
   };
 
   const handleClaimRewards = async () => {
-    if (isLoading) return;
-    setIsLoading(true);
-    try {
-      console.log('Claiming rewards');
-      // Would call contract here
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    } catch (error) {
-      console.error('Claim error:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    // Note: Rewards claiming would need a separate contract function
+    // For now, this is a placeholder
+    console.log('Rewards claiming not yet implemented in contract');
   };
 
   const setMaxStake = () => {
-    setStakeAmount(formatOXC(stakingData.userBalance));
+    setStakeAmount(formatOxcAmount(stakingData.userBalance));
   };
 
   const setMaxUnstake = () => {
-    setUnstakeAmount(formatOXC(stakingData.userStaked));
+    setUnstakeAmount(formatOxcAmount(stakingData.userStaked));
   };
 
   const containerStyle: React.CSSProperties = {
