@@ -217,7 +217,7 @@ export function useContract() {
         contractAddress: contract.address,
         contractName: contract.name,
         functionName: 'unstake',
-        functionArgs: [uintCV(Number(amountMicroOxc))],
+        functionArgs: [uintCV(safeBigIntToNumber(amountMicroOxc, 'amountMicroOxc'))],
         postConditionMode: PostConditionMode.Allow,
         postConditions: [],
         onFinish: (data) => {
