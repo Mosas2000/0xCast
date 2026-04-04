@@ -4,6 +4,7 @@ import { cvToJSON, fetchCallReadOnlyFunction, uintCV, principalCV } from '@stack
 import { STACKS_MAINNET } from '@stacks/network';
 import { useWallet } from '../components/WalletProvider';
 import { useMarkets } from '../hooks/useMarkets';
+import { useContract } from '../hooks/useContract';
 import type { Market, Position } from '../types/market';
 import { MarketStatus, MarketOutcome } from '../types/market';
 import { parsePosition, formatStx, calculateOdds } from '../utils/helpers';
