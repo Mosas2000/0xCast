@@ -41,13 +41,32 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // Check localStorage for saved address
-    const savedAddress = localStorage.getItem(STORAGE_KEY);
-    if (savedAddress) {
-      setIsConnected(true);
-      setAddress(savedAddress);
-    }
-  }, []);
+    // Verify saved connection on mount
+    const verifySavedConnection = async () => {
+      const savedAddress = localStorage.getItem(STORAGE_KEY);
+      
+      if (!savedAddress) {
+        // No saved address, mark verification complete
+        setIsVerifying(false);
+        return;
+      }
+
+      // Verify the saved address is still valid
+      const isValid = await verifyConnection(savedAddress);
+      
+      if (isValid) {
+        setIsConnected(true);
+        setAddress(savedAddress);
+      } else {
+        // Clear stale data
+        clearWalletData();
+      }
+      
+      setIsVerifying(false);
+    };
+
+    verifySavedConnection();
+  }, [verifyConnection, clearWalletData]);
 
   const connect = useCallback(async () => {
     console.log('Attempting to connect wallet...');
