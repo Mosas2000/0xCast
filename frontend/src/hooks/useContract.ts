@@ -44,6 +44,15 @@ export const safeBigIntToNumber = (value: bigint, paramName: string = 'value'): 
   return Number(value);
 };
 
+/**
+ * Check if a BigInt value can be safely converted to Number
+ * @param value - BigInt value to check
+ * @returns true if value is within safe range
+ */
+export const isSafeBigInt = (value: bigint): boolean => {
+  return value >= 0n && value <= BigInt(MAX_SAFE_INTEGER);
+};
+
 // Get OXC token contract configuration
 const getTokenContract = () => {
   return getContract(CONTRACT_NAMES.OXCAST);
