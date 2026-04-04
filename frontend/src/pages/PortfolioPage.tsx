@@ -67,6 +67,14 @@ export function PortfolioPage() {
   const handleClaimWinnings = async (marketId: number) => {
     if (!isConnected || claimingMarketId) return;
     
+    // Find the position to verify it hasn't been claimed
+    const position = positions.find(p => p.marketId === marketId);
+    if (!position || position.claimed) {
+      setClaimError('This position has already been claimed');
+      setTimeout(() => setClaimError(null), 5000);
+      return;
+    }
+    
     setClaimingMarketId(marketId);
     setClaimError(null);
     setClaimSuccess(null);
