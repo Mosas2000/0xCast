@@ -11,6 +11,18 @@ const getNetwork = () => CURRENT_NETWORK === 'mainnet' ? STACKS_MAINNET : STACKS
 // Auto-refresh interval in milliseconds (30 seconds)
 const REFRESH_INTERVAL_MS = 30000;
 
+/**
+ * Hook for fetching and managing prediction market data
+ * 
+ * Features:
+ * - Fetches all markets from the contract on mount
+ * - Auto-refreshes every 30 seconds
+ * - Properly cleans up on unmount to prevent memory leaks
+ * - Cancels in-flight requests when unmounting
+ * - Guards against state updates on unmounted components
+ * 
+ * @returns Object containing markets array, loading state, error, and refetch function
+ */
 export function useMarkets() {
   const [markets, setMarkets] = useState<Market[]>([]);
   const [isLoading, setIsLoading] = useState(true);
