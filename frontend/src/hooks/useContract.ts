@@ -183,14 +183,14 @@ export function useContract() {
         uintCV(Number(amountMicroOxc)),
         principalCV(address),
         principalCV(recipient),
-        memo ? { type: 'some', value: Buffer.from(memo) } : { type: 'none' },
+        memo ? someCV(bufferCV(Buffer.from(memo))) : noneCV(),
       ];
 
       await openContractCall({
         contractAddress: contract.address,
         contractName: contract.name,
         functionName: 'transfer',
-        functionArgs: functionArgs as any,
+        functionArgs: functionArgs,
         postConditionMode: PostConditionMode.Deny,
         postConditions,
         onFinish: (data) => {
