@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { cvToJSON, fetchCallReadOnlyFunction, uintCV } from '@stacks/transactions';
-import { STACKS_MAINNET } from '@stacks/network';
+import { STACKS_MAINNET, STACKS_TESTNET } from '@stacks/network';
 import type { Market } from '../types/market';
 import { parseMarketData } from '../utils/helpers';
-import { CONTRACT_ADDRESS, CONTRACT_NAME } from '../constants';
+import { MARKET_CONTRACT, CURRENT_NETWORK } from '../config/contracts';
+
+// Get the appropriate network based on configuration
+const getNetwork = () => CURRENT_NETWORK === 'mainnet' ? STACKS_MAINNET : STACKS_TESTNET;
 
 export function useMarkets() {
   const [markets, setMarkets] = useState<Market[]>([]);
@@ -13,13 +16,14 @@ export function useMarkets() {
 
   const fetchMarkets = useCallback(async () => {
     try {
+      const network = getNetwork();
       const counterResult = await fetchCallReadOnlyFunction({
-        network: STACKS_MAINNET,
-        contractAddress: CONTRACT_ADDRESS,
-        contractName: CONTRACT_NAME,
+        network,
+        contractAddress: MARKET_CONTRACT.address,
+        contractName: MARKET_CONTRACT.name,
         functionName: 'get-market-counter',
         functionArgs: [],
-        senderAddress: CONTRACT_ADDRESS,
+        senderAddress: MARKET_CONTRACT.address,
       });
 
       const counterJson = cvToJSON(counterResult);
@@ -35,12 +39,12 @@ export function useMarkets() {
       for (let i = 0; i < totalMarkets; i++) {
         marketPromises.push(
           fetchCallReadOnlyFunction({
-            network: STACKS_MAINNET,
-            contractAddress: CONTRACT_ADDRESS,
-            contractName: CONTRACT_NAME,
+            network,
+            contractAddress: MARKET_CONTRACT.address,
+            contractName: MARKET_CONTRACT.name,
             functionName: 'get-market',
             functionArgs: [uintCV(i)],
-            senderAddress: CONTRACT_ADDRESS,
+            senderAddress: MARKET_CONTRACT.address,
           })
         );
       }
