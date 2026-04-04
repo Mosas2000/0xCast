@@ -64,8 +64,19 @@ export function TradePage() {
     const amount = parseFloat(stakeAmount);
     if (isNaN(amount) || amount < MIN_STAKE || amount > MAX_STAKE) return;
 
+    // Reset success state before new trade
+    setTradeSuccess(false);
+    
     const onSuccess = () => {
-      window.location.reload();
+      // Update UI state instead of reloading page
+      setTradeSuccess(true);
+      setSelectedOutcome(null);
+      setStakeAmount('10');
+      
+      // Refetch market data after short delay to allow blockchain confirmation
+      setTimeout(() => {
+        fetchMarket();
+      }, 2000);
     };
 
     if (selectedOutcome === 'yes') {
