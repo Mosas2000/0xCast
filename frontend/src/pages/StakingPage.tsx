@@ -334,19 +334,19 @@ export function StakingPage() {
         <div style={gridStyle}>
           <div style={statCardStyle}>
             <div style={statLabelStyle}>Total Staked</div>
-            <div style={statValueStyle}>{formatOXC(stakingData.totalStaked)} OXC</div>
+            <div style={statValueStyle}>{formatOxcAmount(stakingData.totalStaked)} OXC</div>
           </div>
           <div style={statCardStyle}>
-            <div style={statLabelStyle}>Total Stakers</div>
-            <div style={statValueStyle}>{stakingData.totalStakers.toLocaleString()}</div>
+            <div style={statLabelStyle}>Your Stake</div>
+            <div style={statValueStyle}>{formatOxcAmount(stakingData.userStaked)} OXC</div>
           </div>
           <div style={statCardStyle}>
-            <div style={statLabelStyle}>Current APY</div>
-            <div style={apyValueStyle}>{stakingData.apy}%</div>
+            <div style={statLabelStyle}>Est. APY</div>
+            <div style={apyValueStyle}>{estimatedApy}%</div>
           </div>
           <div style={statCardStyle}>
             <div style={statLabelStyle}>Lock Period</div>
-            <div style={statValueStyle}>{stakingData.lockPeriod} Days</div>
+            <div style={statValueStyle}>{lockPeriodDays} Days</div>
           </div>
         </div>
 
