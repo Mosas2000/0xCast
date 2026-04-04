@@ -64,6 +64,35 @@ export function PortfolioPage() {
     fetchPositions();
   }, [address, markets]);
 
+  const refetchPositions = async () => {
+    if (!address || markets.length === 0) return;
+    
+    const userPositions: PositionWithMarket[] = [];
+    for (const market of markets) {
+      try {
+        const result = await fetchCallReadOnlyFunction({
+          network: STACKS_MAINNET,
+          contractAddress: CONTRACT_ADDRESS,
+          contractName: CONTRACT_NAME,
+          functionName: 'get-user-position',
+          functionArgs: [uintCV(market.id), principalCV(address)],
+          senderAddress: CONTRACT_ADDRESS,
+        });
+
+        const jsonResult = cvToJSON(result);
+        if (jsonResult.type === 'some' && jsonResult.value) {
+          const position = parsePosition(market.id, address, jsonResult.value);
+          if (position.yesStake > 0 || position.noStake > 0) {
+            userPositions.push({ ...position, market });
+          }
+        }
+      } catch (err) {
+        console.error(`Error fetching position for market ${market.id}:`, err);
+      }
+    }
+    setPositions(userPositions);
+  };
+
   const handleClaimWinnings = async (marketId: number) => {
     if (!isConnected || claimingMarketId) return;
     
