@@ -211,6 +211,14 @@ export function PortfolioPage() {
                         </svg>
                       </div>
 
+                      {isWinner && position.claimed && (
+                        <div className="mt-8 pt-6 border-t border-neutral-800">
+                          <div className="p-3 bg-neutral-800 rounded-lg text-neutral-400 text-sm text-center">
+                            ✓ Winnings already claimed
+                          </div>
+                        </div>
+                      )}
+                      
                       {isWinner && !position.claimed && (
                         <div className="mt-8 pt-6 border-t border-neutral-800">
                           {claimSuccess === position.marketId && (
