@@ -8,13 +8,41 @@ import { MARKET_CONTRACT, CURRENT_NETWORK } from '../config/contracts';
 // Get the appropriate network based on configuration
 const getNetwork = () => CURRENT_NETWORK === 'mainnet' ? STACKS_MAINNET : STACKS_TESTNET;
 
+// Auto-refresh interval in milliseconds (30 seconds)
+const REFRESH_INTERVAL_MS = 30000;
+
+/**
+ * Hook for fetching and managing prediction market data
+ * 
+ * Features:
+ * - Fetches all markets from the contract on mount
+ * - Auto-refreshes every 30 seconds
+ * - Properly cleans up on unmount to prevent memory leaks
+ * - Cancels in-flight requests when unmounting
+ * - Guards against state updates on unmounted components
+ * 
+ * @returns Object containing markets array, loading state, error, and refetch function
+ */
 export function useMarkets() {
   const [markets, setMarkets] = useState<Market[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef<boolean>(true);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const fetchMarkets = useCallback(async () => {
+    // Don't start new fetch if component is unmounted
+    if (!isMountedRef.current) {
+      return;
+    }
+    
+    // Cancel any in-flight request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+    
     try {
       const network = getNetwork();
       const counterResult = await fetchCallReadOnlyFunction({
@@ -28,6 +56,9 @@ export function useMarkets() {
 
       const counterJson = cvToJSON(counterResult);
       const totalMarkets = Number(counterJson.value);
+
+      // Check if component is still mounted before updating state
+      if (!isMountedRef.current) return;
 
       if (totalMarkets === 0) {
         setMarkets([]);
@@ -50,6 +81,10 @@ export function useMarkets() {
       }
 
       const results = await Promise.all(marketPromises);
+      
+      // Check if component is still mounted before processing results
+      if (!isMountedRef.current) return;
+      
       const fetchedMarkets: Market[] = [];
       
       results.forEach((result, index) => {
@@ -64,28 +99,61 @@ export function useMarkets() {
         }
       });
 
+      // Final mount check before state updates
+      if (!isMountedRef.current) return;
+      
       setMarkets(fetchedMarkets);
       setError(null);
     } catch (err) {
+      // Ignore abort errors - these are expected during cleanup
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
+      // Only log and set error if still mounted
+      if (!isMountedRef.current) return;
       console.error('Error fetching markets:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch markets');
     } finally {
-      setIsLoading(false);
+      // Only update loading state if still mounted
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
+    // Mark component as mounted
+    isMountedRef.current = true;
+    
     fetchMarkets();
     
-    // Auto-refresh every 30 seconds
-    intervalRef.current = setInterval(fetchMarkets, 30000);
+    // Auto-refresh at configured interval
+    intervalRef.current = setInterval(fetchMarkets, REFRESH_INTERVAL_MS);
     
     return () => {
+      // Mark component as unmounted before cleanup
+      isMountedRef.current = false;
+      
+      // Clear interval
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      
+      // Abort any in-flight requests
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
       }
     };
   }, [fetchMarkets]);
 
-  return { markets, isLoading, error, refetch: fetchMarkets };
+  return { 
+    markets, 
+    isLoading, 
+    error, 
+    refetch: fetchMarkets,
+    // Expose refresh interval for testing/debugging
+    refreshIntervalMs: REFRESH_INTERVAL_MS,
+  };
 }
