@@ -27,6 +27,25 @@ const getTokenContract = () => {
 export const MAX_MEMO_LENGTH = 34;
 
 /**
+ * Validate memo string length before transfer
+ * @param memo - Memo string to validate
+ * @returns true if memo is valid, false otherwise
+ */
+export const isValidMemo = (memo?: string): boolean => {
+  if (!memo) return true;
+  return Buffer.from(memo).length <= MAX_MEMO_LENGTH;
+};
+
+/**
+ * Get remaining bytes available for memo
+ * @param memo - Current memo string
+ * @returns Number of bytes remaining (can be negative if over limit)
+ */
+export const getMemoRemainingBytes = (memo: string): number => {
+  return MAX_MEMO_LENGTH - Buffer.from(memo).length;
+};
+
+/**
  * Build optional memo Clarity value for token transfers
  * @param memo - Optional memo string
  * @returns someCV(bufferCV(...)) if memo provided, noneCV() otherwise
