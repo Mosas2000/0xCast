@@ -6,6 +6,7 @@ interface WalletContextType {
   address: string | null;
   connect: () => void;
   disconnect: () => void;
+  isVerifying: boolean;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
