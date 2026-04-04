@@ -83,6 +83,24 @@ export const parseToMicroAmount = (amount: string): bigint => {
   return integerPart * 1_000_000n + fractionalPart;
 };
 
+/**
+ * Validate that a token amount is within safe transaction limits
+ * @param microAmount - Amount in micro-units
+ * @returns Object with isValid boolean and optional error message
+ */
+export const validateTransactionAmount = (microAmount: bigint): { isValid: boolean; error?: string } => {
+  if (microAmount <= 0n) {
+    return { isValid: false, error: 'Amount must be greater than zero' };
+  }
+  if (!isSafeBigInt(microAmount)) {
+    return { 
+      isValid: false, 
+      error: `Amount exceeds maximum safe limit of ${formatMicroAmount(BigInt(MAX_SAFE_INTEGER))} tokens` 
+    };
+  }
+  return { isValid: true };
+};
+
 // Get OXC token contract configuration
 const getTokenContract = () => {
   return getContract(CONTRACT_NAMES.OXCAST);
