@@ -388,7 +388,7 @@ export function StakingPage() {
               <>
                 <div style={labelStyle}>
                   <span>Amount to Stake</span>
-                  <span>Balance: {formatOXC(stakingData.userBalance)} OXC</span>
+                  <span>Balance: {formatOxcAmount(stakingData.userBalance)} OXC</span>
                 </div>
                 <div style={inputContainerStyle}>
                   <input
@@ -406,17 +406,27 @@ export function StakingPage() {
                 <div style={infoBoxStyle}>
                   <div style={infoRowStyle}>
                     <span style={infoLabelStyle}>Minimum Stake</span>
-                    <span style={infoValueStyle}>{formatOXC(stakingData.minStake)} OXC</span>
+                    <span style={infoValueStyle}>{formatOxcAmount(minStake)} OXC</span>
                   </div>
                   <div style={infoRowStyle}>
                     <span style={infoLabelStyle}>Lock Period</span>
-                    <span style={infoValueStyle}>{stakingData.lockPeriod} days</span>
+                    <span style={infoValueStyle}>{lockPeriodDays} days</span>
                   </div>
                   <div style={infoRowLastStyle}>
                     <span style={infoLabelStyle}>Expected APY</span>
-                    <span style={{ ...infoValueStyle, color: '#22C55E' }}>{stakingData.apy}%</span>
+                    <span style={{ ...infoValueStyle, color: '#22C55E' }}>{estimatedApy}%</span>
                   </div>
                 </div>
+                {actionError && (
+                  <div style={{ color: '#EF4444', fontSize: '14px', marginBottom: '16px', padding: '12px', backgroundColor: '#1a0505', borderRadius: '8px' }}>
+                    {actionError}
+                  </div>
+                )}
+                {txId && (
+                  <div style={{ color: '#22C55E', fontSize: '14px', marginBottom: '16px', padding: '12px', backgroundColor: '#0a1a0a', borderRadius: '8px' }}>
+                    Transaction submitted! ID: {txId.slice(0, 16)}...
+                  </div>
+                )}
                 <button 
                   style={primaryButtonStyle} 
                   onClick={handleStake}
