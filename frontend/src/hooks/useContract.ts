@@ -219,18 +219,17 @@ export function useContract() {
 
 // Read-only contract calls (no wallet needed)
 export async function getMarket(marketId: number) {
-  const contractAddress = getContractPrincipal();
-  if (!contractAddress) return null;
+  const contract = getTokenContract();
+  const apiUrl = getNodeUrl();
 
-  const [principal, name] = contractAddress.split('.');
-  const url = `https://stacks-node-api.${CURRENT_NETWORK}.stacks.co/v2/contracts/call-read/${principal}/${name}/get-market`;
+  const url = `${apiUrl}/v2/contracts/call-read/${contract.address}/${contract.name}/get-market`;
 
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        sender: principal,
+        sender: contract.address,
         arguments: [`0x0100000000000000000000000000000000${marketId.toString(16).padStart(2, '0')}`],
       }),
     });
@@ -243,18 +242,17 @@ export async function getMarket(marketId: number) {
 }
 
 export async function getMarketCount() {
-  const contractAddress = getContractPrincipal();
-  if (!contractAddress) return 0;
+  const contract = getTokenContract();
+  const apiUrl = getNodeUrl();
 
-  const [principal, name] = contractAddress.split('.');
-  const url = `https://stacks-node-api.${CURRENT_NETWORK}.stacks.co/v2/contracts/call-read/${principal}/${name}/get-market-count`;
+  const url = `${apiUrl}/v2/contracts/call-read/${contract.address}/${contract.name}/get-market-count`;
 
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        sender: principal,
+        sender: contract.address,
         arguments: [],
       }),
     });
@@ -267,18 +265,17 @@ export async function getMarketCount() {
 }
 
 export async function getStake(stakerAddress: string) {
-  const contractAddress = getContractPrincipal();
-  if (!contractAddress) return null;
+  const contract = getTokenContract();
+  const apiUrl = getNodeUrl();
 
-  const [principal, name] = contractAddress.split('.');
-  const url = `https://stacks-node-api.${CURRENT_NETWORK}.stacks.co/v2/contracts/call-read/${principal}/${name}/get-stake`;
+  const url = `${apiUrl}/v2/contracts/call-read/${contract.address}/${contract.name}/get-stake`;
 
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        sender: principal,
+        sender: contract.address,
         arguments: [`0x0516${stakerAddress}`], // principal encoding
       }),
     });
@@ -291,18 +288,17 @@ export async function getStake(stakerAddress: string) {
 }
 
 export async function getTotalStaked() {
-  const contractAddress = getContractPrincipal();
-  if (!contractAddress) return 0n;
+  const contract = getTokenContract();
+  const apiUrl = getNodeUrl();
 
-  const [principal, name] = contractAddress.split('.');
-  const url = `https://stacks-node-api.${CURRENT_NETWORK}.stacks.co/v2/contracts/call-read/${principal}/${name}/get-total-staked`;
+  const url = `${apiUrl}/v2/contracts/call-read/${contract.address}/${contract.name}/get-total-staked`;
 
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        sender: principal,
+        sender: contract.address,
         arguments: [],
       }),
     });
