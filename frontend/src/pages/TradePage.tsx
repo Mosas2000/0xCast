@@ -254,7 +254,10 @@ export function TradePage() {
                     <label className="block text-sm text-neutral-400 mb-4">Select Outcome</label>
                     <div className="grid grid-cols-2 gap-4">
                       <button
-                        onClick={() => setSelectedOutcome('yes')}
+                        onClick={() => {
+                          setSelectedOutcome('yes');
+                          resetTradeState();
+                        }}
                         className={`p-4 rounded-xl border-2 transition-all ${
                           selectedOutcome === 'yes'
                             ? 'border-emerald-500 bg-emerald-500/10'
@@ -265,7 +268,10 @@ export function TradePage() {
                         <span className="text-xs text-neutral-500">{odds.yes}%</span>
                       </button>
                       <button
-                        onClick={() => setSelectedOutcome('no')}
+                        onClick={() => {
+                          setSelectedOutcome('no');
+                          resetTradeState();
+                        }}
                         className={`p-4 rounded-xl border-2 transition-all ${
                           selectedOutcome === 'no'
                             ? 'border-rose-500 bg-rose-500/10'
