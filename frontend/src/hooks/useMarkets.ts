@@ -13,6 +13,7 @@ export function useMarkets() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef<boolean>(true);
 
   const fetchMarkets = useCallback(async () => {
     try {
