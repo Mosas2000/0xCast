@@ -8,12 +8,16 @@ import { MARKET_CONTRACT, CURRENT_NETWORK } from '../config/contracts';
 // Get the appropriate network based on configuration
 const getNetwork = () => CURRENT_NETWORK === 'mainnet' ? STACKS_MAINNET : STACKS_TESTNET;
 
+// Auto-refresh interval in milliseconds (30 seconds)
+const REFRESH_INTERVAL_MS = 30000;
+
 export function useMarkets() {
   const [markets, setMarkets] = useState<Market[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef<boolean>(true);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const fetchMarkets = useCallback(async () => {
     try {
