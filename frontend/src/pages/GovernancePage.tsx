@@ -1,111 +1,29 @@
 import { useState } from 'react';
 import { useWallet } from '../components/WalletProvider';
-import { OXC_CONFIG, formatOXC } from '../config/token';
+import { 
+  useGovernance, 
+  formatVotingPower, 
+  calculateVotePercentage,
+  isQuorumReached,
+  type Proposal,
+} from '../hooks/useGovernance';
 
 type ProposalStatus = 'active' | 'passed' | 'rejected' | 'pending';
 type VoteType = 'for' | 'against' | null;
 
-interface Proposal {
-  id: number;
-  title: string;
-  description: string;
-  proposer: string;
-  status: ProposalStatus;
-  votesFor: bigint;
-  votesAgainst: bigint;
-  totalVotes: bigint;
-  quorum: bigint;
-  endBlock: number;
-  userVote?: VoteType;
-}
-
 export function GovernancePage() {
-  const { isConnected, connect } = useWallet();
+  const { isConnected, connect, address } = useWallet();
+  const { stats, proposals, isLoading, error, refetch } = useGovernance(address);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [isVoting, setIsVoting] = useState(false);
-
-  // Mock governance data
-  const governanceStats = {
-    totalProposals: 24,
-    activeProposals: 3,
-    passedProposals: 18,
-    userVotingPower: 5000n * BigInt(10 ** OXC_CONFIG.decimals),
-    quorumRequired: 5000000n * BigInt(10 ** OXC_CONFIG.decimals),
-  };
-
-  const proposals: Proposal[] = [
-    {
-      id: 1,
-      title: 'Increase Liquidity Provider Rewards',
-      description: 'Proposal to increase LP rewards from 10% to 15% of platform fees to attract more liquidity providers.',
-      proposer: 'SP2J6...ABCD',
-      status: 'active',
-      votesFor: 3500000n * BigInt(10 ** OXC_CONFIG.decimals),
-      votesAgainst: 1200000n * BigInt(10 ** OXC_CONFIG.decimals),
-      totalVotes: 4700000n * BigInt(10 ** OXC_CONFIG.decimals),
-      quorum: 5000000n * BigInt(10 ** OXC_CONFIG.decimals),
-      endBlock: 125000,
-      userVote: 'for',
-    },
-    {
-      id: 2,
-      title: 'Add New Market Categories',
-      description: 'Add support for sports and entertainment prediction markets alongside existing crypto/finance categories.',
-      proposer: 'SP1XY...EFGH',
-      status: 'active',
-      votesFor: 2800000n * BigInt(10 ** OXC_CONFIG.decimals),
-      votesAgainst: 800000n * BigInt(10 ** OXC_CONFIG.decimals),
-      totalVotes: 3600000n * BigInt(10 ** OXC_CONFIG.decimals),
-      quorum: 5000000n * BigInt(10 ** OXC_CONFIG.decimals),
-      endBlock: 126500,
-      userVote: null,
-    },
-    {
-      id: 3,
-      title: 'Reduce Platform Fees',
-      description: 'Reduce trading fees from 2% to 1.5% to increase trading volume and user adoption.',
-      proposer: 'SP3MN...IJKL',
-      status: 'active',
-      votesFor: 4200000n * BigInt(10 ** OXC_CONFIG.decimals),
-      votesAgainst: 2100000n * BigInt(10 ** OXC_CONFIG.decimals),
-      totalVotes: 6300000n * BigInt(10 ** OXC_CONFIG.decimals),
-      quorum: 5000000n * BigInt(10 ** OXC_CONFIG.decimals),
-      endBlock: 124000,
-      userVote: 'against',
-    },
-    {
-      id: 4,
-      title: 'Treasury Diversification',
-      description: 'Diversify 20% of treasury holdings into BTC and ETH for long-term stability.',
-      proposer: 'SP4QR...MNOP',
-      status: 'passed',
-      votesFor: 8500000n * BigInt(10 ** OXC_CONFIG.decimals),
-      votesAgainst: 1500000n * BigInt(10 ** OXC_CONFIG.decimals),
-      totalVotes: 10000000n * BigInt(10 ** OXC_CONFIG.decimals),
-      quorum: 5000000n * BigInt(10 ** OXC_CONFIG.decimals),
-      endBlock: 120000,
-    },
-    {
-      id: 5,
-      title: 'Extend Vesting Period',
-      description: 'Extend team token vesting from 2 years to 3 years for better alignment.',
-      proposer: 'SP5ST...QRST',
-      status: 'rejected',
-      votesFor: 2000000n * BigInt(10 ** OXC_CONFIG.decimals),
-      votesAgainst: 4500000n * BigInt(10 ** OXC_CONFIG.decimals),
-      totalVotes: 6500000n * BigInt(10 ** OXC_CONFIG.decimals),
-      quorum: 5000000n * BigInt(10 ** OXC_CONFIG.decimals),
-      endBlock: 118000,
-    },
-  ];
 
   const handleVote = async (proposalId: number, vote: 'for' | 'against') => {
     if (!isConnected || isVoting) return;
     setIsVoting(true);
     try {
       console.log(`Voting ${vote} on proposal ${proposalId}`);
-      // Would call contract here
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Note: Voting functionality requires governance contract deployment
+      console.warn('Governance contract not yet deployed - voting disabled');
     } catch (error) {
       console.error('Vote error:', error);
     } finally {
