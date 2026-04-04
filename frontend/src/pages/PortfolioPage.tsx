@@ -17,8 +17,10 @@ interface PositionWithMarket extends Position {
 export function PortfolioPage() {
   const { isConnected, connect, address } = useWallet();
   const { markets, isLoading: marketsLoading } = useMarkets();
+  const { claimWinnings } = useContract();
   const [positions, setPositions] = useState<PositionWithMarket[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [claimingMarketId, setClaimingMarketId] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchPositions() {
