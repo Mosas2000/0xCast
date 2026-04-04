@@ -1,6 +1,8 @@
 // Unified Contract Configuration for 0xCast
 // This file serves as the single source of truth for all contract addresses
 
+import { STACKS_MAINNET, STACKS_TESTNET } from '@stacks/network';
+
 export type NetworkType = 'mainnet' | 'testnet';
 
 // Contract names
@@ -36,6 +38,11 @@ export const CONTRACT_ADDRESSES = {
 
 // Current active network
 export const CURRENT_NETWORK: NetworkType = 'mainnet';
+
+// Get network object for @stacks/network
+export function getNetwork(network: NetworkType = CURRENT_NETWORK) {
+  return network === 'mainnet' ? STACKS_MAINNET : STACKS_TESTNET;
+}
 
 // Get contract address for a specific contract
 export function getContractAddress(contractName: ContractName, network: NetworkType = CURRENT_NETWORK): string {

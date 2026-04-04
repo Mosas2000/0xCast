@@ -1,111 +1,29 @@
 import { useState } from 'react';
 import { useWallet } from '../components/WalletProvider';
-import { OXC_CONFIG, formatOXC } from '../config/token';
+import { 
+  useGovernance, 
+  formatVotingPower, 
+  calculateVotePercentage,
+  isQuorumReached,
+  type Proposal,
+} from '../hooks/useGovernance';
 
 type ProposalStatus = 'active' | 'passed' | 'rejected' | 'pending';
 type VoteType = 'for' | 'against' | null;
 
-interface Proposal {
-  id: number;
-  title: string;
-  description: string;
-  proposer: string;
-  status: ProposalStatus;
-  votesFor: bigint;
-  votesAgainst: bigint;
-  totalVotes: bigint;
-  quorum: bigint;
-  endBlock: number;
-  userVote?: VoteType;
-}
-
 export function GovernancePage() {
-  const { isConnected, connect } = useWallet();
+  const { isConnected, connect, address } = useWallet();
+  const { stats, proposals, isLoading } = useGovernance(address ?? undefined);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [isVoting, setIsVoting] = useState(false);
-
-  // Mock governance data
-  const governanceStats = {
-    totalProposals: 24,
-    activeProposals: 3,
-    passedProposals: 18,
-    userVotingPower: 5000n * BigInt(10 ** OXC_CONFIG.decimals),
-    quorumRequired: 5000000n * BigInt(10 ** OXC_CONFIG.decimals),
-  };
-
-  const proposals: Proposal[] = [
-    {
-      id: 1,
-      title: 'Increase Liquidity Provider Rewards',
-      description: 'Proposal to increase LP rewards from 10% to 15% of platform fees to attract more liquidity providers.',
-      proposer: 'SP2J6...ABCD',
-      status: 'active',
-      votesFor: 3500000n * BigInt(10 ** OXC_CONFIG.decimals),
-      votesAgainst: 1200000n * BigInt(10 ** OXC_CONFIG.decimals),
-      totalVotes: 4700000n * BigInt(10 ** OXC_CONFIG.decimals),
-      quorum: 5000000n * BigInt(10 ** OXC_CONFIG.decimals),
-      endBlock: 125000,
-      userVote: 'for',
-    },
-    {
-      id: 2,
-      title: 'Add New Market Categories',
-      description: 'Add support for sports and entertainment prediction markets alongside existing crypto/finance categories.',
-      proposer: 'SP1XY...EFGH',
-      status: 'active',
-      votesFor: 2800000n * BigInt(10 ** OXC_CONFIG.decimals),
-      votesAgainst: 800000n * BigInt(10 ** OXC_CONFIG.decimals),
-      totalVotes: 3600000n * BigInt(10 ** OXC_CONFIG.decimals),
-      quorum: 5000000n * BigInt(10 ** OXC_CONFIG.decimals),
-      endBlock: 126500,
-      userVote: null,
-    },
-    {
-      id: 3,
-      title: 'Reduce Platform Fees',
-      description: 'Reduce trading fees from 2% to 1.5% to increase trading volume and user adoption.',
-      proposer: 'SP3MN...IJKL',
-      status: 'active',
-      votesFor: 4200000n * BigInt(10 ** OXC_CONFIG.decimals),
-      votesAgainst: 2100000n * BigInt(10 ** OXC_CONFIG.decimals),
-      totalVotes: 6300000n * BigInt(10 ** OXC_CONFIG.decimals),
-      quorum: 5000000n * BigInt(10 ** OXC_CONFIG.decimals),
-      endBlock: 124000,
-      userVote: 'against',
-    },
-    {
-      id: 4,
-      title: 'Treasury Diversification',
-      description: 'Diversify 20% of treasury holdings into BTC and ETH for long-term stability.',
-      proposer: 'SP4QR...MNOP',
-      status: 'passed',
-      votesFor: 8500000n * BigInt(10 ** OXC_CONFIG.decimals),
-      votesAgainst: 1500000n * BigInt(10 ** OXC_CONFIG.decimals),
-      totalVotes: 10000000n * BigInt(10 ** OXC_CONFIG.decimals),
-      quorum: 5000000n * BigInt(10 ** OXC_CONFIG.decimals),
-      endBlock: 120000,
-    },
-    {
-      id: 5,
-      title: 'Extend Vesting Period',
-      description: 'Extend team token vesting from 2 years to 3 years for better alignment.',
-      proposer: 'SP5ST...QRST',
-      status: 'rejected',
-      votesFor: 2000000n * BigInt(10 ** OXC_CONFIG.decimals),
-      votesAgainst: 4500000n * BigInt(10 ** OXC_CONFIG.decimals),
-      totalVotes: 6500000n * BigInt(10 ** OXC_CONFIG.decimals),
-      quorum: 5000000n * BigInt(10 ** OXC_CONFIG.decimals),
-      endBlock: 118000,
-    },
-  ];
 
   const handleVote = async (proposalId: number, vote: 'for' | 'against') => {
     if (!isConnected || isVoting) return;
     setIsVoting(true);
     try {
       console.log(`Voting ${vote} on proposal ${proposalId}`);
-      // Would call contract here
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Note: Voting functionality requires governance contract deployment
+      console.warn('Governance contract not yet deployed - voting disabled');
     } catch (error) {
       console.error('Vote error:', error);
     } finally {
@@ -132,11 +50,6 @@ export function GovernancePage() {
       case 'pending': return '#F59E0B20';
       default: return '#9CA3AF20';
     }
-  };
-
-  const calculatePercentage = (votes: bigint, total: bigint): number => {
-    if (total === 0n) return 0;
-    return Number((votes * 100n) / total);
   };
 
   const containerStyle: React.CSSProperties = {
@@ -408,24 +321,24 @@ export function GovernancePage() {
         <div style={statsGridStyle}>
           <div style={statCardStyle}>
             <div style={statLabelStyle}>Total Proposals</div>
-            <div style={statValueStyle}>{governanceStats.totalProposals}</div>
+            <div style={statValueStyle}>{stats.totalProposals}</div>
           </div>
           <div style={statCardStyle}>
             <div style={statLabelStyle}>Active</div>
             <div style={{ ...statValueStyle, color: '#3B82F6' }}>
-              {governanceStats.activeProposals}
+              {stats.activeProposals}
             </div>
           </div>
           <div style={statCardStyle}>
             <div style={statLabelStyle}>Passed</div>
             <div style={{ ...statValueStyle, color: '#22C55E' }}>
-              {governanceStats.passedProposals}
+              {stats.passedProposals}
             </div>
           </div>
           <div style={statCardStyle}>
             <div style={statLabelStyle}>Your Voting Power</div>
             <div style={statValueStyle}>
-              {isConnected ? formatOXC(governanceStats.userVotingPower) : '—'}
+              {isConnected ? formatVotingPower(stats.userVotingPower) : '—'}
             </div>
           </div>
         </div>
@@ -447,10 +360,32 @@ export function GovernancePage() {
 
         {/* Active Proposals */}
         <h2 style={sectionTitleStyle}>Active Proposals</h2>
-        {proposals.filter(p => p.status === 'active').map(proposal => {
-          const forPercentage = calculatePercentage(proposal.votesFor, proposal.totalVotes);
-          const againstPercentage = calculatePercentage(proposal.votesAgainst, proposal.totalVotes);
-          const quorumReached = proposal.totalVotes >= proposal.quorum;
+        {isLoading ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#9CA3AF' }}>
+            Loading proposals...
+          </div>
+        ) : proposals.filter(p => p.status === 'active').length === 0 ? (
+          <div style={{ 
+            backgroundColor: '#0A0A0A', 
+            border: '1px solid #1F1F1F', 
+            borderRadius: '16px', 
+            padding: '48px', 
+            textAlign: 'center', 
+            marginBottom: '32px' 
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📋</div>
+            <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#FFFFFF', marginBottom: '8px' }}>
+              No Active Proposals
+            </h3>
+            <p style={{ color: '#9CA3AF', maxWidth: '400px', margin: '0 auto' }}>
+              There are currently no active governance proposals. 
+              Governance features will be enabled when the governance contract is deployed.
+            </p>
+          </div>
+        ) : proposals.filter(p => p.status === 'active').map(proposal => {
+          const forPercentage = calculateVotePercentage(proposal.votesFor, proposal.totalVotes);
+          const againstPercentage = calculateVotePercentage(proposal.votesAgainst, proposal.totalVotes);
+          const quorumReached = isQuorumReached(proposal.totalVotes, proposal.quorum);
 
           return (
             <div
@@ -479,13 +414,13 @@ export function GovernancePage() {
                 </div>
                 <div style={voteStatsStyle}>
                   <span style={{ color: '#22C55E' }}>
-                    For: {formatOXC(proposal.votesFor)} ({forPercentage}%)
+                    For: {formatVotingPower(proposal.votesFor)} ({forPercentage}%)
                   </span>
                   <span style={{ color: quorumReached ? '#22C55E' : '#F59E0B' }}>
-                    Quorum: {quorumReached ? '✓ Reached' : `${calculatePercentage(proposal.totalVotes, proposal.quorum)}%`}
+                    Quorum: {quorumReached ? '✓ Reached' : `${calculateVotePercentage(proposal.totalVotes, proposal.quorum)}%`}
                   </span>
                   <span style={{ color: '#EF4444' }}>
-                    Against: {formatOXC(proposal.votesAgainst)} ({againstPercentage}%)
+                    Against: {formatVotingPower(proposal.votesAgainst)} ({againstPercentage}%)
                   </span>
                 </div>
               </div>
@@ -524,9 +459,23 @@ export function GovernancePage() {
 
         {/* Past Proposals */}
         <h2 style={{ ...sectionTitleStyle, marginTop: '48px' }}>Past Proposals</h2>
-        {proposals.filter(p => p.status !== 'active').map(proposal => {
-          const forPercentage = calculatePercentage(proposal.votesFor, proposal.totalVotes);
-          const againstPercentage = calculatePercentage(proposal.votesAgainst, proposal.totalVotes);
+        {proposals.filter(p => p.status !== 'active').length === 0 ? (
+          <div style={{ 
+            backgroundColor: '#0A0A0A', 
+            border: '1px solid #1F1F1F', 
+            borderRadius: '16px', 
+            padding: '32px', 
+            textAlign: 'center', 
+            marginBottom: '32px',
+            opacity: 0.8
+          }}>
+            <p style={{ color: '#9CA3AF' }}>
+              No past proposals yet.
+            </p>
+          </div>
+        ) : proposals.filter(p => p.status !== 'active').map(proposal => {
+          const forPercentage = calculateVotePercentage(proposal.votesFor, proposal.totalVotes);
+          const againstPercentage = calculateVotePercentage(proposal.votesAgainst, proposal.totalVotes);
 
           return (
             <div
@@ -553,10 +502,10 @@ export function GovernancePage() {
                 </div>
                 <div style={voteStatsStyle}>
                   <span style={{ color: '#22C55E' }}>
-                    For: {formatOXC(proposal.votesFor)} ({forPercentage}%)
+                    For: {formatVotingPower(proposal.votesFor)} ({forPercentage}%)
                   </span>
                   <span style={{ color: '#EF4444' }}>
-                    Against: {formatOXC(proposal.votesAgainst)} ({againstPercentage}%)
+                    Against: {formatVotingPower(proposal.votesAgainst)} ({againstPercentage}%)
                   </span>
                 </div>
               </div>
@@ -594,7 +543,7 @@ export function GovernancePage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                   <span style={{ color: '#9CA3AF', fontSize: '14px' }}>Total Votes</span>
                   <span style={{ color: '#FFFFFF', fontSize: '14px' }}>
-                    {formatOXC(selectedProposal.totalVotes)} OXC
+                    {formatVotingPower(selectedProposal.totalVotes)} OXC
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>

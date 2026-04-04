@@ -1,80 +1,67 @@
 import { useState } from 'react';
 import { useWallet } from '../components/WalletProvider';
-import { OXC_CONFIG, formatOXC, parseOXC } from '../config/token';
+import { useStakingData } from '../hooks/useStakingData';
+import { useStakingActions } from '../hooks/useStakingActions';
+import { 
+  formatOxcAmount, 
+  parseOxcInput, 
+  calculateEstimatedApy,
+  formatLockStatus,
+} from '../utils/stakingHelpers';
 
 type StakingTab = 'stake' | 'unstake' | 'rewards';
 
 export function StakingPage() {
-  const { isConnected, connect } = useWallet();
+  const { isConnected, connect, address } = useWallet();
+  const { stakingData, isLoading: dataLoading, refetch } = useStakingData(address);
+  const { stake, unstake, isLoading: actionLoading, error: actionError, txId } = useStakingActions();
+  
   const [activeTab, setActiveTab] = useState<StakingTab>('stake');
   const [stakeAmount, setStakeAmount] = useState('');
   const [unstakeAmount, setUnstakeAmount] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Mock data - would be fetched from contracts
-  const stakingData = {
-    totalStaked: 15000000n * BigInt(10 ** OXC_CONFIG.decimals),
-    userStaked: 5000n * BigInt(10 ** OXC_CONFIG.decimals),
-    userBalance: 10000n * BigInt(10 ** OXC_CONFIG.decimals),
-    pendingRewards: 125n * BigInt(10 ** OXC_CONFIG.decimals),
-    apy: 12.5,
-    minStake: 100n * BigInt(10 ** OXC_CONFIG.decimals),
-    lockPeriod: 7,
-    totalStakers: 1247,
-  };
+  const isLoading = dataLoading || actionLoading;
+  
+  // Calculate derived values
+  const estimatedApy = calculateEstimatedApy(stakingData.userStaked, stakingData.totalStaked);
+  const lockStatus = formatLockStatus(stakingData.currentBlock, stakingData.userLockedUntil);
+  const minStake = 1000000n; // 1 OXC minimum
+  const lockPeriodDays = 7; // ~7 days lock period
 
   const handleStake = async () => {
     if (!stakeAmount || isLoading) return;
-    setIsLoading(true);
-    try {
-      const amount = parseOXC(stakeAmount);
-      console.log('Staking:', amount);
-      // Would call contract here
-      await new Promise(resolve => setTimeout(resolve, 2000));
+    const amount = parseOxcInput(stakeAmount);
+    if (amount < minStake) return;
+    
+    await stake(amount, () => {
       setStakeAmount('');
-    } catch (error) {
-      console.error('Stake error:', error);
-    } finally {
-      setIsLoading(false);
-    }
+      refetch();
+    });
   };
 
   const handleUnstake = async () => {
-    if (!unstakeAmount || isLoading) return;
-    setIsLoading(true);
-    try {
-      const amount = parseOXC(unstakeAmount);
-      console.log('Unstaking:', amount);
-      // Would call contract here
-      await new Promise(resolve => setTimeout(resolve, 2000));
+    if (!unstakeAmount || isLoading || lockStatus.isLocked) return;
+    const amount = parseOxcInput(unstakeAmount);
+    if (amount <= 0n) return;
+    
+    await unstake(amount, () => {
       setUnstakeAmount('');
-    } catch (error) {
-      console.error('Unstake error:', error);
-    } finally {
-      setIsLoading(false);
-    }
+      refetch();
+    });
   };
 
   const handleClaimRewards = async () => {
-    if (isLoading) return;
-    setIsLoading(true);
-    try {
-      console.log('Claiming rewards');
-      // Would call contract here
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    } catch (error) {
-      console.error('Claim error:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    // Note: Rewards claiming would need a separate contract function
+    // For now, this is a placeholder
+    console.log('Rewards claiming not yet implemented in contract');
   };
 
   const setMaxStake = () => {
-    setStakeAmount(formatOXC(stakingData.userBalance));
+    setStakeAmount(formatOxcAmount(stakingData.userBalance));
   };
 
   const setMaxUnstake = () => {
-    setUnstakeAmount(formatOXC(stakingData.userStaked));
+    setUnstakeAmount(formatOxcAmount(stakingData.userStaked));
   };
 
   const containerStyle: React.CSSProperties = {
@@ -346,19 +333,19 @@ export function StakingPage() {
         <div style={gridStyle}>
           <div style={statCardStyle}>
             <div style={statLabelStyle}>Total Staked</div>
-            <div style={statValueStyle}>{formatOXC(stakingData.totalStaked)} OXC</div>
+            <div style={statValueStyle}>{formatOxcAmount(stakingData.totalStaked)} OXC</div>
           </div>
           <div style={statCardStyle}>
-            <div style={statLabelStyle}>Total Stakers</div>
-            <div style={statValueStyle}>{stakingData.totalStakers.toLocaleString()}</div>
+            <div style={statLabelStyle}>Your Stake</div>
+            <div style={statValueStyle}>{formatOxcAmount(stakingData.userStaked)} OXC</div>
           </div>
           <div style={statCardStyle}>
-            <div style={statLabelStyle}>Current APY</div>
-            <div style={apyValueStyle}>{stakingData.apy}%</div>
+            <div style={statLabelStyle}>Est. APY</div>
+            <div style={apyValueStyle}>{estimatedApy}%</div>
           </div>
           <div style={statCardStyle}>
             <div style={statLabelStyle}>Lock Period</div>
-            <div style={statValueStyle}>{stakingData.lockPeriod} Days</div>
+            <div style={statValueStyle}>{lockPeriodDays} Days</div>
           </div>
         </div>
 
@@ -400,7 +387,7 @@ export function StakingPage() {
               <>
                 <div style={labelStyle}>
                   <span>Amount to Stake</span>
-                  <span>Balance: {formatOXC(stakingData.userBalance)} OXC</span>
+                  <span>Balance: {formatOxcAmount(stakingData.userBalance)} OXC</span>
                 </div>
                 <div style={inputContainerStyle}>
                   <input
@@ -418,17 +405,27 @@ export function StakingPage() {
                 <div style={infoBoxStyle}>
                   <div style={infoRowStyle}>
                     <span style={infoLabelStyle}>Minimum Stake</span>
-                    <span style={infoValueStyle}>{formatOXC(stakingData.minStake)} OXC</span>
+                    <span style={infoValueStyle}>{formatOxcAmount(minStake)} OXC</span>
                   </div>
                   <div style={infoRowStyle}>
                     <span style={infoLabelStyle}>Lock Period</span>
-                    <span style={infoValueStyle}>{stakingData.lockPeriod} days</span>
+                    <span style={infoValueStyle}>{lockPeriodDays} days</span>
                   </div>
                   <div style={infoRowLastStyle}>
                     <span style={infoLabelStyle}>Expected APY</span>
-                    <span style={{ ...infoValueStyle, color: '#22C55E' }}>{stakingData.apy}%</span>
+                    <span style={{ ...infoValueStyle, color: '#22C55E' }}>{estimatedApy}%</span>
                   </div>
                 </div>
+                {actionError && (
+                  <div style={{ color: '#EF4444', fontSize: '14px', marginBottom: '16px', padding: '12px', backgroundColor: '#1a0505', borderRadius: '8px' }}>
+                    {actionError}
+                  </div>
+                )}
+                {txId && (
+                  <div style={{ color: '#22C55E', fontSize: '14px', marginBottom: '16px', padding: '12px', backgroundColor: '#0a1a0a', borderRadius: '8px' }}>
+                    Transaction submitted! ID: {txId.slice(0, 16)}...
+                  </div>
+                )}
                 <button 
                   style={primaryButtonStyle} 
                   onClick={handleStake}
@@ -441,7 +438,7 @@ export function StakingPage() {
               <>
                 <div style={labelStyle}>
                   <span>Amount to Unstake</span>
-                  <span>Staked: {formatOXC(stakingData.userStaked)} OXC</span>
+                  <span>Staked: {formatOxcAmount(stakingData.userStaked)} OXC</span>
                 </div>
                 <div style={inputContainerStyle}>
                   <input
@@ -450,60 +447,73 @@ export function StakingPage() {
                     placeholder="0.00"
                     value={unstakeAmount}
                     onChange={(e) => setUnstakeAmount(e.target.value)}
-                    disabled={isLoading}
+                    disabled={isLoading || lockStatus.isLocked}
                   />
-                  <button style={maxButtonStyle} onClick={setMaxUnstake}>
+                  <button style={maxButtonStyle} onClick={setMaxUnstake} disabled={lockStatus.isLocked}>
                     MAX
                   </button>
                 </div>
                 <div style={infoBoxStyle}>
                   <div style={infoRowStyle}>
                     <span style={infoLabelStyle}>Currently Staked</span>
-                    <span style={infoValueStyle}>{formatOXC(stakingData.userStaked)} OXC</span>
+                    <span style={infoValueStyle}>{formatOxcAmount(stakingData.userStaked)} OXC</span>
                   </div>
                   <div style={infoRowLastStyle}>
-                    <span style={infoLabelStyle}>Pending Rewards</span>
-                    <span style={{ ...infoValueStyle, color: '#22C55E' }}>
-                      {formatOXC(stakingData.pendingRewards)} OXC
+                    <span style={infoLabelStyle}>Lock Status</span>
+                    <span style={{ ...infoValueStyle, color: lockStatus.isLocked ? '#EF4444' : '#22C55E' }}>
+                      {lockStatus.message}
                     </span>
                   </div>
                 </div>
+                {lockStatus.isLocked && (
+                  <div style={{ color: '#F59E0B', fontSize: '14px', marginBottom: '16px', padding: '12px', backgroundColor: '#1a1505', borderRadius: '8px' }}>
+                    ⏳ Your tokens are locked. {lockStatus.message}
+                  </div>
+                )}
+                {actionError && (
+                  <div style={{ color: '#EF4444', fontSize: '14px', marginBottom: '16px', padding: '12px', backgroundColor: '#1a0505', borderRadius: '8px' }}>
+                    {actionError}
+                  </div>
+                )}
                 <button 
                   style={primaryButtonStyle} 
                   onClick={handleUnstake}
-                  disabled={isLoading || !unstakeAmount}
+                  disabled={isLoading || !unstakeAmount || lockStatus.isLocked}
                 >
-                  {isLoading ? 'Unstaking...' : 'Unstake OXC'}
+                  {isLoading ? 'Unstaking...' : lockStatus.isLocked ? 'Tokens Locked' : 'Unstake OXC'}
                 </button>
               </>
             ) : (
               <>
                 <div style={rewardsCardStyle}>
-                  <div style={rewardsTitleStyle}>Pending Rewards</div>
+                  <div style={rewardsTitleStyle}>Staking Rewards</div>
                   <div style={rewardsValueStyle}>
-                    {formatOXC(stakingData.pendingRewards)} OXC
+                    Coming Soon
                   </div>
+                  <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '16px' }}>
+                    Rewards distribution will be enabled in a future contract update.
+                  </p>
                   <button 
-                    style={{ ...primaryButtonStyle, backgroundColor: '#22C55E' }}
+                    style={{ ...primaryButtonStyle, backgroundColor: '#374151', cursor: 'not-allowed' }}
                     onClick={handleClaimRewards}
-                    disabled={isLoading || stakingData.pendingRewards === 0n}
+                    disabled={true}
                   >
-                    {isLoading ? 'Claiming...' : 'Claim Rewards'}
+                    Claim Rewards (Coming Soon)
                   </button>
                 </div>
                 <div style={{ ...infoBoxStyle, marginTop: '24px', marginBottom: '0' }}>
                   <div style={infoRowStyle}>
                     <span style={infoLabelStyle}>Your Stake</span>
-                    <span style={infoValueStyle}>{formatOXC(stakingData.userStaked)} OXC</span>
+                    <span style={infoValueStyle}>{formatOxcAmount(stakingData.userStaked)} OXC</span>
                   </div>
                   <div style={infoRowStyle}>
-                    <span style={infoLabelStyle}>Current APY</span>
-                    <span style={{ ...infoValueStyle, color: '#22C55E' }}>{stakingData.apy}%</span>
+                    <span style={infoLabelStyle}>Est. APY</span>
+                    <span style={{ ...infoValueStyle, color: '#22C55E' }}>{estimatedApy}%</span>
                   </div>
                   <div style={infoRowLastStyle}>
-                    <span style={infoLabelStyle}>Estimated Daily</span>
-                    <span style={infoValueStyle}>
-                      ~{(Number(formatOXC(stakingData.userStaked)) * stakingData.apy / 100 / 365).toFixed(2)} OXC
+                    <span style={infoLabelStyle}>Lock Status</span>
+                    <span style={{ ...infoValueStyle, color: lockStatus.isLocked ? '#F59E0B' : '#22C55E' }}>
+                      {lockStatus.message}
                     </span>
                   </div>
                 </div>
@@ -515,29 +525,37 @@ export function StakingPage() {
           <div style={yourStakeCardStyle}>
             <h3 style={yourStakeTitleStyle}>Your Staking Overview</h3>
             
-            <div style={stakeRowStyle}>
-              <span style={stakeLabelStyle}>Wallet Balance</span>
-              <span style={stakeValueStyle}>{formatOXC(stakingData.userBalance)} OXC</span>
-            </div>
-            
-            <div style={stakeRowStyle}>
-              <span style={stakeLabelStyle}>Currently Staked</span>
-              <span style={stakeValueStyle}>{formatOXC(stakingData.userStaked)} OXC</span>
-            </div>
-            
-            <div style={stakeRowStyle}>
-              <span style={stakeLabelStyle}>Pending Rewards</span>
-              <span style={{ ...stakeValueStyle, color: '#22C55E' }}>
-                {formatOXC(stakingData.pendingRewards)} OXC
-              </span>
-            </div>
-            
-            <div style={{ ...stakeRowStyle, borderBottom: 'none' }}>
-              <span style={stakeLabelStyle}>Total Value</span>
-              <span style={stakeValueStyle}>
-                {formatOXC(stakingData.userBalance + stakingData.userStaked + stakingData.pendingRewards)} OXC
-              </span>
-            </div>
+            {dataLoading ? (
+              <div style={{ textAlign: 'center', padding: '40px 0', color: '#9CA3AF' }}>
+                Loading staking data...
+              </div>
+            ) : (
+              <>
+                <div style={stakeRowStyle}>
+                  <span style={stakeLabelStyle}>Wallet Balance</span>
+                  <span style={stakeValueStyle}>{formatOxcAmount(stakingData.userBalance)} OXC</span>
+                </div>
+                
+                <div style={stakeRowStyle}>
+                  <span style={stakeLabelStyle}>Currently Staked</span>
+                  <span style={stakeValueStyle}>{formatOxcAmount(stakingData.userStaked)} OXC</span>
+                </div>
+                
+                <div style={stakeRowStyle}>
+                  <span style={stakeLabelStyle}>Lock Status</span>
+                  <span style={{ ...stakeValueStyle, color: lockStatus.isLocked ? '#F59E0B' : '#22C55E' }}>
+                    {lockStatus.message}
+                  </span>
+                </div>
+                
+                <div style={{ ...stakeRowStyle, borderBottom: 'none' }}>
+                  <span style={stakeLabelStyle}>Total Value</span>
+                  <span style={stakeValueStyle}>
+                    {formatOxcAmount(stakingData.userBalance + stakingData.userStaked)} OXC
+                  </span>
+                </div>
+              </>
+            )}
 
             <div style={{ 
               marginTop: '32px', 
