@@ -326,24 +326,24 @@ export function GovernancePage() {
         <div style={statsGridStyle}>
           <div style={statCardStyle}>
             <div style={statLabelStyle}>Total Proposals</div>
-            <div style={statValueStyle}>{governanceStats.totalProposals}</div>
+            <div style={statValueStyle}>{stats.totalProposals}</div>
           </div>
           <div style={statCardStyle}>
             <div style={statLabelStyle}>Active</div>
             <div style={{ ...statValueStyle, color: '#3B82F6' }}>
-              {governanceStats.activeProposals}
+              {stats.activeProposals}
             </div>
           </div>
           <div style={statCardStyle}>
             <div style={statLabelStyle}>Passed</div>
             <div style={{ ...statValueStyle, color: '#22C55E' }}>
-              {governanceStats.passedProposals}
+              {stats.passedProposals}
             </div>
           </div>
           <div style={statCardStyle}>
             <div style={statLabelStyle}>Your Voting Power</div>
             <div style={statValueStyle}>
-              {isConnected ? formatOXC(governanceStats.userVotingPower) : '—'}
+              {isConnected ? formatVotingPower(stats.userVotingPower) : '—'}
             </div>
           </div>
         </div>
