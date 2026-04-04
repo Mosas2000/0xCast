@@ -24,14 +24,15 @@ const getTokenContract = () => {
 };
 
 // Maximum memo length per SIP-010 standard
-const MAX_MEMO_LENGTH = 34;
+export const MAX_MEMO_LENGTH = 34;
 
 /**
  * Build optional memo Clarity value for token transfers
  * @param memo - Optional memo string
  * @returns someCV(bufferCV(...)) if memo provided, noneCV() otherwise
+ * @throws Error if memo exceeds MAX_MEMO_LENGTH bytes
  */
-const buildMemoCV = (memo?: string) => {
+export const buildMemoCV = (memo?: string) => {
   if (!memo) return noneCV();
   const buffer = Buffer.from(memo);
   if (buffer.length > MAX_MEMO_LENGTH) {
