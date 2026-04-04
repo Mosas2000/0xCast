@@ -1,9 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { cvToJSON, fetchCallReadOnlyFunction, uintCV, principalCV } from '@stacks/transactions';
-import { STACKS_MAINNET } from '@stacks/network';
+import { STACKS_MAINNET, STACKS_TESTNET } from '@stacks/network';
 import type { Position } from '../types/market';
 import { parsePosition } from '../utils/helpers';
-import { CONTRACT_ADDRESS, CONTRACT_NAME } from '../constants';
+import { MARKET_CONTRACT, CURRENT_NETWORK } from '../config/contracts';
+
+// Get the appropriate network based on configuration
+const getNetwork = () => CURRENT_NETWORK === 'mainnet' ? STACKS_MAINNET : STACKS_TESTNET;
 
 export function usePosition(marketId: number | null, userAddress: string | null) {
   const [position, setPosition] = useState<Position | null>(null);
@@ -20,13 +23,14 @@ export function usePosition(marketId: number | null, userAddress: string | null)
     setError(null);
 
     try {
+      const network = getNetwork();
       const result = await fetchCallReadOnlyFunction({
-        network: STACKS_MAINNET,
-        contractAddress: CONTRACT_ADDRESS,
-        contractName: CONTRACT_NAME,
+        network,
+        contractAddress: MARKET_CONTRACT.address,
+        contractName: MARKET_CONTRACT.name,
         functionName: 'get-user-position',
         functionArgs: [uintCV(marketId), principalCV(userAddress)],
-        senderAddress: CONTRACT_ADDRESS,
+        senderAddress: MARKET_CONTRACT.address,
       });
 
       const jsonResult = cvToJSON(result);
@@ -41,6 +45,11 @@ export function usePosition(marketId: number | null, userAddress: string | null)
       setIsLoading(false);
     }
   }, [marketId, userAddress]);
+
+  // Auto-fetch position when marketId or userAddress changes
+  useEffect(() => {
+    fetchPosition();
+  }, [fetchPosition]);
 
   return { position, isLoading, error, refetch: fetchPosition };
 }
