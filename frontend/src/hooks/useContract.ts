@@ -7,6 +7,9 @@ import {
   principalCV,
   PostConditionMode,
   Pc,
+  someCV,
+  noneCV,
+  bufferCV,
 } from '@stacks/transactions';
 import { 
   CONTRACT_NAMES,
