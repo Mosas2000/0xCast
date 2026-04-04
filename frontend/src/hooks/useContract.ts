@@ -58,6 +58,18 @@ export const isSafeBigInt = (value: bigint): boolean => {
   return value >= 0n && value <= BigInt(MAX_SAFE_INTEGER);
 };
 
+/**
+ * Format a BigInt as a human-readable token amount
+ * @param microAmount - Amount in micro-units (6 decimals)
+ * @returns Formatted string with token amount
+ */
+export const formatMicroAmount = (microAmount: bigint): string => {
+  const integerPart = microAmount / 1_000_000n;
+  const fractionalPart = microAmount % 1_000_000n;
+  const fractionalStr = fractionalPart.toString().padStart(6, '0').replace(/0+$/, '');
+  return fractionalStr ? `${integerPart}.${fractionalStr}` : integerPart.toString();
+};
+
 // Get OXC token contract configuration
 const getTokenContract = () => {
   return getContract(CONTRACT_NAMES.OXCAST);
