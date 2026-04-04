@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { fetchCallReadOnlyFunction, cvToValue, Cl } from '@stacks/transactions';
-import { TOKEN_CONTRACT, getApiUrl, getNetwork } from '../config';
+import { TOKEN_CONTRACT, getNetwork } from '../config';
 
 export interface GovernanceStats {
   totalProposals: number;
@@ -54,7 +54,8 @@ const DEFAULT_STATS: GovernanceStats = {
  */
 async function fetchUserVotingPower(address: string): Promise<bigint> {
   try {
-    const [contractAddress, contractName] = TOKEN_CONTRACT.split('.');
+    const contractAddress = TOKEN_CONTRACT.address;
+    const contractName = TOKEN_CONTRACT.name;
     
     const result = await fetchCallReadOnlyFunction({
       network: getNetwork(),

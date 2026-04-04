@@ -49,7 +49,6 @@ export function calculateEstimatedApy(
   
   // Simplified APY calculation
   // Real APY would depend on actual reward distribution
-  const shareOfPool = Number(userStake) / Number(totalStaked);
   const epochsPerYear = 365; // Assuming daily epochs
   const baseApy = (rewardRate / 10000) * epochsPerYear * 100;
   

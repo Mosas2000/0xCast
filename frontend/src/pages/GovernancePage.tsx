@@ -13,7 +13,7 @@ type VoteType = 'for' | 'against' | null;
 
 export function GovernancePage() {
   const { isConnected, connect, address } = useWallet();
-  const { stats, proposals, isLoading, error, refetch } = useGovernance(address);
+  const { stats, proposals, isLoading } = useGovernance(address ?? undefined);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [isVoting, setIsVoting] = useState(false);
 

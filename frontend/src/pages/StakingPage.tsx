@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useWallet } from '../components/WalletProvider';
-import { OXC_CONFIG } from '../config/token';
 import { useStakingData } from '../hooks/useStakingData';
 import { useStakingActions } from '../hooks/useStakingActions';
 import { 
