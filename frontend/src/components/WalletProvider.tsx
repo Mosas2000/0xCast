@@ -18,6 +18,13 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [address, setAddress] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(true);
 
+  // Clear stale wallet connection data
+  const clearWalletData = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    setIsConnected(false);
+    setAddress(null);
+  }, []);
+
   useEffect(() => {
     // Check localStorage for saved address
     const savedAddress = localStorage.getItem(STORAGE_KEY);
