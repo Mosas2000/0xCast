@@ -1,7 +1,9 @@
 import { useState, useCallback } from 'react';
 import { openContractCall } from '@stacks/connect';
-import { uintCV, PostConditionMode } from '@stacks/transactions';
-import { CONTRACT_ADDRESS, CONTRACT_NAME, stxToMicroStx } from '../constants';
+import { uintCV, PostConditionMode, Pc } from '@stacks/transactions';
+import { MARKET_CONTRACT } from '../config/contracts';
+import { stxToMicroStx } from '../constants';
+import { useWallet } from '../components/WalletProvider';
 
 interface UseStakeReturn {
   placeYesStake: (marketId: number, amount: number, onSuccess?: () => void) => Promise<void>;
@@ -13,6 +15,7 @@ interface UseStakeReturn {
 }
 
 export function useStake(): UseStakeReturn {
+  const { address } = useWallet();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [txId, setTxId] = useState<string | null>(null);
@@ -30,6 +33,11 @@ export function useStake(): UseStakeReturn {
       functionName: 'place-yes-stake' | 'place-no-stake',
       onSuccess?: () => void
     ) => {
+      if (!address) {
+        setError('Wallet not connected');
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
       setTxId(null);
@@ -37,12 +45,18 @@ export function useStake(): UseStakeReturn {
       try {
         const stakeMicroStx = stxToMicroStx(amount);
 
+        // Post condition: user sends exact STX amount
+        const postConditions = [
+          Pc.principal(address).willSendEq(stakeMicroStx).ustx(),
+        ];
+
         await openContractCall({
-          contractAddress: CONTRACT_ADDRESS,
-          contractName: CONTRACT_NAME,
+          contractAddress: MARKET_CONTRACT.address,
+          contractName: MARKET_CONTRACT.name,
           functionName,
           functionArgs: [uintCV(marketId), uintCV(stakeMicroStx)],
           postConditionMode: PostConditionMode.Deny,
+          postConditions,
           onFinish: (data) => {
             setTxId(data.txId);
             setIsLoading(false);
@@ -58,7 +72,7 @@ export function useStake(): UseStakeReturn {
         setIsLoading(false);
       }
     },
-    []
+    [address]
   );
 
   const placeYesStake = useCallback(
