@@ -9,6 +9,16 @@ import { CONTRACT_ADDRESS, CONTRACT_NAME, MIN_STAKE, MAX_STAKE } from '../consta
 import { useWallet } from '../components/WalletProvider';
 import { useStake } from '../hooks/useStake';
 
+/**
+ * TradePage Component
+ * 
+ * Displays market details and allows users to place predictions.
+ * After a successful trade:
+ * - Updates UI state without page reload
+ * - Shows transaction ID with explorer link
+ * - Resets form for next trade
+ * - Auto-refreshes market data
+ */
 export function TradePage() {
   const { id } = useParams<{ id: string }>();
   const marketId = id ? parseInt(id, 10) : null;
