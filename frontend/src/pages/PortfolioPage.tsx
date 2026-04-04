@@ -21,6 +21,8 @@ export function PortfolioPage() {
   const [positions, setPositions] = useState<PositionWithMarket[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [claimingMarketId, setClaimingMarketId] = useState<number | null>(null);
+  const [claimError, setClaimError] = useState<string | null>(null);
+  const [claimSuccess, setClaimSuccess] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchPositions() {
