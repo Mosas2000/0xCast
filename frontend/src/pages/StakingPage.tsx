@@ -526,29 +526,37 @@ export function StakingPage() {
           <div style={yourStakeCardStyle}>
             <h3 style={yourStakeTitleStyle}>Your Staking Overview</h3>
             
-            <div style={stakeRowStyle}>
-              <span style={stakeLabelStyle}>Wallet Balance</span>
-              <span style={stakeValueStyle}>{formatOXC(stakingData.userBalance)} OXC</span>
-            </div>
-            
-            <div style={stakeRowStyle}>
-              <span style={stakeLabelStyle}>Currently Staked</span>
-              <span style={stakeValueStyle}>{formatOXC(stakingData.userStaked)} OXC</span>
-            </div>
-            
-            <div style={stakeRowStyle}>
-              <span style={stakeLabelStyle}>Pending Rewards</span>
-              <span style={{ ...stakeValueStyle, color: '#22C55E' }}>
-                {formatOXC(stakingData.pendingRewards)} OXC
-              </span>
-            </div>
-            
-            <div style={{ ...stakeRowStyle, borderBottom: 'none' }}>
-              <span style={stakeLabelStyle}>Total Value</span>
-              <span style={stakeValueStyle}>
-                {formatOXC(stakingData.userBalance + stakingData.userStaked + stakingData.pendingRewards)} OXC
-              </span>
-            </div>
+            {dataLoading ? (
+              <div style={{ textAlign: 'center', padding: '40px 0', color: '#9CA3AF' }}>
+                Loading staking data...
+              </div>
+            ) : (
+              <>
+                <div style={stakeRowStyle}>
+                  <span style={stakeLabelStyle}>Wallet Balance</span>
+                  <span style={stakeValueStyle}>{formatOxcAmount(stakingData.userBalance)} OXC</span>
+                </div>
+                
+                <div style={stakeRowStyle}>
+                  <span style={stakeLabelStyle}>Currently Staked</span>
+                  <span style={stakeValueStyle}>{formatOxcAmount(stakingData.userStaked)} OXC</span>
+                </div>
+                
+                <div style={stakeRowStyle}>
+                  <span style={stakeLabelStyle}>Lock Status</span>
+                  <span style={{ ...stakeValueStyle, color: lockStatus.isLocked ? '#F59E0B' : '#22C55E' }}>
+                    {lockStatus.message}
+                  </span>
+                </div>
+                
+                <div style={{ ...stakeRowStyle, borderBottom: 'none' }}>
+                  <span style={stakeLabelStyle}>Total Value</span>
+                  <span style={stakeValueStyle}>
+                    {formatOxcAmount(stakingData.userBalance + stakingData.userStaked)} OXC
+                  </span>
+                </div>
+              </>
+            )}
 
             <div style={{ 
               marginTop: '32px', 
