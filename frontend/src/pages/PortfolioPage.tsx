@@ -4,6 +4,7 @@ import { cvToJSON, fetchCallReadOnlyFunction, uintCV, principalCV } from '@stack
 import { STACKS_MAINNET } from '@stacks/network';
 import { useWallet } from '../components/WalletProvider';
 import { useMarkets } from '../hooks/useMarkets';
+import { useContract } from '../hooks/useContract';
 import type { Market, Position } from '../types/market';
 import { MarketStatus, MarketOutcome } from '../types/market';
 import { parsePosition, formatStx, calculateOdds } from '../utils/helpers';
@@ -16,8 +17,12 @@ interface PositionWithMarket extends Position {
 export function PortfolioPage() {
   const { isConnected, connect, address } = useWallet();
   const { markets, isLoading: marketsLoading } = useMarkets();
+  const { claimWinnings } = useContract();
   const [positions, setPositions] = useState<PositionWithMarket[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [claimingMarketId, setClaimingMarketId] = useState<number | null>(null);
+  const [claimError, setClaimError] = useState<string | null>(null);
+  const [claimSuccess, setClaimSuccess] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchPositions() {
@@ -58,6 +63,72 @@ export function PortfolioPage() {
 
     fetchPositions();
   }, [address, markets]);
+
+  const refetchPositions = async () => {
+    if (!address || markets.length === 0) return;
+    
+    const userPositions: PositionWithMarket[] = [];
+    for (const market of markets) {
+      try {
+        const result = await fetchCallReadOnlyFunction({
+          network: STACKS_MAINNET,
+          contractAddress: CONTRACT_ADDRESS,
+          contractName: CONTRACT_NAME,
+          functionName: 'get-user-position',
+          functionArgs: [uintCV(market.id), principalCV(address)],
+          senderAddress: CONTRACT_ADDRESS,
+        });
+
+        const jsonResult = cvToJSON(result);
+        if (jsonResult.type === 'some' && jsonResult.value) {
+          const position = parsePosition(market.id, address, jsonResult.value);
+          if (position.yesStake > 0 || position.noStake > 0) {
+            userPositions.push({ ...position, market });
+          }
+        }
+      } catch (err) {
+        console.error(`Error fetching position for market ${market.id}:`, err);
+      }
+    }
+    setPositions(userPositions);
+  };
+
+  const handleClaimWinnings = async (marketId: number) => {
+    if (!isConnected || claimingMarketId) return;
+    
+    // Find the position to verify it hasn't been claimed
+    const position = positions.find(p => p.marketId === marketId);
+    if (!position || position.claimed) {
+      setClaimError('This position has already been claimed');
+      setTimeout(() => setClaimError(null), 5000);
+      return;
+    }
+    
+    setClaimingMarketId(marketId);
+    setClaimError(null);
+    setClaimSuccess(null);
+    
+    try {
+      await claimWinnings(marketId);
+      setClaimSuccess(marketId);
+      
+      // Refresh positions after successful claim
+      setTimeout(() => {
+        refetchPositions();
+      }, 2000); // Wait 2s for blockchain to update
+      
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => setClaimSuccess(null), 5000);
+    } catch (error) {
+      console.error('Error claiming winnings:', error);
+      setClaimError(error instanceof Error ? error.message : 'Failed to claim winnings');
+      
+      // Auto-hide error after 5 seconds
+      setTimeout(() => setClaimError(null), 5000);
+    } finally {
+      setClaimingMarketId(null);
+    }
+  };
 
   if (!isConnected) {
     return (
@@ -182,9 +253,38 @@ export function PortfolioPage() {
                         </svg>
                       </div>
 
+                      {isWinner && position.claimed && (
+                        <div className="mt-8 pt-6 border-t border-neutral-800">
+                          <div className="p-3 bg-neutral-800 rounded-lg text-neutral-400 text-sm text-center">
+                            ✓ Winnings already claimed
+                          </div>
+                        </div>
+                      )}
+                      
                       {isWinner && !position.claimed && (
                         <div className="mt-8 pt-6 border-t border-neutral-800">
-                          <button className="btn btn-success w-full">Claim Winnings</button>
+                          {claimSuccess === position.marketId && (
+                            <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm">
+                              ✓ Winnings claimed successfully! Transaction submitted.
+                            </div>
+                          )}
+                          
+                          {claimError && claimingMarketId === position.marketId && (
+                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+                              ✗ {claimError}
+                            </div>
+                          )}
+                          
+                          <button 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleClaimWinnings(position.marketId);
+                            }}
+                            disabled={claimingMarketId === position.marketId}
+                            className="btn btn-success w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {claimingMarketId === position.marketId ? 'Claiming...' : 'Claim Winnings'}
+                          </button>
                         </div>
                       )}
                     </div>
