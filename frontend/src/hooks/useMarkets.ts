@@ -30,6 +30,9 @@ export function useMarkets() {
       const counterJson = cvToJSON(counterResult);
       const totalMarkets = Number(counterJson.value);
 
+      // Check if component is still mounted before updating state
+      if (!isMountedRef.current) return;
+
       if (totalMarkets === 0) {
         setMarkets([]);
         setIsLoading(false);
