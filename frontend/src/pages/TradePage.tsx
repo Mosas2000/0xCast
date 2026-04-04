@@ -88,16 +88,22 @@ export function TradePage() {
       setSelectedOutcome(null);
       setStakeAmount('10');
       
-      // Refetch market data after short delay to allow blockchain confirmation
+      // Refetch market data after delay to allow blockchain confirmation
+      // Note: Transaction may take longer to confirm, but UI shows txId immediately
       setTimeout(() => {
         fetchMarket();
       }, 2000);
     };
 
-    if (selectedOutcome === 'yes') {
-      await placeYesStake(market.id, amount, onSuccess);
-    } else {
-      await placeNoStake(market.id, amount, onSuccess);
+    try {
+      if (selectedOutcome === 'yes') {
+        await placeYesStake(market.id, amount, onSuccess);
+      } else {
+        await placeNoStake(market.id, amount, onSuccess);
+      }
+    } catch (err) {
+      // Error handling is done by useStake hook
+      console.error('Trade failed:', err);
     }
   };
 
