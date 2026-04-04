@@ -91,14 +91,20 @@ export function useMarkets() {
   }, []);
 
   useEffect(() => {
+    // Mark component as mounted
+    isMountedRef.current = true;
+    
     fetchMarkets();
     
     // Auto-refresh every 30 seconds
     intervalRef.current = setInterval(fetchMarkets, 30000);
     
     return () => {
+      // Mark component as unmounted before cleanup
+      isMountedRef.current = false;
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
     };
   }, [fetchMarkets]);
