@@ -21,40 +21,42 @@ export function TradePage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedOutcome, setSelectedOutcome] = useState<'yes' | 'no' | null>(null);
   const [stakeAmount, setStakeAmount] = useState<string>('10');
+  const [tradeSuccess, setTradeSuccess] = useState(false);
 
-  useEffect(() => {
-    async function fetchMarket() {
-      if (marketId === null) {
-        setError('Invalid market ID');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const result = await fetchCallReadOnlyFunction({
-          network: STACKS_MAINNET,
-          contractAddress: CONTRACT_ADDRESS,
-          contractName: CONTRACT_NAME,
-          functionName: 'get-market',
-          functionArgs: [uintCV(marketId)],
-          senderAddress: CONTRACT_ADDRESS,
-        });
-
-        const jsonResult = cvToJSON(result);
-        if (jsonResult.type === 'some' && jsonResult.value) {
-          setMarket(parseMarketData(marketId, jsonResult.value));
-        } else {
-          setError('Market not found');
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch market');
-      } finally {
-        setIsLoading(false);
-      }
+  // Fetch market data from contract
+  const fetchMarket = useCallback(async () => {
+    if (marketId === null) {
+      setError('Invalid market ID');
+      setIsLoading(false);
+      return;
     }
 
-    fetchMarket();
+    try {
+      const result = await fetchCallReadOnlyFunction({
+        network: STACKS_MAINNET,
+        contractAddress: CONTRACT_ADDRESS,
+        contractName: CONTRACT_NAME,
+        functionName: 'get-market',
+        functionArgs: [uintCV(marketId)],
+        senderAddress: CONTRACT_ADDRESS,
+      });
+
+      const jsonResult = cvToJSON(result);
+      if (jsonResult.type === 'some' && jsonResult.value) {
+        setMarket(parseMarketData(marketId, jsonResult.value));
+      } else {
+        setError('Market not found');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch market');
+    } finally {
+      setIsLoading(false);
+    }
   }, [marketId]);
+
+  useEffect(() => {
+    fetchMarket();
+  }, [fetchMarket]);
 
   const handleTrade = async () => {
     if (!market || !selectedOutcome || !stakeAmount) return;
