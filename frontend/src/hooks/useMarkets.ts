@@ -106,15 +106,23 @@ export function useMarkets() {
     
     fetchMarkets();
     
-    // Auto-refresh every 30 seconds
-    intervalRef.current = setInterval(fetchMarkets, 30000);
+    // Auto-refresh at configured interval
+    intervalRef.current = setInterval(fetchMarkets, REFRESH_INTERVAL_MS);
     
     return () => {
       // Mark component as unmounted before cleanup
       isMountedRef.current = false;
+      
+      // Clear interval
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
+      }
+      
+      // Abort any in-flight requests
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
       }
     };
   }, [fetchMarkets]);
