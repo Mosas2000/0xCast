@@ -1,10 +1,8 @@
 // Import unified contract configuration
 import { 
   TOKEN_CONTRACT, 
-  CURRENT_NETWORK,
   getContractIdentifier,
   CONTRACT_NAMES,
-  type NetworkType,
 } from './contracts';
 
 // OXC Token Configuration

@@ -9,7 +9,6 @@ import {
   Pc,
 } from '@stacks/transactions';
 import { 
-  TOKEN_CONTRACT,
   CONTRACT_NAMES,
   getContractPrincipal as getContract,
 } from '../config/contracts';
@@ -20,9 +19,6 @@ import { useWallet } from '../components/WalletProvider';
 const getTokenContract = () => {
   return getContract(CONTRACT_NAMES.OXCAST);
 };
-
-// Contract name for OXC operations
-const CONTRACT_NAME = TOKEN_CONTRACT.name;
 
 export function useContract() {
   const { address, isConnected } = useWallet();
@@ -123,7 +119,7 @@ export function useContract() {
       const contract = getTokenContract();
 
       const postConditions = [
-        Pc.principal(address).willSendEq(amountMicroOxc).ft(contract.identifier, 'oxc-token'),
+        Pc.principal(address).willSendEq(amountMicroOxc).ft(contract.identifier as `${string}.${string}`, 'oxc-token'),
       ];
 
       await openContractCall({
@@ -177,7 +173,7 @@ export function useContract() {
       const contract = getTokenContract();
 
       const postConditions = [
-        Pc.principal(address).willSendEq(amountMicroOxc).ft(contract.identifier, 'oxc-token'),
+        Pc.principal(address).willSendEq(amountMicroOxc).ft(contract.identifier as `${string}.${string}`, 'oxc-token'),
       ];
 
       const functionArgs = [
