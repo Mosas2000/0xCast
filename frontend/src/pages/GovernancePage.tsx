@@ -34,9 +34,12 @@ export function GovernancePage() {
     createProposal,
     delegateVotingPower,
     revokeDelegation,
+    queueProposal,
+    executeProposal,
     voteState,
     proposalState,
     delegationState,
+    executionState,
   } = useGovernanceActions();
   
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
@@ -86,6 +89,20 @@ export function GovernancePage() {
   const handleRevokeDelegation = async () => {
     await revokeDelegation();
     if (delegationState.txId) {
+      refetch();
+    }
+  };
+
+  const handleQueueProposal = async (proposalId: number) => {
+    await queueProposal(proposalId);
+    if (executionState.txId) {
+      refetch();
+    }
+  };
+
+  const handleExecuteProposal = async (proposalId: number) => {
+    await executeProposal(proposalId);
+    if (executionState.txId) {
       refetch();
     }
   };
@@ -764,6 +781,65 @@ export function GovernancePage() {
                   fontWeight: '600',
                 }}>
                   You voted {selectedProposal.userVote === 'for' ? 'For' : 'Against'} this proposal
+                </div>
+              )}
+
+              {/* Execution Actions */}
+              {isConnected && selectedProposal.status === 'passed' && (
+                <button
+                  onClick={() => handleQueueProposal(selectedProposal.id)}
+                  disabled={executionState.isLoading}
+                  style={{
+                    width: '100%',
+                    marginTop: '16px',
+                    padding: '12px 20px',
+                    backgroundColor: executionState.isLoading ? '#374151' : '#22C55E',
+                    border: 'none',
+                    borderRadius: '10px',
+                    color: '#FFFFFF',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: executionState.isLoading ? 'not-allowed' : 'pointer',
+                    opacity: executionState.isLoading ? 0.5 : 1,
+                  }}
+                >
+                  {executionState.isLoading ? 'Queueing...' : 'Queue Proposal'}
+                </button>
+              )}
+
+              {isConnected && selectedProposal.status === 'queued' && (
+                <button
+                  onClick={() => handleExecuteProposal(selectedProposal.id)}
+                  disabled={executionState.isLoading}
+                  style={{
+                    width: '100%',
+                    marginTop: '16px',
+                    padding: '12px 20px',
+                    backgroundColor: executionState.isLoading ? '#374151' : '#3B82F6',
+                    border: 'none',
+                    borderRadius: '10px',
+                    color: '#FFFFFF',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: executionState.isLoading ? 'not-allowed' : 'pointer',
+                    opacity: executionState.isLoading ? 0.5 : 1,
+                  }}
+                >
+                  {executionState.isLoading ? 'Executing...' : 'Execute Proposal'}
+                </button>
+              )}
+
+              {executionState.error && (
+                <div style={{
+                  marginTop: '16px',
+                  padding: '12px',
+                  backgroundColor: '#EF444420',
+                  border: '1px solid #EF444440',
+                  borderRadius: '8px',
+                  color: '#F87171',
+                  fontSize: '13px',
+                }}>
+                  {executionState.error}
                 </div>
               )}
             </div>
