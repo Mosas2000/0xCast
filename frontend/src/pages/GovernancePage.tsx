@@ -1,29 +1,48 @@
+/**
+ * GovernancePage Component
+ * 
+ * Main governance page for proposals and voting.
+ * Connects to governance-core and governance-token contracts.
+ */
+
 import { useState } from 'react';
 import { useWallet } from '../components/WalletProvider';
 import { 
   useGovernance, 
   formatVotingPower, 
   calculateVotePercentage,
-  isQuorumReached,
-  type Proposal,
 } from '../hooks/useGovernance';
+import { useGovernanceActions } from '../hooks/useGovernanceActions';
+import { ProposalCard } from '../components/ProposalCard';
+import { CreateProposalModal } from '../components/CreateProposalModal';
+import type { Proposal, VoteType, ProposalStatus } from '../types/governance';
 import { validateMarketId } from '../utils/validation';
-
-type ProposalStatus = 'active' | 'passed' | 'rejected' | 'pending';
-type VoteType = 'for' | 'against' | null;
 
 export function GovernancePage() {
   const { isConnected, connect, address } = useWallet();
-  const { stats, proposals, isLoading } = useGovernance(address ?? undefined);
+  const { 
+    stats, 
+    proposals, 
+    parameters,
+    isLoading, 
+    currentBlock,
+    refetch 
+  } = useGovernance(address ?? undefined);
+  
+  const { 
+    castVote, 
+    createProposal,
+    voteState,
+    proposalState,
+  } = useGovernanceActions();
+  
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
-  const [isVoting, setIsVoting] = useState(false);
-  // Note: voteError stored for future UI display when governance is fully implemented
-  const [, setVoteError] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [voteError, setVoteError] = useState<string | null>(null);
 
-  const handleVote = async (proposalId: number, vote: 'for' | 'against') => {
-    if (!isConnected || isVoting) return;
+  const handleVote = async (proposalId: number, vote: VoteType) => {
+    if (!isConnected || voteState.isLoading) return;
     
-    // Validate proposal ID
     const proposalIdValidation = validateMarketId(proposalId);
     if (!proposalIdValidation.isValid) {
       setVoteError(proposalIdValidation.error || 'Invalid proposal ID');
@@ -32,39 +51,37 @@ export function GovernancePage() {
     }
     
     setVoteError(null);
-    setIsVoting(true);
-    try {
-      console.log(`Voting ${vote} on proposal ${proposalId}`);
-      // Note: Voting functionality requires governance contract deployment
-      console.warn('Governance contract not yet deployed - voting disabled');
-    } catch (error) {
-      console.error('Vote error:', error);
-      setVoteError(error instanceof Error ? error.message : 'Failed to submit vote');
-      setTimeout(() => setVoteError(null), 5000);
-    } finally {
-      setIsVoting(false);
+    await castVote(proposalId, vote);
+    
+    if (voteState.txId) {
+      refetch();
       setSelectedProposal(null);
     }
   };
 
-  const getStatusColor = (status: ProposalStatus): string => {
+  const handleCreateProposal = async (title: string, description: string) => {
+    await createProposal(title, description);
+    if (proposalState.txId) {
+      setShowCreateModal(false);
+      refetch();
+    }
+  };
+
+  const getStatusColor = (status: string): string => {
     switch (status) {
       case 'active': return '#3B82F6';
-      case 'passed': return '#22C55E';
-      case 'rejected': return '#EF4444';
+      case 'passed': 
+      case 'executed':
+      case 'queued': return '#22C55E';
+      case 'rejected':
+      case 'cancelled': return '#EF4444';
       case 'pending': return '#F59E0B';
       default: return '#9CA3AF';
     }
   };
 
-  const getStatusBgColor = (status: ProposalStatus): string => {
-    switch (status) {
-      case 'active': return '#3B82F620';
-      case 'passed': return '#22C55E20';
-      case 'rejected': return '#EF444420';
-      case 'pending': return '#F59E0B20';
-      default: return '#9CA3AF20';
-    }
+  const getStatusBgColor = (status: string): string => {
+    return `${getStatusColor(status)}20`;
   };
 
   const containerStyle: React.CSSProperties = {
@@ -140,37 +157,7 @@ export function GovernancePage() {
     marginBottom: '24px',
   };
 
-  const proposalCardStyle: React.CSSProperties = {
-    backgroundColor: '#0A0A0A',
-    border: '1px solid #1F1F1F',
-    borderRadius: '16px',
-    padding: '24px',
-    marginBottom: '16px',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-  };
-
-  const proposalHeaderStyle: React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '16px',
-  };
-
-  const proposalTitleStyle: React.CSSProperties = {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: '8px',
-  };
-
-  const proposalDescStyle: React.CSSProperties = {
-    fontSize: '14px',
-    color: '#9CA3AF',
-    lineHeight: '1.6',
-    marginBottom: '16px',
-  };
-
+  // Used in modal for status badge
   const statusBadgeStyle = (status: ProposalStatus): React.CSSProperties => ({
     display: 'inline-block',
     padding: '6px 12px',
@@ -181,39 +168,6 @@ export function GovernancePage() {
     backgroundColor: getStatusBgColor(status),
     color: getStatusColor(status),
   });
-
-  const progressContainerStyle: React.CSSProperties = {
-    marginBottom: '16px',
-  };
-
-  const progressBarBgStyle: React.CSSProperties = {
-    height: '8px',
-    backgroundColor: '#1F1F1F',
-    borderRadius: '4px',
-    overflow: 'hidden',
-    display: 'flex',
-  };
-
-  const progressBarForStyle = (percentage: number): React.CSSProperties => ({
-    width: `${percentage}%`,
-    height: '100%',
-    backgroundColor: '#22C55E',
-    transition: 'width 0.3s',
-  });
-
-  const progressBarAgainstStyle = (percentage: number): React.CSSProperties => ({
-    width: `${percentage}%`,
-    height: '100%',
-    backgroundColor: '#EF4444',
-    transition: 'width 0.3s',
-  });
-
-  const voteStatsStyle: React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    fontSize: '13px',
-    marginTop: '8px',
-  };
 
   const voteButtonsStyle: React.CSSProperties = {
     display: 'flex',
@@ -233,18 +187,6 @@ export function GovernancePage() {
     backgroundColor: type === 'for' ? '#22C55E' : '#EF4444',
     color: '#FFFFFF',
     transition: 'all 0.2s',
-  });
-
-  const votedBadgeStyle = (vote: VoteType): React.CSSProperties => ({
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '8px 16px',
-    borderRadius: '8px',
-    fontSize: '13px',
-    fontWeight: '600',
-    backgroundColor: vote === 'for' ? '#22C55E20' : '#EF444420',
-    color: vote === 'for' ? '#22C55E' : '#EF4444',
   });
 
   const modalOverlayStyle: React.CSSProperties = {
@@ -358,23 +300,147 @@ export function GovernancePage() {
           </div>
         </div>
 
-        {/* Connect Wallet CTA */}
-        {!isConnected && (
+        {/* Governance Parameters Info */}
+        <div style={{
+          backgroundColor: '#0A0A0A',
+          border: '1px solid #1F1F1F',
+          borderRadius: '16px',
+          padding: '20px 24px',
+          marginBottom: '32px',
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '16px',
+          }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#FFFFFF', margin: 0 }}>
+              Governance Parameters
+            </h3>
+            <span style={{ fontSize: '13px', color: '#6B7280' }}>
+              Current settings
+            </span>
+          </div>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '16px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: '#9CA3AF', fontSize: '14px' }}>Proposal Threshold</span>
+              <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: '500' }}>
+                {formatVotingPower(parameters.proposalThreshold)} CAST
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: '#9CA3AF', fontSize: '14px' }}>Quorum</span>
+              <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: '500' }}>
+                {parameters.quorumPercentage}%
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: '#9CA3AF', fontSize: '14px' }}>Voting Period</span>
+              <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: '500' }}>
+                {parameters.votingPeriod.toLocaleString()} blocks (~{Math.round(parameters.votingPeriod / 144)} days)
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: '#9CA3AF', fontSize: '14px' }}>Timelock Period</span>
+              <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: '500' }}>
+                {parameters.timelockPeriod.toLocaleString()} blocks (~{Math.round(parameters.timelockPeriod / 144)} days)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Connect Wallet CTA or Create Proposal Button */}
+        {!isConnected ? (
           <div style={connectCardStyle}>
             <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#FFFFFF', marginBottom: '12px' }}>
               Connect to Participate
             </h3>
             <p style={{ color: '#9CA3AF', marginBottom: '24px' }}>
-              Connect your wallet and stake OXC to vote on proposals
+              Connect your wallet to vote on proposals and participate in governance
             </p>
             <button style={connectButtonStyle} onClick={() => connect()}>
               Connect Wallet
             </button>
           </div>
+        ) : (
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            marginBottom: '32px',
+          }}>
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+              <span style={{ fontSize: '14px', color: '#6B7280' }}>
+                Current block: {currentBlock.toLocaleString()}
+              </span>
+              <button
+                onClick={refetch}
+                disabled={isLoading}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'transparent',
+                  border: '1px solid #374151',
+                  borderRadius: '8px',
+                  color: '#9CA3AF',
+                  fontSize: '13px',
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
+                  opacity: isLoading ? 0.5 : 1,
+                }}
+              >
+                {isLoading ? 'Refreshing...' : 'Refresh'}
+              </button>
+            </div>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              style={{
+                padding: '12px 24px',
+                backgroundColor: '#3B82F6',
+                border: 'none',
+                borderRadius: '10px',
+                color: '#FFFFFF',
+                fontSize: '15px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              + Create Proposal
+            </button>
+          </div>
+        )}
+
+        {/* Vote Error */}
+        {voteError && (
+          <div style={{
+            padding: '12px 16px',
+            backgroundColor: '#EF444420',
+            border: '1px solid #EF444440',
+            borderRadius: '10px',
+            marginBottom: '24px',
+            color: '#F87171',
+            fontSize: '14px',
+          }}>
+            {voteError}
+          </div>
         )}
 
         {/* Active Proposals */}
-        <h2 style={sectionTitleStyle}>Active Proposals</h2>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          marginBottom: '24px',
+        }}>
+          <h2 style={{ ...sectionTitleStyle, marginBottom: 0 }}>Active Proposals</h2>
+          <span style={{ fontSize: '14px', color: '#6B7280' }}>
+            {proposals.filter(p => p.status === 'active').length} active
+          </span>
+        </div>
+        
         {isLoading ? (
           <div style={{ textAlign: 'center', padding: '40px', color: '#9CA3AF' }}>
             Loading proposals...
@@ -392,85 +458,37 @@ export function GovernancePage() {
             <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#FFFFFF', marginBottom: '8px' }}>
               No Active Proposals
             </h3>
-            <p style={{ color: '#9CA3AF', maxWidth: '400px', margin: '0 auto' }}>
-              There are currently no active governance proposals. 
-              Governance features will be enabled when the governance contract is deployed.
+            <p style={{ color: '#9CA3AF', maxWidth: '400px', margin: '0 auto', marginBottom: '24px' }}>
+              There are currently no active governance proposals. Be the first to create one!
             </p>
+            {isConnected && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: '#3B82F6',
+                  border: 'none',
+                  borderRadius: '10px',
+                  color: '#FFFFFF',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                Create First Proposal
+              </button>
+            )}
           </div>
-        ) : proposals.filter(p => p.status === 'active').map(proposal => {
-          const forPercentage = calculateVotePercentage(proposal.votesFor, proposal.totalVotes);
-          const againstPercentage = calculateVotePercentage(proposal.votesAgainst, proposal.totalVotes);
-          const quorumReached = isQuorumReached(proposal.totalVotes, proposal.quorum);
-
-          return (
-            <div
-              key={proposal.id}
-              style={proposalCardStyle}
-              onClick={() => setSelectedProposal(proposal)}
-            >
-              <div style={proposalHeaderStyle}>
-                <div>
-                  <div style={proposalTitleStyle}>{proposal.title}</div>
-                  <div style={{ fontSize: '12px', color: '#6B7280' }}>
-                    Proposed by {proposal.proposer} • Ends at block {proposal.endBlock.toLocaleString()}
-                  </div>
-                </div>
-                <span style={statusBadgeStyle(proposal.status)}>
-                  {proposal.status}
-                </span>
-              </div>
-              
-              <p style={proposalDescStyle}>{proposal.description}</p>
-              
-              <div style={progressContainerStyle}>
-                <div style={progressBarBgStyle}>
-                  <div style={progressBarForStyle(forPercentage)} />
-                  <div style={progressBarAgainstStyle(againstPercentage)} />
-                </div>
-                <div style={voteStatsStyle}>
-                  <span style={{ color: '#22C55E' }}>
-                    For: {formatVotingPower(proposal.votesFor)} ({forPercentage}%)
-                  </span>
-                  <span style={{ color: quorumReached ? '#22C55E' : '#F59E0B' }}>
-                    Quorum: {quorumReached ? '✓ Reached' : `${calculateVotePercentage(proposal.totalVotes, proposal.quorum)}%`}
-                  </span>
-                  <span style={{ color: '#EF4444' }}>
-                    Against: {formatVotingPower(proposal.votesAgainst)} ({againstPercentage}%)
-                  </span>
-                </div>
-              </div>
-
-              {isConnected && (
-                proposal.userVote ? (
-                  <div style={votedBadgeStyle(proposal.userVote)}>
-                    {proposal.userVote === 'for' ? '✓ Voted For' : '✗ Voted Against'}
-                  </div>
-                ) : (
-                  <div style={voteButtonsStyle}>
-                    <button
-                      style={voteButtonStyle('for', isVoting)}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleVote(proposal.id, 'for');
-                      }}
-                    >
-                      Vote For
-                    </button>
-                    <button
-                      style={voteButtonStyle('against', isVoting)}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleVote(proposal.id, 'against');
-                      }}
-                    >
-                      Vote Against
-                    </button>
-                  </div>
-                )
-              )}
-            </div>
-          );
-        })}
+        ) : proposals.filter(p => p.status === 'active').map(proposal => (
+          <ProposalCard
+            key={proposal.id}
+            proposal={proposal}
+            isConnected={isConnected}
+            isVoting={voteState.isLoading}
+            onVote={handleVote}
+            onSelect={setSelectedProposal}
+          />
+        ))}
 
         {/* Past Proposals */}
         <h2 style={{ ...sectionTitleStyle, marginTop: '48px' }}>Past Proposals</h2>
@@ -488,45 +506,16 @@ export function GovernancePage() {
               No past proposals yet.
             </p>
           </div>
-        ) : proposals.filter(p => p.status !== 'active').map(proposal => {
-          const forPercentage = calculateVotePercentage(proposal.votesFor, proposal.totalVotes);
-          const againstPercentage = calculateVotePercentage(proposal.votesAgainst, proposal.totalVotes);
-
-          return (
-            <div
-              key={proposal.id}
-              style={{ ...proposalCardStyle, opacity: 0.8 }}
-              onClick={() => setSelectedProposal(proposal)}
-            >
-              <div style={proposalHeaderStyle}>
-                <div>
-                  <div style={proposalTitleStyle}>{proposal.title}</div>
-                  <div style={{ fontSize: '12px', color: '#6B7280' }}>
-                    Proposed by {proposal.proposer} • Ended at block {proposal.endBlock.toLocaleString()}
-                  </div>
-                </div>
-                <span style={statusBadgeStyle(proposal.status)}>
-                  {proposal.status}
-                </span>
-              </div>
-              
-              <div style={progressContainerStyle}>
-                <div style={progressBarBgStyle}>
-                  <div style={progressBarForStyle(forPercentage)} />
-                  <div style={progressBarAgainstStyle(againstPercentage)} />
-                </div>
-                <div style={voteStatsStyle}>
-                  <span style={{ color: '#22C55E' }}>
-                    For: {formatVotingPower(proposal.votesFor)} ({forPercentage}%)
-                  </span>
-                  <span style={{ color: '#EF4444' }}>
-                    Against: {formatVotingPower(proposal.votesAgainst)} ({againstPercentage}%)
-                  </span>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        ) : proposals.filter(p => p.status !== 'active').map(proposal => (
+          <ProposalCard
+            key={proposal.id}
+            proposal={proposal}
+            isConnected={isConnected}
+            isVoting={voteState.isLoading}
+            onVote={handleVote}
+            onSelect={setSelectedProposal}
+          />
+        ))}
 
         {/* Proposal Detail Modal */}
         {selectedProposal && (
@@ -558,7 +547,13 @@ export function GovernancePage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                   <span style={{ color: '#9CA3AF', fontSize: '14px' }}>Total Votes</span>
                   <span style={{ color: '#FFFFFF', fontSize: '14px' }}>
-                    {formatVotingPower(selectedProposal.totalVotes)} OXC
+                    {formatVotingPower(selectedProposal.totalVotes)} CAST
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <span style={{ color: '#9CA3AF', fontSize: '14px' }}>Start Block</span>
+                  <span style={{ color: '#FFFFFF', fontSize: '14px' }}>
+                    #{selectedProposal.startBlock.toLocaleString()}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -569,25 +564,84 @@ export function GovernancePage() {
                 </div>
               </div>
 
+              {/* Voting Progress */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{
+                  height: '8px',
+                  backgroundColor: '#1F1F1F',
+                  borderRadius: '4px',
+                  overflow: 'hidden',
+                  display: 'flex',
+                }}>
+                  <div style={{
+                    width: `${calculateVotePercentage(selectedProposal.votesFor, selectedProposal.totalVotes)}%`,
+                    height: '100%',
+                    backgroundColor: '#22C55E',
+                  }} />
+                  <div style={{
+                    width: `${calculateVotePercentage(selectedProposal.votesAgainst, selectedProposal.totalVotes)}%`,
+                    height: '100%',
+                    backgroundColor: '#EF4444',
+                  }} />
+                </div>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontSize: '13px',
+                  marginTop: '8px',
+                }}>
+                  <span style={{ color: '#22C55E' }}>
+                    For: {formatVotingPower(selectedProposal.votesFor)}
+                  </span>
+                  <span style={{ color: '#EF4444' }}>
+                    Against: {formatVotingPower(selectedProposal.votesAgainst)}
+                  </span>
+                </div>
+              </div>
+
               {selectedProposal.status === 'active' && isConnected && !selectedProposal.userVote && (
                 <div style={voteButtonsStyle}>
                   <button
-                    style={voteButtonStyle('for', isVoting)}
+                    style={voteButtonStyle('for', voteState.isLoading)}
                     onClick={() => handleVote(selectedProposal.id, 'for')}
                   >
-                    {isVoting ? 'Voting...' : 'Vote For'}
+                    {voteState.isLoading ? 'Voting...' : 'Vote For'}
                   </button>
                   <button
-                    style={voteButtonStyle('against', isVoting)}
+                    style={voteButtonStyle('against', voteState.isLoading)}
                     onClick={() => handleVote(selectedProposal.id, 'against')}
                   >
-                    {isVoting ? 'Voting...' : 'Vote Against'}
+                    {voteState.isLoading ? 'Voting...' : 'Vote Against'}
                   </button>
+                </div>
+              )}
+
+              {selectedProposal.userVote && (
+                <div style={{
+                  padding: '12px 16px',
+                  borderRadius: '10px',
+                  backgroundColor: selectedProposal.userVote === 'for' ? '#22C55E20' : '#EF444420',
+                  color: selectedProposal.userVote === 'for' ? '#22C55E' : '#EF4444',
+                  textAlign: 'center',
+                  fontWeight: '600',
+                }}>
+                  You voted {selectedProposal.userVote === 'for' ? 'For' : 'Against'} this proposal
                 </div>
               )}
             </div>
           </div>
         )}
+
+        {/* Create Proposal Modal */}
+        <CreateProposalModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={handleCreateProposal}
+          isSubmitting={proposalState.isLoading}
+          userVotingPower={stats.userVotingPower}
+          proposalThreshold={stats.proposalThreshold}
+          error={proposalState.error}
+        />
       </div>
     </div>
   );

@@ -6,16 +6,15 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { fetchCallReadOnlyFunction, cvToValue, Cl, makeContractCall, broadcastTransaction, AnchorMode } from '@stacks/transactions';
+import { fetchCallReadOnlyFunction, cvToValue, Cl, AnchorMode } from '@stacks/transactions';
 import { getNetwork } from '../config';
 import { GOVERNANCE_CONFIG, mapProposalStatus } from '../config/governance';
 import type { 
   Proposal, 
   GovernanceStats, 
   GovernanceParameters, 
-  VoteType, 
-  ProposalStatus,
-  ContractProposal 
+  ContractProposal,
+  VoteType,
 } from '../types/governance';
 
 // Default stats when data is not available
@@ -459,7 +458,4 @@ export function calculateVotePercentage(votes: bigint, total: bigint): number {
 export function isQuorumReached(totalVotes: bigint, quorum: bigint): boolean {
   return totalVotes >= quorum;
 }
-
-// Re-export types for backward compatibility
-export type { Proposal, GovernanceStats, VoteType, ProposalStatus };
 
