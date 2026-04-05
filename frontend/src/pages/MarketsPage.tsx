@@ -315,34 +315,75 @@ export function MarketsPage() {
               height: 80,
               margin: '0 auto 24px',
               borderRadius: '50%',
-              background: '#1a1a1a',
+              background: category !== 'all' ? `${activeCategory.color}15` : '#1a1a1a',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 32
             }}>
-              🔍
+              {category !== 'all' ? activeCategory.icon : '🔍'}
             </div>              
             <h3 style={{ fontSize: 24, fontWeight: 600, color: '#fff', marginBottom: 12 }}>
-              No markets found
+              {category !== 'all' 
+                ? `No ${activeCategory.label} Markets`
+                : 'No markets found'}
             </h3>
             <p style={{ fontSize: 16, color: '#737373', marginBottom: 32 }}>
-              {searchQuery ? 'Try adjusting your search' : 'No markets match your filter'}
+              {searchQuery 
+                ? `No markets matching "${searchQuery}" in ${category !== 'all' ? activeCategory.label : 'any category'}`
+                : category !== 'all'
+                  ? `There are no ${activeCategory.label.toLowerCase()} markets at the moment`
+                  : 'No markets match your current filters'}
             </p>
-            <button
-              onClick={resetFilters}
-              style={{
-                padding: '14px 28px',
-                background: '#1a1a1a',
-                border: '1px solid #333',
-                borderRadius: 10,
-                color: '#fff',
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}
-            >
-              Clear Filters
-            </button>
+            {searchQuery || category !== 'all' ? (
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+                {category !== 'all' && (
+                  <button
+                    onClick={() => setCategory(MarketCategory.ALL)}
+                    style={{
+                      padding: '14px 28px',
+                      background: `${activeCategory.color}20`,
+                      border: `1px solid ${activeCategory.color}40`,
+                      borderRadius: 10,
+                      color: activeCategory.color,
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    View All Categories
+                  </button>
+                )}
+                <button
+                  onClick={resetFilters}
+                  style={{
+                    padding: '14px 28px',
+                    background: '#1a1a1a',
+                    border: '1px solid #333',
+                    borderRadius: 10,
+                    color: '#fff',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={refetch}
+                style={{
+                  padding: '14px 28px',
+                  background: '#1a1a1a',
+                  border: '1px solid #333',
+                  borderRadius: 10,
+                  color: '#fff',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Refresh Markets
+              </button>
+            )}
           </div>
         )}
       </div>
