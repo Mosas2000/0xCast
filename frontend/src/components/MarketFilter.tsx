@@ -9,7 +9,6 @@ import {
   SortOption,
   CATEGORIES,
   SORT_OPTIONS,
-  type CategoryConfig,
 } from '../utils/marketCategories';
 
 interface MarketFilterProps {

@@ -4,7 +4,7 @@
  * Provides filtering, sorting, and categorization logic for markets.
  * Supports URL query params for filter persistence.
  */
-import { useMemo, useState, useCallback, useEffect } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { Market } from '../types/market';
 import { MarketStatus } from '../types/market';
@@ -192,17 +192,17 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
         result.sort((a, b) => a.createdAt - b.createdAt);
         break;
       case SortOption.VOLUME_HIGH:
-        result.sort((a, b) => (b.yesPool + b.noPool) - (a.yesPool + a.noPool));
+        result.sort((a, b) => (b.totalYesStake + b.totalNoStake) - (a.totalYesStake + a.totalNoStake));
         break;
       case SortOption.VOLUME_LOW:
-        result.sort((a, b) => (a.yesPool + a.noPool) - (b.yesPool + b.noPool));
+        result.sort((a, b) => (a.totalYesStake + a.totalNoStake) - (b.totalYesStake + b.totalNoStake));
         break;
       case SortOption.ENDING_SOON:
-        result.sort((a, b) => a.endBlock - b.endBlock);
+        result.sort((a, b) => a.endDate - b.endDate);
         break;
       case SortOption.MOST_PARTICIPANTS:
         // Approximate by total volume since we don't have participant count
-        result.sort((a, b) => (b.yesPool + b.noPool) - (a.yesPool + a.noPool));
+        result.sort((a, b) => (b.totalYesStake + b.totalNoStake) - (a.totalYesStake + a.totalNoStake));
         break;
     }
     

@@ -2,7 +2,7 @@
  * Tests for useMarketFiltering hook
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { MarketStatus } from '../types/market';
+import { MarketStatus, MarketOutcome } from '../types/market';
 import type { Market } from '../types/market';
 import { MarketCategory, SortOption, categorizeMarket } from '../utils/marketCategories';
 
@@ -17,15 +17,13 @@ function createTestMarket(overrides: Partial<Market> = {}): Market {
     id: 1,
     question: 'Test Market Question',
     creator: 'SP123456789ABCDEFG',
-    endBlock: 100000,
-    resolutionSource: 'oracle',
+    endDate: 100000,
+    resolutionDate: 0,
     status: MarketStatus.ACTIVE,
-    yesPool: 1000,
-    noPool: 1000,
     totalYesStake: 500,
     totalNoStake: 500,
     createdAt: Date.now(),
-    outcome: null,
+    outcome: MarketOutcome.NONE,
     ...overrides,
   };
 }
@@ -95,36 +93,36 @@ describe('Market Filtering Logic', () => {
         question: 'Will Bitcoin hit $100k?', 
         status: MarketStatus.ACTIVE,
         createdAt: 1000,
-        yesPool: 5000,
-        noPool: 3000,
-        endBlock: 200
+        totalYesStake: 5000,
+        totalNoStake: 3000,
+        endDate: 200
       }),
       createTestMarket({ 
         id: 2, 
         question: 'Super Bowl 2025 winner', 
         status: MarketStatus.ACTIVE,
         createdAt: 2000,
-        yesPool: 2000,
-        noPool: 2000,
-        endBlock: 100
+        totalYesStake: 2000,
+        totalNoStake: 2000,
+        endDate: 100
       }),
       createTestMarket({ 
         id: 3, 
         question: 'Election results prediction', 
         status: MarketStatus.RESOLVED,
         createdAt: 500,
-        yesPool: 10000,
-        noPool: 8000,
-        endBlock: 50
+        totalYesStake: 10000,
+        totalNoStake: 8000,
+        endDate: 50
       }),
       createTestMarket({ 
         id: 4, 
         question: 'ETH price above $5k', 
         status: MarketStatus.ACTIVE,
         createdAt: 3000,
-        yesPool: 1000,
-        noPool: 500,
-        endBlock: 300
+        totalYesStake: 1000,
+        totalNoStake: 500,
+        endDate: 300
       }),
     ];
   });
@@ -180,7 +178,7 @@ describe('Market Filtering Logic', () => {
 
   it('should sort by volume high correctly', () => {
     const sorted = [...testMarkets].sort(
-      (a, b) => (b.yesPool + b.noPool) - (a.yesPool + a.noPool)
+      (a, b) => (b.totalYesStake + b.totalNoStake) - (a.totalYesStake + a.totalNoStake)
     );
     
     expect(sorted[0].id).toBe(3); // 10000 + 8000 = 18000
@@ -191,7 +189,7 @@ describe('Market Filtering Logic', () => {
 
   it('should sort by volume low correctly', () => {
     const sorted = [...testMarkets].sort(
-      (a, b) => (a.yesPool + a.noPool) - (b.yesPool + b.noPool)
+      (a, b) => (a.totalYesStake + a.totalNoStake) - (b.totalYesStake + b.totalNoStake)
     );
     
     expect(sorted[0].id).toBe(4); // 1500
@@ -199,12 +197,12 @@ describe('Market Filtering Logic', () => {
   });
 
   it('should sort by ending soon correctly', () => {
-    const sorted = [...testMarkets].sort((a, b) => a.endBlock - b.endBlock);
+    const sorted = [...testMarkets].sort((a, b) => a.endDate - b.endDate);
     
-    expect(sorted[0].id).toBe(3); // endBlock: 50
-    expect(sorted[1].id).toBe(2); // endBlock: 100
-    expect(sorted[2].id).toBe(1); // endBlock: 200
-    expect(sorted[3].id).toBe(4); // endBlock: 300
+    expect(sorted[0].id).toBe(3); // endDate: 50
+    expect(sorted[1].id).toBe(2); // endDate: 100
+    expect(sorted[2].id).toBe(1); // endDate: 200
+    expect(sorted[3].id).toBe(4); // endDate: 300
   });
 
   it('should combine filters correctly', () => {
