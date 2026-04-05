@@ -2,8 +2,9 @@ import { useState, useCallback } from 'react';
 import { openContractCall } from '@stacks/connect';
 import { uintCV, PostConditionMode, Pc } from '@stacks/transactions';
 import { MARKET_CONTRACT } from '../config/contracts';
-import { stxToMicroStx } from '../constants';
+import { stxToMicroStx, MIN_STAKE, MAX_STAKE } from '../constants';
 import { useWallet } from '../components/WalletProvider';
+import { validateAmount, validateMarketId } from '../utils/validation';
 
 interface UseStakeReturn {
   placeYesStake: (marketId: number, amount: number, onSuccess?: () => void) => Promise<void>;
@@ -35,6 +36,19 @@ export function useStake(): UseStakeReturn {
     ) => {
       if (!address) {
         setError('Wallet not connected');
+        return;
+      }
+
+      // Validate inputs before proceeding
+      const marketIdValidation = validateMarketId(marketId);
+      if (!marketIdValidation.isValid) {
+        setError(marketIdValidation.error || 'Invalid market ID');
+        return;
+      }
+
+      const amountValidation = validateAmount(amount, MIN_STAKE, MAX_STAKE);
+      if (!amountValidation.isValid) {
+        setError(amountValidation.error || 'Invalid stake amount');
         return;
       }
 
