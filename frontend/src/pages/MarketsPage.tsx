@@ -2,7 +2,7 @@ import { useMarkets } from '../hooks/useMarkets';
 import { useMarketFiltering } from '../hooks/useMarketFiltering';
 import { MarketCard } from '../components/MarketCard';
 import { MarketFilter } from '../components/MarketFilter';
-import { getCategoryConfig } from '../utils/marketCategories';
+import { getCategoryConfig, CATEGORIES, MarketCategory } from '../utils/marketCategories';
 
 export function MarketsPage() {
   const { markets, isLoading, error, refetch } = useMarkets();
@@ -122,6 +122,60 @@ export function MarketsPage() {
               Refresh
             </button>
           </div>
+        </div>
+
+        {/* Category Quick Filter Chips */}
+        <div style={{ 
+          display: 'flex', 
+          gap: 10, 
+          marginBottom: 24, 
+          overflowX: 'auto',
+          paddingBottom: 8,
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
+        }}>
+          {CATEGORIES.filter(cat => 
+            cat.value === MarketCategory.ALL || counts.byCategory[cat.value] > 0
+          ).map((cat) => {
+            const isSelected = category === cat.value;
+            const count = cat.value === MarketCategory.ALL 
+              ? counts.all 
+              : counts.byCategory[cat.value];
+            
+            return (
+              <button
+                key={cat.value}
+                onClick={() => setCategory(cat.value)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '8px 16px',
+                  background: isSelected ? `${cat.color}20` : 'transparent',
+                  border: `1px solid ${isSelected ? cat.color : '#333'}`,
+                  borderRadius: 20,
+                  color: isSelected ? cat.color : '#9ca3af',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0
+                }}
+              >
+                <span>{cat.icon}</span>
+                <span>{cat.label}</span>
+                <span style={{
+                  background: isSelected ? `${cat.color}30` : '#333',
+                  padding: '2px 8px',
+                  borderRadius: 10,
+                  fontSize: 11
+                }}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Active filters indicator */}
