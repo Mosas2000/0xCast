@@ -378,16 +378,63 @@ export function GovernancePage() {
 
         {/* Delegation Section */}
         {isConnected && (
-          <div style={{
-            backgroundColor: '#0A0A0A',
-            border: '1px solid #1F1F1F',
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '32px',
-          }}>
-            <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#FFFFFF', marginBottom: '12px' }}>
-              Voting Power Delegation
-            </h3>
+          <>
+            {/* User Voting Activity */}
+            <div style={{
+              backgroundColor: '#0A0A0A',
+              border: '1px solid #1F1F1F',
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '16px',
+            }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#FFFFFF', marginBottom: '16px' }}>
+                Your Governance Activity
+              </h3>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                gap: '16px',
+              }}>
+                <div>
+                  <div style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '4px' }}>Proposals Voted</div>
+                  <div style={{ color: '#FFFFFF', fontSize: '20px', fontWeight: '600' }}>
+                    {proposals.filter(p => p.userVote).length}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '4px' }}>Votes For</div>
+                  <div style={{ color: '#22C55E', fontSize: '20px', fontWeight: '600' }}>
+                    {proposals.filter(p => p.userVote === 'for').length}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '4px' }}>Votes Against</div>
+                  <div style={{ color: '#EF4444', fontSize: '20px', fontWeight: '600' }}>
+                    {proposals.filter(p => p.userVote === 'against').length}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '4px' }}>Participation</div>
+                  <div style={{ color: '#3B82F6', fontSize: '20px', fontWeight: '600' }}>
+                    {stats.totalProposals > 0 
+                      ? Math.round((proposals.filter(p => p.userVote).length / stats.totalProposals) * 100) 
+                      : 0}%
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Delegation Section */}
+            <div style={{
+              backgroundColor: '#0A0A0A',
+              border: '1px solid #1F1F1F',
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '32px',
+            }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#FFFFFF', marginBottom: '12px' }}>
+                Voting Power Delegation
+              </h3>
             <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '20px', lineHeight: '1.6' }}>
               Delegate your voting power to another address to vote on your behalf. You can revoke delegation at any time.
             </p>
@@ -441,6 +488,7 @@ export function GovernancePage() {
               </div>
             )}
           </div>
+          </>
         )}
 
         {/* Connect Wallet CTA or Create Proposal Button */}
