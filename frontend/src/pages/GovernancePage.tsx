@@ -47,6 +47,8 @@ export function GovernancePage() {
   const [voteError, setVoteError] = useState<string | null>(null);
   const [showDelegateModal, setShowDelegateModal] = useState(false);
   const [delegateAddress, setDelegateAddress] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'passed' | 'rejected'>('all');
 
   const handleVote = async (proposalId: number, vote: VoteType) => {
     if (!isConnected || voteState.isLoading) return;
@@ -106,6 +108,17 @@ export function GovernancePage() {
       refetch();
     }
   };
+
+  // Filter proposals based on search and status
+  const filteredProposals = proposals.filter(proposal => {
+    const matchesSearch = searchQuery === '' || 
+      proposal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      proposal.description.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || proposal.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
 
   const getStatusColor = (status: string): string => {
     switch (status) {
@@ -583,6 +596,62 @@ export function GovernancePage() {
           </div>
         )}
 
+        {/* Search and Filter */}
+        <div style={{
+          backgroundColor: '#0A0A0A',
+          border: '1px solid #1F1F1F',
+          borderRadius: '16px',
+          padding: '20px 24px',
+          marginBottom: '24px',
+        }}>
+          <div style={{
+            display: 'flex',
+            gap: '16px',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+          }}>
+            <input
+              type="text"
+              placeholder="Search proposals..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                flex: '1',
+                minWidth: '200px',
+                padding: '10px 16px',
+                backgroundColor: '#111111',
+                border: '1px solid #2F2F2F',
+                borderRadius: '10px',
+                color: '#FFFFFF',
+                fontSize: '14px',
+                outline: 'none',
+              }}
+            />
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {['all', 'active', 'passed', 'rejected'].map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setStatusFilter(status as typeof statusFilter)}
+                  style={{
+                    padding: '8px 16px',
+                    backgroundColor: statusFilter === status ? '#3B82F6' : 'transparent',
+                    border: `1px solid ${statusFilter === status ? '#3B82F6' : '#374151'}`,
+                    borderRadius: '8px',
+                    color: statusFilter === status ? '#FFFFFF' : '#9CA3AF',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    textTransform: 'capitalize',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* Active Proposals */}
         <div style={{ 
           display: 'flex', 
@@ -590,9 +659,11 @@ export function GovernancePage() {
           alignItems: 'center',
           marginBottom: '24px',
         }}>
-          <h2 style={{ ...sectionTitleStyle, marginBottom: 0 }}>Active Proposals</h2>
+          <h2 style={{ ...sectionTitleStyle, marginBottom: 0 }}>
+            {statusFilter === 'all' ? 'All Proposals' : `${statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)} Proposals`}
+          </h2>
           <span style={{ fontSize: '14px', color: '#6B7280' }}>
-            {proposals.filter(p => p.status === 'active').length} active
+            {filteredProposals.length} {filteredProposals.length === 1 ? 'proposal' : 'proposals'}
           </span>
         </div>
         
@@ -600,7 +671,7 @@ export function GovernancePage() {
           <div style={{ textAlign: 'center', padding: '40px', color: '#9CA3AF' }}>
             Loading proposals...
           </div>
-        ) : proposals.filter(p => p.status === 'active').length === 0 ? (
+        ) : filteredProposals.length === 0 ? (
           <div style={{ 
             backgroundColor: '#0A0A0A', 
             border: '1px solid #1F1F1F', 
@@ -611,12 +682,15 @@ export function GovernancePage() {
           }}>
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>📋</div>
             <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#FFFFFF', marginBottom: '8px' }}>
-              No Active Proposals
+              {searchQuery || statusFilter !== 'all' ? 'No Matching Proposals' : 'No Proposals Yet'}
             </h3>
             <p style={{ color: '#9CA3AF', maxWidth: '400px', margin: '0 auto', marginBottom: '24px' }}>
-              There are currently no active governance proposals. Be the first to create one!
+              {searchQuery || statusFilter !== 'all' 
+                ? 'Try adjusting your search or filter to see more results.'
+                : 'There are currently no governance proposals. Be the first to create one!'
+              }
             </p>
-            {isConnected && (
+            {isConnected && !searchQuery && statusFilter === 'all' && (
               <button
                 onClick={() => setShowCreateModal(true)}
                 style={{
@@ -634,34 +708,7 @@ export function GovernancePage() {
               </button>
             )}
           </div>
-        ) : proposals.filter(p => p.status === 'active').map(proposal => (
-          <ProposalCard
-            key={proposal.id}
-            proposal={proposal}
-            isConnected={isConnected}
-            isVoting={voteState.isLoading}
-            onVote={handleVote}
-            onSelect={setSelectedProposal}
-          />
-        ))}
-
-        {/* Past Proposals */}
-        <h2 style={{ ...sectionTitleStyle, marginTop: '48px' }}>Past Proposals</h2>
-        {proposals.filter(p => p.status !== 'active').length === 0 ? (
-          <div style={{ 
-            backgroundColor: '#0A0A0A', 
-            border: '1px solid #1F1F1F', 
-            borderRadius: '16px', 
-            padding: '32px', 
-            textAlign: 'center', 
-            marginBottom: '32px',
-            opacity: 0.8
-          }}>
-            <p style={{ color: '#9CA3AF' }}>
-              No past proposals yet.
-            </p>
-          </div>
-        ) : proposals.filter(p => p.status !== 'active').map(proposal => (
+        ) : filteredProposals.map(proposal => (
           <ProposalCard
             key={proposal.id}
             proposal={proposal}
