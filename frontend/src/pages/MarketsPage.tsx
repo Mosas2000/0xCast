@@ -1,31 +1,26 @@
-import { useState } from 'react';
 import { useMarkets } from '../hooks/useMarkets';
+import { useMarketFiltering } from '../hooks/useMarketFiltering';
 import { MarketCard } from '../components/MarketCard';
-import { MarketStatus } from '../types/market';
-
-type FilterStatus = 'all' | 'active' | 'resolved';
+import { MarketFilter } from '../components/MarketFilter';
+import { getCategoryConfig, CATEGORIES, MarketCategory } from '../utils/marketCategories';
 
 export function MarketsPage() {
   const { markets, isLoading, error, refetch } = useMarkets();
-  const [filter, setFilter] = useState<FilterStatus>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const {
+    filteredMarkets,
+    category,
+    sortOption,
+    statusFilter,
+    searchQuery,
+    setCategory,
+    setSortOption,
+    setStatusFilter,
+    setSearchQuery,
+    counts,
+    resetFilters,
+  } = useMarketFiltering({ markets, syncWithUrl: true });
 
-  const filteredMarkets = markets.filter((market) => {
-    if (filter === 'active' && market.status !== MarketStatus.ACTIVE) return false;
-    if (filter === 'resolved' && market.status !== MarketStatus.RESOLVED) return false;
-    if (searchQuery && !market.question.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false;
-    }
-    return true;
-  });
-
-  const sortedMarkets = [...filteredMarkets].sort((a, b) => b.createdAt - a.createdAt);
-
-  const filters: { value: FilterStatus; label: string }[] = [
-    { value: 'all', label: 'All' },
-    { value: 'active', label: 'Active' },
-    { value: 'resolved', label: 'Resolved' },
-  ];
+  const activeCategory = getCategoryConfig(category);
 
   return (
     <div style={{ paddingTop: 72, minHeight: '100vh', background: '#000' }}>
@@ -83,36 +78,21 @@ export function MarketsPage() {
             />
           </div>
 
-          {/* Filter Tabs & Refresh */}
+          {/* Filter Controls */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center' }}>
-            <div style={{
-              display: 'flex',
-              gap: 8,
-              padding: 6,
-              borderRadius: 14,
-              background: '#111',
-              border: '1px solid #262626'
-            }}>
-              {filters.map((f) => (
-                <button
-                  key={f.value}
-                  onClick={() => setFilter(f.value)}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: 10,
-                    border: 'none',
-                    background: filter === f.value ? '#3b82f6' : 'transparent',
-                    color: filter === f.value ? '#fff' : '#737373',
-                    fontSize: 14,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
+            <MarketFilter
+              selectedCategory={category}
+              selectedSort={sortOption}
+              selectedStatus={statusFilter}
+              onCategoryChange={setCategory}
+              onSortChange={setSortOption}
+              onStatusChange={setStatusFilter}
+              marketCounts={{
+                all: counts.all,
+                active: counts.active,
+                resolved: counts.resolved,
+              }}
+            />
 
             <button
               onClick={refetch}
@@ -143,6 +123,116 @@ export function MarketsPage() {
             </button>
           </div>
         </div>
+
+        {/* Category Quick Filter Chips */}
+        <div style={{ 
+          display: 'flex', 
+          gap: 10, 
+          marginBottom: 24, 
+          overflowX: 'auto',
+          paddingBottom: 8,
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
+        }}>
+          {CATEGORIES.filter(cat => 
+            cat.value === MarketCategory.ALL || counts.byCategory[cat.value] > 0
+          ).map((cat) => {
+            const isSelected = category === cat.value;
+            const count = cat.value === MarketCategory.ALL 
+              ? counts.all 
+              : counts.byCategory[cat.value];
+            
+            return (
+              <button
+                key={cat.value}
+                onClick={() => setCategory(cat.value)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '8px 16px',
+                  background: isSelected ? `${cat.color}20` : 'transparent',
+                  border: `1px solid ${isSelected ? cat.color : '#333'}`,
+                  borderRadius: 20,
+                  color: isSelected ? cat.color : '#9ca3af',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0
+                }}
+              >
+                <span>{cat.icon}</span>
+                <span>{cat.label}</span>
+                <span style={{
+                  background: isSelected ? `${cat.color}30` : '#333',
+                  padding: '2px 8px',
+                  borderRadius: 10,
+                  fontSize: 11
+                }}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Active filters indicator */}
+        {(category !== 'all' || searchQuery) && (
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 12, 
+            marginBottom: 24,
+            flexWrap: 'wrap'
+          }}>
+            <span style={{ fontSize: 14, color: '#6B7280' }}>Active filters:</span>
+            {category !== 'all' && (
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 12px',
+                backgroundColor: `${activeCategory.color}20`,
+                border: `1px solid ${activeCategory.color}40`,
+                borderRadius: 20,
+                fontSize: 13,
+                color: activeCategory.color,
+              }}>
+                {activeCategory.icon} {activeCategory.label}
+              </span>
+            )}
+            {searchQuery && (
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 12px',
+                backgroundColor: '#3B82F620',
+                border: '1px solid #3B82F640',
+                borderRadius: 20,
+                fontSize: 13,
+                color: '#3B82F6',
+              }}>
+                Search: "{searchQuery}"
+              </span>
+            )}
+            <button
+              onClick={resetFilters}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#9CA3AF',
+                fontSize: 13,
+                cursor: 'pointer',
+                textDecoration: 'underline',
+              }}
+            >
+              Clear all
+            </button>
+          </div>
+        )}
 
         {/* Error */}
         {error && (
@@ -197,17 +287,17 @@ export function MarketsPage() {
               </div>
             ))}
           </div>
-        ) : sortedMarkets.length > 0 ? (
+        ) : filteredMarkets.length > 0 ? (
           <>
             <p style={{ fontSize: 14, color: '#525252', marginBottom: 24 }}>
-              Showing {sortedMarkets.length} market{sortedMarkets.length !== 1 ? 's' : ''}
+              Showing {filteredMarkets.length} market{filteredMarkets.length !== 1 ? 's' : ''}
             </p>
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
               gap: 32
             }}>
-              {sortedMarkets.map((market) => (
+              {filteredMarkets.map((market) => (
                 <MarketCard key={market.id} market={market} />
               ))}
             </div>
@@ -225,22 +315,62 @@ export function MarketsPage() {
               height: 80,
               margin: '0 auto 24px',
               borderRadius: '50%',
-              background: '#1a1a1a',
+              background: category !== 'all' ? `${activeCategory.color}15` : '#1a1a1a',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 32
             }}>
+              {category !== 'all' ? activeCategory.icon : '🔍'}
             </div>              
             <h3 style={{ fontSize: 24, fontWeight: 600, color: '#fff', marginBottom: 12 }}>
-              No markets found
+              {category !== 'all' 
+                ? `No ${activeCategory.label} Markets`
+                : 'No markets found'}
             </h3>
             <p style={{ fontSize: 16, color: '#737373', marginBottom: 32 }}>
-              {searchQuery ? 'Try adjusting your search' : 'No markets match your filter'}
+              {searchQuery 
+                ? `No markets matching "${searchQuery}" in ${category !== 'all' ? activeCategory.label : 'any category'}`
+                : category !== 'all'
+                  ? `There are no ${activeCategory.label.toLowerCase()} markets at the moment`
+                  : 'No markets match your current filters'}
             </p>
-            {filter !== 'all' && (
+            {searchQuery || category !== 'all' ? (
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+                {category !== 'all' && (
+                  <button
+                    onClick={() => setCategory(MarketCategory.ALL)}
+                    style={{
+                      padding: '14px 28px',
+                      background: `${activeCategory.color}20`,
+                      border: `1px solid ${activeCategory.color}40`,
+                      borderRadius: 10,
+                      color: activeCategory.color,
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    View All Categories
+                  </button>
+                )}
+                <button
+                  onClick={resetFilters}
+                  style={{
+                    padding: '14px 28px',
+                    background: '#1a1a1a',
+                    border: '1px solid #333',
+                    borderRadius: 10,
+                    color: '#fff',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            ) : (
               <button
-                onClick={() => setFilter('all')}
+                onClick={refetch}
                 style={{
                   padding: '14px 28px',
                   background: '#1a1a1a',
@@ -251,7 +381,7 @@ export function MarketsPage() {
                   cursor: 'pointer'
                 }}
               >
-                View All Markets
+                Refresh Markets
               </button>
             )}
           </div>
