@@ -5,7 +5,7 @@
  */
 import { useEffect, useState } from 'react';
 import {
-  Transaction,
+  type Transaction,
   TransactionStatus,
   formatTransactionType,
   getStatusColor,

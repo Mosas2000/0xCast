@@ -7,9 +7,8 @@ import { createContext, useContext, useState, useCallback, useEffect, type React
 import { useTransactionTracking } from '../hooks/useTransactionTracking';
 import { TransactionToast } from './TransactionToast';
 import {
-  Transaction,
+  type Transaction,
   TransactionStatus,
-  TransactionType,
 } from '../utils/transactions';
 
 interface TransactionContextValue {

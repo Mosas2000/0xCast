@@ -4,11 +4,9 @@
  * Provides transaction status tracking and history management.
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { STACKS_MAINNET } from '@stacks/network';
 import {
-  Transaction,
+  type Transaction,
   TransactionStatus,
-  TransactionType,
   getTransactionHistory,
   saveTransaction,
   updateTransactionStatus,

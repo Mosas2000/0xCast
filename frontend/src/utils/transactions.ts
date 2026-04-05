@@ -4,12 +4,14 @@
  * Provides types and functions for tracking transaction status on Stacks blockchain.
  */
 
-export enum TransactionStatus {
-  PENDING = 'pending',
-  SUCCESS = 'success',
-  FAILED = 'failed',
-  DROPPED = 'dropped',
-}
+export const TransactionStatus = {
+  PENDING: 'pending',
+  SUCCESS: 'success',
+  FAILED: 'failed',
+  DROPPED: 'dropped',
+} as const;
+
+export type TransactionStatus = typeof TransactionStatus[keyof typeof TransactionStatus];
 
 export interface Transaction {
   txId: string;
