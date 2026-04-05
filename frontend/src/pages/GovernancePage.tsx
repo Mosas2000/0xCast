@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useWallet } from '../components/WalletProvider';
 import { 
   useGovernance, 
@@ -17,7 +17,8 @@ export function GovernancePage() {
   const { stats, proposals, isLoading } = useGovernance(address ?? undefined);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [isVoting, setIsVoting] = useState(false);
-  const [voteError, setVoteError] = useState<string | null>(null);
+  // Note: voteError stored for future UI display when governance is fully implemented
+  const [, setVoteError] = useState<string | null>(null);
 
   const handleVote = async (proposalId: number, vote: 'for' | 'against') => {
     if (!isConnected || isVoting) return;

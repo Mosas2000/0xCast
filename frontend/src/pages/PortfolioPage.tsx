@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { cvToJSON, fetchCallReadOnlyFunction, uintCV, principalCV } from '@stacks/transactions';
 import { STACKS_MAINNET } from '@stacks/network';
@@ -9,7 +9,7 @@ import type { Market, Position } from '../types/market';
 import { MarketStatus, MarketOutcome } from '../types/market';
 import { parsePosition, formatStx, calculateOdds } from '../utils/helpers';
 import { CONTRACT_ADDRESS, CONTRACT_NAME } from '../constants';
-import { validateMarketId, validateStacksAddress } from '../utils/validation';
+import { validateMarketId } from '../utils/validation';
 
 interface PositionWithMarket extends Position {
   market: Market;

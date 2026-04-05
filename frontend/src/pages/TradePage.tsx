@@ -39,7 +39,8 @@ export function TradePage() {
   const [selectedOutcome, setSelectedOutcome] = useState<'yes' | 'no' | null>(null);
   const [stakeAmount, setStakeAmount] = useState<string>('10');
   const [tradeSuccess, setTradeSuccess] = useState(false);
-  const [validationError, setValidationError] = useState<string | null>(null);
+  // Note: validationError stored for future UI display of validation errors
+  const [, setValidationError] = useState<string | null>(null);
 
   // Validate stake amount in real-time
   const stakeValidation = useMemo(() => {
@@ -147,7 +148,7 @@ export function TradePage() {
     );
   }
 
-  if (error || !market) {
+  if (!marketIdValidation.isValid || error || !market) {
     return (
       <div className="pt-[72px] min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
@@ -157,7 +158,7 @@ export function TradePage() {
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Market Not Found</h2>
-          <p className="text-neutral-500 mb-6">{error || "The market you're looking for doesn't exist."}</p>
+          <p className="text-neutral-500 mb-6">{marketIdValidation.error || error || "The market you're looking for doesn't exist."}</p>
           <Link to="/markets" className="btn btn-primary">Back to Markets</Link>
         </div>
       </div>

@@ -8,7 +8,7 @@ import {
   calculateEstimatedApy,
   formatLockStatus,
 } from '../utils/stakingHelpers';
-import { validateAmount, ValidationResult } from '../utils/validation';
+import { validateAmount, type ValidationResult } from '../utils/validation';
 
 type StakingTab = 'stake' | 'unstake' | 'rewards';
 
@@ -20,7 +20,8 @@ export function StakingPage() {
   const [activeTab, setActiveTab] = useState<StakingTab>('stake');
   const [stakeAmount, setStakeAmount] = useState('');
   const [unstakeAmount, setUnstakeAmount] = useState('');
-  const [validationError, setValidationError] = useState<string | null>(null);
+  // Note: validationError stored for future UI display
+  const [, setValidationError] = useState<string | null>(null);
 
   const isLoading = dataLoading || actionLoading;
   
