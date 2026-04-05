@@ -82,9 +82,11 @@ export function categorizeMarket(question: string): MarketCategory {
   }
   
   // Sports keywords
-  if (q.includes('world cup') || q.includes('nba') || q.includes('nfl') ||
+  if (q.includes('super bowl') || q.includes('world cup') || q.includes('nba') || q.includes('nfl') ||
       q.includes('football') || q.includes('basketball') || q.includes('soccer') ||
-      q.includes('championship') || q.includes('match') || q.includes('game')) {
+      q.includes('championship') || q.includes('match') || q.includes('finals') ||
+      q.includes('playoff') || q.includes('game') || q.includes('sports') ||
+      q.includes('tennis') || q.includes('golf') || q.includes('olympic')) {
     return MarketCategory.SPORTS;
   }
   
@@ -98,21 +100,23 @@ export function categorizeMarket(question: string): MarketCategory {
   // Entertainment keywords
   if (q.includes('movie') || q.includes('oscar') || q.includes('grammy') ||
       q.includes('album') || q.includes('concert') || q.includes('actor') ||
-      q.includes('netflix') || q.includes('streaming')) {
+      q.includes('netflix') || q.includes('streaming') || q.includes('box office') ||
+      q.includes('tv show') || q.includes('premiere') || q.includes('award')) {
     return MarketCategory.ENTERTAINMENT;
   }
   
   // Science keywords
   if (q.includes('space') || q.includes('nasa') || q.includes('research') ||
       q.includes('discovery') || q.includes('ai') || q.includes('artificial intelligence') ||
-      q.includes('climate') || q.includes('vaccine')) {
+      q.includes('climate') || q.includes('vaccine') || q.includes('spacex') ||
+      q.includes('mars') || q.includes('moon') || q.includes('rocket')) {
     return MarketCategory.SCIENCE;
   }
   
   // Business keywords
   if (q.includes('stock') || q.includes('company') || q.includes('ipo') ||
       q.includes('merger') || q.includes('earnings') || q.includes('revenue') ||
-      q.includes('market cap') || q.includes('ceo')) {
+      q.includes('market cap') || q.includes('ceo') || q.includes('acquisition')) {
     return MarketCategory.BUSINESS;
   }
   

@@ -43,10 +43,10 @@ describe('categorizeMarket', () => {
   });
 
   it('should categorize sports-related questions', () => {
-    expect(categorizeMarket('Super Bowl winner')).toBe(MarketCategory.SPORTS);
+    expect(categorizeMarket('Super Bowl winner predictions')).toBe(MarketCategory.SPORTS);
     expect(categorizeMarket('NBA finals outcome')).toBe(MarketCategory.SPORTS);
     expect(categorizeMarket('World Cup results')).toBe(MarketCategory.SPORTS);
-    expect(categorizeMarket('Football championship')).toBe(MarketCategory.SPORTS);
+    expect(categorizeMarket('Football championship game')).toBe(MarketCategory.SPORTS);
   });
 
   it('should categorize politics-related questions', () => {
@@ -57,29 +57,29 @@ describe('categorizeMarket', () => {
   });
 
   it('should categorize entertainment-related questions', () => {
-    expect(categorizeMarket('Oscar nominations')).toBe(MarketCategory.ENTERTAINMENT);
-    expect(categorizeMarket('Box office record')).toBe(MarketCategory.ENTERTAINMENT);
-    expect(categorizeMarket('Grammy award winner')).toBe(MarketCategory.ENTERTAINMENT);
-    expect(categorizeMarket('New TV show premiere')).toBe(MarketCategory.ENTERTAINMENT);
+    expect(categorizeMarket('Oscar nominations announced')).toBe(MarketCategory.ENTERTAINMENT);
+    expect(categorizeMarket('Box office record breaking')).toBe(MarketCategory.ENTERTAINMENT);
+    expect(categorizeMarket('Grammy award winner prediction')).toBe(MarketCategory.ENTERTAINMENT);
+    expect(categorizeMarket('New TV show premiere date')).toBe(MarketCategory.ENTERTAINMENT);
   });
 
   it('should categorize science-related questions', () => {
-    expect(categorizeMarket('NASA Mars mission')).toBe(MarketCategory.SCIENCE);
+    expect(categorizeMarket('NASA Mars mission success')).toBe(MarketCategory.SCIENCE);
     expect(categorizeMarket('Climate change milestones')).toBe(MarketCategory.SCIENCE);
     expect(categorizeMarket('AI breakthrough discovery')).toBe(MarketCategory.SCIENCE);
-    expect(categorizeMarket('SpaceX rocket launch')).toBe(MarketCategory.SCIENCE);
+    expect(categorizeMarket('SpaceX rocket launch success')).toBe(MarketCategory.SCIENCE);
   });
 
   it('should categorize business-related questions', () => {
     expect(categorizeMarket('Stock market prediction')).toBe(MarketCategory.BUSINESS);
     expect(categorizeMarket('Company earnings report')).toBe(MarketCategory.BUSINESS);
-    expect(categorizeMarket('IPO valuation')).toBe(MarketCategory.BUSINESS);
-    expect(categorizeMarket('Merger acquisition deal')).toBe(MarketCategory.BUSINESS);
+    expect(categorizeMarket('IPO valuation target')).toBe(MarketCategory.BUSINESS);
+    expect(categorizeMarket('Merger acquisition deal close')).toBe(MarketCategory.BUSINESS);
   });
 
   it('should return OTHER for uncategorized questions', () => {
-    expect(categorizeMarket('Random event prediction')).toBe(MarketCategory.OTHER);
-    expect(categorizeMarket('Something unrelated')).toBe(MarketCategory.OTHER);
+    expect(categorizeMarket('Weather forecast tomorrow')).toBe(MarketCategory.OTHER);
+    expect(categorizeMarket('Local event happening')).toBe(MarketCategory.OTHER);
   });
 });
 
