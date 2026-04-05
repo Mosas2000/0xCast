@@ -13,25 +13,27 @@ import { GovernancePage } from './pages/GovernancePage';
 
 function App() {
   return (
-    <WalletProvider>
-      <BrowserRouter>
-        <div className="min-h-screen flex flex-col bg-black">
-          <Header />
-          <main className="flex-1">
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/markets" element={<MarketsPage />} />
-              <Route path="/trade/:id" element={<TradePage />} />
-              <Route path="/portfolio" element={<PortfolioPage />} />
-              <Route path="/token" element={<TokenPage />} />
-              <Route path="/staking" element={<StakingPage />} />
-              <Route path="/governance" element={<GovernancePage />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
-      </BrowserRouter>
-    </WalletProvider>
+    <ErrorBoundary>
+      <WalletProvider>
+        <BrowserRouter>
+          <div className="min-h-screen flex flex-col bg-black">
+            <Header />
+            <main className="flex-1">
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/markets" element={<MarketsPage />} />
+                <Route path="/trade/:id" element={<TradePage />} />
+                <Route path="/portfolio" element={<PortfolioPage />} />
+                <Route path="/token" element={<TokenPage />} />
+                <Route path="/staking" element={<StakingPage />} />
+                <Route path="/governance" element={<GovernancePage />} />
+              </Routes>
+            </main>
+            <Footer />
+          </div>
+        </BrowserRouter>
+      </WalletProvider>
+    </ErrorBoundary>
   );
 }
 
