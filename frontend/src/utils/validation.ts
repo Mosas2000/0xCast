@@ -145,6 +145,27 @@ export function sanitizeInput(input: string): string {
 }
 
 /**
+ * Sanitize HTML content to prevent XSS attacks
+ */
+export function sanitizeHtml(html: string): string {
+  if (!html) return '';
+  
+  // Convert HTML entities
+  const entities: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+    '/': '&#x2F;',
+    '`': '&#x60;',
+    '=': '&#x3D;'
+  };
+  
+  return html.replace(/[&<>"'`=/]/g, (char) => entities[char] || char);
+}
+
+/**
  * Validate a market ID
  */
 export function validateMarketId(id: string | number): ValidationResult {
