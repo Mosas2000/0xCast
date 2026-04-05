@@ -12,6 +12,7 @@ import { PortfolioPage } from './pages/PortfolioPage';
 import { TokenPage } from './pages/TokenPage';
 import { StakingPage } from './pages/StakingPage';
 import { GovernancePage } from './pages/GovernancePage';
+import { TransactionHistoryPage } from './pages/TransactionHistoryPage';
 
 function App() {
   return (
@@ -52,6 +53,11 @@ function App() {
                   <Route path="/governance" element={
                     <PageErrorBoundary pageName="Governance">
                       <GovernancePage />
+                    </PageErrorBoundary>
+                  } />
+                  <Route path="/transactions" element={
+                    <PageErrorBoundary pageName="Transactions">
+                      <TransactionHistoryPage />
                     </PageErrorBoundary>
                   } />
                 </Routes>
