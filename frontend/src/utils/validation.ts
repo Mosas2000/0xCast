@@ -186,12 +186,46 @@ export function validateMarketId(id: string | number): ValidationResult {
   return { isValid: true };
 }
 
+/**
+ * Validate URL to prevent open redirect vulnerabilities
+ */
+export function validateUrl(url: string, allowedDomains?: string[]): ValidationResult {
+  if (!url) {
+    return { isValid: false, error: 'URL is required' };
+  }
+
+  try {
+    const parsedUrl = new URL(url);
+    
+    // Block javascript: and data: protocols
+    if (parsedUrl.protocol === 'javascript:' || parsedUrl.protocol === 'data:') {
+      return { isValid: false, error: 'Invalid URL protocol' };
+    }
+    
+    // If allowedDomains specified, check domain whitelist
+    if (allowedDomains && allowedDomains.length > 0) {
+      const isAllowed = allowedDomains.some(domain => 
+        parsedUrl.hostname === domain || parsedUrl.hostname.endsWith(`.${domain}`)
+      );
+      if (!isAllowed) {
+        return { isValid: false, error: 'URL domain not allowed' };
+      }
+    }
+    
+    return { isValid: true };
+  } catch {
+    return { isValid: false, error: 'Invalid URL format' };
+  }
+}
+
 export default {
   validateAmount,
   validateStacksAddress,
   validateMarketQuestion,
   validateMemo,
   validateMarketId,
+  validateUrl,
   sanitizeInput,
+  sanitizeHtml,
   VALIDATION_LIMITS,
 };
