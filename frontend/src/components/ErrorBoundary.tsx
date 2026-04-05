@@ -52,7 +52,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       this.props.onError(error, errorInfo);
     }
   }
-  }
 
   handleReset = (): void => {
     this.setState({

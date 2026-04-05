@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useWallet } from '../components/WalletProvider';
 import { useStakingData } from '../hooks/useStakingData';
 import { useStakingActions } from '../hooks/useStakingActions';
@@ -8,6 +8,7 @@ import {
   calculateEstimatedApy,
   formatLockStatus,
 } from '../utils/stakingHelpers';
+import { validateAmount, type ValidationResult } from '../utils/validation';
 
 type StakingTab = 'stake' | 'unstake' | 'rewards';
 
@@ -19,6 +20,8 @@ export function StakingPage() {
   const [activeTab, setActiveTab] = useState<StakingTab>('stake');
   const [stakeAmount, setStakeAmount] = useState('');
   const [unstakeAmount, setUnstakeAmount] = useState('');
+  // Note: validationError stored for future UI display
+  const [, setValidationError] = useState<string | null>(null);
 
   const isLoading = dataLoading || actionLoading;
   
@@ -28,11 +31,35 @@ export function StakingPage() {
   const minStake = 1000000n; // 1 OXC minimum
   const lockPeriodDays = 7; // ~7 days lock period
 
+  // Validate stake amount
+  const stakeValidation = useMemo((): ValidationResult => {
+    if (!stakeAmount) return { isValid: true };
+    const result = validateAmount(stakeAmount, 1, 1000000);
+    return result;
+  }, [stakeAmount]);
+
+  // Validate unstake amount
+  const unstakeValidation = useMemo((): ValidationResult => {
+    if (!unstakeAmount) return { isValid: true };
+    const result = validateAmount(unstakeAmount, 0.000001, Number(stakingData.userStaked) / 1000000);
+    return result;
+  }, [unstakeAmount, stakingData.userStaked]);
+
   const handleStake = async () => {
     if (!stakeAmount || isLoading) return;
-    const amount = parseOxcInput(stakeAmount);
-    if (amount < minStake) return;
     
+    if (!stakeValidation.isValid) {
+      setValidationError(stakeValidation.error || 'Invalid amount');
+      return;
+    }
+    
+    const amount = parseOxcInput(stakeAmount);
+    if (amount < minStake) {
+      setValidationError('Amount must be at least 1 OXC');
+      return;
+    }
+    
+    setValidationError(null);
     await stake(amount, () => {
       setStakeAmount('');
       refetch();
@@ -41,9 +68,19 @@ export function StakingPage() {
 
   const handleUnstake = async () => {
     if (!unstakeAmount || isLoading || lockStatus.isLocked) return;
-    const amount = parseOxcInput(unstakeAmount);
-    if (amount <= 0n) return;
     
+    if (!unstakeValidation.isValid) {
+      setValidationError(unstakeValidation.error || 'Invalid amount');
+      return;
+    }
+    
+    const amount = parseOxcInput(unstakeAmount);
+    if (amount <= 0n) {
+      setValidationError('Amount must be greater than zero');
+      return;
+    }
+    
+    setValidationError(null);
     await unstake(amount, () => {
       setUnstakeAmount('');
       refetch();

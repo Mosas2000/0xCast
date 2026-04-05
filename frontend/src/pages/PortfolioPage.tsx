@@ -9,6 +9,7 @@ import type { Market, Position } from '../types/market';
 import { MarketStatus, MarketOutcome } from '../types/market';
 import { parsePosition, formatStx, calculateOdds } from '../utils/helpers';
 import { CONTRACT_ADDRESS, CONTRACT_NAME } from '../constants';
+import { validateMarketId } from '../utils/validation';
 
 interface PositionWithMarket extends Position {
   market: Market;
@@ -95,6 +96,14 @@ export function PortfolioPage() {
 
   const handleClaimWinnings = async (marketId: number) => {
     if (!isConnected || claimingMarketId) return;
+    
+    // Validate market ID before processing
+    const marketIdValidation = validateMarketId(marketId);
+    if (!marketIdValidation.isValid) {
+      setClaimError(marketIdValidation.error || 'Invalid market ID');
+      setTimeout(() => setClaimError(null), 5000);
+      return;
+    }
     
     // Find the position to verify it hasn't been claimed
     const position = positions.find(p => p.marketId === marketId);

@@ -7,6 +7,7 @@ import {
   isQuorumReached,
   type Proposal,
 } from '../hooks/useGovernance';
+import { validateMarketId } from '../utils/validation';
 
 type ProposalStatus = 'active' | 'passed' | 'rejected' | 'pending';
 type VoteType = 'for' | 'against' | null;
@@ -16,9 +17,21 @@ export function GovernancePage() {
   const { stats, proposals, isLoading } = useGovernance(address ?? undefined);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [isVoting, setIsVoting] = useState(false);
+  // Note: voteError stored for future UI display when governance is fully implemented
+  const [, setVoteError] = useState<string | null>(null);
 
   const handleVote = async (proposalId: number, vote: 'for' | 'against') => {
     if (!isConnected || isVoting) return;
+    
+    // Validate proposal ID
+    const proposalIdValidation = validateMarketId(proposalId);
+    if (!proposalIdValidation.isValid) {
+      setVoteError(proposalIdValidation.error || 'Invalid proposal ID');
+      setTimeout(() => setVoteError(null), 5000);
+      return;
+    }
+    
+    setVoteError(null);
     setIsVoting(true);
     try {
       console.log(`Voting ${vote} on proposal ${proposalId}`);
@@ -26,6 +39,8 @@ export function GovernancePage() {
       console.warn('Governance contract not yet deployed - voting disabled');
     } catch (error) {
       console.error('Vote error:', error);
+      setVoteError(error instanceof Error ? error.message : 'Failed to submit vote');
+      setTimeout(() => setVoteError(null), 5000);
     } finally {
       setIsVoting(false);
       setSelectedProposal(null);

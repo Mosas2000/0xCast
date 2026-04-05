@@ -4,6 +4,7 @@ import { openContractCall } from '@stacks/connect';
 import { uintCV, PostConditionMode, Pc } from '@stacks/transactions';
 import { TOKEN_CONTRACT } from '../config/contracts';
 import { useWallet } from '../components/WalletProvider';
+import { safeBigIntToNumber, validateTransactionAmount } from './useContract';
 
 interface UseStakingActionsReturn {
   stake: (amount: bigint, onSuccess?: () => void) => Promise<void>;
@@ -33,11 +34,21 @@ export function useStakingActions(): UseStakingActionsReturn {
         return;
       }
 
+      // Validate amount before proceeding
+      const amountValidation = validateTransactionAmount(amount);
+      if (!amountValidation.isValid) {
+        setError(amountValidation.error || 'Invalid stake amount');
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
       setTxId(null);
 
       try {
+        // Safe conversion for contract call
+        const safeAmount = safeBigIntToNumber(amount);
+        
         // Post condition: user sends OXC tokens to contract
         const postConditions = [
           Pc.principal(address)
@@ -49,7 +60,7 @@ export function useStakingActions(): UseStakingActionsReturn {
           contractAddress: TOKEN_CONTRACT.address,
           contractName: TOKEN_CONTRACT.name,
           functionName: 'stake',
-          functionArgs: [uintCV(Number(amount))],
+          functionArgs: [uintCV(safeAmount)],
           postConditionMode: PostConditionMode.Deny,
           postConditions,
           onFinish: (data) => {
@@ -77,16 +88,26 @@ export function useStakingActions(): UseStakingActionsReturn {
         return;
       }
 
+      // Validate amount before proceeding
+      const amountValidation = validateTransactionAmount(amount);
+      if (!amountValidation.isValid) {
+        setError(amountValidation.error || 'Invalid unstake amount');
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
       setTxId(null);
 
       try {
+        // Safe conversion for contract call
+        const safeAmount = safeBigIntToNumber(amount);
+        
         await openContractCall({
           contractAddress: TOKEN_CONTRACT.address,
           contractName: TOKEN_CONTRACT.name,
           functionName: 'unstake',
-          functionArgs: [uintCV(Number(amount))],
+          functionArgs: [uintCV(safeAmount)],
           postConditionMode: PostConditionMode.Allow,
           postConditions: [],
           onFinish: (data) => {

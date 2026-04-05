@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { cvToJSON, fetchCallReadOnlyFunction, uintCV } from '@stacks/transactions';
 import { STACKS_MAINNET } from '@stacks/network';
@@ -8,6 +8,7 @@ import { parseMarketData, calculateOdds, formatStx, getStatusLabel, formatAddres
 import { CONTRACT_ADDRESS, CONTRACT_NAME, MIN_STAKE, MAX_STAKE } from '../constants';
 import { useWallet } from '../components/WalletProvider';
 import { useStake } from '../hooks/useStake';
+import { validateAmount, validateMarketId } from '../utils/validation';
 
 /**
  * TradePage Component
@@ -23,6 +24,12 @@ export function TradePage() {
   const { id } = useParams<{ id: string }>();
   const marketId = id ? parseInt(id, 10) : null;
   
+  // Validate market ID
+  const marketIdValidation = useMemo(() => {
+    if (marketId === null) return { isValid: false, error: 'Market ID is required' };
+    return validateMarketId(marketId);
+  }, [marketId]);
+  
   const { isConnected, connect } = useWallet();
   const { placeYesStake, placeNoStake, isLoading: isStaking, error: stakeError, txId } = useStake();
   
@@ -32,6 +39,14 @@ export function TradePage() {
   const [selectedOutcome, setSelectedOutcome] = useState<'yes' | 'no' | null>(null);
   const [stakeAmount, setStakeAmount] = useState<string>('10');
   const [tradeSuccess, setTradeSuccess] = useState(false);
+  // Note: validationError stored for future UI display of validation errors
+  const [, setValidationError] = useState<string | null>(null);
+
+  // Validate stake amount in real-time
+  const stakeValidation = useMemo(() => {
+    if (!stakeAmount) return { isValid: true };
+    return validateAmount(stakeAmount, MIN_STAKE, MAX_STAKE);
+  }, [stakeAmount]);
 
   // Fetch market data from contract
   const fetchMarket = useCallback(async () => {
@@ -72,15 +87,29 @@ export function TradePage() {
   // Clear success messages when starting new trade or changing selection
   const resetTradeState = useCallback(() => {
     setTradeSuccess(false);
+    setValidationError(null);
   }, []);
 
   const handleTrade = async () => {
     if (!market || !selectedOutcome || !stakeAmount) return;
     
+    // Validate inputs before processing
+    if (!stakeValidation.isValid) {
+      setValidationError(stakeValidation.error || 'Invalid stake amount');
+      return;
+    }
+    
     const amount = parseFloat(stakeAmount);
-    if (isNaN(amount) || amount < MIN_STAKE || amount > MAX_STAKE) return;
+    if (isNaN(amount) || amount < MIN_STAKE || amount > MAX_STAKE) {
+      setValidationError(`Stake must be between ${MIN_STAKE} and ${MAX_STAKE} STX`);
+      return;
+    }
 
+    // Clear validation errors
+    setValidationError(null);
+    
     // Reset success state before new trade
+    resetTradeState();
     resetTradeState();
     
     const onSuccess = () => {
@@ -119,7 +148,7 @@ export function TradePage() {
     );
   }
 
-  if (error || !market) {
+  if (!marketIdValidation.isValid || error || !market) {
     return (
       <div className="pt-[72px] min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
@@ -129,7 +158,7 @@ export function TradePage() {
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Market Not Found</h2>
-          <p className="text-neutral-500 mb-6">{error || "The market you're looking for doesn't exist."}</p>
+          <p className="text-neutral-500 mb-6">{marketIdValidation.error || error || "The market you're looking for doesn't exist."}</p>
           <Link to="/markets" className="btn btn-primary">Back to Markets</Link>
         </div>
       </div>
