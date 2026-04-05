@@ -2,15 +2,19 @@ import { Link } from 'react-router-dom';
 import type { Market } from '../types/market';
 import { MarketStatus } from '../types/market';
 import { calculateOdds, formatStx, getStatusLabel } from '../utils/helpers';
+import { categorizeMarket, getCategoryConfig } from '../utils/marketCategories';
 
 interface MarketCardProps {
   market: Market;
+  showCategory?: boolean;
 }
 
-export function MarketCard({ market }: MarketCardProps) {
+export function MarketCard({ market, showCategory = true }: MarketCardProps) {
   const odds = calculateOdds(market.totalYesStake, market.totalNoStake);
   const totalPool = market.totalYesStake + market.totalNoStake;
   const isActive = market.status === MarketStatus.ACTIVE;
+  const category = categorizeMarket(market.question);
+  const categoryConfig = getCategoryConfig(category);
 
   return (
     <Link to={`/trade/${market.id}`} style={{ textDecoration: 'none', display: 'block', height: '100%' }}>
@@ -27,16 +31,34 @@ export function MarketCard({ market }: MarketCardProps) {
       }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
-          <span style={{
-            padding: '6px 12px',
-            borderRadius: 9999,
-            background: isActive ? 'rgba(34, 197, 94, 0.15)' : 'rgba(59, 130, 246, 0.15)',
-            color: isActive ? '#4ade80' : '#60a5fa',
-            fontSize: 12,
-            fontWeight: 600
-          }}>
-            {getStatusLabel(market.status)}
-          </span>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{
+              padding: '6px 12px',
+              borderRadius: 9999,
+              background: isActive ? 'rgba(34, 197, 94, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+              color: isActive ? '#4ade80' : '#60a5fa',
+              fontSize: 12,
+              fontWeight: 600
+            }}>
+              {getStatusLabel(market.status)}
+            </span>
+            {showCategory && categoryConfig && (
+              <span style={{
+                padding: '6px 12px',
+                borderRadius: 9999,
+                background: 'rgba(168, 85, 247, 0.15)',
+                color: '#c084fc',
+                fontSize: 11,
+                fontWeight: 500,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4
+              }}>
+                <span>{categoryConfig.icon}</span>
+                <span>{categoryConfig.label}</span>
+              </span>
+            )}
+          </div>
           <span style={{ fontSize: 12, color: '#525252', fontFamily: 'monospace' }}>
             #{market.id}
           </span>
