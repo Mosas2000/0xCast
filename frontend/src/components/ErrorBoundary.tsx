@@ -1,8 +1,12 @@
 import { Component, type ReactNode, type ErrorInfo } from 'react';
 
 interface ErrorBoundaryProps {
+  /** Child components to render */
   children: ReactNode;
+  /** Optional custom fallback UI */
   fallback?: ReactNode;
+  /** Optional callback when error is caught */
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
 interface ErrorBoundaryState {
@@ -42,6 +46,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     // Log error to console in development
     console.error('ErrorBoundary caught an error:', error);
     console.error('Component stack:', errorInfo.componentStack);
+    
+    // Call optional error callback
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
+  }
   }
 
   handleReset = (): void => {
