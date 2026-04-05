@@ -18,7 +18,7 @@ export function MarketsPage() {
     setSearchQuery,
     counts,
     resetFilters,
-  } = useMarketFiltering({ markets });
+  } = useMarketFiltering({ markets, syncWithUrl: true });
 
   const activeCategory = getCategoryConfig(category);
 
