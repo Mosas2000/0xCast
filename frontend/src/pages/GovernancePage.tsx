@@ -32,13 +32,18 @@ export function GovernancePage() {
   const { 
     castVote, 
     createProposal,
+    delegateVotingPower,
+    revokeDelegation,
     voteState,
     proposalState,
+    delegationState,
   } = useGovernanceActions();
   
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [voteError, setVoteError] = useState<string | null>(null);
+  const [showDelegateModal, setShowDelegateModal] = useState(false);
+  const [delegateAddress, setDelegateAddress] = useState('');
 
   const handleVote = async (proposalId: number, vote: VoteType) => {
     if (!isConnected || voteState.isLoading) return;
@@ -63,6 +68,24 @@ export function GovernancePage() {
     await createProposal(title, description);
     if (proposalState.txId) {
       setShowCreateModal(false);
+      refetch();
+    }
+  };
+
+  const handleDelegate = async () => {
+    if (!delegateAddress.trim()) return;
+    
+    await delegateVotingPower(delegateAddress.trim());
+    if (delegationState.txId) {
+      setShowDelegateModal(false);
+      setDelegateAddress('');
+      refetch();
+    }
+  };
+
+  const handleRevokeDelegation = async () => {
+    await revokeDelegation();
+    if (delegationState.txId) {
       refetch();
     }
   };
@@ -353,6 +376,73 @@ export function GovernancePage() {
           </div>
         </div>
 
+        {/* Delegation Section */}
+        {isConnected && (
+          <div style={{
+            backgroundColor: '#0A0A0A',
+            border: '1px solid #1F1F1F',
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+          }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#FFFFFF', marginBottom: '12px' }}>
+              Voting Power Delegation
+            </h3>
+            <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '20px', lineHeight: '1.6' }}>
+              Delegate your voting power to another address to vote on your behalf. You can revoke delegation at any time.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setShowDelegateModal(true)}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: 'transparent',
+                  border: '1px solid #3B82F6',
+                  borderRadius: '10px',
+                  color: '#3B82F6',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                Delegate Voting Power
+              </button>
+              <button
+                onClick={handleRevokeDelegation}
+                disabled={delegationState.isLoading}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: 'transparent',
+                  border: '1px solid #6B7280',
+                  borderRadius: '10px',
+                  color: '#9CA3AF',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: delegationState.isLoading ? 'not-allowed' : 'pointer',
+                  opacity: delegationState.isLoading ? 0.5 : 1,
+                  transition: 'all 0.2s',
+                }}
+              >
+                {delegationState.isLoading ? 'Revoking...' : 'Revoke Delegation'}
+              </button>
+            </div>
+            {delegationState.error && (
+              <div style={{
+                marginTop: '16px',
+                padding: '12px',
+                backgroundColor: '#EF444420',
+                border: '1px solid #EF444440',
+                borderRadius: '8px',
+                color: '#F87171',
+                fontSize: '13px',
+              }}>
+                {delegationState.error}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Connect Wallet CTA or Create Proposal Button */}
         {!isConnected ? (
           <div style={connectCardStyle}>
@@ -642,6 +732,102 @@ export function GovernancePage() {
           proposalThreshold={stats.proposalThreshold}
           error={proposalState.error}
         />
+
+        {/* Delegate Modal */}
+        {showDelegateModal && (
+          <div style={modalOverlayStyle} onClick={() => setShowDelegateModal(false)}>
+            <div style={{ ...modalStyle, position: 'relative', maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
+              <button style={closeButtonStyle} onClick={() => setShowDelegateModal(false)}>
+                ×
+              </button>
+              <h2 style={modalTitleStyle}>Delegate Voting Power</h2>
+              <p style={modalDescStyle}>
+                Enter the Stacks address you want to delegate your voting power to. They will be able to vote on your behalf.
+              </p>
+              
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#9CA3AF', 
+                  fontSize: '14px', 
+                  marginBottom: '8px',
+                  fontWeight: '500',
+                }}>
+                  Delegate Address
+                </label>
+                <input
+                  type="text"
+                  value={delegateAddress}
+                  onChange={(e) => setDelegateAddress(e.target.value)}
+                  placeholder="SP2..."
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: '#111111',
+                    border: '1px solid #2F2F2F',
+                    borderRadius: '10px',
+                    color: '#FFFFFF',
+                    fontSize: '14px',
+                    fontFamily: 'monospace',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              <div style={{
+                padding: '12px 16px',
+                backgroundColor: '#F59E0B20',
+                border: '1px solid #F59E0B40',
+                borderRadius: '10px',
+                marginBottom: '24px',
+              }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                  <span style={{ color: '#F59E0B', fontSize: '16px' }}>⚠️</span>
+                  <p style={{ color: '#FCD34D', fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
+                    The delegate will be able to vote with your full voting power until you revoke the delegation.
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => setShowDelegateModal(false)}
+                  style={{
+                    flex: '1',
+                    padding: '12px 20px',
+                    backgroundColor: 'transparent',
+                    border: '1px solid #2F2F2F',
+                    borderRadius: '10px',
+                    color: '#9CA3AF',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelegate}
+                  disabled={!delegateAddress.trim() || delegationState.isLoading}
+                  style={{
+                    flex: '1',
+                    padding: '12px 20px',
+                    backgroundColor: delegateAddress.trim() && !delegationState.isLoading ? '#3B82F6' : '#374151',
+                    border: 'none',
+                    borderRadius: '10px',
+                    color: '#FFFFFF',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: delegateAddress.trim() && !delegationState.isLoading ? 'pointer' : 'not-allowed',
+                    opacity: delegateAddress.trim() && !delegationState.isLoading ? 1 : 0.5,
+                  }}
+                >
+                  {delegationState.isLoading ? 'Delegating...' : 'Delegate'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
