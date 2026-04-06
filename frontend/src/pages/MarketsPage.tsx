@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useMarkets } from '../hooks/useMarkets';
 import { useMarketFiltering } from '../hooks/useMarketFiltering';
 import { MarketCard } from '../components/MarketCard';
@@ -27,9 +28,30 @@ export function MarketsPage() {
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '64px 24px' }}>
         {/* Header */}
         <div style={{ marginBottom: 48 }}>
-          <h1 style={{ fontSize: 36, fontWeight: 700, color: '#fff', marginBottom: 12 }}>
-            Markets
-          </h1>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h1 style={{ fontSize: 36, fontWeight: 700, color: '#fff', margin: 0 }}>
+              Markets
+            </h1>
+            <Link 
+              to="/create-market"
+              style={{
+                padding: '12px 24px',
+                backgroundColor: '#3B82F6',
+                border: 'none',
+                borderRadius: '10px',
+                color: '#FFFFFF',
+                fontSize: '15px',
+                fontWeight: '600',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.2s',
+              }}
+            >
+              <span>+</span> Create Market
+            </Link>
+          </div>
           <p style={{ fontSize: 18, color: '#737373' }}>
             Browse and trade on prediction markets
           </p>
@@ -369,20 +391,39 @@ export function MarketsPage() {
                 </button>
               </div>
             ) : (
-              <button
-                onClick={refetch}
-                style={{
-                  padding: '14px 28px',
-                  background: '#1a1a1a',
-                  border: '1px solid #333',
-                  borderRadius: 10,
-                  color: '#fff',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                Refresh Markets
-              </button>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Link 
+                  to="/create-market"
+                  style={{
+                    padding: '14px 28px',
+                    background: '#3B82F6',
+                    border: 'none',
+                    borderRadius: 10,
+                    color: '#fff',
+                    fontWeight: 600,
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <span>+</span> Create First Market
+                </Link>
+                <button
+                  onClick={refetch}
+                  style={{
+                    padding: '14px 28px',
+                    background: '#1a1a1a',
+                    border: '1px solid #333',
+                    borderRadius: 10,
+                    color: '#fff',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Refresh Markets
+                </button>
+              </div>
             )}
           </div>
         )}

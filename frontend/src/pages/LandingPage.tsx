@@ -274,6 +274,74 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* Create Market CTA */}
+      <section style={{ 
+        background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)',
+        paddingTop: 64,
+        paddingBottom: 64
+      }}>
+        <div style={{ 
+          maxWidth: 1200, 
+          margin: '0 auto', 
+          padding: '0 24px',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '20px' }}>✨</div>
+          <h2 style={{ 
+            fontSize: 36, 
+            fontWeight: 700, 
+            color: '#fff', 
+            marginBottom: 16 
+          }}>
+            Create Your Own Market
+          </h2>
+          <p style={{ 
+            fontSize: 18, 
+            color: '#E0E7FF', 
+            marginBottom: 32,
+            maxWidth: '600px',
+            margin: '0 auto 32px',
+            lineHeight: '1.6',
+          }}>
+            Have a prediction you want to trade on? Launch your own market in minutes and let the community participate.
+          </p>
+          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link
+              to="/create-market"
+              style={{
+                padding: '16px 32px',
+                background: '#fff',
+                color: '#1e3a8a',
+                border: 'none',
+                borderRadius: 12,
+                fontSize: 16,
+                fontWeight: 600,
+                textDecoration: 'none',
+                display: 'inline-block',
+              }}
+            >
+              Create Market
+            </Link>
+            <Link
+              to="/markets"
+              style={{
+                padding: '16px 32px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                color: '#fff',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: 12,
+                fontSize: 16,
+                fontWeight: 600,
+                textDecoration: 'none',
+                display: 'inline-block',
+              }}
+            >
+              Browse Markets
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Featured Markets */}
       <section style={{ 
         background: '#000',
