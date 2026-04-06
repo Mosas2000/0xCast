@@ -3,6 +3,24 @@
  * 
  * Custom hook for reading oracle data from the blockchain.
  * Provides oracle statistics, resolutions, disputes, and settings.
+ * 
+ * Features:
+ * - Fetch oracle settings (dispute period, voting period, etc.)
+ * - Check if an address is a registered oracle
+ * - Get oracle statistics and reputation
+ * - Look up market resolutions and their status
+ * - Get dispute information and vote records
+ * 
+ * Usage:
+ * ```tsx
+ * const { settings, checkIsOracle, getMarketResolution } = useOracle();
+ * 
+ * // Check if address is an oracle
+ * const isOracle = await checkIsOracle('SP...');
+ * 
+ * // Get resolution for a market
+ * const resolution = await getMarketResolution(1);
+ * ```
  */
 
 import { useState, useEffect, useCallback } from 'react';

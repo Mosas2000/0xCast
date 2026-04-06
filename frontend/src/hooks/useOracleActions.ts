@@ -3,6 +3,37 @@
  * 
  * Custom hook for oracle write operations (transactions).
  * Handles oracle management, resolution submission, and dispute actions.
+ * 
+ * Action Categories:
+ * 
+ * Admin Actions (owner only):
+ * - registerOracle: Add a new trusted oracle
+ * - removeOracle: Remove an oracle from the registry
+ * - configureOracleSource: Set up price feed for a market
+ * - setDisputePeriod/setVotingPeriod: Adjust timing settings
+ * - adminResolveDispute: Emergency dispute resolution
+ * 
+ * Oracle Actions:
+ * - submitPriceFeed: Submit price data for a market
+ * - submitResolution: Resolve a market with YES/NO outcome
+ * - autoResolveWithOracle: Auto-resolve based on price feed
+ * - finalizeResolution: Finalize after dispute period ends
+ * 
+ * User Actions:
+ * - submitDispute: Challenge a resolution with STX stake
+ * - voteOnDispute: Vote YES/NO on an active dispute
+ * - resolveDispute: Trigger dispute resolution after voting
+ * 
+ * Usage:
+ * ```tsx
+ * const { submitDispute, voteOnDispute, state } = useOracleActions();
+ * 
+ * // Submit a dispute
+ * await submitDispute(1, 'Incorrect price data', 5000000n);
+ * 
+ * // Vote on a dispute
+ * await voteOnDispute(1, 1); // 1 = YES, 2 = NO
+ * ```
  */
 
 import { useCallback, useState } from 'react';
