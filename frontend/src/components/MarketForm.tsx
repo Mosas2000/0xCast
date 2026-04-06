@@ -195,6 +195,7 @@ export function MarketForm({ onSubmit, isSubmitting, error }: MarketFormProps) {
           placeholder="Will Bitcoin reach $100,000 by December 2026?"
           rows={3}
           maxLength={256}
+          autoFocus
           style={{
             ...inputStyle,
             borderColor: touched.question && validation.errors.question ? '#EF4444' : '#2F2F2F',
@@ -493,7 +494,15 @@ export function MarketForm({ onSubmit, isSubmitting, error }: MarketFormProps) {
         color: '#93C5FD',
         lineHeight: '1.5',
       }}>
-        ℹ️ Creating a market will require a small transaction fee. Your market will become active immediately after confirmation.
+        <div style={{ fontWeight: '600', marginBottom: '6px' }}>
+          ℹ️ Market Creation Tips
+        </div>
+        <ul style={{ margin: 0, paddingLeft: '20px' }}>
+          <li>Markets require a small transaction fee</li>
+          <li>Choose clear, verifiable outcomes</li>
+          <li>Your market becomes active immediately</li>
+          <li>You can share the market link after creation</li>
+        </ul>
       </div>
     </form>
   );
