@@ -12,6 +12,7 @@ export function Header() {
   const navItems = [
     { path: '/', label: 'Home' },
     { path: '/markets', label: 'Markets' },
+    { path: '/create-market', label: 'Create', highlight: true },
     { path: '/portfolio', label: 'Portfolio' },
     { path: '/transactions', label: 'Activity' },
     { path: '/token', label: 'OXC Token' },
@@ -33,7 +34,9 @@ export function Header() {
                 key={item.path}
                 to={item.path}
                 className={`text-sm font-medium transition-colors ${
-                  location.pathname === item.path
+                  item.highlight
+                    ? 'px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700'
+                    : location.pathname === item.path
                     ? 'text-white'
                     : 'text-neutral-400 hover:text-white'
                 }`}
