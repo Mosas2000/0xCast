@@ -14,6 +14,7 @@ import { StakingPage } from './pages/StakingPage';
 import { GovernancePage } from './pages/GovernancePage';
 import { TransactionHistoryPage } from './pages/TransactionHistoryPage';
 import { CreateMarketPage } from './pages/CreateMarketPage';
+import { OraclePage } from './pages/OraclePage';
 
 function App() {
   return (
@@ -64,6 +65,11 @@ function App() {
                   <Route path="/create-market" element={
                     <PageErrorBoundary pageName="Create Market">
                       <CreateMarketPage />
+                    </PageErrorBoundary>
+                  } />
+                  <Route path="/oracle" element={
+                    <PageErrorBoundary pageName="Oracle">
+                      <OraclePage />
                     </PageErrorBoundary>
                   } />
                 </Routes>

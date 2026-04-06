@@ -123,7 +123,7 @@ export interface UseOracleReturn {
 
 export function useOracle(): UseOracleReturn {
   const [settings, setSettings] = useState<OracleSettings | null>(null);
-  const [registeredOracles, setRegisteredOracles] = useState<string[]>([]);
+  const [registeredOracles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

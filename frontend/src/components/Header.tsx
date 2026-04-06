@@ -15,6 +15,7 @@ export function Header() {
     { path: '/create-market', label: 'Create', highlight: true },
     { path: '/portfolio', label: 'Portfolio' },
     { path: '/transactions', label: 'Activity' },
+    { path: '/oracle', label: 'Oracle' },
     { path: '/token', label: 'OXC Token' },
   ];
 

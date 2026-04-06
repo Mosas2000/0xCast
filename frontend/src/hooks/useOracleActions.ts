@@ -83,8 +83,10 @@ export function useOracleActions(): UseOracleActionsReturn {
   const executeCall = useCallback(
     async (
       functionName: string,
-      functionArgs: ReturnType<typeof uintCV | typeof stringAsciiCV | typeof principalCV>[],
-      postConditions: ReturnType<typeof Pc.principal>[] = [],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      functionArgs: any[],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      postConditions: any[] = [],
       postConditionMode: PostConditionMode = PostConditionMode.Deny
     ) => {
       if (!isConnected || !address) {

@@ -232,7 +232,7 @@ function OverviewTab({ settings, isLoading }: OverviewTabProps) {
 // ==================== Oracles Tab ====================
 
 function OraclesTab() {
-  const { checkIsOracle, getOracleStats, getOracleReputation } = useOracle();
+  const { getOracleStats } = useOracle();
   const [searchAddress, setSearchAddress] = useState('');
   const [searchResult, setSearchResult] = useState<OracleStats | null>(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -651,7 +651,6 @@ function DisputesTab() {
 // ==================== Admin Tab ====================
 
 function AdminTab() {
-  const { address } = useWallet();
   const {
     registerOracle,
     removeOracle,
