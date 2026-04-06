@@ -3,6 +3,47 @@
  * 
  * Custom hook for liquidity rewards operations.
  * Handles pending rewards, claiming, and reward tracking.
+ * 
+ * Features:
+ * - Fetch pending rewards for a provider
+ * - Get pool-level reward configuration
+ * - Claim accumulated rewards
+ * - Update pool reward state (admin)
+ * - Transaction state tracking
+ * 
+ * Reward System:
+ * The liquidity-rewards contract tracks rewards using an accumulated
+ * reward-per-share model. As time passes, rewards accrue proportionally
+ * to each provider's share of the pool. The accRewardPerShare increases
+ * over time based on the rewardMultiplier and block height.
+ * 
+ * Usage:
+ * ```tsx
+ * const { state, getPendingRewards, claimRewards } = useLiquidityRewards();
+ * 
+ * // Check pending rewards
+ * const rewards = await getPendingRewards(marketId, userAddress);
+ * if (rewards?.claimable) {
+ *   console.log(`You have ${rewards.amount} OXC to claim`);
+ * }
+ * 
+ * // Claim rewards
+ * await claimRewards(marketId);
+ * 
+ * // Check claim status
+ * if (state.txId) {
+ *   console.log('Claim submitted:', state.txId);
+ * }
+ * ```
+ * 
+ * Contract Functions:
+ * - get-pending-rewards(market-id, provider) -> uint
+ * - get-pool-rewards(market-id) -> { acc-reward-per-share, last-update-block, reward-multiplier }
+ * - claim-rewards(market-id) -> (response bool uint)
+ * - update-pool(market-id) -> (response bool uint) [admin only]
+ * 
+ * @see useLiquidity for pool data
+ * @see useLiquidityActions for add/remove liquidity
  */
 
 import { useState, useCallback } from 'react';

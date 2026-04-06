@@ -3,6 +3,43 @@
  * 
  * Custom hook for liquidity pool write operations (transactions).
  * Handles adding/removing liquidity and pool management.
+ * 
+ * Features:
+ * - Create new liquidity pools for markets
+ * - Add STX liquidity to existing pools
+ * - Remove liquidity and withdraw STX
+ * - Transaction state tracking with error handling
+ * - Post-condition support for transaction safety
+ * 
+ * Usage:
+ * ```tsx
+ * const { state, addLiquidity, removeLiquidity, resetState } = useLiquidityActions();
+ * 
+ * // Add liquidity to a pool
+ * await addLiquidity(marketId, 1000000n); // 1 STX
+ * 
+ * // Check transaction status
+ * if (state.success) {
+ *   console.log('Transaction ID:', state.txId);
+ * }
+ * 
+ * // Reset state for new transaction
+ * resetState();
+ * ```
+ * 
+ * Transaction State:
+ * - isSubmitting: Transaction is pending user confirmation
+ * - error: Error message if transaction failed
+ * - txId: Transaction ID if successful
+ * - success: True when transaction was broadcasted
+ * 
+ * Post Conditions:
+ * - addLiquidity: willSendEq for exact STX amount
+ * - removeLiquidity: Allow mode (receives varying amounts)
+ * - createPool: willSendEq for initial liquidity
+ * 
+ * @see useLiquidity for read operations
+ * @see useLiquidityRewards for reward claiming
  */
 
 import { useCallback, useState } from 'react';
