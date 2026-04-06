@@ -20,29 +20,23 @@ export function StakingPage() {
   const [activeTab, setActiveTab] = useState<StakingTab>('stake');
   const [stakeAmount, setStakeAmount] = useState('');
   const [unstakeAmount, setUnstakeAmount] = useState('');
-  // Note: validationError stored for future UI display
   const [, setValidationError] = useState<string | null>(null);
 
   const isLoading = dataLoading || actionLoading;
   
-  // Calculate derived values
   const estimatedApy = calculateEstimatedApy(stakingData.userStaked, stakingData.totalStaked);
   const lockStatus = formatLockStatus(stakingData.currentBlock, stakingData.userLockedUntil);
-  const minStake = 1000000n; // 1 OXC minimum
-  const lockPeriodDays = 7; // ~7 days lock period
+  const minStake = 1000000n;
+  const lockPeriodDays = 7;
 
-  // Validate stake amount
   const stakeValidation = useMemo((): ValidationResult => {
     if (!stakeAmount) return { isValid: true };
-    const result = validateAmount(stakeAmount, 1, 1000000);
-    return result;
+    return validateAmount(stakeAmount, 1, 1000000);
   }, [stakeAmount]);
 
-  // Validate unstake amount
   const unstakeValidation = useMemo((): ValidationResult => {
     if (!unstakeAmount) return { isValid: true };
-    const result = validateAmount(unstakeAmount, 0.000001, Number(stakingData.userStaked) / 1000000);
-    return result;
+    return validateAmount(unstakeAmount, 0.000001, Number(stakingData.userStaked) / 1000000);
   }, [unstakeAmount, stakingData.userStaked]);
 
   const handleStake = async () => {
@@ -88,383 +82,96 @@ export function StakingPage() {
   };
 
   const handleClaimRewards = async () => {
-    // Note: Rewards claiming would need a separate contract function
-    // For now, this is a placeholder
-    console.log('Rewards claiming not yet implemented in contract');
+    // Rewards claiming will be implemented
   };
 
   const setMaxStake = () => {
-    setStakeAmount(formatOxcAmount(stakingData.userBalance));
+    if (stakingData.userBalance > 0n) {
+      setStakeAmount((Number(stakingData.userBalance) / 1000000).toString());
+    }
   };
 
   const setMaxUnstake = () => {
-    setUnstakeAmount(formatOxcAmount(stakingData.userStaked));
-  };
-
-  const containerStyle: React.CSSProperties = {
-    minHeight: '100vh',
-    backgroundColor: '#000000',
-    paddingTop: '120px',
-    paddingBottom: '80px',
-  };
-
-  const wrapperStyle: React.CSSProperties = {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '0 24px',
-  };
-
-  const headerStyle: React.CSSProperties = {
-    textAlign: 'center' as const,
-    marginBottom: '48px',
-  };
-
-  const titleStyle: React.CSSProperties = {
-    fontSize: '48px',
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: '16px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '16px',
-  };
-
-  const subtitleStyle: React.CSSProperties = {
-    fontSize: '18px',
-    color: '#9CA3AF',
-    maxWidth: '600px',
-    margin: '0 auto',
-    lineHeight: '1.6',
-  };
-
-  const gridStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-    gap: '24px',
-    marginBottom: '48px',
-  };
-
-  const statCardStyle: React.CSSProperties = {
-    backgroundColor: '#0A0A0A',
-    border: '1px solid #1F1F1F',
-    borderRadius: '16px',
-    padding: '24px',
-    textAlign: 'center' as const,
-  };
-
-  const statLabelStyle: React.CSSProperties = {
-    fontSize: '14px',
-    color: '#9CA3AF',
-    marginBottom: '8px',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.5px',
-  };
-
-  const statValueStyle: React.CSSProperties = {
-    fontSize: '28px',
-    fontWeight: '700',
-    color: '#FFFFFF',
-  };
-
-  const apyValueStyle: React.CSSProperties = {
-    ...statValueStyle,
-    color: '#22C55E',
-  };
-
-  const mainGridStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '32px',
-  };
-
-  const cardStyle: React.CSSProperties = {
-    backgroundColor: '#0A0A0A',
-    border: '1px solid #1F1F1F',
-    borderRadius: '20px',
-    padding: '32px',
-  };
-
-  const tabsStyle: React.CSSProperties = {
-    display: 'flex',
-    gap: '8px',
-    marginBottom: '32px',
-    backgroundColor: '#111111',
-    padding: '4px',
-    borderRadius: '12px',
-  };
-
-  const tabStyle = (isActive: boolean): React.CSSProperties => ({
-    flex: '1',
-    padding: '12px 20px',
-    borderRadius: '8px',
-    fontSize: '14px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-    border: 'none',
-    backgroundColor: isActive ? '#3B82F6' : 'transparent',
-    color: isActive ? '#FFFFFF' : '#9CA3AF',
-  });
-
-  const labelStyle: React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '8px',
-    fontSize: '14px',
-    color: '#9CA3AF',
-  };
-
-  const inputContainerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    backgroundColor: '#111111',
-    border: '1px solid #2F2F2F',
-    borderRadius: '12px',
-    padding: '4px',
-    marginBottom: '24px',
-  };
-
-  const inputStyle: React.CSSProperties = {
-    flex: '1',
-    backgroundColor: 'transparent',
-    border: 'none',
-    outline: 'none',
-    color: '#FFFFFF',
-    fontSize: '18px',
-    fontWeight: '600',
-    padding: '12px 16px',
-  };
-
-  const maxButtonStyle: React.CSSProperties = {
-    backgroundColor: '#1F1F1F',
-    border: 'none',
-    borderRadius: '8px',
-    padding: '8px 16px',
-    color: '#3B82F6',
-    fontSize: '12px',
-    fontWeight: '700',
-    cursor: 'pointer',
-    marginRight: '8px',
-  };
-
-  const primaryButtonStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '16px 24px',
-    backgroundColor: '#3B82F6',
-    border: 'none',
-    borderRadius: '12px',
-    color: '#FFFFFF',
-    fontSize: '16px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-    opacity: isLoading ? 0.7 : 1,
-  };
-
-  const connectButtonStyle: React.CSSProperties = {
-    ...primaryButtonStyle,
-    backgroundColor: '#3B82F6',
-    marginTop: '24px',
-  };
-
-  const infoBoxStyle: React.CSSProperties = {
-    backgroundColor: '#111111',
-    borderRadius: '12px',
-    padding: '16px',
-    marginBottom: '24px',
-  };
-
-  const infoRowStyle: React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '8px 0',
-    borderBottom: '1px solid #1F1F1F',
-  };
-
-  const infoRowLastStyle: React.CSSProperties = {
-    ...infoRowStyle,
-    borderBottom: 'none',
-  };
-
-  const infoLabelStyle: React.CSSProperties = {
-    fontSize: '14px',
-    color: '#9CA3AF',
-  };
-
-  const infoValueStyle: React.CSSProperties = {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#FFFFFF',
-  };
-
-  const rewardsCardStyle: React.CSSProperties = {
-    backgroundColor: '#0F1A0F',
-    border: '1px solid #22C55E33',
-    borderRadius: '16px',
-    padding: '24px',
-    textAlign: 'center' as const,
-  };
-
-  const rewardsTitleStyle: React.CSSProperties = {
-    fontSize: '14px',
-    color: '#9CA3AF',
-    marginBottom: '8px',
-  };
-
-  const rewardsValueStyle: React.CSSProperties = {
-    fontSize: '32px',
-    fontWeight: '700',
-    color: '#22C55E',
-    marginBottom: '16px',
-  };
-
-  const yourStakeCardStyle: React.CSSProperties = {
-    ...cardStyle,
-  };
-
-  const yourStakeTitleStyle: React.CSSProperties = {
-    fontSize: '20px',
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: '24px',
-  };
-
-  const stakeRowStyle: React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '16px 0',
-    borderBottom: '1px solid #1F1F1F',
-  };
-
-  const stakeLabelStyle: React.CSSProperties = {
-    fontSize: '14px',
-    color: '#9CA3AF',
-  };
-
-  const stakeValueStyle: React.CSSProperties = {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#FFFFFF',
+    if (stakingData.userStaked > 0n && !lockStatus.isLocked) {
+      setUnstakeAmount((Number(stakingData.userStaked) / 1000000).toString());
+    }
   };
 
   return (
-    <div style={containerStyle}>
-      <div style={wrapperStyle}>
+    <div className="min-h-screen bg-black pt-24 pb-12">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         {/* Header */}
-        <div style={headerStyle}>
-          <h1 style={titleStyle}>
-            <span>🔒</span> OXC Staking
-          </h1>
-          <p style={subtitleStyle}>
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3 sm:mb-4 flex items-center justify-center gap-2 sm:gap-3">
+          </h1>            <span>
+          <p className="text-sm sm:text-base text-neutral-400 max-w-2xl mx-auto px-4">
             Stake your OXC tokens to earn rewards and participate in platform governance. 
             The more you stake, the more you earn.
           </p>
         </div>
 
-        {/* Stats Grid */}
-        <div style={gridStyle}>
-          <div style={statCardStyle}>
-            <div style={statLabelStyle}>Total Staked</div>
-            <div style={statValueStyle}>{formatOxcAmount(stakingData.totalStaked)} OXC</div>
-          </div>
-          <div style={statCardStyle}>
-            <div style={statLabelStyle}>Your Stake</div>
-            <div style={statValueStyle}>{formatOxcAmount(stakingData.userStaked)} OXC</div>
-          </div>
-          <div style={statCardStyle}>
-            <div style={statLabelStyle}>Est. APY</div>
-            <div style={apyValueStyle}>{estimatedApy}%</div>
-          </div>
-          <div style={statCardStyle}>
-            <div style={statLabelStyle}>Lock Period</div>
-            <div style={statValueStyle}>{lockPeriodDays} Days</div>
-          </div>
+        {/* Stats Grid - Responsive */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-8 sm:mb-12">
+          <StatCard label="Total Staked" value={`${formatOxcAmount(stakingData.totalStaked)} OXC`} />
+          <StatCard label="Your Stake" value={`${formatOxcAmount(stakingData.userStaked)} OXC`} />
+          <StatCard label="Est. APY" value={`${estimatedApy}%`} isHighlighted />
+          <StatCard label="Lock Period" value={`${lockPeriodDays} Days`} />
         </div>
 
-        {/* Main Content */}
-        <div style={mainGridStyle}>
+        {/* Main Content - Responsive Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           {/* Staking Card */}
-          <div style={cardStyle}>
-            <div style={tabsStyle}>
-              <button 
-                style={tabStyle(activeTab === 'stake')} 
-                onClick={() => setActiveTab('stake')}
-              >
-                Stake
-              </button>
-              <button 
-                style={tabStyle(activeTab === 'unstake')} 
-                onClick={() => setActiveTab('unstake')}
-              >
-                Unstake
-              </button>
-              <button 
-                style={tabStyle(activeTab === 'rewards')} 
-                onClick={() => setActiveTab('rewards')}
-              >
-                Rewards
-              </button>
+          <div className="bg-[#0A0A0A] border border-neutral-800 rounded-2xl p-4 sm:p-6 lg:p-8">
+            {/* Tabs */}
+            <div className="flex gap-1 sm:gap-2 mb-6 sm:mb-8 bg-neutral-900 p-1 rounded-xl">
+              <TabButton 
+                label="Stake" 
+                isActive={activeTab === 'stake'} 
+                onClick={() => setActiveTab('stake')} 
+              />
+              <TabButton 
+                label="Unstake" 
+                isActive={activeTab === 'unstake'} 
+                onClick={() => setActiveTab('unstake')} 
+              />
+              <TabButton 
+                label="Rewards" 
+                isActive={activeTab === 'rewards'} 
+                onClick={() => setActiveTab('rewards')} 
+              />
             </div>
 
             {!isConnected ? (
-              <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <p style={{ color: '#9CA3AF', marginBottom: '24px' }}>
+              <div className="text-center py-8 sm:py-10">
+                <p className="text-neutral-400 mb-4 sm:mb-6">
                   Connect your wallet to start staking
                 </p>
-                <button style={connectButtonStyle} onClick={() => connect()}>
+                <button 
+                  className="btn btn-primary w-full sm:w-auto min-w-[200px]"
+                  onClick={() => connect()}
+                >
                   Connect Wallet
                 </button>
               </div>
             ) : activeTab === 'stake' ? (
               <>
-                <div style={labelStyle}>
-                  <span>Amount to Stake</span>
-                  <span>Balance: {formatOxcAmount(stakingData.userBalance)} OXC</span>
-                </div>
-                <div style={inputContainerStyle}>
-                  <input
-                    type="number"
-                    style={inputStyle}
-                    placeholder="0.00"
-                    value={stakeAmount}
-                    onChange={(e) => setStakeAmount(e.target.value)}
-                    disabled={isLoading}
-                  />
-                  <button style={maxButtonStyle} onClick={setMaxStake}>
-                    MAX
-                  </button>
-                </div>
-                <div style={infoBoxStyle}>
-                  <div style={infoRowStyle}>
-                    <span style={infoLabelStyle}>Minimum Stake</span>
-                    <span style={infoValueStyle}>{formatOxcAmount(minStake)} OXC</span>
-                  </div>
-                  <div style={infoRowStyle}>
-                    <span style={infoLabelStyle}>Lock Period</span>
-                    <span style={infoValueStyle}>{lockPeriodDays} days</span>
-                  </div>
-                  <div style={infoRowLastStyle}>
-                    <span style={infoLabelStyle}>Expected APY</span>
-                    <span style={{ ...infoValueStyle, color: '#22C55E' }}>{estimatedApy}%</span>
-                  </div>
-                </div>
-                {actionError && (
-                  <div style={{ color: '#EF4444', fontSize: '14px', marginBottom: '16px', padding: '12px', backgroundColor: '#1a0505', borderRadius: '8px' }}>
-                    {actionError}
-                  </div>
-                )}
-                {txId && (
-                  <div style={{ color: '#22C55E', fontSize: '14px', marginBottom: '16px', padding: '12px', backgroundColor: '#0a1a0a', borderRadius: '8px' }}>
-                    Transaction submitted! ID: {txId.slice(0, 16)}...
-                  </div>
-                )}
+                <InputSection
+                  label="Amount to Stake"
+                  balance={`Balance: ${formatOxcAmount(stakingData.userBalance)} OXC`}
+                  value={stakeAmount}
+                  onChange={setStakeAmount}
+                  onMax={setMaxStake}
+                  disabled={isLoading}
+                />
+                <InfoBox>
+                  <InfoRow label="Minimum Stake" value={`${formatOxcAmount(minStake)} OXC`} />
+                  <InfoRow label="Lock Period" value={`${lockPeriodDays} days`} />
+                  <InfoRow label="Expected APY" value={`${estimatedApy}%`} isLast isHighlighted />
+                </InfoBox>
+                {actionError && <ErrorMessage message={actionError} />}
+                {txId && <SuccessMessage txId={txId} />}
                 <button 
-                  style={primaryButtonStyle} 
+                  className="btn btn-primary w-full mt-4"
                   onClick={handleStake}
                   disabled={isLoading || !stakeAmount}
                 >
@@ -473,47 +180,31 @@ export function StakingPage() {
               </>
             ) : activeTab === 'unstake' ? (
               <>
-                <div style={labelStyle}>
-                  <span>Amount to Unstake</span>
-                  <span>Staked: {formatOxcAmount(stakingData.userStaked)} OXC</span>
-                </div>
-                <div style={inputContainerStyle}>
-                  <input
-                    type="number"
-                    style={inputStyle}
-                    placeholder="0.00"
-                    value={unstakeAmount}
-                    onChange={(e) => setUnstakeAmount(e.target.value)}
-                    disabled={isLoading || lockStatus.isLocked}
+                <InputSection
+                  label="Amount to Unstake"
+                  balance={`Staked: ${formatOxcAmount(stakingData.userStaked)} OXC`}
+                  value={unstakeAmount}
+                  onChange={setUnstakeAmount}
+                  onMax={setMaxUnstake}
+                  disabled={isLoading || lockStatus.isLocked}
+                />
+                <InfoBox>
+                  <InfoRow label="Currently Staked" value={`${formatOxcAmount(stakingData.userStaked)} OXC`} />
+                  <InfoRow 
+                    label="Lock Status" 
+                    value={lockStatus.message} 
+                    isLast 
+                    valueColor={lockStatus.isLocked ? 'text-red-500' : 'text-emerald-500'} 
                   />
-                  <button style={maxButtonStyle} onClick={setMaxUnstake} disabled={lockStatus.isLocked}>
-                    MAX
-                  </button>
-                </div>
-                <div style={infoBoxStyle}>
-                  <div style={infoRowStyle}>
-                    <span style={infoLabelStyle}>Currently Staked</span>
-                    <span style={infoValueStyle}>{formatOxcAmount(stakingData.userStaked)} OXC</span>
-                  </div>
-                  <div style={infoRowLastStyle}>
-                    <span style={infoLabelStyle}>Lock Status</span>
-                    <span style={{ ...infoValueStyle, color: lockStatus.isLocked ? '#EF4444' : '#22C55E' }}>
-                      {lockStatus.message}
-                    </span>
-                  </div>
-                </div>
+                </InfoBox>
                 {lockStatus.isLocked && (
-                  <div style={{ color: '#F59E0B', fontSize: '14px', marginBottom: '16px', padding: '12px', backgroundColor: '#1a1505', borderRadius: '8px' }}>
-                    ⏳ Your tokens are locked. {lockStatus.message}
+                  <div className="text-amber-500 text-sm mb-4 p-3 bg-amber-500/10 rounded-lg">
+   Your tokens are locked. {lockStatus.message}                    
                   </div>
                 )}
-                {actionError && (
-                  <div style={{ color: '#EF4444', fontSize: '14px', marginBottom: '16px', padding: '12px', backgroundColor: '#1a0505', borderRadius: '8px' }}>
-                    {actionError}
-                  </div>
-                )}
+                {actionError && <ErrorMessage message={actionError} />}
                 <button 
-                  style={primaryButtonStyle} 
+                  className="btn btn-primary w-full mt-4"
                   onClick={handleUnstake}
                   disabled={isLoading || !unstakeAmount || lockStatus.isLocked}
                 >
@@ -522,94 +213,65 @@ export function StakingPage() {
               </>
             ) : (
               <>
-                <div style={rewardsCardStyle}>
-                  <div style={rewardsTitleStyle}>Staking Rewards</div>
-                  <div style={rewardsValueStyle}>
+                <div className="bg-emerald-900/20 border border-emerald-500/20 rounded-2xl p-4 sm:p-6 text-center">
+                  <div className="text-sm text-neutral-400 mb-2">Staking Rewards</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-emerald-500 mb-4">
                     Coming Soon
                   </div>
-                  <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '16px' }}>
+                  <p className="text-neutral-400 text-sm mb-4">
                     Rewards distribution will be enabled in a future contract update.
                   </p>
                   <button 
-                    style={{ ...primaryButtonStyle, backgroundColor: '#374151', cursor: 'not-allowed' }}
+                    className="btn w-full bg-neutral-700 text-neutral-400 cursor-not-allowed"
                     onClick={handleClaimRewards}
                     disabled={true}
                   >
                     Claim Rewards (Coming Soon)
                   </button>
                 </div>
-                <div style={{ ...infoBoxStyle, marginTop: '24px', marginBottom: '0' }}>
-                  <div style={infoRowStyle}>
-                    <span style={infoLabelStyle}>Your Stake</span>
-                    <span style={infoValueStyle}>{formatOxcAmount(stakingData.userStaked)} OXC</span>
-                  </div>
-                  <div style={infoRowStyle}>
-                    <span style={infoLabelStyle}>Est. APY</span>
-                    <span style={{ ...infoValueStyle, color: '#22C55E' }}>{estimatedApy}%</span>
-                  </div>
-                  <div style={infoRowLastStyle}>
-                    <span style={infoLabelStyle}>Lock Status</span>
-                    <span style={{ ...infoValueStyle, color: lockStatus.isLocked ? '#F59E0B' : '#22C55E' }}>
-                      {lockStatus.message}
-                    </span>
-                  </div>
-                </div>
+                <InfoBox className="mt-6">
+                  <InfoRow label="Your Stake" value={`${formatOxcAmount(stakingData.userStaked)} OXC`} />
+                  <InfoRow label="Est. APY" value={`${estimatedApy}%`} isHighlighted />
+                  <InfoRow 
+                    label="Lock Status" 
+                    value={lockStatus.message} 
+                    isLast 
+                    valueColor={lockStatus.isLocked ? 'text-amber-500' : 'text-emerald-500'} 
+                  />
+                </InfoBox>
               </>
             )}
           </div>
 
           {/* Your Stake Card */}
-          <div style={yourStakeCardStyle}>
-            <h3 style={yourStakeTitleStyle}>Your Staking Overview</h3>
+          <div className="bg-[#0A0A0A] border border-neutral-800 rounded-2xl p-4 sm:p-6 lg:p-8">
+            <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">
+              Your Staking Overview
+            </h3>
             
             {dataLoading ? (
-              <div style={{ textAlign: 'center', padding: '40px 0', color: '#9CA3AF' }}>
+              <div className="text-center py-10 text-neutral-400">
                 Loading staking data...
               </div>
             ) : (
               <>
-                <div style={stakeRowStyle}>
-                  <span style={stakeLabelStyle}>Wallet Balance</span>
-                  <span style={stakeValueStyle}>{formatOxcAmount(stakingData.userBalance)} OXC</span>
-                </div>
-                
-                <div style={stakeRowStyle}>
-                  <span style={stakeLabelStyle}>Currently Staked</span>
-                  <span style={stakeValueStyle}>{formatOxcAmount(stakingData.userStaked)} OXC</span>
-                </div>
-                
-                <div style={stakeRowStyle}>
-                  <span style={stakeLabelStyle}>Lock Status</span>
-                  <span style={{ ...stakeValueStyle, color: lockStatus.isLocked ? '#F59E0B' : '#22C55E' }}>
-                    {lockStatus.message}
-                  </span>
-                </div>
-                
-                <div style={{ ...stakeRowStyle, borderBottom: 'none' }}>
-                  <span style={stakeLabelStyle}>Total Value</span>
-                  <span style={stakeValueStyle}>
-                    {formatOxcAmount(stakingData.userBalance + stakingData.userStaked)} OXC
-                  </span>
-                </div>
+                <StakeInfoRow label="Wallet Balance" value={`${formatOxcAmount(stakingData.userBalance)} OXC`} />
+                <StakeInfoRow label="Currently Staked" value={`${formatOxcAmount(stakingData.userStaked)} OXC`} />
+                <StakeInfoRow 
+                  label="Lock Status" 
+                  value={lockStatus.message}
+                  valueColor={lockStatus.isLocked ? 'text-amber-500' : 'text-emerald-500'}
+                />
+                <StakeInfoRow 
+                  label="Total Value" 
+                  value={`${formatOxcAmount(stakingData.userBalance + stakingData.userStaked)} OXC`}
+                  isLast
+                />
               </>
             )}
 
-            <div style={{ 
-              marginTop: '32px', 
-              padding: '20px', 
-              backgroundColor: '#111111', 
-              borderRadius: '12px' 
-            }}>
-              <h4 style={{ fontSize: '14px', color: '#9CA3AF', marginBottom: '12px' }}>
-                💡 Staking Benefits
-              </h4>
-              <ul style={{ 
-                fontSize: '13px', 
-                color: '#FFFFFF', 
-                lineHeight: '1.8',
-                paddingLeft: '20px',
-                margin: '0'
-              }}>
+            <div className="mt-6 sm:mt-8 p-4 sm:p-5 bg-neutral-900 rounded-xl">
+              <ul className="text-xs sm:text-sm text-white leading-relaxed space-y-2 list-disc list-inside">              <h4 className="text-sm text-neutral-400 mb-3">
                 <li>Earn passive income through staking rewards</li>
                 <li>Participate in governance voting</li>
                 <li>Reduced platform fees</li>
@@ -619,6 +281,145 @@ export function StakingPage() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Reusable Components
+function StatCard({ label, value, isHighlighted }: { label: string; value: string; isHighlighted?: boolean }) {
+  return (
+    <div className="bg-[#0A0A0A] border border-neutral-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 text-center">
+      <div className="text-xs sm:text-sm text-neutral-400 mb-1 sm:mb-2 uppercase tracking-wide">
+        {label}
+      </div>
+      <div className={`text-lg sm:text-xl lg:text-2xl font-bold ${isHighlighted ? 'text-emerald-500' : 'text-white'}`}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function TabButton({ label, isActive, onClick }: { label: string; isActive: boolean; onClick: () => void }) {
+  return (
+    <button
+      className={`flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
+        isActive 
+          ? 'bg-blue-600 text-white' 
+          : 'text-neutral-400 hover:text-white'
+      }`}
+      onClick={onClick}
+    >
+      {label}
+    </button>
+  );
+}
+
+function InputSection({ 
+  label, 
+  balance, 
+  value, 
+  onChange, 
+  onMax, 
+  disabled 
+}: { 
+  label: string; 
+  balance: string; 
+  value: string; 
+  onChange: (v: string) => void; 
+  onMax: () => void; 
+  disabled: boolean;
+}) {
+  return (
+    <>
+      <div className="flex justify-between items-center mb-2 text-sm text-neutral-400">
+        <span>{label}</span>
+        <span className="text-xs sm:text-sm">{balance}</span>
+      </div>
+      <div className="flex items-center gap-2 bg-neutral-900 border border-neutral-700 rounded-xl p-1 mb-4 sm:mb-6">
+        <input
+          type="number"
+          className="flex-1 bg-transparent border-none outline-none text-white text-base sm:text-lg font-semibold p-2 sm:p-3 min-w-0"
+          placeholder="0.00"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
+        />
+        <button 
+          className="px-3 py-2 bg-neutral-800 rounded-lg text-blue-500 text-xs font-bold hover:bg-neutral-700 transition-colors mr-1"
+          onClick={onMax}
+          disabled={disabled}
+        >
+          MAX
+        </button>
+      </div>
+    </>
+  );
+}
+
+function InfoBox({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`bg-neutral-900 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+function InfoRow({ 
+  label, 
+  value, 
+  isLast, 
+  isHighlighted,
+  valueColor 
+}: { 
+  label: string; 
+  value: string; 
+  isLast?: boolean;
+  isHighlighted?: boolean;
+  valueColor?: string;
+}) {
+  return (
+    <div className={`flex justify-between items-center py-2 ${!isLast ? 'border-b border-neutral-800' : ''}`}>
+      <span className="text-xs sm:text-sm text-neutral-400">{label}</span>
+      <span className={`text-xs sm:text-sm font-semibold ${valueColor || (isHighlighted ? 'text-emerald-500' : 'text-white')}`}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function StakeInfoRow({ 
+  label, 
+  value, 
+  valueColor,
+  isLast 
+}: { 
+  label: string; 
+  value: string; 
+  valueColor?: string;
+  isLast?: boolean;
+}) {
+  return (
+    <div className={`flex justify-between items-center py-3 sm:py-4 ${!isLast ? 'border-b border-neutral-800' : ''}`}>
+      <span className="text-sm text-neutral-400">{label}</span>
+      <span className={`text-base sm:text-lg font-semibold ${valueColor || 'text-white'}`}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function ErrorMessage({ message }: { message: string }) {
+  return (
+    <div className="text-red-500 text-sm mb-4 p-3 bg-red-500/10 rounded-lg">
+      {message}
+    </div>
+  );
+}
+
+function SuccessMessage({ txId }: { txId: string }) {
+  return (
+    <div className="text-emerald-500 text-sm mb-4 p-3 bg-emerald-500/10 rounded-lg">
+      Transaction submitted! ID: {txId.slice(0, 16)}...
     </div>
   );
 }
