@@ -4,40 +4,38 @@
  * Page for creating new prediction markets.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWallet } from '../components/WalletProvider';
-import { useContract } from '../hooks/useContract';
+import { useMarketCreation } from '../hooks/useMarketCreation';
 import { MarketForm } from '../components/MarketForm';
 import type { CreateMarketFormData } from '../types/market';
 
 export function CreateMarketPage() {
   const navigate = useNavigate();
   const { isConnected, connect } = useWallet();
-  const { createMarket } = useContract();
+  const { createMarket, state, resetState } = useMarketCreation();
   
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
+
+  // Auto-redirect on success
+  useEffect(() => {
+    if (state.success && !redirecting) {
+      setRedirecting(true);
+      const timer = setTimeout(() => {
+        navigate('/markets');
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [state.success, navigate, redirecting]);
+
+  // Reset state on unmount
+  useEffect(() => {
+    return () => resetState();
+  }, [resetState]);
 
   const handleSubmit = async (data: CreateMarketFormData) => {
-    setIsSubmitting(true);
-    setError(null);
-    
-    try {
-      await createMarket(data.question, data.durationBlocks);
-      setSuccess(true);
-      
-      // Redirect to markets page after brief delay
-      setTimeout(() => {
-        navigate('/markets');
-      }, 2000);
-    } catch (err) {
-      console.error('Failed to create market:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create market. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    await createMarket(data);
   };
 
   const containerStyle: React.CSSProperties = {
@@ -126,7 +124,7 @@ export function CreateMarketPage() {
         </div>
 
         {/* Success State */}
-        {success ? (
+        {state.success ? (
           <div style={successCardStyle}>
             <div style={{ fontSize: '64px', marginBottom: '24px' }}>✅</div>
             <h2 style={{ 
@@ -168,14 +166,14 @@ export function CreateMarketPage() {
           <div style={cardStyle}>
             <MarketForm 
               onSubmit={handleSubmit}
-              isSubmitting={isSubmitting}
-              error={error}
+              isSubmitting={state.isCreating}
+              error={state.error}
             />
           </div>
         )}
 
         {/* Info Sections */}
-        {isConnected && !success && (
+        {isConnected && !state.success && (
           <div style={{ marginTop: '48px' }}>
             <h2 style={{ 
               fontSize: '24px', 
