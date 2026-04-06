@@ -2,7 +2,7 @@
  * GovernancePage Component
  * 
  * Main governance page for proposals and voting.
- * Connects to governance-core and governance-token contracts.
+ * Refactored for mobile responsiveness with Tailwind CSS.
  */
 
 import { useState } from 'react';
@@ -109,7 +109,6 @@ export function GovernancePage() {
     }
   };
 
-  // Filter proposals based on search and status
   const filteredProposals = proposals.filter(proposal => {
     const matchesSearch = searchQuery === '' || 
       proposal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -122,696 +121,273 @@ export function GovernancePage() {
 
   const getStatusColor = (status: string): string => {
     switch (status) {
-      case 'active': return '#3B82F6';
+      case 'active': return 'text-blue-500';
       case 'passed': 
       case 'executed':
-      case 'queued': return '#22C55E';
+      case 'queued': return 'text-emerald-500';
       case 'rejected':
-      case 'cancelled': return '#EF4444';
-      case 'pending': return '#F59E0B';
-      default: return '#9CA3AF';
+      case 'cancelled': return 'text-red-500';
+      case 'pending': return 'text-amber-500';
+      default: return 'text-neutral-400';
     }
   };
 
   const getStatusBgColor = (status: string): string => {
-    return `${getStatusColor(status)}20`;
-  };
-
-  const containerStyle: React.CSSProperties = {
-    minHeight: '100vh',
-    backgroundColor: '#000000',
-    paddingTop: '120px',
-    paddingBottom: '80px',
-  };
-
-  const wrapperStyle: React.CSSProperties = {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '0 24px',
-  };
-
-  const headerStyle: React.CSSProperties = {
-    textAlign: 'center' as const,
-    marginBottom: '48px',
-  };
-
-  const titleStyle: React.CSSProperties = {
-    fontSize: '48px',
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: '16px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '16px',
-  };
-
-  const subtitleStyle: React.CSSProperties = {
-    fontSize: '18px',
-    color: '#9CA3AF',
-    maxWidth: '600px',
-    margin: '0 auto',
-    lineHeight: '1.6',
-  };
-
-  const statsGridStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '24px',
-    marginBottom: '48px',
-  };
-
-  const statCardStyle: React.CSSProperties = {
-    backgroundColor: '#0A0A0A',
-    border: '1px solid #1F1F1F',
-    borderRadius: '16px',
-    padding: '24px',
-    textAlign: 'center' as const,
-  };
-
-  const statLabelStyle: React.CSSProperties = {
-    fontSize: '14px',
-    color: '#9CA3AF',
-    marginBottom: '8px',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.5px',
-  };
-
-  const statValueStyle: React.CSSProperties = {
-    fontSize: '28px',
-    fontWeight: '700',
-    color: '#FFFFFF',
-  };
-
-  const sectionTitleStyle: React.CSSProperties = {
-    fontSize: '24px',
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: '24px',
-  };
-
-  // Used in modal for status badge
-  const statusBadgeStyle = (status: ProposalStatus): React.CSSProperties => ({
-    display: 'inline-block',
-    padding: '6px 12px',
-    borderRadius: '20px',
-    fontSize: '12px',
-    fontWeight: '600',
-    textTransform: 'uppercase' as const,
-    backgroundColor: getStatusBgColor(status),
-    color: getStatusColor(status),
-  });
-
-  const voteButtonsStyle: React.CSSProperties = {
-    display: 'flex',
-    gap: '12px',
-    marginTop: '16px',
-  };
-
-  const voteButtonStyle = (type: 'for' | 'against', disabled: boolean): React.CSSProperties => ({
-    flex: '1',
-    padding: '12px 20px',
-    borderRadius: '10px',
-    fontSize: '14px',
-    fontWeight: '600',
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    border: 'none',
-    opacity: disabled ? 0.5 : 1,
-    backgroundColor: type === 'for' ? '#22C55E' : '#EF4444',
-    color: '#FFFFFF',
-    transition: 'all 0.2s',
-  });
-
-  const modalOverlayStyle: React.CSSProperties = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 100,
-    padding: '24px',
-  };
-
-  const modalStyle: React.CSSProperties = {
-    backgroundColor: '#0A0A0A',
-    border: '1px solid #2F2F2F',
-    borderRadius: '20px',
-    padding: '32px',
-    maxWidth: '600px',
-    width: '100%',
-    maxHeight: '80vh',
-    overflow: 'auto',
-  };
-
-  const modalTitleStyle: React.CSSProperties = {
-    fontSize: '24px',
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: '16px',
-  };
-
-  const modalDescStyle: React.CSSProperties = {
-    fontSize: '15px',
-    color: '#9CA3AF',
-    lineHeight: '1.7',
-    marginBottom: '24px',
-  };
-
-  const closeButtonStyle: React.CSSProperties = {
-    position: 'absolute' as const,
-    top: '16px',
-    right: '16px',
-    backgroundColor: 'transparent',
-    border: 'none',
-    color: '#9CA3AF',
-    fontSize: '24px',
-    cursor: 'pointer',
-  };
-
-  const connectCardStyle: React.CSSProperties = {
-    backgroundColor: '#0A0A0A',
-    border: '1px solid #1F1F1F',
-    borderRadius: '16px',
-    padding: '48px',
-    textAlign: 'center' as const,
-    marginBottom: '48px',
-  };
-
-  const connectButtonStyle: React.CSSProperties = {
-    padding: '16px 32px',
-    backgroundColor: '#3B82F6',
-    border: 'none',
-    borderRadius: '12px',
-    color: '#FFFFFF',
-    fontSize: '16px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
+    switch (status) {
+      case 'active': return 'bg-blue-500/20';
+      case 'passed': 
+      case 'executed':
+      case 'queued': return 'bg-emerald-500/20';
+      case 'rejected':
+      case 'cancelled': return 'bg-red-500/20';
+      case 'pending': return 'bg-amber-500/20';
+      default: return 'bg-neutral-500/20';
+    }
   };
 
   return (
-    <div style={containerStyle}>
-      <div style={wrapperStyle}>
+    <div className="min-h-screen bg-black pt-24 sm:pt-28 lg:pt-32 pb-16 sm:pb-20">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         {/* Header */}
-        <div style={headerStyle}>
-          <h1 style={titleStyle}>
-            <span>🏛️</span> Governance
-          </h1>
-          <p style={subtitleStyle}>
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-2xl sm:text-3xl lg:text-5xl font-bold text-white mb-3 sm:mb-4 flex items-center justify-center gap-2 sm:gap-4">
+          </h1>            <span>
+          <p className="text-sm sm:text-base lg:text-lg text-neutral-400 max-w-xl mx-auto px-4">
             Shape the future of 0xCast. Vote on proposals and participate in 
             decentralized decision-making with your OXC tokens.
           </p>
         </div>
 
-        {/* Stats Grid */}
-        <div style={statsGridStyle}>
-          <div style={statCardStyle}>
-            <div style={statLabelStyle}>Total Proposals</div>
-            <div style={statValueStyle}>{stats.totalProposals}</div>
+        {/* Stats Grid - Responsive */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+          <StatCard label="Total Proposals" value={stats.totalProposals.toString()} />
+          <StatCard label="Active" value={stats.activeProposals.toString()} valueColor="text-blue-500" />
+          <StatCard label="Passed" value={stats.passedProposals.toString()} valueColor="text-emerald-500" />
+          <StatCard 
+            label="Your Voting Power" 
+            value={isConnected ? formatVotingPower(stats.'} userVotingPower) : '
+          />
+        </div>
+
+        {/* Governance Parameters */}
+        <div className="bg-[#0A0A0A] border border-neutral-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
+            <h3 className="text-sm sm:text-base font-semibold text-white">Governance Parameters</h3>
+            <span className="text-xs text-neutral-500">Current settings</span>
           </div>
-          <div style={statCardStyle}>
-            <div style={statLabelStyle}>Active</div>
-            <div style={{ ...statValueStyle, color: '#3B82F6' }}>
-              {stats.activeProposals}
-            </div>
-          </div>
-          <div style={statCardStyle}>
-            <div style={statLabelStyle}>Passed</div>
-            <div style={{ ...statValueStyle, color: '#22C55E' }}>
-              {stats.passedProposals}
-            </div>
-          </div>
-          <div style={statCardStyle}>
-            <div style={statLabelStyle}>Your Voting Power</div>
-            <div style={statValueStyle}>
-              {isConnected ? formatVotingPower(stats.userVotingPower) : '—'}
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <ParamItem label="Proposal Threshold" value={`${formatVotingPower(parameters.proposalThreshold)} CAST`} />
+            <ParamItem label="Quorum" value={`${parameters.quorumPercentage}%`} />
+            <ParamItem label="Voting Period" value={`~${Math.round(parameters.votingPeriod / 144)} days`} />
+            <ParamItem label="Timelock Period" value={`~${Math.round(parameters.timelockPeriod / 144)} days`} />
           </div>
         </div>
 
-        {/* Governance Parameters Info */}
-        <div style={{
-          backgroundColor: '#0A0A0A',
-          border: '1px solid #1F1F1F',
-          borderRadius: '16px',
-          padding: '20px 24px',
-          marginBottom: '32px',
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '16px',
-          }}>
-            <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#FFFFFF', margin: 0 }}>
-              Governance Parameters
-            </h3>
-            <span style={{ fontSize: '13px', color: '#6B7280' }}>
-              Current settings
-            </span>
-          </div>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '16px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#9CA3AF', fontSize: '14px' }}>Proposal Threshold</span>
-              <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: '500' }}>
-                {formatVotingPower(parameters.proposalThreshold)} CAST
-              </span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#9CA3AF', fontSize: '14px' }}>Quorum</span>
-              <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: '500' }}>
-                {parameters.quorumPercentage}%
-              </span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#9CA3AF', fontSize: '14px' }}>Voting Period</span>
-              <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: '500' }}>
-                {parameters.votingPeriod.toLocaleString()} blocks (~{Math.round(parameters.votingPeriod / 144)} days)
-              </span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#9CA3AF', fontSize: '14px' }}>Timelock Period</span>
-              <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: '500' }}>
-                {parameters.timelockPeriod.toLocaleString()} blocks (~{Math.round(parameters.timelockPeriod / 144)} days)
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Delegation Section */}
+        {/* User Activity Section */}
         {isConnected && (
           <>
-            {/* User Voting Activity */}
-            <div style={{
-              backgroundColor: '#0A0A0A',
-              border: '1px solid #1F1F1F',
-              borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '16px',
-            }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#FFFFFF', marginBottom: '16px' }}>
-                Your Governance Activity
-              </h3>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-                gap: '16px',
-              }}>
-                <div>
-                  <div style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '4px' }}>Proposals Voted</div>
-                  <div style={{ color: '#FFFFFF', fontSize: '20px', fontWeight: '600' }}>
-                    {proposals.filter(p => p.userVote).length}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '4px' }}>Votes For</div>
-                  <div style={{ color: '#22C55E', fontSize: '20px', fontWeight: '600' }}>
-                    {proposals.filter(p => p.userVote === 'for').length}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '4px' }}>Votes Against</div>
-                  <div style={{ color: '#EF4444', fontSize: '20px', fontWeight: '600' }}>
-                    {proposals.filter(p => p.userVote === 'against').length}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ color: '#9CA3AF', fontSize: '13px', marginBottom: '4px' }}>Participation</div>
-                  <div style={{ color: '#3B82F6', fontSize: '20px', fontWeight: '600' }}>
-                    {stats.totalProposals > 0 
-                      ? Math.round((proposals.filter(p => p.userVote).length / stats.totalProposals) * 100) 
-                      : 0}%
-                  </div>
-                </div>
+            <div className="bg-[#0A0A0A] border border-neutral-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4">
+              <h3 className="text-sm sm:text-base font-semibold text-white mb-4">Your Governance Activity</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <ActivityStat 
+                  label="Proposals Voted" 
+                  value={proposals.filter(p => p.userVote).length} 
+                />
+                <ActivityStat 
+                  label="Votes For" 
+                  value={proposals.filter(p => p.userVote === 'for').length}
+                  valueColor="text-emerald-500" 
+                />
+                <ActivityStat 
+                  label="Votes Against" 
+                  value={proposals.filter(p => p.userVote === 'against').length}
+                  valueColor="text-red-500" 
+                />
+                <ActivityStat 
+                  label="Participation" 
+                  value={stats.totalProposals > 0 
+                    ? `${Math.round((proposals.filter(p => p.userVote).length / stats.totalProposals) * 100)}%`
+                    : '0%'}
+                  valueColor="text-blue-500" 
+                />
               </div>
             </div>
 
-            {/* Delegation Section */}
-            <div style={{
-              backgroundColor: '#0A0A0A',
-              border: '1px solid #1F1F1F',
-              borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '32px',
-            }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#FFFFFF', marginBottom: '12px' }}>
-                Voting Power Delegation
-              </h3>
-            <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '20px', lineHeight: '1.6' }}>
-              Delegate your voting power to another address to vote on your behalf. You can revoke delegation at any time.
-            </p>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              <button
-                onClick={() => setShowDelegateModal(true)}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: 'transparent',
-                  border: '1px solid #3B82F6',
-                  borderRadius: '10px',
-                  color: '#3B82F6',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-              >
-                Delegate Voting Power
-              </button>
-              <button
-                onClick={handleRevokeDelegation}
-                disabled={delegationState.isLoading}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: 'transparent',
-                  border: '1px solid #6B7280',
-                  borderRadius: '10px',
-                  color: '#9CA3AF',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: delegationState.isLoading ? 'not-allowed' : 'pointer',
-                  opacity: delegationState.isLoading ? 0.5 : 1,
-                  transition: 'all 0.2s',
-                }}
-              >
-                {delegationState.isLoading ? 'Revoking...' : 'Revoke Delegation'}
-              </button>
-            </div>
-            {delegationState.error && (
-              <div style={{
-                marginTop: '16px',
-                padding: '12px',
-                backgroundColor: '#EF444420',
-                border: '1px solid #EF444440',
-                borderRadius: '8px',
-                color: '#F87171',
-                fontSize: '13px',
-              }}>
-                {delegationState.error}
+            {/* Delegation Card */}
+            <div className="bg-[#0A0A0A] border border-neutral-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                <div>
+                  <h3 className="text-sm sm:text-base font-semibold text-white mb-1">Delegation</h3>
+                  <p className="text-xs sm:text-sm text-neutral-400">
+                    {stats.userDelegatedTo 
+                      ? `Delegated to: ${stats.userDelegatedTo.slice(0, 8)}...${stats.userDelegatedTo.slice(-6)}`
+                      : 'Delegate your voting power to another address'}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  {stats.userDelegatedTo ? (
+                    <button 
+                      onClick={handleRevokeDelegation}
+                      disabled={delegationState.isLoading}
+                      className="btn btn-secondary text-sm py-2 px-4"
+                    >
+                      {delegationState.isLoading ? 'Revoking...' : 'Revoke'}
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => setShowDelegateModal(true)}
+                      className="btn btn-primary text-sm py-2 px-4"
+                    >
+                      Delegate
+                    </button>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
+            </div>
           </>
         )}
 
-        {/* Connect Wallet CTA or Create Proposal Button */}
-        {!isConnected ? (
-          <div style={connectCardStyle}>
-            <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#FFFFFF', marginBottom: '12px' }}>
-              Connect to Participate
-            </h3>
-            <p style={{ color: '#9CA3AF', marginBottom: '24px' }}>
-              Connect your wallet to vote on proposals and participate in governance
+        {/* Connect Wallet Prompt */}
+        {!isConnected && (
+          <div className="bg-[#0A0A0A] border border-neutral-800 rounded-xl sm:rounded-2xl p-6 sm:p-8 lg:p-12 text-center mb-6 sm:mb-8">
+            <h3 className="text-lg sm:text-xl font-semibold text-white mb-3">Connect to Participate</h3>
+            <p className="text-sm text-neutral-400 mb-6 max-w-md mx-auto">
+              Connect your wallet to vote on proposals, delegate voting power, and create new proposals.
             </p>
-            <button style={connectButtonStyle} onClick={() => connect()}>
+            <button onClick={() => connect()} className="btn btn-primary">
               Connect Wallet
             </button>
           </div>
-        ) : (
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            marginBottom: '32px',
-          }}>
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-              <span style={{ fontSize: '14px', color: '#6B7280' }}>
-                Current block: {currentBlock.toLocaleString()}
-              </span>
-              <button
-                onClick={refetch}
-                disabled={isLoading}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: 'transparent',
-                  border: '1px solid #374151',
-                  borderRadius: '8px',
-                  color: '#9CA3AF',
-                  fontSize: '13px',
-                  cursor: isLoading ? 'not-allowed' : 'pointer',
-                  opacity: isLoading ? 0.5 : 1,
-                }}
+        )}
+
+        {/* Proposals Section */}
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-white">Proposals</h2>
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Search */}
+              <input
+                type="text"
+                placeholder="Search proposals..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="px-4 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white text-sm placeholder:text-neutral-500 w-full sm:w-64"
+              />
+              {/* Filter */}
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+                className="px-4 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white text-sm"
               >
-                {isLoading ? 'Refreshing...' : 'Refresh'}
-              </button>
-            </div>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              style={{
-                padding: '12px 24px',
-                backgroundColor: '#3B82F6',
-                border: 'none',
-                borderRadius: '10px',
-                color: '#FFFFFF',
-                fontSize: '15px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
-              + Create Proposal
-            </button>
-          </div>
-        )}
-
-        {/* Vote Error */}
-        {voteError && (
-          <div style={{
-            padding: '12px 16px',
-            backgroundColor: '#EF444420',
-            border: '1px solid #EF444440',
-            borderRadius: '10px',
-            marginBottom: '24px',
-            color: '#F87171',
-            fontSize: '14px',
-          }}>
-            {voteError}
-          </div>
-        )}
-
-        {/* Search and Filter */}
-        <div style={{
-          backgroundColor: '#0A0A0A',
-          border: '1px solid #1F1F1F',
-          borderRadius: '16px',
-          padding: '20px 24px',
-          marginBottom: '24px',
-        }}>
-          <div style={{
-            display: 'flex',
-            gap: '16px',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-          }}>
-            <input
-              type="text"
-              placeholder="Search proposals..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                flex: '1',
-                minWidth: '200px',
-                padding: '10px 16px',
-                backgroundColor: '#111111',
-                border: '1px solid #2F2F2F',
-                borderRadius: '10px',
-                color: '#FFFFFF',
-                fontSize: '14px',
-                outline: 'none',
-              }}
-            />
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {['all', 'active', 'passed', 'rejected'].map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setStatusFilter(status as typeof statusFilter)}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: statusFilter === status ? '#3B82F6' : 'transparent',
-                    border: `1px solid ${statusFilter === status ? '#3B82F6' : '#374151'}`,
-                    borderRadius: '8px',
-                    color: statusFilter === status ? '#FFFFFF' : '#9CA3AF',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    textTransform: 'capitalize',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                  }}
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="passed">Passed</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              {/* Create Button */}
+              {isConnected && (
+                <button 
+                  onClick={() => setShowCreateModal(true)}
+                  className="btn btn-primary text-sm whitespace-nowrap"
                 >
-                  {status}
+                  + Create Proposal
                 </button>
+              )}
+            </div>
+          </div>
+
+          {/* Proposals Grid */}
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-neutral-900 rounded-xl p-6 animate-pulse">
+                  <div className="h-4 bg-neutral-800 rounded w-3/4 mb-4" />
+                  <div className="h-3 bg-neutral-800 rounded w-full mb-2" />
+                  <div className="h-3 bg-neutral-800 rounded w-2/3" />
+                </div>
               ))}
             </div>
-          </div>
+          ) : filteredProposals.length === 0 ? (
+            <div className="bg-neutral-900/50 rounded-xl p-8 sm:p-12 text-center">
+              <p className="text-neutral-400">
+                {searchQuery || statusFilter !== 'all' 
+                  ? 'No proposals match your search criteria'
+                  : 'No proposals yet. Be the first to create one!'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredProposals.map((proposal) => (
+                <ProposalCard
+                  key={proposal.id}
+                  proposal={proposal}
+                  currentBlock={currentBlock}
+                  onVote={(vote) => handleVote(proposal.id, vote)}
+                  onQueue={() => handleQueueProposal(proposal.id)}
+                  onExecute={() => handleExecuteProposal(proposal.id)}
+                  onClick={() => setSelectedProposal(proposal)}
+                  isVoting={voteState.isLoading}
+                  isExecuting={executionState.isLoading}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Active Proposals */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          marginBottom: '24px',
-        }}>
-          <h2 style={{ ...sectionTitleStyle, marginBottom: 0 }}>
-            {statusFilter === 'all' ? 'All Proposals' : `${statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)} Proposals`}
-          </h2>
-          <span style={{ fontSize: '14px', color: '#6B7280' }}>
-            {filteredProposals.length} {filteredProposals.length === 1 ? 'proposal' : 'proposals'}
-          </span>
-        </div>
-        
-        {isLoading ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#9CA3AF' }}>
-            Loading proposals...
-          </div>
-        ) : filteredProposals.length === 0 ? (
-          <div style={{ 
-            backgroundColor: '#0A0A0A', 
-            border: '1px solid #1F1F1F', 
-            borderRadius: '16px', 
-            padding: '48px', 
-            textAlign: 'center', 
-            marginBottom: '32px' 
-          }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📋</div>
-            <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#FFFFFF', marginBottom: '8px' }}>
-              {searchQuery || statusFilter !== 'all' ? 'No Matching Proposals' : 'No Proposals Yet'}
-            </h3>
-            <p style={{ color: '#9CA3AF', maxWidth: '400px', margin: '0 auto', marginBottom: '24px' }}>
-              {searchQuery || statusFilter !== 'all' 
-                ? 'Try adjusting your search or filter to see more results.'
-                : 'There are currently no governance proposals. Be the first to create one!'
-              }
-            </p>
-            {isConnected && !searchQuery && statusFilter === 'all' && (
-              <button
-                onClick={() => setShowCreateModal(true)}
-                style={{
-                  padding: '12px 24px',
-                  backgroundColor: '#3B82F6',
-                  border: 'none',
-                  borderRadius: '10px',
-                  color: '#FFFFFF',
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                }}
-              >
-                Create First Proposal
-              </button>
-            )}
-          </div>
-        ) : filteredProposals.map(proposal => (
-          <ProposalCard
-            key={proposal.id}
-            proposal={proposal}
-            isConnected={isConnected}
-            isVoting={voteState.isLoading}
-            onVote={handleVote}
-            onSelect={setSelectedProposal}
-          />
-        ))}
-
-        {/* Proposal Detail Modal */}
+        {/* Selected Proposal Modal */}
         {selectedProposal && (
-          <div style={modalOverlayStyle} onClick={() => setSelectedProposal(null)}>
-            <div style={{ ...modalStyle, position: 'relative' }} onClick={e => e.stopPropagation()}>
-              <button style={closeButtonStyle} onClick={() => setSelectedProposal(null)}>
-                ×
+          <div 
+            className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+            onClick={() => setSelectedProposal(null)}
+          >
+            <div 
+              className="bg-[#0A0A0A] border border-neutral-700 rounded-2xl p-4 sm:p-6 lg:p-8 max-w-2xl w-full max-h-[90vh] overflow-auto relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button 
+                onClick={() => setSelectedProposal(null)}
+                className="absolute top-4 right-4 text-neutral-400 hover:text-white text-2xl"
+              >
+                
               </button>
-              <span style={statusBadgeStyle(selectedProposal.status)}>
-                {selectedProposal.status}
-              </span>
-              <h2 style={{ ...modalTitleStyle, marginTop: '16px' }}>
-                {selectedProposal.title}
-              </h2>
-              <p style={modalDescStyle}>{selectedProposal.description}</p>
               
-              <div style={{ 
-                padding: '16px', 
-                backgroundColor: '#111111', 
-                borderRadius: '12px',
-                marginBottom: '24px' 
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                  <span style={{ color: '#9CA3AF', fontSize: '14px' }}>Proposer</span>
-                  <span style={{ color: '#FFFFFF', fontSize: '14px', fontFamily: 'monospace' }}>
-                    {selectedProposal.proposer}
-                  </span>
+              <div className="mb-4">
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase ${getStatusBgColor(selectedProposal.status)} ${getStatusColor(selectedProposal.status)}`}>
+                  {selectedProposal.status}
+                </span>
+              </div>
+              
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-4">{selectedProposal.title}</h2>
+              <p className="text-sm sm:text-base text-neutral-400 leading-relaxed mb-6">{selectedProposal.description}</p>
+              
+              {/* Vote Stats */}
+              <div className="bg-neutral-900 rounded-xl p-4 mb-6">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-emerald-500">For: {calculateVotePercentage(selectedProposal.votesFor, selectedProposal.votesAgainst)}%</span>
+                  <span className="text-red-500">Against: {calculateVotePercentage(selectedProposal.votesAgainst, selectedProposal.votesFor)}%</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                  <span style={{ color: '#9CA3AF', fontSize: '14px' }}>Total Votes</span>
-                  <span style={{ color: '#FFFFFF', fontSize: '14px' }}>
-                    {formatVotingPower(selectedProposal.totalVotes)} CAST
-                  </span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                  <span style={{ color: '#9CA3AF', fontSize: '14px' }}>Start Block</span>
-                  <span style={{ color: '#FFFFFF', fontSize: '14px' }}>
-                    #{selectedProposal.startBlock.toLocaleString()}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#9CA3AF', fontSize: '14px' }}>End Block</span>
-                  <span style={{ color: '#FFFFFF', fontSize: '14px' }}>
-                    #{selectedProposal.endBlock.toLocaleString()}
-                  </span>
+                <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-emerald-500 rounded-full"
+                    style={{ width: `${calculateVotePercentage(selectedProposal.votesFor, selectedProposal.votesAgainst)}%` }}
+                  />
                 </div>
               </div>
 
-              {/* Voting Progress */}
-              <div style={{ marginBottom: '24px' }}>
-                <div style={{
-                  height: '8px',
-                  backgroundColor: '#1F1F1F',
-                  borderRadius: '4px',
-                  overflow: 'hidden',
-                  display: 'flex',
-                }}>
-                  <div style={{
-                    width: `${calculateVotePercentage(selectedProposal.votesFor, selectedProposal.totalVotes)}%`,
-                    height: '100%',
-                    backgroundColor: '#22C55E',
-                  }} />
-                  <div style={{
-                    width: `${calculateVotePercentage(selectedProposal.votesAgainst, selectedProposal.totalVotes)}%`,
-                    height: '100%',
-                    backgroundColor: '#EF4444',
-                  }} />
-                </div>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: '13px',
-                  marginTop: '8px',
-                }}>
-                  <span style={{ color: '#22C55E' }}>
-                    For: {formatVotingPower(selectedProposal.votesFor)}
-                  </span>
-                  <span style={{ color: '#EF4444' }}>
-                    Against: {formatVotingPower(selectedProposal.votesAgainst)}
-                  </span>
-                </div>
-              </div>
-
-              {selectedProposal.status === 'active' && isConnected && !selectedProposal.userVote && (
-                <div style={voteButtonsStyle}>
-                  <button
-                    style={voteButtonStyle('for', voteState.isLoading)}
+              {/* Vote Buttons */}
+              {isConnected && selectedProposal.status === 'active' && !selectedProposal.userVote && (
+                <div className="flex gap-3">
+                  <button 
                     onClick={() => handleVote(selectedProposal.id, 'for')}
+                    disabled={voteState.isLoading}
+                    className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold transition-colors disabled:opacity-50"
                   >
                     {voteState.isLoading ? 'Voting...' : 'Vote For'}
                   </button>
-                  <button
-                    style={voteButtonStyle('against', voteState.isLoading)}
+                  <button 
                     onClick={() => handleVote(selectedProposal.id, 'against')}
+                    disabled={voteState.isLoading}
+                    className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-colors disabled:opacity-50"
                   >
                     {voteState.isLoading ? 'Voting...' : 'Vote Against'}
                   </button>
@@ -819,74 +395,62 @@ export function GovernancePage() {
               )}
 
               {selectedProposal.userVote && (
-                <div style={{
-                  padding: '12px 16px',
-                  borderRadius: '10px',
-                  backgroundColor: selectedProposal.userVote === 'for' ? '#22C55E20' : '#EF444420',
-                  color: selectedProposal.userVote === 'for' ? '#22C55E' : '#EF4444',
-                  textAlign: 'center',
-                  fontWeight: '600',
-                }}>
-                  You voted {selectedProposal.userVote === 'for' ? 'For' : 'Against'} this proposal
+                <div className="text-center py-3 bg-neutral-900 rounded-xl">
+                  <span className="text-neutral-400">You voted: </span>
+                  <span className={selectedProposal.userVote === 'for' ? 'text-emerald-500' : 'text-red-500'}>
+                    {selectedProposal.userVote === 'for' ? 'For' : 'Against'}
+                  </span>
                 </div>
               )}
 
-              {/* Execution Actions */}
-              {isConnected && selectedProposal.status === 'passed' && (
-                <button
-                  onClick={() => handleQueueProposal(selectedProposal.id)}
-                  disabled={executionState.isLoading}
-                  style={{
-                    width: '100%',
-                    marginTop: '16px',
-                    padding: '12px 20px',
-                    backgroundColor: executionState.isLoading ? '#374151' : '#22C55E',
-                    border: 'none',
-                    borderRadius: '10px',
-                    color: '#FFFFFF',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: executionState.isLoading ? 'not-allowed' : 'pointer',
-                    opacity: executionState.isLoading ? 0.5 : 1,
-                  }}
-                >
-                  {executionState.isLoading ? 'Queueing...' : 'Queue Proposal'}
-                </button>
+              {voteError && (
+                <div className="mt-4 p-3 bg-red-500/10 text-red-500 rounded-lg text-sm">
+                  {voteError}
+                </div>
               )}
+            </div>
+          </div>
+        )}
 
-              {isConnected && selectedProposal.status === 'queued' && (
-                <button
-                  onClick={() => handleExecuteProposal(selectedProposal.id)}
-                  disabled={executionState.isLoading}
-                  style={{
-                    width: '100%',
-                    marginTop: '16px',
-                    padding: '12px 20px',
-                    backgroundColor: executionState.isLoading ? '#374151' : '#3B82F6',
-                    border: 'none',
-                    borderRadius: '10px',
-                    color: '#FFFFFF',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: executionState.isLoading ? 'not-allowed' : 'pointer',
-                    opacity: executionState.isLoading ? 0.5 : 1,
-                  }}
+        {/* Delegate Modal */}
+        {showDelegateModal && (
+          <div 
+            className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowDelegateModal(false)}
+          >
+            <div 
+              className="bg-[#0A0A0A] border border-neutral-700 rounded-2xl p-4 sm:p-6 max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-4">Delegate Voting Power</h3>
+              <p className="text-sm text-neutral-400 mb-4">
+                Enter the address you want to delegate your voting power to.
+              </p>
+              <input
+                type="text"
+                placeholder="SP... or ST..."
+                value={delegateAddress}
+                onChange={(e) => setDelegateAddress(e.target.value)}
+                className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl text-white mb-4"
+              />
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setShowDelegateModal(false)}
+                  className="flex-1 py-3 bg-neutral-800 text-white rounded-xl font-semibold"
                 >
-                  {executionState.isLoading ? 'Executing...' : 'Execute Proposal'}
+                  Cancel
                 </button>
-              )}
-
-              {executionState.error && (
-                <div style={{
-                  marginTop: '16px',
-                  padding: '12px',
-                  backgroundColor: '#EF444420',
-                  border: '1px solid #EF444440',
-                  borderRadius: '8px',
-                  color: '#F87171',
-                  fontSize: '13px',
-                }}>
-                  {executionState.error}
+                <button 
+                  onClick={handleDelegate}
+                  disabled={!delegateAddress.trim() || delegationState.isLoading}
+                  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold disabled:opacity-50"
+                >
+                  {delegationState.isLoading ? 'Delegating...' : 'Delegate'}
+                </button>
+              </div>
+              {delegationState.error && (
+                <div className="mt-4 p-3 bg-red-500/10 text-red-500 rounded-lg text-sm">
+                  {delegationState.error}
                 </div>
               )}
             </div>
@@ -894,112 +458,45 @@ export function GovernancePage() {
         )}
 
         {/* Create Proposal Modal */}
-        <CreateProposalModal
-          isOpen={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onSubmit={handleCreateProposal}
-          isSubmitting={proposalState.isLoading}
-          userVotingPower={stats.userVotingPower}
-          proposalThreshold={stats.proposalThreshold}
-          error={proposalState.error}
-        />
-
-        {/* Delegate Modal */}
-        {showDelegateModal && (
-          <div style={modalOverlayStyle} onClick={() => setShowDelegateModal(false)}>
-            <div style={{ ...modalStyle, position: 'relative', maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
-              <button style={closeButtonStyle} onClick={() => setShowDelegateModal(false)}>
-                ×
-              </button>
-              <h2 style={modalTitleStyle}>Delegate Voting Power</h2>
-              <p style={modalDescStyle}>
-                Enter the Stacks address you want to delegate your voting power to. They will be able to vote on your behalf.
-              </p>
-              
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ 
-                  display: 'block', 
-                  color: '#9CA3AF', 
-                  fontSize: '14px', 
-                  marginBottom: '8px',
-                  fontWeight: '500',
-                }}>
-                  Delegate Address
-                </label>
-                <input
-                  type="text"
-                  value={delegateAddress}
-                  onChange={(e) => setDelegateAddress(e.target.value)}
-                  placeholder="SP2..."
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    backgroundColor: '#111111',
-                    border: '1px solid #2F2F2F',
-                    borderRadius: '10px',
-                    color: '#FFFFFF',
-                    fontSize: '14px',
-                    fontFamily: 'monospace',
-                    outline: 'none',
-                  }}
-                />
-              </div>
-
-              <div style={{
-                padding: '12px 16px',
-                backgroundColor: '#F59E0B20',
-                border: '1px solid #F59E0B40',
-                borderRadius: '10px',
-                marginBottom: '24px',
-              }}>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-                  <span style={{ color: '#F59E0B', fontSize: '16px' }}>⚠️</span>
-                  <p style={{ color: '#FCD34D', fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
-                    The delegate will be able to vote with your full voting power until you revoke the delegation.
-                  </p>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button
-                  onClick={() => setShowDelegateModal(false)}
-                  style={{
-                    flex: '1',
-                    padding: '12px 20px',
-                    backgroundColor: 'transparent',
-                    border: '1px solid #2F2F2F',
-                    borderRadius: '10px',
-                    color: '#9CA3AF',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDelegate}
-                  disabled={!delegateAddress.trim() || delegationState.isLoading}
-                  style={{
-                    flex: '1',
-                    padding: '12px 20px',
-                    backgroundColor: delegateAddress.trim() && !delegationState.isLoading ? '#3B82F6' : '#374151',
-                    border: 'none',
-                    borderRadius: '10px',
-                    color: '#FFFFFF',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: delegateAddress.trim() && !delegationState.isLoading ? 'pointer' : 'not-allowed',
-                    opacity: delegateAddress.trim() && !delegationState.isLoading ? 1 : 0.5,
-                  }}
-                >
-                  {delegationState.isLoading ? 'Delegating...' : 'Delegate'}
-                </button>
-              </div>
-            </div>
-          </div>
+        {showCreateModal && (
+          <CreateProposalModal
+            onClose={() => setShowCreateModal(false)}
+            onSubmit={handleCreateProposal}
+            isLoading={proposalState.isLoading}
+            error={proposalState.error}
+            threshold={parameters.proposalThreshold}
+            userVotingPower={stats.userVotingPower}
+          />
         )}
       </div>
+    </div>
+  );
+}
+
+// Helper Components
+function StatCard({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
+  return (
+    <div className="bg-[#0A0A0A] border border-neutral-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 text-center">
+      <div className="text-xs sm:text-sm text-neutral-400 mb-1 sm:mb-2 uppercase tracking-wide">{label}</div>
+      <div className={`text-lg sm:text-xl lg:text-2xl font-bold ${valueColor || 'text-white'}`}>{value}</div>
+    </div>
+  );
+}
+
+function ParamItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between items-center py-1">
+      <span className="text-xs sm:text-sm text-neutral-400">{label}</span>
+      <span className="text-xs sm:text-sm text-white font-medium">{value}</span>
+    </div>
+  );
+}
+
+function ActivityStat({ label, value, valueColor }: { label: string; value: string | number; valueColor?: string }) {
+  return (
+    <div>
+      <div className="text-xs text-neutral-400 mb-1">{label}</div>
+      <div className={`text-lg sm:text-xl font-semibold ${valueColor || 'text-white'}`}>{value}</div>
     </div>
   );
 }
