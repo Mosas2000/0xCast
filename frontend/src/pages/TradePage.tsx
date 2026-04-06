@@ -176,27 +176,27 @@ export function TradePage() {
 
   return (
     <div className="pt-[72px] min-h-screen">
-      <div className="container max-w-5xl py-12 lg:py-16">
+      <div className="container max-w-5xl py-8 sm:py-12 lg:py-16 px-4 sm:px-6">
         {/* Back */}
-        <Link to="/markets" className="inline-flex items-center gap-2 text-neutral-500 hover:text-white mb-10 transition-colors">
+        <Link to="/markets" className="inline-flex items-center gap-2 text-neutral-500 hover:text-white mb-6 sm:mb-10 transition-colors text-sm sm:text-base">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back to Markets
         </Link>
 
-        <div className="grid lg:grid-cols-5 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-10">
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-8">
+          <div className="lg:col-span-3 space-y-6 sm:space-y-8">
             {/* Header */}
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
               <span className={`badge ${isActive ? 'badge-green' : 'badge-blue'}`}>
                 {getStatusLabel(market.status)}
               </span>
               <span className="text-sm text-neutral-500 font-mono">#{market.id}</span>
             </div>
 
-            <h1 className="text-2xl lg:text-3xl font-bold text-white leading-tight">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white leading-tight">
               {market.question}
             </h1>
 
@@ -227,10 +227,10 @@ export function TradePage() {
             )}
 
             {/* Odds */}
-            <div className="card p-8">
-              <h3 className="text-sm font-medium text-neutral-400 mb-8">Current Odds</h3>
+            <div className="card p-4 sm:p-6 lg:p-8">
+              <h3 className="text-sm font-medium text-neutral-400 mb-6 sm:mb-8">Current Odds</h3>
               
-              <div className="space-y-8">
+              <div className="space-y-6 sm:space-y-8">
                 <div>
                   <div className="flex justify-between mb-3">
                     <span className="text-emerald-400 font-semibold">Yes</span>
@@ -254,18 +254,18 @@ export function TradePage() {
                 </div>
               </div>
 
-              <div className="mt-8 pt-8 border-t border-neutral-800 flex justify-between">
-                <span className="text-neutral-500">Total Pool</span>
-                <span className="text-white font-bold">{formatStx(totalPool)}</span>
+              <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-neutral-800 flex justify-between">
+                <span className="text-neutral-500 text-sm sm:text-base">Total Pool</span>
+                <span className="text-white font-bold text-sm sm:text-base">{formatStx(totalPool)}</span>
               </div>
             </div>
 
             {/* Details */}
-            <div className="card p-8">
-              <h3 className="text-sm font-medium text-neutral-400 mb-6">Market Details</h3>
-              <div className="space-y-5">
-                <div className="flex justify-between items-center">
-                  <span className="text-neutral-500">Creator</span>
+            <div className="card p-4 sm:p-6 lg:p-8">
+              <h3 className="text-sm font-medium text-neutral-400 mb-4 sm:mb-6">Market Details</h3>
+              <div className="space-y-4 sm:space-y-5">
+                <div className="flex justify-between items-center flex-wrap gap-2">
+                  <span className="text-neutral-500 text-sm">Creator</span>
                   <a
                     href={`https://explorer.hiro.so/address/${market.creator}?chain=mainnet`}
                     target="_blank"
@@ -289,38 +289,38 @@ export function TradePage() {
 
           {/* Trading Panel */}
           <div className="lg:col-span-2">
-            <div className="card p-8 lg:sticky lg:top-[88px]">
-              <h3 className="text-lg font-semibold text-white mb-8">
+            <div className="card p-4 sm:p-6 lg:p-8 lg:sticky lg:top-[88px]">
+              <h3 className="text-base sm:text-lg font-semibold text-white mb-6 sm:mb-8">
                 {isActive ? 'Place Your Prediction' : 'Trading Closed'}
               </h3>
 
               {!isConnected ? (
-                <div className="text-center py-12">
-                  <p className="text-neutral-500 mb-6">Connect your wallet to trade</p>
+                <div className="text-center py-8 sm:py-12">
+                  <p className="text-neutral-500 mb-4 sm:mb-6 text-sm sm:text-base">Connect your wallet to trade</p>
                   <button type="button" onClick={() => connect()} className="btn btn-primary w-full">Connect Wallet</button>
                 </div>
               ) : !isActive ? (
-                <div className="text-center py-12">
-                  <p className="text-neutral-500">This market is no longer accepting trades</p>
+                <div className="text-center py-8 sm:py-12">
+                  <p className="text-neutral-500 text-sm sm:text-base">This market is no longer accepting trades</p>
                 </div>
               ) : (
-                <div className="space-y-8">
+                <div className="space-y-6 sm:space-y-8">
                   {/* Outcome Selection */}
                   <div>
-                    <label className="block text-sm text-neutral-400 mb-4">Select Outcome</label>
-                    <div className="grid grid-cols-2 gap-4">
+                    <label className="block text-sm text-neutral-400 mb-3 sm:mb-4">Select Outcome</label>
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
                       <button
                         onClick={() => {
                           setSelectedOutcome('yes');
                           resetTradeState();
                         }}
-                        className={`p-4 rounded-xl border-2 transition-all ${
+                        className={`p-3 sm:p-4 rounded-xl border-2 transition-all ${
                           selectedOutcome === 'yes'
                             ? 'border-emerald-500 bg-emerald-500/10'
                             : 'border-neutral-800 hover:border-neutral-700'
                         }`}
                       >
-                        <span className="block text-xl font-bold text-emerald-400">Yes</span>
+                        <span className="block text-lg sm:text-xl font-bold text-emerald-400">Yes</span>
                         <span className="text-xs text-neutral-500">{odds.yes}%</span>
                       </button>
                       <button
@@ -328,13 +328,13 @@ export function TradePage() {
                           setSelectedOutcome('no');
                           resetTradeState();
                         }}
-                        className={`p-4 rounded-xl border-2 transition-all ${
+                        className={`p-3 sm:p-4 rounded-xl border-2 transition-all ${
                           selectedOutcome === 'no'
                             ? 'border-rose-500 bg-rose-500/10'
                             : 'border-neutral-800 hover:border-neutral-700'
                         }`}
                       >
-                        <span className="block text-xl font-bold text-rose-400">No</span>
+                        <span className="block text-lg sm:text-xl font-bold text-rose-400">No</span>
                         <span className="text-xs text-neutral-500">{odds.no}%</span>
                       </button>
                     </div>
