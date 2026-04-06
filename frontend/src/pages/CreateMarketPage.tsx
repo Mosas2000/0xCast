@@ -126,7 +126,11 @@ export function CreateMarketPage() {
         {/* Success State */}
         {state.success ? (
           <div style={successCardStyle}>
-            <div style={{ fontSize: '64px', marginBottom: '24px' }}>✅</div>
+            <div style={{ 
+              fontSize: '64px', 
+              marginBottom: '24px',
+              animation: 'bounce 0.5s ease-in-out',
+            }}>✅</div>
             <h2 style={{ 
               fontSize: '28px', 
               fontWeight: '700', 
@@ -138,9 +142,68 @@ export function CreateMarketPage() {
             <p style={{ fontSize: '16px', color: '#86EFAC', marginBottom: '24px' }}>
               Your prediction market has been created and is now live.
             </p>
+            <div style={{
+              padding: '16px',
+              backgroundColor: 'rgba(0,0,0,0.2)',
+              borderRadius: '10px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ fontSize: '13px', color: '#D1FAE5', marginBottom: '12px' }}>
+                Share your market:
+              </div>
+              <div style={{
+                display: 'flex',
+                gap: '12px',
+                justifyContent: 'center',
+                flexWrap: 'wrap',
+              }}>
+                <button
+                  onClick={() => {
+                    const url = `${window.location.origin}/markets`;
+                    navigator.clipboard.writeText(url);
+                  }}
+                  style={{
+                    padding: '10px 20px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    borderRadius: '8px',
+                    color: '#FFFFFF',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                  }}
+                >
+                  📋 Copy Link
+                </button>
+                <a
+                  href={`https://twitter.com/intent/tweet?text=Check out my new prediction market on 0xCast!&url=${window.location.origin}/markets`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    padding: '10px 20px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    borderRadius: '8px',
+                    color: '#FFFFFF',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    textDecoration: 'none',
+                    display: 'inline-block',
+                  }}
+                >
+                  🐦 Share on X
+                </a>
+              </div>
+            </div>
             <p style={{ fontSize: '14px', color: '#9CA3AF' }}>
               Redirecting to markets page...
             </p>
+            <style>{`
+              @keyframes bounce {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-20px); }
+              }
+            `}</style>
           </div>
         ) : !isConnected ? (
           /* Not Connected State */
