@@ -18,7 +18,7 @@ type TabType = 'pools' | 'positions' | 'rewards';
 
 export function LiquidityPage() {
   const { isConnected, address, connect } = useWallet();
-  const { getPool, getLPPosition, isLoading: isLoadingPool } = useLiquidity();
+  const { getPool, getLPPosition } = useLiquidity();
   const { addLiquidity, removeLiquidity, state: actionState, resetState: resetActionState } = useLiquidityActions();
   const { getPendingRewards, claimRewards, state: rewardsState } = useLiquidityRewards();
 

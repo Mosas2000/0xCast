@@ -5,7 +5,7 @@
  */
 
 import type { LiquidityPool, LPPosition } from '../types/liquidity';
-import { formatStxAmount, calculateSharePercentage } from '../types/liquidity';
+import { formatStxAmount } from '../types/liquidity';
 
 interface LiquidityCardProps {
   pool: LiquidityPool;

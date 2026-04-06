@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { LPPosition, PendingRewards } from '../types/liquidity';
-import { formatStxAmount, calculateSharePercentage } from '../types/liquidity';
+import { formatStxAmount } from '../types/liquidity';
 
 interface PoolPositionRowProps {
   position: LPPosition;
@@ -21,14 +21,6 @@ export function PoolPositionRow({
   onRemoveLiquidity,
   onClaimRewards,
 }: PoolPositionRowProps) {
-  const sharePercentage = calculateSharePercentage(
-    position.lpBalance,
-    position.poolTotalShares
-  );
-  const userValue = Math.floor(
-    (position.lpBalance / position.poolTotalShares) * position.poolTotalLiquidity
-  );
-
   return (
     <div className="flex items-center justify-between p-4 bg-neutral-900/50 rounded-xl border border-neutral-800 hover:border-neutral-700 transition-colors">
       {/* Pool Info */}
@@ -41,7 +33,7 @@ export function PoolPositionRow({
             to={`/trade/${position.marketId}`}
             className="text-white font-medium hover:text-blue-400 transition-colors truncate block"
           >
-            Pool #{position.poolId}
+            Pool #{position.marketId}
           </Link>
           <p className="text-sm text-neutral-500 truncate">
             Market #{position.marketId}
@@ -52,23 +44,23 @@ export function PoolPositionRow({
       {/* User Share */}
       <div className="text-right px-4 hidden sm:block">
         <p className="text-white font-medium">
-          {formatStxAmount(position.lpBalance)} LP
+          {formatStxAmount(position.shares)} LP
         </p>
         <p className="text-sm text-neutral-500">
-          {sharePercentage.toFixed(2)}% share
+          {position.sharePercentage.toFixed(2)}% share
         </p>
       </div>
 
       {/* User Value */}
       <div className="text-right px-4">
         <p className="text-emerald-400 font-medium">
-          {formatStxAmount(userValue)} STX
+          {formatStxAmount(position.estimatedValue)} STX
         </p>
         <p className="text-sm text-neutral-500">Value</p>
       </div>
 
       {/* Pending Rewards */}
-      {pendingRewards && pendingRewards.amount > 0 && (
+      {pendingRewards && pendingRewards.amount > 0n && (
         <div className="text-right px-4 hidden md:block">
           <p className="text-amber-400 font-medium">
             {formatStxAmount(pendingRewards.amount)} OXC
@@ -79,7 +71,7 @@ export function PoolPositionRow({
 
       {/* Actions */}
       <div className="flex items-center gap-2">
-        {pendingRewards && pendingRewards.amount > 0 && onClaimRewards && (
+        {pendingRewards && pendingRewards.amount > 0n && onClaimRewards && (
           <button
             onClick={onClaimRewards}
             className="px-3 py-1.5 text-xs font-medium text-amber-400 bg-amber-500/10 rounded-lg hover:bg-amber-500/20 transition-colors"
@@ -172,9 +164,9 @@ export function NoPositionsMessage() {
  * Summary card showing total LP value across all positions
  */
 interface PositionsSummaryProps {
-  totalValue: number;
+  totalValue: bigint;
   totalPositions: number;
-  totalRewards: number;
+  totalRewards: bigint;
 }
 
 export function PositionsSummary({ totalValue, totalPositions, totalRewards }: PositionsSummaryProps) {

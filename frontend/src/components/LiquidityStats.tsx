@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import type { LiquidityPool, LPPosition, PendingRewards } from '../types/liquidity';
-import { formatStxAmount, calculateAPY, calculateSharePercentage } from '../types/liquidity';
+import { formatStxAmount, calculateAPY } from '../types/liquidity';
 
 interface LiquidityStatsProps {
   pools: LiquidityPool[];
@@ -17,49 +17,41 @@ export function LiquidityStats({ pools, positions, pendingRewards }: LiquiditySt
 
   // Calculate total protocol TVL
   const totalTVL = useMemo(() => {
-    return pools.reduce((sum, pool) => sum + pool.totalLiquidity, 0);
+    return pools.reduce((sum, pool) => sum + pool.stxBalance, 0n);
   }, [pools]);
 
   // Calculate user's total value locked
   const userTVL = useMemo(() => {
-    return positions.reduce((sum, pos) => {
-      const shareRatio = pos.poolTotalShares > 0 
-        ? pos.lpBalance / pos.poolTotalShares 
-        : 0;
-      return sum + Math.floor(shareRatio * pos.poolTotalLiquidity);
-    }, 0);
+    return positions.reduce((sum, pos) => sum + pos.estimatedValue, 0n);
   }, [positions]);
 
   // Calculate total pending rewards
   const totalPendingRewards = useMemo(() => {
-    return pendingRewards.reduce((sum, r) => sum + r.amount, 0);
+    return pendingRewards.reduce((sum, r) => sum + r.amount, 0n);
   }, [pendingRewards]);
 
   // Calculate average APY across positions
   const averageAPY = useMemo(() => {
     if (positions.length === 0) return 0;
     const totalAPY = positions.reduce((sum, pos) => {
-      return sum + calculateAPY(pos.poolTotalLiquidity, pos.poolTotalLiquidity * 0.05);
+      // Estimate based on position value (5% rewards rate assumption)
+      return sum + calculateAPY(pos.estimatedValue / 20n, pos.estimatedValue);
     }, 0);
     return totalAPY / positions.length;
   }, [positions]);
 
   // Calculate portfolio distribution
   const portfolioDistribution = useMemo(() => {
-    if (userTVL === 0) return [];
+    if (userTVL === 0n) return [];
     return positions.map(pos => {
-      const shareRatio = pos.poolTotalShares > 0 
-        ? pos.lpBalance / pos.poolTotalShares 
-        : 0;
-      const value = Math.floor(shareRatio * pos.poolTotalLiquidity);
-      const percentage = (value / userTVL) * 100;
+      const value = pos.estimatedValue;
+      const percentage = Number((value * 10000n) / userTVL) / 100;
       return {
-        poolId: pos.poolId,
         marketId: pos.marketId,
         value,
         percentage,
       };
-    }).sort((a, b) => b.value - a.value);
+    }).sort((a, b) => Number(b.value - a.value));
   }, [positions, userTVL]);
 
   return (
@@ -97,14 +89,14 @@ export function LiquidityStats({ pools, positions, pendingRewards }: LiquiditySt
           label="Your TVL"
           value={formatStxAmount(userTVL)}
           unit="STX"
-          trend={userTVL > 0 ? +2.1 : 0}
+          trend={userTVL > 0n ? +2.1 : 0}
           trendLabel="vs last period"
         />
         <MetricCard
           label="Pending Rewards"
           value={formatStxAmount(totalPendingRewards)}
           unit="OXC"
-          trend={totalPendingRewards > 0 ? +12.5 : 0}
+          trend={totalPendingRewards > 0n ? +12.5 : 0}
           trendLabel="accrued"
         />
         <MetricCard
@@ -122,9 +114,9 @@ export function LiquidityStats({ pools, positions, pendingRewards }: LiquiditySt
           <h4 className="text-sm font-medium text-neutral-400 mb-4">Portfolio Distribution</h4>
           <div className="space-y-3">
             {portfolioDistribution.slice(0, 5).map((item) => (
-              <div key={item.poolId} className="space-y-1">
+              <div key={item.marketId} className="space-y-1">
                 <div className="flex justify-between text-sm">
-                  <span className="text-white">Pool #{item.poolId}</span>
+                  <span className="text-white">Pool #{item.marketId}</span>
                   <span className="text-neutral-400">
                     {formatStxAmount(item.value)} STX ({item.percentage.toFixed(1)}%)
                   </span>
@@ -149,14 +141,14 @@ export function LiquidityStats({ pools, positions, pendingRewards }: LiquiditySt
       {/* TVL Chart Placeholder */}
       <div className="bg-neutral-900/50 rounded-xl border border-neutral-800 p-6">
         <h4 className="text-sm font-medium text-neutral-400 mb-4">TVL Over Time</h4>
-        <TVLChart timeRange={timeRange} currentTVL={userTVL} />
+        <TVLChart timeRange={timeRange} currentTVL={Number(userTVL)} />
       </div>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-4">
         <QuickStat
           label="Active Pools"
-          value={pools.filter(p => p.totalLiquidity > 0).length.toString()}
+          value={pools.filter(p => p.stxBalance > 0n).length.toString()}
           icon={
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
@@ -174,7 +166,7 @@ export function LiquidityStats({ pools, positions, pendingRewards }: LiquiditySt
         />
         <QuickStat
           label="LP Share"
-          value={positions.length > 0 ? `${(userTVL / totalTVL * 100).toFixed(2)}%` : '0%'}
+          value={positions.length > 0 && totalTVL > 0n ? `${(Number((userTVL * 10000n) / totalTVL) / 100).toFixed(2)}%` : '0%'}
           icon={
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
@@ -265,7 +257,7 @@ function TVLChart({ timeRange, currentTVL }: TVLChartProps) {
             style={{ height: `${Math.max(height, 5)}%` }}
           >
             <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-neutral-800 px-2 py-1 rounded text-xs text-white whitespace-nowrap pointer-events-none">
-              {formatStxAmount(value)} STX
+              {formatStxAmount(BigInt(Math.floor(value)))} STX
             </div>
           </div>
         );
