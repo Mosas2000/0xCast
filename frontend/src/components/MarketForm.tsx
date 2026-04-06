@@ -111,6 +111,23 @@ export function MarketForm({ onSubmit, isSubmitting, error }: MarketFormProps) {
     }
   };
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + Enter to submit
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && validation.isValid && !isSubmitting) {
+        handleSubmit(e as unknown as React.FormEvent);
+      }
+      // Escape to toggle preview
+      if (e.key === 'Escape' && showPreview) {
+        setShowPreview(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [validation.isValid, isSubmitting, showPreview]);
+
   const inputStyle: React.CSSProperties = {
     width: '100%',
     padding: '14px 16px',
@@ -450,9 +467,19 @@ export function MarketForm({ onSubmit, isSubmitting, error }: MarketFormProps) {
           cursor: validation.isValid && !isSubmitting ? 'pointer' : 'not-allowed',
           opacity: validation.isValid && !isSubmitting ? 1 : 0.5,
           transition: 'all 0.2s',
+          position: 'relative',
         }}
       >
         {isSubmitting ? 'Creating Market...' : 'Create Market'}
+        {validation.isValid && !isSubmitting && (
+          <span style={{ 
+            fontSize: '11px', 
+            opacity: 0.7,
+            marginLeft: '8px',
+          }}>
+            (⌘+Enter)
+          </span>
+        )}
       </button>
 
       {/* Info Note */}
