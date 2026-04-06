@@ -48,6 +48,8 @@ export function MarketForm({ onSubmit, isSubmitting, error }: MarketFormProps) {
   
   const [showPreview, setShowPreview] = useState(false);
   const [questionSuggestions, setQuestionSuggestions] = useState<string[]>([]);
+  const [customDurationDays, setCustomDurationDays] = useState('');
+  const [showCustomDuration, setShowCustomDuration] = useState(false);
 
   // Validate form whenever data changes
   useEffect(() => {
@@ -77,6 +79,21 @@ export function MarketForm({ onSubmit, isSubmitting, error }: MarketFormProps) {
       durationPreset: preset,
     }));
     setTouched(prev => ({ ...prev, duration: true }));
+    setShowCustomDuration(false);
+    setCustomDurationDays('');
+  };
+
+  const handleCustomDurationChange = (days: string) => {
+    setCustomDurationDays(days);
+    const daysNum = parseInt(days);
+    if (!isNaN(daysNum) && daysNum > 0) {
+      setFormData(prev => ({
+        ...prev,
+        durationBlocks: daysNum * 144, // Convert days to blocks
+        durationPreset: undefined,
+      }));
+      setTouched(prev => ({ ...prev, duration: true }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -246,6 +263,75 @@ export function MarketForm({ onSubmit, isSubmitting, error }: MarketFormProps) {
             </button>
           ))}
         </div>
+        
+        {/* Custom Duration Option */}
+        <div style={{ marginTop: '10px' }}>
+          {!showCustomDuration ? (
+            <button
+              type="button"
+              onClick={() => setShowCustomDuration(true)}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: 'transparent',
+                border: '1px dashed #374151',
+                borderRadius: '8px',
+                color: '#9CA3AF',
+                fontSize: '13px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                width: '100%',
+              }}
+            >
+              + Custom Duration
+            </button>
+          ) : (
+            <div style={{
+              padding: '12px',
+              backgroundColor: '#0A0A0A',
+              border: '1px solid #2F2F2F',
+              borderRadius: '10px',
+            }}>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <input
+                  type="number"
+                  value={customDurationDays}
+                  onChange={(e) => handleCustomDurationChange(e.target.value)}
+                  placeholder="Enter days"
+                  min="1"
+                  style={{
+                    flex: 1,
+                    padding: '10px 12px',
+                    backgroundColor: '#111111',
+                    border: '1px solid #2F2F2F',
+                    borderRadius: '8px',
+                    color: '#FFFFFF',
+                    fontSize: '14px',
+                    outline: 'none',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCustomDuration(false);
+                    setCustomDurationDays('');
+                  }}
+                  style={{
+                    padding: '10px 16px',
+                    backgroundColor: 'transparent',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    color: '#9CA3AF',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+        
         <div style={{ 
           marginTop: '10px',
           padding: '12px',
