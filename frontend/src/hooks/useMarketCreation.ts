@@ -1,7 +1,26 @@
 /**
  * useMarketCreation Hook
  * 
- * Hook for creating prediction markets with state management.
+ * Custom React hook for managing prediction market creation workflow.
+ * 
+ * Features:
+ * - Manages creation state (loading, success, error)
+ * - Handles contract interaction via useContract hook
+ * - Provides human-readable error messages
+ * - Supports state reset for retries
+ * 
+ * Usage:
+ * ```tsx
+ * const { createMarket, state, resetState } = useMarketCreation();
+ * 
+ * // Create a market
+ * await createMarket({ question: 'Will BTC reach $100k?', durationBlocks: 1008 });
+ * 
+ * // Check state
+ * if (state.isCreating) // Show loading
+ * if (state.success) // Show success
+ * if (state.error) // Show error message
+ * ```
  */
 
 import { useState, useCallback } from 'react';

@@ -1,16 +1,35 @@
 /**
  * Market Validation Utilities
  * 
- * Validation functions for market creation.
+ * Utility functions for validating and formatting market creation data.
+ * 
+ * Validation Rules:
+ * - Question: 10-256 characters, must end with "?"
+ * - Category: Required selection
+ * - Duration: 144-525,600 blocks (~1 day to ~1 year)
+ * 
+ * Block Time Calculations:
+ * - 1 block ≈ 10 minutes
+ * - 6 blocks ≈ 1 hour
+ * - 144 blocks ≈ 1 day
+ * - 1,008 blocks ≈ 1 week
+ * 
+ * @module marketValidation
  */
 
 import type { CreateMarketFormData, MarketValidationResult } from '../types/market';
 
-// Constants
+/** Minimum question length for valid markets */
 const MIN_QUESTION_LENGTH = 10;
+
+/** Maximum question length for valid markets */
 const MAX_QUESTION_LENGTH = 256;
-const MIN_DURATION_BLOCKS = 144; // 1 day
-const MAX_DURATION_BLOCKS = 525600; // ~1 year
+
+/** Minimum duration in blocks (~1 day) */
+const MIN_DURATION_BLOCKS = 144;
+
+/** Maximum duration in blocks (~1 year) */
+const MAX_DURATION_BLOCKS = 525600;
 
 /**
  * Validate market creation form data

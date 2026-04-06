@@ -1,7 +1,20 @@
 /**
  * CreateMarketPage Component
  * 
- * Page for creating new prediction markets.
+ * Page for creating new prediction markets. Allows users to:
+ * - Enter a market question with validation
+ * - Select a category for the market
+ * - Choose a duration (preset or custom)
+ * - Preview the market before submission
+ * - Share the market after successful creation
+ * 
+ * Features:
+ * - Wallet connection required to create markets
+ * - Auto-redirect to markets page after creation
+ * - Social sharing (Twitter/X, clipboard)
+ * - Best practices guide for market creation
+ * 
+ * Routes to: /create-market
  */
 
 import { useState, useEffect } from 'react';
