@@ -1,12 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { cvToJSON, fetchCallReadOnlyFunction, uintCV } from '@stacks/transactions';
-import { STACKS_MAINNET, STACKS_TESTNET } from '@stacks/network';
 import type { Market } from '../types/market';
 import { parseMarketData } from '../utils/helpers';
-import { MARKET_CONTRACT, CURRENT_NETWORK } from '../config/contracts';
-
-// Get the appropriate network based on configuration
-const getNetwork = () => CURRENT_NETWORK === 'mainnet' ? STACKS_MAINNET : STACKS_TESTNET;
+import { MARKET_CONTRACT, getNetwork as getNetworkConfig } from '../config/contracts';
+import { useNetwork } from '../contexts/NetworkContext';
 
 // Auto-refresh interval in milliseconds (30 seconds)
 const REFRESH_INTERVAL_MS = 30000;
@@ -17,6 +14,7 @@ const REFRESH_INTERVAL_MS = 30000;
  * Features:
  * - Fetches all markets from the contract on mount
  * - Auto-refreshes every 30 seconds
+ * - Re-fetches when network changes
  * - Properly cleans up on unmount to prevent memory leaks
  * - Cancels in-flight requests when unmounting
  * - Guards against state updates on unmounted components
@@ -24,6 +22,7 @@ const REFRESH_INTERVAL_MS = 30000;
  * @returns Object containing markets array, loading state, error, and refetch function
  */
 export function useMarkets() {
+  const { network, stacksNetwork } = useNetwork();
   const [markets, setMarkets] = useState<Market[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,9 +43,10 @@ export function useMarkets() {
     abortControllerRef.current = new AbortController();
     
     try {
-      const network = getNetwork();
+      // Use the network from context
+      const currentNetwork = stacksNetwork;
       const counterResult = await fetchCallReadOnlyFunction({
-        network,
+        network: currentNetwork,
         contractAddress: MARKET_CONTRACT.address,
         contractName: MARKET_CONTRACT.name,
         functionName: 'get-market-counter',
@@ -70,7 +70,7 @@ export function useMarkets() {
       for (let i = 0; i < totalMarkets; i++) {
         marketPromises.push(
           fetchCallReadOnlyFunction({
-            network,
+            network: currentNetwork,
             contractAddress: MARKET_CONTRACT.address,
             contractName: MARKET_CONTRACT.name,
             functionName: 'get-market',
@@ -119,11 +119,17 @@ export function useMarkets() {
         setIsLoading(false);
       }
     }
-  }, []);
+  }, [stacksNetwork]);
 
+  // Re-fetch when network changes
   useEffect(() => {
     // Mark component as mounted
     isMountedRef.current = true;
+    
+    // Reset state on network change
+    setIsLoading(true);
+    setMarkets([]);
+    setError(null);
     
     fetchMarkets();
     
@@ -146,13 +152,15 @@ export function useMarkets() {
         abortControllerRef.current = null;
       }
     };
-  }, [fetchMarkets]);
+  }, [fetchMarkets, network]);
 
   return { 
     markets, 
     isLoading, 
     error, 
     refetch: fetchMarkets,
+    // Expose current network for debugging
+    currentNetwork: network,
     // Expose refresh interval for testing/debugging
     refreshIntervalMs: REFRESH_INTERVAL_MS,
   };
