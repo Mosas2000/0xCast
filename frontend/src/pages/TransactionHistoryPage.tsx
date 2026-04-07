@@ -18,120 +18,37 @@ export function TransactionHistoryPage() {
   const successCount = transactions.filter(tx => tx.status === TransactionStatus.SUCCESS).length;
   const failedCount = transactions.filter(tx => tx.status === TransactionStatus.FAILED).length;
 
-  const containerStyle: React.CSSProperties = {
-    minHeight: '100vh',
-    backgroundColor: '#000000',
-    paddingTop: '120px',
-    paddingBottom: '80px',
-  };
-
-  const wrapperStyle: React.CSSProperties = {
-    maxWidth: '800px',
-    margin: '0 auto',
-    padding: '0 24px',
-  };
-
-  const headerStyle: React.CSSProperties = {
-    textAlign: 'center' as const,
-    marginBottom: '48px',
-  };
-
-  const titleStyle: React.CSSProperties = {
-    fontSize: '36px',
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: '16px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '12px',
-  };
-
-  const subtitleStyle: React.CSSProperties = {
-    fontSize: '16px',
-    color: '#9CA3AF',
-    maxWidth: '500px',
-    margin: '0 auto',
-    lineHeight: '1.6',
-  };
-
-  const statsGridStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '16px',
-    marginBottom: '32px',
-  };
-
-  const statCardStyle: React.CSSProperties = {
-    backgroundColor: '#0A0A0A',
-    border: '1px solid #1F1F1F',
-    borderRadius: '12px',
-    padding: '20px',
-    textAlign: 'center' as const,
-  };
-
-  const statLabelStyle: React.CSSProperties = {
-    fontSize: '12px',
-    color: '#9CA3AF',
-    marginBottom: '8px',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.5px',
-  };
-
-  const statValueStyle = (color: string): React.CSSProperties => ({
-    fontSize: '28px',
-    fontWeight: '700',
-    color,
-  });
-
-  const connectBoxStyle: React.CSSProperties = {
-    backgroundColor: '#0A0A0A',
-    border: '1px solid #1F1F1F',
-    borderRadius: '16px',
-    padding: '48px',
-    textAlign: 'center' as const,
-  };
-
-  const connectButtonStyle: React.CSSProperties = {
-    padding: '14px 32px',
-    backgroundColor: '#3B82F6',
-    border: 'none',
-    borderRadius: '10px',
-    color: '#FFFFFF',
-    fontSize: '16px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    marginTop: '20px',
-  };
-
-  const checkingStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
-    marginBottom: '16px',
-    fontSize: '13px',
-    color: '#F59E0B',
-  };
+  const StatCard = ({ label, value, color }: { label: string; value: number; color: string }) => (
+    <div className="bg-neutral-950 border border-neutral-800 rounded-xl p-4 sm:p-5 text-center">
+      <div className="text-[10px] sm:text-xs text-neutral-400 mb-2 uppercase tracking-wide">
+        {label}
+      </div>
+      <div className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color }}>
+        {value}
+      </div>
+    </div>
+  );
 
   if (!isConnected) {
     return (
-      <div style={containerStyle}>
-        <div style={wrapperStyle}>
-          <div style={headerStyle}>
-            <h1 style={titleStyle}>
-              <span>📜</span> Transaction History
-            </h1>
-            <p style={subtitleStyle}>
+      <div className="min-h-screen bg-black pt-[72px] pb-20 px-4 sm:px-6">
+        <div className="max-w-3xl mx-auto py-10 sm:py-16">
+          <div className="text-center mb-10 sm:mb-12">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 flex items-center justify-center gap-3">
+            </h1>              <span>
+            <p className="text-sm sm:text-base text-neutral-400 max-w-md mx-auto leading-relaxed">
               Track all your transactions on 0xCast
             </p>
           </div>
           
-          <div style={connectBoxStyle}>
-            <p style={{ color: '#9CA3AF', marginBottom: '8px' }}>
+          <div className="bg-neutral-950 border border-neutral-800 rounded-2xl p-8 sm:p-12 text-center">
+            <p className="text-sm sm:text-base text-neutral-400 mb-5">
               Connect your wallet to view transaction history
             </p>
-            <button style={connectButtonStyle} onClick={() => connect()}>
+            <button 
+              className="py-3 sm:py-4 px-6 sm:px-8 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-base transition-colors"
+              onClick={() => connect()}
+            >
               Connect Wallet
             </button>
           </div>
@@ -141,50 +58,39 @@ export function TransactionHistoryPage() {
   }
 
   return (
-    <div style={containerStyle}>
-      <div style={wrapperStyle}>
-        <div style={headerStyle}>
-          <h1 style={titleStyle}>
-            <span>📜</span> Transaction History
-          </h1>
-          <p style={subtitleStyle}>
+    <div className="min-h-screen bg-black pt-[72px] pb-20 px-4 sm:px-6">
+      <div className="max-w-3xl mx-auto py-10 sm:py-16">
+        <div className="text-center mb-10 sm:mb-12">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 flex items-center justify-center gap-3">
+          </h1>            <span>
+          <p className="text-sm sm:text-base text-neutral-400 max-w-md mx-auto leading-relaxed">
             Track all your transactions on 0xCast
           </p>
         </div>
 
         {isChecking && (
-          <div style={checkingStyle}>
-            <div style={{
-              width: '14px',
-              height: '14px',
-              border: '2px solid #F59E0B',
-              borderTopColor: 'transparent',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-            }} />
+          <div className="flex items-center justify-center gap-2 mb-4 text-xs sm:text-sm text-amber-500">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
             Checking pending transactions...
           </div>
         )}
 
-        <div style={statsGridStyle}>
-          <div style={statCardStyle}>
-            <div style={statLabelStyle}>Pending</div>
-            <div style={statValueStyle(getStatusColor(TransactionStatus.PENDING))}>
-              {pendingCount}
-            </div>
-          </div>
-          <div style={statCardStyle}>
-            <div style={statLabelStyle}>Confirmed</div>
-            <div style={statValueStyle(getStatusColor(TransactionStatus.SUCCESS))}>
-              {successCount}
-            </div>
-          </div>
-          <div style={statCardStyle}>
-            <div style={statLabelStyle}>Failed</div>
-            <div style={statValueStyle(getStatusColor(TransactionStatus.FAILED))}>
-              {failedCount}
-            </div>
-          </div>
+        <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <StatCard 
+            label="Pending" 
+            value={pendingCount} 
+            color={getStatusColor(TransactionStatus.PENDING)} 
+          />
+          <StatCard 
+            label="Confirmed" 
+            value={successCount} 
+            color={getStatusColor(TransactionStatus.SUCCESS)} 
+          />
+          <StatCard 
+            label="Failed" 
+            value={failedCount} 
+            color={getStatusColor(TransactionStatus.FAILED)} 
+          />
         </div>
 
         <TransactionHistory 
@@ -193,13 +99,6 @@ export function TransactionHistoryPage() {
           maxItems={50}
         />
       </div>
-      
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }
