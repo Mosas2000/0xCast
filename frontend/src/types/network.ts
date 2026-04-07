@@ -47,3 +47,16 @@ export const DEFAULT_NETWORK: NetworkType = NetworkType.MAINNET;
 
 // LocalStorage key for persisting network selection
 export const NETWORK_STORAGE_KEY = '0xcast_network';
+
+// Context type for network state
+import type { StacksNetwork } from '@stacks/network';
+
+export interface NetworkContextType {
+  network: NetworkType;
+  networkConfig: NetworkConfig;
+  stacksNetwork: StacksNetwork;
+  contractAddress: string;
+  isTestnet: boolean;
+  setNetwork: (network: NetworkType) => void;
+  toggleNetwork: () => void;
+}

@@ -4,7 +4,7 @@
  * Helper functions for network operations
  */
 
-import { StacksMainnet, StacksTestnet, type StacksNetwork } from '@stacks/network';
+import { STACKS_MAINNET, STACKS_TESTNET, type StacksNetwork } from '@stacks/network';
 import { 
   NetworkType, 
   NETWORK_CONFIGS, 
@@ -17,8 +17,8 @@ import {
  */
 export function getStacksNetwork(networkType: NetworkType): StacksNetwork {
   return networkType === NetworkType.MAINNET 
-    ? new StacksMainnet() 
-    : new StacksTestnet();
+    ? STACKS_MAINNET
+    : STACKS_TESTNET;
 }
 
 /**
@@ -97,4 +97,27 @@ export function getContractAddress(networkType: NetworkType): string {
  */
 export function getContractName(): string {
   return '0xcast-v1';
+}
+
+/**
+ * Check if a string is a valid network type
+ */
+export function isValidNetwork(network: string): network is NetworkType {
+  return network === NetworkType.MAINNET || network === NetworkType.TESTNET;
+}
+
+/**
+ * Get network from URL query parameter
+ */
+export function getNetworkFromURL(): NetworkType | null {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const network = params.get('network');
+    if (network && isValidNetwork(network)) {
+      return network;
+    }
+  } catch (error) {
+    console.warn('Failed to get network from URL:', error);
+  }
+  return null;
 }

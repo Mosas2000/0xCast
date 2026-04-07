@@ -3,13 +3,12 @@
 
 import { STACKS_MAINNET, STACKS_TESTNET } from '@stacks/network';
 import { loadNetworkPreference } from '../utils/networkUtils';
-import { NetworkType as NetworkTypeEnum } from '../types/network';
 
 export type NetworkType = 'mainnet' | 'testnet';
 
 // Helper to convert network enum to legacy type
-function normalizeNetwork(network: NetworkType | NetworkTypeEnum): NetworkType {
-  if (network === NetworkTypeEnum.MAINNET || network === 'mainnet') {
+function normalizeNetwork(network: string): NetworkType {
+  if (network === 'mainnet') {
     return 'mainnet';
   }
   return 'testnet';

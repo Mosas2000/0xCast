@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { cvToJSON, fetchCallReadOnlyFunction, uintCV } from '@stacks/transactions';
 import type { Market } from '../types/market';
 import { parseMarketData } from '../utils/helpers';
-import { MARKET_CONTRACT, getNetwork as getNetworkConfig } from '../config/contracts';
+import { MARKET_CONTRACT } from '../config/contracts';
 import { useNetwork } from '../contexts/NetworkContext';
 
 // Auto-refresh interval in milliseconds (30 seconds)

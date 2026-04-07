@@ -5,7 +5,6 @@
  */
 
 import { useNetwork } from '../contexts/NetworkContext';
-import { NetworkType } from '../types/network';
 
 interface NetworkBadgeProps {
   size?: 'sm' | 'md' | 'lg';
