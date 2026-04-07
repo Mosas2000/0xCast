@@ -1,7 +1,7 @@
 // Network Configuration for 0xCast
 // Centralized network settings and API endpoints
 
-import { CURRENT_NETWORK, type NetworkType } from './contracts';
+import { getActiveNetwork, type NetworkType } from './contracts';
 
 // API URLs per network
 export const API_URLS = {
@@ -31,27 +31,30 @@ export const EXPLORER_URLS = {
   },
 } as const;
 
-// Get API URL for current network
-export function getApiUrl(network: NetworkType = CURRENT_NETWORK): string {
-  return API_URLS[network].hiro;
+// Get API URL for current or specified network
+export function getApiUrl(network?: NetworkType): string {
+  const activeNetwork = network ?? getActiveNetwork();
+  return API_URLS[activeNetwork].hiro;
 }
 
-// Get Node API URL for current network
-export function getNodeUrl(network: NetworkType = CURRENT_NETWORK): string {
-  return API_URLS[network].node;
+// Get Node API URL for current or specified network
+export function getNodeUrl(network?: NetworkType): string {
+  const activeNetwork = network ?? getActiveNetwork();
+  return API_URLS[activeNetwork].node;
 }
 
-// Get explorer URLs for current network
-export function getExplorerUrls(network: NetworkType = CURRENT_NETWORK) {
-  return EXPLORER_URLS[network];
+// Get explorer URLs for current or specified network
+export function getExplorerUrls(network?: NetworkType) {
+  const activeNetwork = network ?? getActiveNetwork();
+  return EXPLORER_URLS[activeNetwork];
 }
 
-// Check if we're on mainnet
+// Check if we're on mainnet (dynamic)
 export function isMainnet(): boolean {
-  return CURRENT_NETWORK === 'mainnet';
+  return getActiveNetwork() === 'mainnet';
 }
 
-// Check if we're on testnet
+// Check if we're on testnet (dynamic)
 export function isTestnet(): boolean {
-  return CURRENT_NETWORK === 'testnet';
+  return getActiveNetwork() === 'testnet';
 }

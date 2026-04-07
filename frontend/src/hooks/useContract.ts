@@ -19,7 +19,7 @@
  * - parseToMicroAmount: Parse string to BigInt micro-amount
  * - validateTransactionAmount: Validate amount for transaction
  */
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { openContractCall } from '@stacks/connect';
 import {
   uintCV,
@@ -37,6 +37,7 @@ import {
 } from '../config/contracts';
 import { getNodeUrl } from '../config/network';
 import { useWallet } from '../components/WalletProvider';
+import { useNetwork } from '../contexts/NetworkContext';
 
 // Type for optional Clarity values (someCV or noneCV)
 export type OptionalClarityValue = ReturnType<typeof someCV> | ReturnType<typeof noneCV>;
@@ -165,17 +166,22 @@ export const buildMemoCV = (memo?: string) => {
 
 export function useContract() {
   const { address, isConnected } = useWallet();
+  const { network, stacksNetwork, contractAddress } = useNetwork();
+  
+  // Get token contract for current network
+  const tokenContract = useMemo(() => {
+    return getContract(CONTRACT_NAMES.OXCAST);
+  }, [network]);
 
   // Create a new prediction market
   const createMarket = useCallback(
     async (question: string, durationBlocks: number) => {
       if (!isConnected || !address) throw new Error('Wallet not connected');
-
-      const contract = getTokenContract();
       
       await openContractCall({
-        contractAddress: contract.address,
-        contractName: contract.name,
+        network: stacksNetwork,
+        contractAddress: tokenContract.address,
+        contractName: tokenContract.name,
         functionName: 'create-market',
         functionArgs: [
           stringAsciiCV(question),
@@ -191,7 +197,7 @@ export function useContract() {
         },
       });
     },
-    [isConnected, address]
+    [isConnected, address, stacksNetwork, tokenContract]
   );
 
   // Place a prediction (YES or NO)
@@ -199,7 +205,6 @@ export function useContract() {
     async (marketId: number, outcome: 'yes' | 'no', amountMicroStx: bigint) => {
       if (!isConnected || !address) throw new Error('Wallet not connected');
 
-      const contract = getTokenContract();
       const outcomeValue = outcome === 'yes' ? 1 : 2;
 
       // Post condition: user sends STX
@@ -208,8 +213,9 @@ export function useContract() {
       ];
 
       await openContractCall({
-        contractAddress: contract.address,
-        contractName: contract.name,
+        network: stacksNetwork,
+        contractAddress: tokenContract.address,
+        contractName: tokenContract.name,
         functionName: 'predict',
         functionArgs: [
           uintCV(marketId),
@@ -226,7 +232,7 @@ export function useContract() {
         },
       });
     },
-    [isConnected, address]
+    [isConnected, address, stacksNetwork, tokenContract]
   );
 
   // Claim winnings from a resolved market
@@ -234,11 +240,10 @@ export function useContract() {
     async (marketId: number) => {
       if (!isConnected || !address) throw new Error('Wallet not connected');
 
-      const contract = getTokenContract();
-
       await openContractCall({
-        contractAddress: contract.address,
-        contractName: contract.name,
+        network: stacksNetwork,
+        contractAddress: tokenContract.address,
+        contractName: tokenContract.name,
         functionName: 'claim-winnings',
         functionArgs: [uintCV(marketId)],
         postConditionMode: PostConditionMode.Allow,
@@ -251,7 +256,7 @@ export function useContract() {
         },
       });
     },
-    [isConnected, address]
+    [isConnected, address, stacksNetwork, tokenContract]
   );
 
   // Stake OXC tokens
@@ -259,15 +264,14 @@ export function useContract() {
     async (amountMicroOxc: bigint) => {
       if (!isConnected || !address) throw new Error('Wallet not connected');
 
-      const contract = getTokenContract();
-
       const postConditions = [
-        Pc.principal(address).willSendEq(amountMicroOxc).ft(contract.identifier as `${string}.${string}`, 'oxc-token'),
+        Pc.principal(address).willSendEq(amountMicroOxc).ft(tokenContract.identifier as `${string}.${string}`, 'oxc-token'),
       ];
 
       await openContractCall({
-        contractAddress: contract.address,
-        contractName: contract.name,
+        network: stacksNetwork,
+        contractAddress: tokenContract.address,
+        contractName: tokenContract.name,
         functionName: 'stake',
         functionArgs: [uintCV(safeBigIntToNumber(amountMicroOxc, 'amountMicroOxc'))],
         postConditionMode: PostConditionMode.Deny,
@@ -280,7 +284,7 @@ export function useContract() {
         },
       });
     },
-    [isConnected, address]
+    [isConnected, address, stacksNetwork, tokenContract]
   );
 
   // Unstake OXC tokens
@@ -288,11 +292,10 @@ export function useContract() {
     async (amountMicroOxc: bigint) => {
       if (!isConnected || !address) throw new Error('Wallet not connected');
 
-      const contract = getTokenContract();
-
       await openContractCall({
-        contractAddress: contract.address,
-        contractName: contract.name,
+        network: stacksNetwork,
+        contractAddress: tokenContract.address,
+        contractName: tokenContract.name,
         functionName: 'unstake',
         functionArgs: [uintCV(safeBigIntToNumber(amountMicroOxc, 'amountMicroOxc'))],
         postConditionMode: PostConditionMode.Allow,
@@ -305,7 +308,7 @@ export function useContract() {
         },
       });
     },
-    [isConnected, address]
+    [isConnected, address, stacksNetwork, tokenContract]
   );
 
   // Transfer OXC tokens to another address
@@ -317,10 +320,8 @@ export function useContract() {
       if (!recipient) throw new Error('Recipient address is required');
       if (amountMicroOxc <= 0n) throw new Error('Amount must be greater than zero');
 
-      const contract = getTokenContract();
-
       const postConditions = [
-        Pc.principal(address).willSendEq(amountMicroOxc).ft(contract.identifier as `${string}.${string}`, 'oxc-token'),
+        Pc.principal(address).willSendEq(amountMicroOxc).ft(tokenContract.identifier as `${string}.${string}`, 'oxc-token'),
       ];
 
       // Construct function arguments with proper Clarity types
@@ -332,8 +333,9 @@ export function useContract() {
       ];
 
       await openContractCall({
-        contractAddress: contract.address,
-        contractName: contract.name,
+        network: stacksNetwork,
+        contractAddress: tokenContract.address,
+        contractName: tokenContract.name,
         functionName: 'transfer',
         functionArgs: functionArgs,
         postConditionMode: PostConditionMode.Deny,
@@ -346,7 +348,7 @@ export function useContract() {
         },
       });
     },
-    [isConnected, address]
+    [isConnected, address, stacksNetwork, tokenContract]
   );
 
   return {
@@ -358,6 +360,9 @@ export function useContract() {
     transferTokens,
     isConnected,
     address,
+    // Expose network info for debugging
+    network,
+    contractAddress,
   };
 }
 

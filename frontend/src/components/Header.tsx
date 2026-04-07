@@ -3,10 +3,13 @@ import { Link, useLocation } from 'react-router-dom';
 import { Logo } from './Logo';
 import { useWallet } from './WalletProvider';
 import { formatAddress } from '../utils/helpers';
+import { NetworkSelector } from './NetworkSelector';
+import { useNetwork } from '../contexts/NetworkContext';
 
 export function Header() {
   const location = useLocation();
   const { isConnected, address, connect, disconnect } = useWallet();
+  const { isTestnet, networkConfig } = useNetwork();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
@@ -50,14 +53,29 @@ export function Header() {
 
           {/* Right Side */}
           <div className="flex items-center gap-4">
+            {/* Network Selector */}
+            <div className="hidden sm:block">
+              <NetworkSelector variant="dropdown" showLabel={true} />
+            </div>
+            <div className="sm:hidden">
+              <NetworkSelector variant="compact" />
+            </div>
+            
             {/* Wallet */}
             {isConnected ? (
               <div className="flex items-center gap-3">
                 <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 border border-neutral-800">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span 
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: networkConfig.color }}
+                    title={`Connected to ${networkConfig.label}`}
+                  ></span>
                   <span className="text-sm text-neutral-300 font-mono">
                     {formatAddress(address || '')}
                   </span>
+                  {isTestnet && (
+                    <span className="text-xs text-yellow-500 ml-1">(Test)</span>
+                  )}
                 </div>
                 <button onClick={disconnect} className="btn btn-secondary btn-sm">
                   Disconnect
