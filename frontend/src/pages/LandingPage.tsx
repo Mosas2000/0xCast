@@ -18,7 +18,10 @@ export function LandingPage() {
   const activeMarkets = markets.filter((m) => m.status === MarketStatus.ACTIVE).length;
 
   const howItWorks = [
-  ];    { step: '03', title: 'Place Stake', desc: 'Stake STX on Yes or No and earn if correct', icon: '    { step: '02', title: 'Choose Market', desc: 'Browse markets and pick your prediction', icon: '    { step: '01', title: 'Connect Wallet', desc: 'Link your Stacks wallet to start trading', icon: '
+    { step: '01', title: 'Connect Wallet', desc: 'Link your Stacks wallet to start trading', icon: '\u{1F517}' },
+    { step: '02', title: 'Choose Market', desc: 'Browse markets and pick your prediction', icon: '\u{1F4CA}' },
+    { step: '03', title: 'Place Stake', desc: 'Stake STX on Yes or No and earn if correct', icon: '\u{1F4B0}' }
+  ];
 
   const securityFeatures = [
     { title: 'Non-Custodial', desc: 'You always control your funds' },
@@ -27,37 +30,91 @@ export function LandingPage() {
   ];
 
   return (
-    <div className="pt-[72px]">
+    <div style={{ paddingTop: 72 }}>
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-black to-neutral-950 py-16 sm:py-20 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section style={{ 
+        background: 'linear-gradient(to bottom, #000, #0a0a0a)',
+        paddingTop: 80,
+        paddingBottom: 80
+      }}>
+        <div style={{ 
+          maxWidth: 1200, 
+          margin: '0 auto', 
+          padding: '0 24px',
+          textAlign: 'center'
+        }}>
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/15 border border-blue-500/30 mb-6 sm:mb-8">
-            <span className="w-2 h-2 rounded-full bg-blue-400" />
-            <span className="text-sm font-semibold text-blue-300">
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '8px 16px',
+            borderRadius: 9999,
+            background: 'rgba(59, 130, 246, 0.15)',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+            marginBottom: 32
+          }}>
+            <span style={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: '#60a5fa'
+            }} />
+            <span style={{ fontSize: 14, color: '#93c5fd', fontWeight: 600 }}>
               Live on Stacks Mainnet
             </span>
           </div>
 
           {/* Headline */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
+          <h1 style={{
+            fontSize: 'clamp(2.5rem, 6vw, 4rem)',
+            fontWeight: 700,
+            color: '#fff',
+            lineHeight: 1.1,
+            marginBottom: 24
+          }}>
             Predict the Future,<br />
-            <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+            <span style={{
+              background: 'linear-gradient(90deg, #60a5fa, #3b82f6)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>
               Own Your Wins
             </span>
           </h1>
 
           {/* Description */}
-          <p className="text-base sm:text-lg text-neutral-400 max-w-xl mx-auto mb-8 sm:mb-10 leading-relaxed">
+          <p style={{
+            fontSize: 18,
+            color: '#a3a3a3',
+            maxWidth: 600,
+            margin: '0 auto 40px',
+            lineHeight: 1.6
+          }}>
             The decentralized prediction market built on Bitcoin. Trade outcomes, earn rewards, and control your future.
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col gap-4 max-w-sm mx-auto mb-12 sm:mb-16">
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 16,
+            maxWidth: 400,
+            margin: '0 auto 64px'
+          }}>
             {isConnected ? (
               <Link 
                 to="/markets" 
-                className="block py-4 px-8 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-center transition-colors"
+                style={{
+                  display: 'block',
+                  padding: '16px 32px',
+                  background: '#3b82f6',
+                  color: '#fff',
+                  borderRadius: 12,
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  textAlign: 'center'
+                }}
               >
                 Explore Markets
               </Link>
@@ -65,7 +122,16 @@ export function LandingPage() {
               <button 
                 type="button"
                 onClick={() => connect()}
-                className="py-4 px-8 bg-blue-600 hover:bg-blue-700 text-white border-none rounded-xl font-semibold cursor-pointer text-base transition-colors"
+                style={{
+                  padding: '16px 32px',
+                  background: '#3b82f6',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontSize: 16
+                }}
               >
                 Get Started
               </button>
@@ -74,64 +140,132 @@ export function LandingPage() {
               href="https://explorer.hiro.so/address/SP31PKQVQZVZCK3FM3NH67CGD6G1FMR17VQVS2W5T?chain=mainnet"
               target="_blank"
               rel="noopener noreferrer"
-              className="block py-4 px-8 bg-transparent text-white border border-neutral-700 hover:border-neutral-600 rounded-xl font-semibold text-center transition-colors"
+              style={{
+                display: 'block',
+                padding: '16px 32px',
+                background: 'transparent',
+                color: '#fff',
+                border: '1px solid #404040',
+                borderRadius: 12,
+                fontWeight: 600,
+                textDecoration: 'none',
+                textAlign: 'center'
+              }}
             >
               View Contract
             </a>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-xl mx-auto">
-            <div className="py-6 sm:py-8 px-6 bg-neutral-900 rounded-2xl border border-neutral-800">
-              <p className="text-3xl sm:text-4xl font-bold text-white mb-2">
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+            gap: 24,
+            maxWidth: 600,
+            margin: '0 auto'
+          }}>
+            <div style={{
+              padding: '32px 24px',
+              background: '#111',
+              borderRadius: 16,
+              border: '1px solid #262626'
+            }}>
+              <p style={{ fontSize: 36, fontWeight: 700, color: '#fff', marginBottom: 8 }}>
                 {markets.length}
               </p>
-              <p className="text-sm text-neutral-500">Markets</p>
+              <p style={{ fontSize: 14, color: '#737373' }}>Markets</p>
             </div>
-            <div className="py-6 sm:py-8 px-6 bg-neutral-900 rounded-2xl border border-neutral-800">
-              <p className="text-3xl sm:text-4xl font-bold text-white mb-2">
+            <div style={{
+              padding: '32px 24px',
+              background: '#111',
+              borderRadius: 16,
+              border: '1px solid #262626'
+            }}>
+              <p style={{ fontSize: 36, fontWeight: 700, color: '#fff', marginBottom: 8 }}>
                 {formatStx(totalVolume, 0)}
               </p>
-              <p className="text-sm text-neutral-500">Volume</p>
+              <p style={{ fontSize: 14, color: '#737373' }}>Volume</p>
             </div>
-            <div className="py-6 sm:py-8 px-6 bg-neutral-900 rounded-2xl border border-neutral-800">
-              <p className="text-3xl sm:text-4xl font-bold text-white mb-2">
+            <div style={{
+              padding: '32px 24px',
+              background: '#111',
+              borderRadius: 16,
+              border: '1px solid #262626'
+            }}>
+              <p style={{ fontSize: 36, fontWeight: 700, color: '#fff', marginBottom: 8 }}>
                 {activeMarkets}
               </p>
-              <p className="text-sm text-neutral-500">Active</p>
+              <p style={{ fontSize: 14, color: '#737373' }}>Active</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* How It Works */}
-      <section className="bg-neutral-950 py-16 sm:py-20 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
+      <section style={{ 
+        background: '#0a0a0a',
+        paddingTop: 96,
+        paddingBottom: 96
+      }}>
+        <div style={{ 
+          maxWidth: 1200, 
+          margin: '0 auto', 
+          padding: '0 24px'
+        }}>
+          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+            <h2 style={{ fontSize: 32, fontWeight: 700, color: '#fff', marginBottom: 16 }}>
               How It Works
             </h2>
-            <p className="text-base sm:text-lg text-neutral-500">
+            <p style={{ fontSize: 18, color: '#737373' }}>
               Start trading in three simple steps
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: 32
+          }}>
             {howItWorks.map((item) => (
               <div 
                 key={item.step}
-                className="p-8 sm:p-10 bg-neutral-900 rounded-2xl border border-neutral-800 text-center"
+                style={{
+                  padding: '40px 32px',
+                  background: '#111',
+                  borderRadius: 20,
+                  border: '1px solid #262626',
+                  textAlign: 'center'
+                }}
               >
-                <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center text-2xl sm:text-3xl">
+                <div style={{
+                  width: 64,
+                  height: 64,
+                  margin: '0 auto 24px',
+                  borderRadius: 16,
+                  background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 28
+                }}>
                   {item.icon}
                 </div>
-                <span className="inline-block px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-bold mb-4">
+                <span style={{
+                  display: 'inline-block',
+                  padding: '4px 12px',
+                  borderRadius: 9999,
+                  background: 'rgba(59, 130, 246, 0.1)',
+                  color: '#60a5fa',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  marginBottom: 16
+                }}>
                   {item.step}
                 </span>
-                <h3 className="text-lg sm:text-xl font-semibold text-white mb-3">
+                <h3 style={{ fontSize: 20, fontWeight: 600, color: '#fff', marginBottom: 12 }}>
                   {item.title}
                 </h3>
-                <p className="text-sm sm:text-base text-neutral-500 leading-relaxed">
+                <p style={{ fontSize: 15, color: '#737373', lineHeight: 1.6 }}>
                   {item.desc}
                 </p>
               </div>
@@ -141,25 +275,66 @@ export function LandingPage() {
       </section>
 
       {/* Create Market CTA */}
-      <section className="bg-gradient-to-br from-blue-900 to-blue-600 py-12 sm:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="text-4xl sm:text-5xl mb-</div>5">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4">
+      <section style={{ 
+        background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)',
+        paddingTop: 64,
+        paddingBottom: 64
+      }}>
+        <div style={{ 
+          maxWidth: 1200, 
+          margin: '0 auto', 
+          padding: '0 24px',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '20px' }}>✨</div>
+          <h2 style={{ 
+            fontSize: 36, 
+            fontWeight: 700, 
+            color: '#fff', 
+            marginBottom: 16 
+          }}>
             Create Your Own Market
           </h2>
-          <p className="text-base sm:text-lg text-blue-100 max-w-xl mx-auto mb-8 leading-relaxed">
+          <p style={{ 
+            fontSize: 18, 
+            color: '#E0E7FF', 
+            marginBottom: 32,
+            maxWidth: '600px',
+            margin: '0 auto 32px',
+            lineHeight: '1.6',
+          }}>
             Have a prediction you want to trade on? Launch your own market in minutes and let the community participate.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link
               to="/create-market"
-              className="py-4 px-8 bg-white hover:bg-neutral-100 text-blue-900 rounded-xl font-semibold transition-colors"
+              style={{
+                padding: '16px 32px',
+                background: '#fff',
+                color: '#1e3a8a',
+                border: 'none',
+                borderRadius: 12,
+                fontSize: 16,
+                fontWeight: 600,
+                textDecoration: 'none',
+                display: 'inline-block',
+              }}
             >
               Create Market
             </Link>
             <Link
               to="/markets"
-              className="py-4 px-8 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl font-semibold transition-colors"
+              style={{
+                padding: '16px 32px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                color: '#fff',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: 12,
+                fontSize: 16,
+                fontWeight: 600,
+                textDecoration: 'none',
+                display: 'inline-block',
+              }}
             >
               Browse Markets
             </Link>
@@ -168,52 +343,114 @@ export function LandingPage() {
       </section>
 
       {/* Featured Markets */}
-      <section className="bg-black py-16 sm:py-20 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10 sm:mb-12">
+      <section style={{ 
+        background: '#000',
+        paddingTop: 96,
+        paddingBottom: 96
+      }}>
+        <div style={{ 
+          maxWidth: 1200, 
+          margin: '0 auto', 
+          padding: '0 24px'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            flexWrap: 'wrap',
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            gap: 24,
+            marginBottom: 48
+          }}>
             <div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+              <h2 style={{ fontSize: 32, fontWeight: 700, color: '#fff', marginBottom: 8 }}>
                 Featured Markets
               </h2>
-              <p className="text-base text-neutral-500">Top markets by volume</p>
+              <p style={{ fontSize: 16, color: '#737373' }}>Top markets by volume</p>
             </div>
             <Link 
               to="/markets"
-              className="py-3 px-6 bg-neutral-900 hover:bg-neutral-800 text-white border border-neutral-700 rounded-xl font-medium transition-colors"
+              style={{
+                padding: '12px 24px',
+                background: '#1a1a1a',
+                color: '#fff',
+                border: '1px solid #333',
+                borderRadius: 10,
+                fontWeight: 500,
+                textDecoration: 'none'
+              }}
             >
               View All Markets
             </Link>
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: 32
+            }}>
               {[1, 2, 3].map((i) => (
-                <div key={i} className="p-8 sm:p-10 bg-neutral-900 rounded-2xl border border-neutral-800 h-64 sm:h-72 animate-pulse">
-                  <div className="h-5 w-20 bg-neutral-800 rounded mb-6" />
-                  <div className="h-6 w-full bg-neutral-800 rounded mb-3" />
-                  <div className="h-6 w-3/4 bg-neutral-800 rounded" />
+                <div key={i} style={{
+                  padding: 40,
+                  background: '#111',
+                  borderRadius: 20,
+                  border: '1px solid #262626',
+                  height: 280
+                }}>
+                  <div style={{ height: 20, width: 80, background: '#222', borderRadius: 4, marginBottom: 24 }} />
+                  <div style={{ height: 24, width: '100%', background: '#222', borderRadius: 4, marginBottom: 12 }} />
+                  <div style={{ height: 24, width: '70%', background: '#222', borderRadius: 4 }} />
                 </div>
               ))}
             </div>
           ) : featuredMarkets.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: 32
+            }}>
               {featuredMarkets.map((market) => (
                 <MarketCard key={market.id} market={market} />
               ))}
             </div>
           ) : (
-            <div className="py-16 sm:py-20 px-8 sm:px-10 bg-neutral-900 rounded-2xl border border-neutral-800 text-center">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-6 rounded-full bg-neutral-800 flex items-center justify-center text-3xl sm:text-4xl">
-              </div>                
-              <h3 className="text-xl sm:text-2xl font-semibold text-white mb-3">
+            <div style={{
+              padding: '80px 40px',
+              background: '#111',
+              borderRadius: 20,
+              border: '1px solid #262626',
+              textAlign: 'center'
+            }}>
+              <div style={{
+                width: 80,
+                height: 80,
+                margin: '0 auto 24px',
+                borderRadius: '50%',
+                background: '#1a1a1a',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 32
+              }}>
+                📊
+              </div>
+              <h3 style={{ fontSize: 24, fontWeight: 600, color: '#fff', marginBottom: 12 }}>
                 No Active Markets
               </h3>
-              <p className="text-base text-neutral-500 mb-8">
+              <p style={{ fontSize: 16, color: '#737373', marginBottom: 32 }}>
                 Markets will appear here once they are created
               </p>
               <Link 
                 to="/markets"
-                className="inline-block py-3 sm:py-4 px-6 sm:px-8 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors"
+                style={{
+                  display: 'inline-block',
+                  padding: '14px 28px',
+                  background: '#3b82f6',
+                  color: '#fff',
+                  borderRadius: 10,
+                  fontWeight: 600,
+                  textDecoration: 'none'
+                }}
               >
                 Browse All Markets
               </Link>
@@ -223,29 +460,56 @@ export function LandingPage() {
       </section>
 
       {/* Security Section */}
-      <section className="bg-neutral-950 py-16 sm:py-20 lg:py-24">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-orange-500/15 border border-orange-500/30 mb-6 sm:mb-8">
-            <span className="text-</span>base">
-            <span className="text-sm font-semibold text-orange-300">
+      <section style={{ 
+        background: '#0a0a0a',
+        paddingTop: 96,
+        paddingBottom: 96
+      }}>
+        <div style={{ 
+          maxWidth: 900, 
+          margin: '0 auto', 
+          padding: '0 24px',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '10px 20px',
+            borderRadius: 9999,
+            background: 'rgba(249, 115, 22, 0.15)',
+            border: '1px solid rgba(249, 115, 22, 0.3)',
+            marginBottom: 32
+          }}>
+            <span style={{ fontSize: 16 }}>₿</span>
+            <span style={{ fontSize: 14, color: '#fdba74', fontWeight: 600 }}>
               Bitcoin Secured
             </span>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
+          <h2 style={{ fontSize: 32, fontWeight: 700, color: '#fff', marginBottom: 16 }}>
             Built on Stacks, Secured by Bitcoin
           </h2>
-          <p className="text-base sm:text-lg text-neutral-400 mb-10 sm:mb-12 leading-relaxed">
+          <p style={{ fontSize: 18, color: '#a3a3a3', marginBottom: 48, lineHeight: 1.6 }}>
             Your funds are protected by the most decentralized blockchain in the world.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: 24
+          }}>
             {securityFeatures.map((item) => (
-              <div key={item.title} className="py-8 px-6 bg-neutral-900 rounded-2xl border border-neutral-800">
-                <h3 className="text-lg font-semibold text-white mb-2">
+              <div key={item.title} style={{
+                padding: '32px 24px',
+                background: '#111',
+                borderRadius: 16,
+                border: '1px solid #262626'
+              }}>
+                <h3 style={{ fontSize: 18, fontWeight: 600, color: '#fff', marginBottom: 8 }}>
                   {item.title}
                 </h3>
-                <p className="text-sm text-neutral-500">{item.desc}</p>
+                <p style={{ fontSize: 14, color: '#737373' }}>{item.desc}</p>
               </div>
             ))}
           </div>
@@ -253,19 +517,37 @@ export function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-black py-16 sm:py-20 lg:py-24">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4">
+      <section style={{ 
+        background: '#000',
+        paddingTop: 96,
+        paddingBottom: 96
+      }}>
+        <div style={{ 
+          maxWidth: 700, 
+          margin: '0 auto', 
+          padding: '0 24px',
+          textAlign: 'center'
+        }}>
+          <h2 style={{ fontSize: 36, fontWeight: 700, color: '#fff', marginBottom: 16 }}>
             Ready to Start?
           </h2>
-          <p className="text-base sm:text-lg text-neutral-500 mb-8 sm:mb-10">
+          <p style={{ fontSize: 18, color: '#737373', marginBottom: 40 }}>
             Join the future of decentralized prediction markets
           </p>
           
           {isConnected ? (
             <Link 
               to="/markets"
-              className="inline-block py-4 sm:py-5 px-10 sm:px-12 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-lg sm:text-xl transition-colors"
+              style={{
+                display: 'inline-block',
+                padding: '18px 48px',
+                background: '#3b82f6',
+                color: '#fff',
+                borderRadius: 12,
+                fontWeight: 600,
+                textDecoration: 'none',
+                fontSize: 18
+              }}
             >
               Start Trading
             </Link>
@@ -273,7 +555,16 @@ export function LandingPage() {
             <button 
               type="button"
               onClick={() => connect()}
-              className="py-4 sm:py-5 px-10 sm:px-12 bg-blue-600 hover:bg-blue-700 text-white border-none rounded-xl font-semibold cursor-pointer text-lg sm:text-xl transition-colors"
+              style={{
+                padding: '18px 48px',
+                background: '#3b82f6',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontSize: 18
+              }}
             >
               Connect Wallet
             </button>

@@ -1,15 +1,10 @@
 /**
  * Transaction History Page
- * 
- * Displays user's complete transaction history with filtering and status tracking.
  */
 import { useTransactions } from '../components/TransactionProvider';
 import { TransactionHistory } from '../components/TransactionHistory';
 import { useWallet } from '../components/WalletProvider';
-import {
-  TransactionStatus,
-  getStatusColor,
-} from '../utils/transactions';
+import { TransactionStatus, getStatusColor } from '../utils/transactions';
 
 export function TransactionHistoryPage() {
   const { isConnected, connect } = useWallet();
@@ -20,12 +15,8 @@ export function TransactionHistoryPage() {
 
   const StatCard = ({ label, value, color }: { label: string; value: number; color: string }) => (
     <div className="bg-neutral-950 border border-neutral-800 rounded-xl p-4 sm:p-5 text-center">
-      <div className="text-[10px] sm:text-xs text-neutral-400 mb-2 uppercase tracking-wide">
-        {label}
-      </div>
-      <div className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color }}>
-        {value}
-      </div>
+      <div className="text-[10px] sm:text-xs text-neutral-400 mb-2 uppercase tracking-wide">{label}</div>
+      <div className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color }}>{value}</div>
     </div>
   );
 
@@ -34,23 +25,12 @@ export function TransactionHistoryPage() {
       <div className="min-h-screen bg-black pt-[72px] pb-20 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto py-10 sm:py-16">
           <div className="text-center mb-10 sm:mb-12">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 flex items-center justify-center gap-3">
-            </h1>              <span>
-            <p className="text-sm sm:text-base text-neutral-400 max-w-md mx-auto leading-relaxed">
-              Track all your transactions on 0xCast
-            </p>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4">Transaction History</h1>
+            <p className="text-sm sm:text-base text-neutral-400 max-w-md mx-auto leading-relaxed">Track all your transactions on 0xCast</p>
           </div>
-          
           <div className="bg-neutral-950 border border-neutral-800 rounded-2xl p-8 sm:p-12 text-center">
-            <p className="text-sm sm:text-base text-neutral-400 mb-5">
-              Connect your wallet to view transaction history
-            </p>
-            <button 
-              className="py-3 sm:py-4 px-6 sm:px-8 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-base transition-colors"
-              onClick={() => connect()}
-            >
-              Connect Wallet
-            </button>
+            <p className="text-sm sm:text-base text-neutral-400 mb-5">Connect your wallet to view transaction history</p>
+            <button className="py-3 sm:py-4 px-6 sm:px-8 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-base transition-colors" onClick={() => connect()}>Connect Wallet</button>
           </div>
         </div>
       </div>
@@ -61,11 +41,8 @@ export function TransactionHistoryPage() {
     <div className="min-h-screen bg-black pt-[72px] pb-20 px-4 sm:px-6">
       <div className="max-w-3xl mx-auto py-10 sm:py-16">
         <div className="text-center mb-10 sm:mb-12">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 flex items-center justify-center gap-3">
-          </h1>            <span>
-          <p className="text-sm sm:text-base text-neutral-400 max-w-md mx-auto leading-relaxed">
-            Track all your transactions on 0xCast
-          </p>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4">Transaction History</h1>
+          <p className="text-sm sm:text-base text-neutral-400 max-w-md mx-auto leading-relaxed">Track all your transactions on 0xCast</p>
         </div>
 
         {isChecking && (
@@ -76,28 +53,12 @@ export function TransactionHistoryPage() {
         )}
 
         <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <StatCard 
-            label="Pending" 
-            value={pendingCount} 
-            color={getStatusColor(TransactionStatus.PENDING)} 
-          />
-          <StatCard 
-            label="Confirmed" 
-            value={successCount} 
-            color={getStatusColor(TransactionStatus.SUCCESS)} 
-          />
-          <StatCard 
-            label="Failed" 
-            value={failedCount} 
-            color={getStatusColor(TransactionStatus.FAILED)} 
-          />
+          <StatCard label="Pending" value={pendingCount} color={getStatusColor(TransactionStatus.PENDING)} />
+          <StatCard label="Confirmed" value={successCount} color={getStatusColor(TransactionStatus.SUCCESS)} />
+          <StatCard label="Failed" value={failedCount} color={getStatusColor(TransactionStatus.FAILED)} />
         </div>
 
-        <TransactionHistory 
-          transactions={transactions}
-          onClear={clearHistory}
-          maxItems={50}
-        />
+        <TransactionHistory transactions={transactions} onClear={clearHistory} maxItems={50} />
       </div>
     </div>
   );
