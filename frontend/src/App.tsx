@@ -1,11 +1,13 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { WalletProvider } from './components/WalletProvider';
 import { TransactionProvider } from './components/TransactionProvider';
+import { NetworkProvider } from './contexts/NetworkContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PageErrorBoundary } from './components/PageErrorBoundary';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { MobileBottomNav } from './components/MobileBottomNav';
+import { TestnetWarningBanner } from './components/TestnetWarningBanner';
 import { LandingPage } from './pages/LandingPage';
 import { MarketsPage } from './pages/MarketsPage';
 import { TradePage } from './pages/TradePage';
@@ -21,11 +23,13 @@ import { LiquidityPage } from './pages/LiquidityPage';
 function App() {
   return (
     <ErrorBoundary>
-      <WalletProvider>
-        <TransactionProvider>
-          <BrowserRouter>
-            <div className="min-h-screen flex flex-col bg-black pb-16 md:pb-0">
-              <Header />
+      <NetworkProvider>
+        <WalletProvider>
+          <TransactionProvider>
+            <BrowserRouter>
+              <div className="min-h-screen flex flex-col bg-black pb-16 md:pb-0">
+                <TestnetWarningBanner />
+                <Header />
               <main className="flex-1">
                 <Routes>
                   <Route path="/" element={<LandingPage />} />
@@ -84,9 +88,10 @@ function App() {
               <Footer />
               <MobileBottomNav />
             </div>
-          </BrowserRouter>
-        </TransactionProvider>
-      </WalletProvider>
+            </BrowserRouter>
+          </TransactionProvider>
+        </WalletProvider>
+      </NetworkProvider>
     </ErrorBoundary>
   );
 }
