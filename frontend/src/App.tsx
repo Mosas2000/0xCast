@@ -5,6 +5,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { PageErrorBoundary } from './components/PageErrorBoundary';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { LandingPage } from './pages/LandingPage';
 import { MarketsPage } from './pages/MarketsPage';
 import { TradePage } from './pages/TradePage';
@@ -23,7 +24,7 @@ function App() {
       <WalletProvider>
         <TransactionProvider>
           <BrowserRouter>
-            <div className="min-h-screen flex flex-col bg-black">
+            <div className="min-h-screen flex flex-col bg-black pb-16 md:pb-0">
               <Header />
               <main className="flex-1">
                 <Routes>
@@ -81,6 +82,7 @@ function App() {
                 </Routes>
               </main>
               <Footer />
+              <MobileBottomNav />
             </div>
           </BrowserRouter>
         </TransactionProvider>

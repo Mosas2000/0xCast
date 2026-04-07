@@ -97,7 +97,6 @@ export function PortfolioPage() {
   const handleClaimWinnings = async (marketId: number) => {
     if (!isConnected || claimingMarketId) return;
     
-    // Validate market ID before processing
     const marketIdValidation = validateMarketId(marketId);
     if (!marketIdValidation.isValid) {
       setClaimError(marketIdValidation.error || 'Invalid market ID');
@@ -105,7 +104,6 @@ export function PortfolioPage() {
       return;
     }
     
-    // Find the position to verify it hasn't been claimed
     const position = positions.find(p => p.marketId === marketId);
     if (!position || position.claimed) {
       setClaimError('This position has already been claimed');
@@ -121,18 +119,15 @@ export function PortfolioPage() {
       await claimWinnings(marketId);
       setClaimSuccess(marketId);
       
-      // Refresh positions after successful claim
       setTimeout(() => {
         refetchPositions();
-      }, 2000); // Wait 2s for blockchain to update
+      }, 2000);
       
-      // Auto-hide success message after 5 seconds
       setTimeout(() => setClaimSuccess(null), 5000);
     } catch (error) {
       console.error('Error claiming winnings:', error);
       setClaimError(error instanceof Error ? error.message : 'Failed to claim winnings');
       
-      // Auto-hide error after 5 seconds
       setTimeout(() => setClaimError(null), 5000);
     } finally {
       setClaimingMarketId(null);
@@ -141,15 +136,15 @@ export function PortfolioPage() {
 
   if (!isConnected) {
     return (
-      <div className="pt-[72px] min-h-screen flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-blue-500/10 flex items-center justify-center">
-            <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="pt-[72px] min-h-screen flex items-center justify-center px-4">
+        <div className="text-center max-w-md mx-auto">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-6 rounded-full bg-blue-500/10 flex items-center justify-center">
+            <svg className="w-8 h-8 sm:w-10 sm:h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-4">Connect Your Wallet</h2>
-          <p className="text-neutral-500 mb-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-4">Connect Your Wallet</h2>
+          <p className="text-sm sm:text-base text-neutral-500 mb-8">
             Connect your Stacks wallet to view your portfolio and track your positions.
           </p>
           <button type="button" onClick={() => connect()} className="btn btn-primary">Connect Wallet</button>
@@ -162,8 +157,8 @@ export function PortfolioPage() {
     return (
       <div className="pt-[72px] min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 mx-auto mb-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-neutral-500">Loading portfolio...</p>
+          <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm sm:text-base text-neutral-500">Loading portfolio...</p>
         </div>
       </div>
     );
@@ -180,35 +175,35 @@ export function PortfolioPage() {
 
   return (
     <div className="pt-[72px] min-h-screen">
-      <div className="container py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
         {/* Header */}
-        <div className="mb-12">
-          <h1 className="text-3xl font-bold text-white mb-3">Portfolio</h1>
-          <p className="text-neutral-500">Track your positions and winnings</p>
+        <div className="mb-8 sm:mb-12">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 sm:mb-3">Portfolio</h1>
+          <p className="text-sm sm:text-base text-neutral-500">Track your positions and winnings</p>
         </div>
 
         {/* Stats */}
-        <div className="grid sm:grid-cols-3 gap-8 mb-12">
-          <div className="card p-8">
-            <p className="text-sm text-neutral-500 mb-3">Total Staked</p>
-            <p className="text-2xl font-bold text-white">{formatStx(totalStaked)}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12">
+          <div className="card p-5 sm:p-6 lg:p-8">
+            <p className="text-xs sm:text-sm text-neutral-500 mb-2 sm:mb-3">Total Staked</p>
+            <p className="text-xl sm:text-2xl font-bold text-white">{formatStx(totalStaked)}</p>
           </div>
-          <div className="card p-8">
-            <p className="text-sm text-neutral-500 mb-3">Active Positions</p>
-            <p className="text-2xl font-bold text-white">{activePositions.length}</p>
+          <div className="card p-5 sm:p-6 lg:p-8">
+            <p className="text-xs sm:text-sm text-neutral-500 mb-2 sm:mb-3">Active Positions</p>
+            <p className="text-xl sm:text-2xl font-bold text-white">{activePositions.length}</p>
           </div>
-          <div className="card p-8">
-            <p className="text-sm text-neutral-500 mb-3">Winning Positions</p>
-            <p className="text-2xl font-bold text-emerald-400">{wonPositions.length}</p>
+          <div className="card p-5 sm:p-6 lg:p-8">
+            <p className="text-xs sm:text-sm text-neutral-500 mb-2 sm:mb-3">Winning Positions</p>
+            <p className="text-xl sm:text-2xl font-bold text-emerald-400">{wonPositions.length}</p>
           </div>
         </div>
 
         {/* Positions */}
         {positions.length > 0 ? (
           <div>
-            <h2 className="text-xl font-semibold text-white mb-8">Your Positions</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-white mb-6 sm:mb-8">Your Positions</h2>
             
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {positions.map((position) => {
                 const odds = calculateOdds(position.market.totalYesStake, position.market.totalNoStake);
                 const isWinner =
@@ -219,14 +214,14 @@ export function PortfolioPage() {
 
                 return (
                   <Link key={position.marketId} to={`/trade/${position.marketId}`} className="block group">
-                    <div className={`card p-8 transition-all ${
+                    <div className={`card p-5 sm:p-6 lg:p-8 transition-all ${
                       isWinner ? 'border-emerald-500/30 bg-emerald-500/5' :
                       isLoser ? 'border-rose-500/30 bg-rose-500/5' : ''
                     }`}>
-                      <div className="flex items-start justify-between gap-4">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-4">
-                            <span className={`badge ${
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                            <span className={`badge text-xs ${
                               position.market.status === MarketStatus.ACTIVE ? 'badge-green' :
                               isWinner ? 'badge-green' : 'badge-blue'
                             }`}>
@@ -235,11 +230,11 @@ export function PortfolioPage() {
                             <span className="text-xs text-neutral-500 font-mono">#{position.marketId}</span>
                           </div>
                           
-                          <h3 className="text-lg font-semibold text-white mb-6 group-hover:text-blue-400 transition-colors">
+                          <h3 className="text-base sm:text-lg font-semibold text-white mb-4 sm:mb-6 group-hover:text-blue-400 transition-colors">
                             {position.market.question}
                           </h3>
 
-                          <div className="flex flex-wrap gap-8 text-sm">
+                          <div className="flex flex-col sm:flex-row gap-3 sm:gap-8 text-sm">
                             {position.yesStake > 0 && (
                               <div>
                                 <span className="text-emerald-400 font-medium">Yes: </span>
@@ -257,30 +252,30 @@ export function PortfolioPage() {
                           </div>
                         </div>
 
-                        <svg className="w-5 h-5 text-neutral-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="hidden sm:block w-5 h-5 text-neutral-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                       </div>
 
                       {isWinner && position.claimed && (
-                        <div className="mt-8 pt-6 border-t border-neutral-800">
-                          <div className="p-3 bg-neutral-800 rounded-lg text-neutral-400 text-sm text-center">
-                            ✓ Winnings already claimed
+                        <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-neutral-800">
+                          <div className="p-3 bg-neutral-800 rounded-lg text-neutral-400 text-xs sm:text-sm text-center">
+ Winnings already claimed                            
                           </div>
                         </div>
                       )}
                       
                       {isWinner && !position.claimed && (
-                        <div className="mt-8 pt-6 border-t border-neutral-800">
+                        <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-neutral-800">
                           {claimSuccess === position.marketId && (
-                            <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm">
-                              ✓ Winnings claimed successfully! Transaction submitted.
+                            <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-xs sm:text-sm">
+ Winnings claimed successfully! Transaction submitted.                              
                             </div>
                           )}
                           
                           {claimError && claimingMarketId === position.marketId && (
-                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
-                              ✗ {claimError}
+                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs sm:text-sm">
+ {claimError}                              
                             </div>
                           )}
                           
@@ -303,14 +298,14 @@ export function PortfolioPage() {
             </div>
           </div>
         ) : (
-          <div className="card p-24 text-center">
-            <div className="w-24 h-24 mx-auto mb-10 rounded-full bg-neutral-900 flex items-center justify-center">
-              <svg className="w-12 h-12 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="card p-12 sm:p-16 lg:p-24 text-center">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 mx-auto mb-6 sm:mb-8 lg:mb-10 rounded-full bg-neutral-900 flex items-center justify-center">
+              <svg className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-white mb-2">No Positions Yet</h3>
-            <p className="text-neutral-500 mb-6">Start trading to see your positions here</p>
+            <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">No Positions Yet</h3>
+            <p className="text-sm sm:text-base text-neutral-500 mb-6">Start trading to see your positions here</p>
             <Link to="/markets" className="btn btn-primary">Explore Markets</Link>
           </div>
         )}
