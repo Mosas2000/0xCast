@@ -2,8 +2,23 @@
 // This file serves as the single source of truth for all contract addresses
 
 import { STACKS_MAINNET, STACKS_TESTNET } from '@stacks/network';
+import { loadNetworkPreference } from '../utils/networkUtils';
+import { NetworkType as NetworkTypeEnum } from '../types/network';
 
 export type NetworkType = 'mainnet' | 'testnet';
+
+// Helper to convert network enum to legacy type
+function normalizeNetwork(network: NetworkType | NetworkTypeEnum): NetworkType {
+  if (network === NetworkTypeEnum.MAINNET || network === 'mainnet') {
+    return 'mainnet';
+  }
+  return 'testnet';
+}
+
+// Get the current network from storage (dynamic)
+function getCurrentNetworkFromStorage(): NetworkType {
+  return normalizeNetwork(loadNetworkPreference());
+}
 
 // Contract names
 export const CONTRACT_NAMES = {
@@ -36,17 +51,30 @@ export const CONTRACT_ADDRESSES = {
   },
 } as const;
 
-// Current active network
-export const CURRENT_NETWORK: NetworkType = 'mainnet';
+// Current active network (reads from localStorage for persistence)
+export const CURRENT_NETWORK: NetworkType = getCurrentNetworkFromStorage();
+
+// Subscribe to network changes (for use outside React)
+let networkOverride: NetworkType | null = null;
+
+export function setNetworkOverride(network: NetworkType | null) {
+  networkOverride = network;
+}
+
+export function getActiveNetwork(): NetworkType {
+  return networkOverride ?? getCurrentNetworkFromStorage();
+}
 
 // Get network object for @stacks/network
-export function getNetwork(network: NetworkType = CURRENT_NETWORK) {
-  return network === 'mainnet' ? STACKS_MAINNET : STACKS_TESTNET;
+export function getNetwork(network?: NetworkType) {
+  const activeNetwork = network ?? getActiveNetwork();
+  return activeNetwork === 'mainnet' ? STACKS_MAINNET : STACKS_TESTNET;
 }
 
 // Get contract address for a specific contract
-export function getContractAddress(contractName: ContractName, network: NetworkType = CURRENT_NETWORK): string {
-  const addresses = CONTRACT_ADDRESSES[network];
+export function getContractAddress(contractName: ContractName, network?: NetworkType): string {
+  const activeNetwork = network ?? getActiveNetwork();
+  const addresses = CONTRACT_ADDRESSES[activeNetwork];
   
   // OXC token uses the token deployer address
   if (contractName === CONTRACT_NAMES.OXCAST) {
@@ -58,13 +86,13 @@ export function getContractAddress(contractName: ContractName, network: NetworkT
 }
 
 // Get full contract identifier (address.name)
-export function getContractIdentifier(contractName: ContractName, network: NetworkType = CURRENT_NETWORK): string {
+export function getContractIdentifier(contractName: ContractName, network?: NetworkType): string {
   const address = getContractAddress(contractName, network);
   return `${address}.${contractName}`;
 }
 
 // Get contract principal for a contract
-export function getContractPrincipal(contractName: ContractName, network: NetworkType = CURRENT_NETWORK): {
+export function getContractPrincipal(contractName: ContractName, network?: NetworkType): {
   address: string;
   name: string;
   identifier: string;
