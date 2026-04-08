@@ -194,7 +194,7 @@ describe('formatAddress', () => {
   it('truncates long addresses', () => {
     const address = 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM';
     const result = formatAddress(address);
-    expect(result).toBe('ST1PQH...ZGZGM');
+    expect(result).toBe('ST1PQH...GZGM');
     expect(result.length).toBe(13);
   });
 
