@@ -178,7 +178,7 @@ describe('categorizeMarket', () => {
   describe('Other category', () => {
     it('returns OTHER for unmatched questions', () => {
       expect(categorizeMarket('Random question here')).toBe(MarketCategory.OTHER);
-      expect(categorizeMarket('Will it rain tomorrow?')).toBe(MarketCategory.OTHER);
+      expect(categorizeMarket('Will the sun set today?')).toBe(MarketCategory.OTHER);
     });
   });
 
