@@ -1,11 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { TimeRangeSelector, TimeRangeDropdown } from '../TimeRangeSelector';
-import type { TimeRange } from '../../types/analytics';
 
 describe('TimeRangeSelector', () => {
   const mockOnChange = vi.fn();
-  const timeRanges: TimeRange[] = ['24h', '7d', '30d', '90d', 'all'];
 
   beforeEach(() => {
     mockOnChange.mockClear();
@@ -33,7 +31,7 @@ describe('TimeRangeSelector', () => {
     );
     
     const button = screen.getByText('30D');
-    expect(button.closest('button')).toHaveClass('bg-blue-500');
+    expect(button).toHaveClass('bg-blue-600');
   });
 
   it('calls onChange when option clicked', () => {
@@ -46,6 +44,18 @@ describe('TimeRangeSelector', () => {
     
     screen.getByText('24H').click();
     expect(mockOnChange).toHaveBeenCalledWith('24h');
+  });
+
+  it('renders unselected options with neutral styling', () => {
+    render(
+      <TimeRangeSelector 
+        value="7d" 
+        onChange={mockOnChange} 
+      />
+    );
+    
+    const unselectedButton = screen.getByText('24H');
+    expect(unselectedButton).toHaveClass('text-neutral-400');
   });
 });
 
@@ -76,6 +86,19 @@ describe('TimeRangeDropdown', () => {
     );
     
     const select = screen.getByRole('combobox');
-    expect(select).toBeInTheDocument();
+    expect(select).toHaveValue('7d');
+  });
+
+  it('has correct option values', () => {
+    render(
+      <TimeRangeDropdown 
+        value="30d" 
+        onChange={mockOnChange} 
+      />
+    );
+    
+    expect(screen.getByRole('option', { name: '24H' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: '7D' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: '30D' })).toBeInTheDocument();
   });
 });
