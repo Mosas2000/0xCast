@@ -11,7 +11,7 @@ import { VolumeChart, CategoryPieChart, ActivityChart } from '../components/char
 import { TopMarketsTable, TopMarketCard } from '../components/TopMarketsTable';
 import { TimeRangeSelector, TimeRangeDropdown } from '../components/TimeRangeSelector';
 import { PersonalStatsCard } from '../components/PersonalStatsCard';
-import { Loading } from '../components/Loading';
+import { LoadingState } from '../components/Loading';
 
 export function AnalyticsPage() {
   const { isConnected } = useWallet();
@@ -59,7 +59,7 @@ export function AnalyticsPage() {
         </div>
 
         {isLoading ? (
-          <Loading />
+          <LoadingState message="Loading analytics..." />
         ) : (
           <div className="space-y-8">
             {/* Platform Stats */}

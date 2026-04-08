@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useMarkets } from './useMarkets';
 import { useWallet } from '../components/WalletProvider';
+import { MarketStatus, MarketOutcome } from '../types/market';
 import type {
   PlatformStats,
   MarketStats,
@@ -79,21 +80,21 @@ export function useAnalytics(initialTimeRange: TimeRange = '30d') {
   
   const [timeRange, setTimeRange] = useState<TimeRange>(initialTimeRange);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Compute platform stats from markets
   const platformStats = useMemo<PlatformStats | null>(() => {
     if (markets.length === 0) return null;
     
-    const activeMarkets = markets.filter(m => m.status === 'active').length;
-    const resolvedMarkets = markets.filter(m => m.status === 'resolved').length;
+    const activeMarkets = markets.filter(m => m.status === MarketStatus.ACTIVE).length;
+    const resolvedMarkets = markets.filter(m => m.status === MarketStatus.RESOLVED).length;
     
     let totalVolume = 0n;
     let totalPredictions = 0;
     
     markets.forEach(market => {
-      totalVolume += BigInt(market.yesPool || 0) + BigInt(market.noPool || 0);
-      totalPredictions += market.predictorCount || 0;
+      totalVolume += BigInt(market.totalYesStake || 0) + BigInt(market.totalNoStake || 0);
+      // Estimate predictions based on stake amounts
+      totalPredictions += Math.max(1, Math.floor((market.totalYesStake + market.totalNoStake) / 1000000));
     });
     
     // Estimate fees (2% of volume)
@@ -116,25 +117,35 @@ export function useAnalytics(initialTimeRange: TimeRange = '30d') {
   const topMarkets = useMemo<MarketStats[]>(() => {
     return markets
       .map(market => {
-        const totalPool = BigInt(market.yesPool || 0) + BigInt(market.noPool || 0);
+        const totalPool = BigInt(market.totalYesStake || 0) + BigInt(market.totalNoStake || 0);
         const totalPoolNum = Number(totalPool);
-        const yesPoolNum = Number(market.yesPool || 0);
-        const noPoolNum = Number(market.noPool || 0);
+        const yesPoolNum = Number(market.totalYesStake || 0);
+        const noPoolNum = Number(market.totalNoStake || 0);
+        
+        // Map numeric status to string
+        let statusStr: 'active' | 'resolved' | 'disputed' = 'active';
+        if (market.status === MarketStatus.RESOLVED) statusStr = 'resolved';
+        else if (market.status === MarketStatus.DISPUTED) statusStr = 'disputed';
+        
+        // Map numeric outcome to string
+        let outcomeStr: 'yes' | 'no' | null = null;
+        if (market.outcome === MarketOutcome.YES) outcomeStr = 'yes';
+        else if (market.outcome === MarketOutcome.NO) outcomeStr = 'no';
         
         return {
           id: market.id,
           question: market.question,
           totalPool,
           totalPoolFormatted: (totalPoolNum / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 2 }),
-          yesPool: BigInt(market.yesPool || 0),
-          noPool: BigInt(market.noPool || 0),
+          yesPool: BigInt(market.totalYesStake || 0),
+          noPool: BigInt(market.totalNoStake || 0),
           yesPercentage: totalPoolNum > 0 ? (yesPoolNum / totalPoolNum) * 100 : 50,
           noPercentage: totalPoolNum > 0 ? (noPoolNum / totalPoolNum) * 100 : 50,
-          predictorCount: market.predictorCount || 0,
+          predictorCount: Math.max(1, Math.floor((market.totalYesStake + market.totalNoStake) / 1000000)),
           createdAt: market.createdAt || 0,
-          endBlock: market.endBlock || 0,
-          status: market.status as 'active' | 'resolved' | 'disputed',
-          outcome: market.outcome as 'yes' | 'no' | null | undefined,
+          endBlock: market.endDate || 0,
+          status: statusStr,
+          outcome: outcomeStr,
         };
       })
       .sort((a, b) => Number(b.totalPool - a.totalPool))
@@ -237,7 +248,6 @@ export function useAnalytics(initialTimeRange: TimeRange = '30d') {
     
     // State
     isLoading,
-    error,
     timeRange,
     
     // Actions

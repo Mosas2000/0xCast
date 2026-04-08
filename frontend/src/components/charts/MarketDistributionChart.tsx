@@ -12,7 +12,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell,
 } from 'recharts';
 import type { MarketStats } from '../../types/analytics';
 import { CHART_COLORS } from '../../types/analytics';
@@ -53,7 +52,7 @@ export function MarketDistributionChart({
     );
   }
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
