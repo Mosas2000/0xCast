@@ -2,9 +2,9 @@
  * Tests for useMarketFiltering hook
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { MarketStatus, MarketOutcome } from '../types/market';
-import type { Market } from '../types/market';
-import { MarketCategory, SortOption, categorizeMarket } from '../utils/marketCategories';
+import { MarketStatus, MarketOutcome } from '../../types/market';
+import type { Market } from '../../types/market';
+import { MarketCategory, SortOption, categorizeMarket } from '../../utils/marketCategories';
 
 // Mock react-router-dom
 vi.mock('react-router-dom', () => ({
