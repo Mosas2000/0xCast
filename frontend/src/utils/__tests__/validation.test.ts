@@ -66,8 +66,9 @@ describe('validateAmount', () => {
 });
 
 describe('validateStacksAddress', () => {
-  const validMainnetAddress = 'SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9';
-  const validTestnetAddress = 'ST2PABAF9FTAJYNFZH93XENAJ8FVY99RRM4JPZQZZ';
+  // Use real-format addresses (41 chars, valid base58 - no 0, O, I, l)
+  const validMainnetAddress = 'SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7';
+  const validTestnetAddress = 'ST2CY5V39NHDPWSXMW9QDT3HC3GD6Q6XX4CFRK9AG';
 
   it('accepts valid mainnet addresses', () => {
     const result = validateStacksAddress(validMainnetAddress);
@@ -85,7 +86,7 @@ describe('validateStacksAddress', () => {
   });
 
   it('rejects addresses without SP or ST prefix', () => {
-    const result = validateStacksAddress('XX2PABAF9FTAJYNFZH93XENAJ8FVY99RRM4JPZQ');
+    const result = validateStacksAddress('XX2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7');
     expect(result.isValid).toBe(false);
     expect(result.error).toContain('Must start with SP or ST');
   });
@@ -96,8 +97,9 @@ describe('validateStacksAddress', () => {
     expect(result.error).toContain(`${VALIDATION_LIMITS.STACKS_ADDRESS_LENGTH} characters`);
   });
 
-  it('rejects addresses with invalid characters', () => {
-    const result = validateStacksAddress('SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG0');
+  it('rejects addresses with invalid characters (0, O, I, l)', () => {
+    // Contains '0' which is invalid in base58
+    const result = validateStacksAddress('SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9E00');
     expect(result.isValid).toBe(false);
     expect(result.error).toContain('invalid characters');
   });
