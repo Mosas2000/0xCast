@@ -41,15 +41,15 @@ describe('getNetworkConfig', () => {
   it('returns config for mainnet', () => {
     const config = getNetworkConfig(NetworkType.MAINNET);
     expect(config).toBeDefined();
-    expect(config.type).toBe(NetworkType.MAINNET);
-    expect(config.displayName).toBe('Mainnet');
+    expect(config.name).toBe('mainnet');
+    expect(config.label).toBe('Mainnet');
   });
 
   it('returns config for testnet', () => {
     const config = getNetworkConfig(NetworkType.TESTNET);
     expect(config).toBeDefined();
-    expect(config.type).toBe(NetworkType.TESTNET);
-    expect(config.displayName).toBe('Testnet');
+    expect(config.name).toBe('testnet');
+    expect(config.label).toBe('Testnet');
   });
 });
 
