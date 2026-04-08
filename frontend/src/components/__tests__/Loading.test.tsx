@@ -4,26 +4,29 @@ import { LoadingSpinner, LoadingState, SkeletonCard } from '../Loading';
 
 describe('LoadingSpinner', () => {
   it('renders with default size', () => {
-    render(<LoadingSpinner />);
-    const spinner = document.querySelector('div');
-    expect(spinner).toHaveClass('w-8', 'h-8');
+    const { container } = render(<LoadingSpinner />);
+    const spinner = container.firstChild as HTMLElement;
+    expect(spinner).toHaveClass('w-8');
+    expect(spinner).toHaveClass('h-8');
   });
 
   it('renders with small size', () => {
-    render(<LoadingSpinner size="sm" />);
-    const spinner = document.querySelector('div');
-    expect(spinner).toHaveClass('w-4', 'h-4');
+    const { container } = render(<LoadingSpinner size="sm" />);
+    const spinner = container.firstChild as HTMLElement;
+    expect(spinner).toHaveClass('w-4');
+    expect(spinner).toHaveClass('h-4');
   });
 
   it('renders with large size', () => {
-    render(<LoadingSpinner size="lg" />);
-    const spinner = document.querySelector('div');
-    expect(spinner).toHaveClass('w-12', 'h-12');
+    const { container } = render(<LoadingSpinner size="lg" />);
+    const spinner = container.firstChild as HTMLElement;
+    expect(spinner).toHaveClass('w-12');
+    expect(spinner).toHaveClass('h-12');
   });
 
   it('applies custom className', () => {
-    render(<LoadingSpinner className="text-red-500" />);
-    const spinner = document.querySelector('div');
+    const { container } = render(<LoadingSpinner className="text-red-500" />);
+    const spinner = container.firstChild as HTMLElement;
     expect(spinner).toHaveClass('text-red-500');
   });
 
@@ -53,9 +56,11 @@ describe('LoadingState', () => {
   });
 
   it('has centered layout', () => {
-    render(<LoadingState />);
-    const container = document.querySelector('div');
-    expect(container).toHaveClass('flex', 'flex-col', 'items-center', 'justify-center');
+    const { container } = render(<LoadingState />);
+    const wrapper = container.firstChild as HTMLElement;
+    expect(wrapper).toHaveClass('flex');
+    expect(wrapper).toHaveClass('items-center');
+    expect(wrapper).toHaveClass('justify-center');
   });
 });
 
