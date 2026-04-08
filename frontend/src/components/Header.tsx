@@ -18,8 +18,8 @@ export function Header() {
     { path: '/create-market', label: 'Create', highlight: true },
     { path: '/portfolio', label: 'Portfolio' },
     { path: '/liquidity', label: 'Liquidity' },
+    { path: '/analytics', label: 'Analytics' },
     { path: '/transactions', label: 'Activity' },
-    { path: '/oracle', label: 'Oracle' },
     { path: '/token', label: 'OXC Token' },
   ];
 
