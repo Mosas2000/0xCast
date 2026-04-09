@@ -22,7 +22,7 @@ export function PoolPositionRow({
   onClaimRewards,
 }: PoolPositionRowProps) {
   return (
-    <div className="flex items-center justify-between p-4 bg-neutral-900/50 rounded-xl border border-neutral-800 hover:border-neutral-700 transition-colors">
+    <div className="flex items-center justify-between p-4 bg-neutral-100 dark:bg-neutral-900/50 rounded-xl border border-neutral-300 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-700 transition-colors">
       {/* Pool Info */}
       <div className="flex items-center gap-4 min-w-0 flex-1">
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
@@ -31,11 +31,11 @@ export function PoolPositionRow({
         <div className="min-w-0">
           <Link
             to={`/trade/${position.marketId}`}
-            className="text-white font-medium hover:text-blue-400 transition-colors truncate block"
+            className="text-black dark:text-white font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate block"
           >
             Pool #{position.marketId}
           </Link>
-          <p className="text-sm text-neutral-500 truncate">
+          <p className="text-sm text-neutral-600 dark:text-neutral-500 truncate">
             Market #{position.marketId}
           </p>
         </div>
@@ -43,10 +43,10 @@ export function PoolPositionRow({
 
       {/* User Share */}
       <div className="text-right px-4 hidden sm:block">
-        <p className="text-white font-medium">
+        <p className="text-black dark:text-white font-medium">
           {formatStxAmount(position.shares)} LP
         </p>
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-neutral-600 dark:text-neutral-500">
           {position.sharePercentage.toFixed(2)}% share
         </p>
       </div>
@@ -56,7 +56,7 @@ export function PoolPositionRow({
         <p className="text-emerald-400 font-medium">
           {formatStxAmount(position.estimatedValue)} STX
         </p>
-        <p className="text-sm text-neutral-500">Value</p>
+        <p className="text-sm text-neutral-600 dark:text-neutral-500">Value</p>
       </div>
 
       {/* Pending Rewards */}
@@ -108,21 +108,21 @@ export function PoolPositionRow({
  */
 export function PoolPositionRowSkeleton() {
   return (
-    <div className="flex items-center justify-between p-4 bg-neutral-900/50 rounded-xl border border-neutral-800 animate-pulse">
+    <div className="flex items-center justify-between p-4 bg-neutral-100 dark:bg-neutral-900/50 rounded-xl border border-neutral-300 dark:border-neutral-800 animate-pulse">
       <div className="flex items-center gap-4 flex-1">
-        <div className="w-10 h-10 rounded-full bg-neutral-800" />
+        <div className="w-10 h-10 rounded-full bg-neutral-300 dark:bg-neutral-800" />
         <div className="space-y-2">
-          <div className="h-4 w-24 bg-neutral-800 rounded" />
-          <div className="h-3 w-16 bg-neutral-800 rounded" />
+          <div className="h-4 w-24 bg-neutral-300 dark:bg-neutral-800 rounded" />
+          <div className="h-3 w-16 bg-neutral-300 dark:bg-neutral-800 rounded" />
         </div>
       </div>
       <div className="space-y-2 px-4 hidden sm:block">
-        <div className="h-4 w-20 bg-neutral-800 rounded" />
-        <div className="h-3 w-12 bg-neutral-800 rounded ml-auto" />
+        <div className="h-4 w-20 bg-neutral-300 dark:bg-neutral-800 rounded" />
+        <div className="h-3 w-12 bg-neutral-300 dark:bg-neutral-800 rounded ml-auto" />
       </div>
       <div className="space-y-2 px-4">
-        <div className="h-4 w-20 bg-neutral-800 rounded" />
-        <div className="h-3 w-12 bg-neutral-800 rounded ml-auto" />
+        <div className="h-4 w-20 bg-neutral-300 dark:bg-neutral-800 rounded" />
+        <div className="h-3 w-12 bg-neutral-300 dark:bg-neutral-800 rounded ml-auto" />
       </div>
       <div className="flex gap-2">
         <div className="h-7 w-7 bg-neutral-800 rounded-lg" />
@@ -137,14 +137,14 @@ export function PoolPositionRowSkeleton() {
  */
 export function NoPositionsMessage() {
   return (
-    <div className="text-center py-12 px-4 bg-neutral-900/30 rounded-xl border border-neutral-800/50">
-      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-neutral-800/50 flex items-center justify-center">
-        <svg className="w-8 h-8 text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div className="text-center py-12 px-4 bg-neutral-100 dark:bg-neutral-900/30 rounded-xl border border-neutral-300 dark:border-neutral-800/50">
+      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-neutral-300 dark:bg-neutral-800/50 flex items-center justify-center">
+        <svg className="w-8 h-8 text-neutral-600 dark:text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
         </svg>
       </div>
-      <h3 className="text-lg font-semibold text-white mb-2">No LP Positions</h3>
-      <p className="text-neutral-400 mb-6 max-w-sm mx-auto">
+      <h3 className="text-lg font-semibold text-black dark:text-white mb-2">No LP Positions</h3>
+      <p className="text-neutral-600 dark:text-neutral-400 mb-6 max-w-sm mx-auto">
         You don't have any liquidity positions yet. Add liquidity to a pool to start earning rewards.
       </p>
       <Link
@@ -173,15 +173,15 @@ export function PositionsSummary({ totalValue, totalPositions, totalRewards }: P
   return (
     <div className="grid grid-cols-3 gap-4 p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
       <div>
-        <p className="text-sm text-neutral-400 mb-1">Total Value</p>
-        <p className="text-xl font-bold text-white">{formatStxAmount(totalValue)} STX</p>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Total Value</p>
+        <p className="text-xl font-bold text-black dark:text-white">{formatStxAmount(totalValue)} STX</p>
       </div>
       <div className="text-center">
-        <p className="text-sm text-neutral-400 mb-1">Positions</p>
-        <p className="text-xl font-bold text-white">{totalPositions}</p>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Positions</p>
+        <p className="text-xl font-bold text-black dark:text-white">{totalPositions}</p>
       </div>
       <div className="text-right">
-        <p className="text-sm text-neutral-400 mb-1">Pending Rewards</p>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Pending Rewards</p>
         <p className="text-xl font-bold text-amber-400">{formatStxAmount(totalRewards)} OXC</p>
       </div>
     </div>
