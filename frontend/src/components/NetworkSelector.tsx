@@ -34,7 +34,7 @@ export function NetworkSelector({ variant = 'dropdown', showLabel = true }: Netw
     return (
       <button
         onClick={toggleNetwork}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-neutral-900 border border-neutral-800 hover:border-neutral-700 transition-colors"
+        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-700 transition-colors"
         title={`Switch to ${network === NetworkType.MAINNET ? 'Testnet' : 'Mainnet'}`}
       >
         <span className="text-base">{networkConfig.icon}</span>
@@ -52,7 +52,7 @@ export function NetworkSelector({ variant = 'dropdown', showLabel = true }: Netw
     return (
       <button
         onClick={toggleNetwork}
-        className="w-8 h-8 flex items-center justify-center rounded-lg bg-neutral-900 border border-neutral-800 hover:border-neutral-700 transition-colors"
+        className="w-8 h-8 flex items-center justify-center rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-700 transition-colors"
         title={`${networkConfig.label} - Click to switch`}
       >
         <span className="text-sm">{networkConfig.icon}</span>
@@ -65,7 +65,7 @@ export function NetworkSelector({ variant = 'dropdown', showLabel = true }: Netw
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-neutral-900 border border-neutral-800 hover:border-neutral-700 transition-colors"
+        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-700 transition-colors"
       >
         <span className="text-base">{networkConfig.icon}</span>
         {showLabel && (
@@ -84,9 +84,9 @@ export function NetworkSelector({ variant = 'dropdown', showLabel = true }: Netw
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-48 bg-neutral-900 border border-neutral-800 rounded-xl shadow-xl z-50 overflow-hidden">
+        <div className="absolute top-full right-0 mt-2 w-48 bg-neutral-50 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-800 rounded-xl shadow-xl z-50 overflow-hidden">
           <div className="p-2">
-            <p className="text-xs text-neutral-500 uppercase tracking-wider px-2 py-1">
+            <p className="text-xs text-neutral-600 dark:text-neutral-500 uppercase tracking-wider px-2 py-1">
               Select Network
             </p>
           </div>
@@ -101,14 +101,14 @@ export function NetworkSelector({ variant = 'dropdown', showLabel = true }: Netw
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
                   isSelected 
-                    ? 'bg-neutral-800' 
-                    : 'hover:bg-neutral-800/50'
+                    ? 'bg-neutral-200 dark:bg-neutral-800' 
+                    : 'hover:bg-neutral-100 dark:hover:bg-neutral-800/50'
                 }`}
               >
                 <span className="text-lg">{config.icon}</span>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-white">{config.label}</p>
-                  <p className="text-xs text-neutral-500 truncate">{config.apiUrl}</p>
+                  <p className="text-sm font-medium text-black dark:text-white">{config.label}</p>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-500 truncate">{config.apiUrl}</p>
                 </div>
                 {isSelected && (
                   <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">

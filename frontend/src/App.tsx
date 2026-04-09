@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { WalletProvider } from './components/WalletProvider';
 import { TransactionProvider } from './components/TransactionProvider';
 import { NetworkProvider } from './contexts/NetworkContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PageErrorBoundary } from './components/PageErrorBoundary';
 import { Header } from './components/Header';
@@ -24,11 +25,12 @@ import { AnalyticsPage } from './pages/AnalyticsPage';
 function App() {
   return (
     <ErrorBoundary>
-      <NetworkProvider>
-        <WalletProvider>
-          <TransactionProvider>
-            <BrowserRouter>
-              <div className="min-h-screen flex flex-col bg-black pb-16 md:pb-0">
+      <ThemeProvider>
+        <NetworkProvider>
+          <WalletProvider>
+            <TransactionProvider>
+              <BrowserRouter>
+                <div className="min-h-screen flex flex-col bg-white dark:bg-black pb-16 md:pb-0">
                 <TestnetWarningBanner />
                 <Header />
               <main className="flex-1">
@@ -98,6 +100,7 @@ function App() {
           </TransactionProvider>
         </WalletProvider>
       </NetworkProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

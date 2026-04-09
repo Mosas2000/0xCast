@@ -107,7 +107,7 @@ export function TestnetTransactionWarning() {
         <p className="font-medium" style={{ color: networkConfig.color }}>
           Testnet Transaction
         </p>
-        <p className="text-neutral-400 text-xs mt-0.5">
+        <p className="text-neutral-600 dark:text-neutral-400 text-xs mt-0.5">
           This transaction will use testnet STX which has no real value. 
           Perfect for testing before using real tokens.
         </p>
