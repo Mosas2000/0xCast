@@ -21,6 +21,7 @@ import { CreateMarketPage } from './pages/CreateMarketPage';
 import { OraclePage } from './pages/OraclePage';
 import { LiquidityPage } from './pages/LiquidityPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
+import { LeaderboardPage } from './pages/LeaderboardPage';
 
 function App() {
   return (
@@ -89,6 +90,11 @@ function App() {
                   <Route path="/analytics" element={
                     <PageErrorBoundary pageName="Analytics">
                       <AnalyticsPage />
+                    </PageErrorBoundary>
+                  } />
+                  <Route path="/leaderboard" element={
+                    <PageErrorBoundary pageName="Leaderboard">
+                      <LeaderboardPage />
                     </PageErrorBoundary>
                   } />
                 </Routes>
