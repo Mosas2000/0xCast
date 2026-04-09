@@ -9,6 +9,7 @@ import { CONTRACT_ADDRESS, CONTRACT_NAME, MIN_STAKE, MAX_STAKE } from '../consta
 import { useWallet } from '../components/WalletProvider';
 import { useStake } from '../hooks/useStake';
 import { validateAmount, validateMarketId } from '../utils/validation';
+import { SocialButtons } from '../components/SocialButtons';
 
 /**
  * TradePage Component
@@ -199,6 +200,18 @@ export function TradePage() {
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white leading-tight">
               {market.question}
             </h1>
+
+            {/* Share Market */}
+            <div>
+              <SocialButtons
+                marketId={market.id}
+                marketQuestion={market.question}
+                yesPercentage={odds.yes}
+                noPercentage={odds.no}
+                poolSize={totalPool}
+                variant="button"
+              />
+            </div>
 
             {/* Resolved */}
             {isResolved && (
