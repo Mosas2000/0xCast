@@ -32,10 +32,10 @@ export function VolumeChart({
   if (data.length === 0) {
     return (
       <div 
-        className="flex items-center justify-center bg-neutral-900/50 rounded-xl border border-neutral-800"
+        className="flex items-center justify-center bg-neutral-100 dark:bg-neutral-900/50 rounded-xl border border-neutral-300 dark:border-neutral-800"
         style={{ height }}
       >
-        <p className="text-neutral-500">No volume data available</p>
+        <p className="text-neutral-600 dark:text-neutral-500">No volume data available</p>
       </div>
     );
   }
