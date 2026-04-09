@@ -37,8 +37,9 @@ export function calculateOdds(yesStake: number, noStake: number): { yes: number;
   };
 }
 
-export function formatStx(microStx: number, decimals: number = 2): string {
-  return `${microStxToStx(microStx).toFixed(decimals)} STX`;
+export function formatStx(microStx: number | bigint, decimals: number = 2): string {
+  const num = typeof microStx === 'bigint' ? Number(microStx) : microStx;
+  return `${microStxToStx(num).toFixed(decimals)} STX`;
 }
 
 export function formatAddress(address: string): string {
