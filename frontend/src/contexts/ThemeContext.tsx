@@ -15,10 +15,9 @@ const DEFAULT_THEME: Theme = 'dark';
 
 interface ThemeProviderProps {
   children: React.ReactNode;
-  defaultTheme?: Theme;
 }
 
-export function ThemeProvider({ children, defaultTheme = DEFAULT_THEME }: ThemeProviderProps) {
+export function ThemeProvider({ children }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(DEFAULT_THEME);
   const [mounted, setMounted] = useState(false);
 
