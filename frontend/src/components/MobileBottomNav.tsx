@@ -58,7 +58,7 @@ export function MobileBottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-lg border-t border-neutral-800 md:hidden safe-area-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-black/95 backdrop-blur-lg border-t border-neutral-200 dark:border-neutral-800 md:hidden safe-area-bottom">
       <div className="flex items-center justify-around h-16">
         {navItems.map((item, index) => {
           const isActive = location.pathname === item.path;
@@ -73,7 +73,7 @@ export function MobileBottomNav() {
                   ? 'relative -mt-4'
                   : isActive
                   ? 'text-blue-500'
-                  : 'text-neutral-500 hover:text-neutral-300'
+                  : 'text-neutral-600 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
               }`}
             >
               {isCreate ? (
