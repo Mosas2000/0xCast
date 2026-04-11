@@ -129,3 +129,16 @@ export const TOKEN_CONTRACT = {
     return getContractIdentifier(CONTRACT_NAMES.OXCAST);
   },
 } as const;
+
+// Multi-outcome market contract configuration
+export const MARKET_MULTI_CONTRACT = {
+  get address() {
+    return getContractAddress(CONTRACT_NAMES.MARKET_MULTI);
+  },
+  get name() {
+    return CONTRACT_NAMES.MARKET_MULTI;
+  },
+  get identifier() {
+    return getContractIdentifier(CONTRACT_NAMES.MARKET_MULTI);
+  },
+} as const;
