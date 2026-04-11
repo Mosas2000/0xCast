@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMultiMarketCreation } from '../hooks/useMultiMarketCreation';
+import { validateMultiOutcomeInputs } from '../utils/validation';
 
 function getCurrentBlockEstimate(): number {
   return Math.floor(Date.now() / 600000);
@@ -19,17 +20,17 @@ export function CreateMultiMarketPage() {
     () => endDate + resolutionDelayDays * 144,
     [endDate, resolutionDelayDays]
   );
+  const inputValidation = useMemo(
+    () => validateMultiOutcomeInputs(question, outcomes),
+    [question, outcomes]
+  );
 
   const canSubmit = useMemo(() => {
-    const trimmedQuestion = question.trim();
-    const validOutcomes = outcomes.map((value) => value.trim()).filter(Boolean);
     return (
-      trimmedQuestion.length >= 10 &&
-      validOutcomes.length >= 3 &&
-      validOutcomes.length <= 10 &&
+      inputValidation.isValid &&
       endDate < resolutionDate
     );
-  }, [question, outcomes, endDate, resolutionDate]);
+  }, [inputValidation.isValid, endDate, resolutionDate]);
 
   const updateOutcome = (index: number, value: string) => {
     setOutcomes((prev) => prev.map((item, idx) => (idx === index ? value : item)));
@@ -138,6 +139,12 @@ export function CreateMultiMarketPage() {
           <div className="text-sm text-neutral-500 dark:text-neutral-400">
             End block: {endDate.toLocaleString()} | Resolution block: {resolutionDate.toLocaleString()}
           </div>
+
+          {!inputValidation.isValid && (
+            <p className="text-sm text-red-500">
+              {inputValidation.error}
+            </p>
+          )}
 
           {state.error && <p className="text-sm text-red-500">{state.error}</p>}
           {state.success && (
