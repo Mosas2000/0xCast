@@ -51,6 +51,26 @@ export function MarketsPage() {
             >
               <span>+</span> Create Market
             </Link>
+            <Link
+              to="/multi-markets"
+              style={{
+                marginLeft: 12,
+                padding: '12px 24px',
+                backgroundColor: '#111827',
+                border: '1px solid #374151',
+                borderRadius: '10px',
+                color: '#FFFFFF',
+                fontSize: '15px',
+                fontWeight: '600',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.2s',
+              }}
+            >
+              Multi Markets
+            </Link>
           </div>
           <p style={{ fontSize: 18, color: '#737373' }}>
             Browse and trade on prediction markets
