@@ -22,6 +22,8 @@ export function AnalyticsPage() {
     categoryDistribution,
     userActivity,
     personalStats,
+    marketHealth,
+    predictiveInsights,
     isLoading,
     timeRange,
     setTimeRange,
@@ -166,6 +168,64 @@ export function AnalyticsPage() {
                 {topMarkets.slice(0, 5).map((market, index) => (
                   <TopMarketCard key={market.id} market={market} rank={index + 1} />
                 ))}
+              </div>
+            </section>
+
+            {/* Market Health and Predictive Insights */}
+            <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-neutral-900/50 rounded-xl border border-neutral-800 p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Market Health</h3>
+                {!marketHealth ? (
+                  <p className="text-neutral-500">No market health data available</p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-neutral-500">Active Rate</p>
+                      <p className="text-white font-semibold">{marketHealth.activeRate.toFixed(1)}%</p>
+                    </div>
+                    <div>
+                      <p className="text-neutral-500">Resolved Rate</p>
+                      <p className="text-white font-semibold">{marketHealth.resolvedRate.toFixed(1)}%</p>
+                    </div>
+                    <div>
+                      <p className="text-neutral-500">Average Pool</p>
+                      <p className="text-white font-semibold">{marketHealth.averagePoolFormatted} STX</p>
+                    </div>
+                    <div>
+                      <p className="text-neutral-500">Median Pool</p>
+                      <p className="text-white font-semibold">{marketHealth.medianPoolFormatted} STX</p>
+                    </div>
+                    <div>
+                      <p className="text-neutral-500">Largest Pool</p>
+                      <p className="text-white font-semibold">{marketHealth.largestPoolFormatted} STX</p>
+                    </div>
+                    <div>
+                      <p className="text-neutral-500">Top 3 Concentration</p>
+                      <p className="text-white font-semibold">{marketHealth.concentrationTop3.toFixed(1)}%</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-neutral-900/50 rounded-xl border border-neutral-800 p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Predictive Insights</h3>
+                {predictiveInsights.length === 0 ? (
+                  <p className="text-neutral-500">No predictive insights available</p>
+                ) : (
+                  <div className="space-y-3">
+                    {predictiveInsights.map((insight) => (
+                      <div key={insight.marketId} className="border border-neutral-800 rounded-lg p-3">
+                        <p className="text-sm text-white line-clamp-1">{insight.question}</p>
+                        <div className="mt-2 flex flex-wrap gap-3 text-xs text-neutral-400">
+                          <span>Projected winner: <span className="text-neutral-200">{insight.projectedWinner.toUpperCase()}</span></span>
+                          <span>Confidence: <span className="text-neutral-200">{insight.confidence.toFixed(1)}%</span></span>
+                          <span>Projected pool: <span className="text-neutral-200">{insight.projectedFinalPoolFormatted} STX</span></span>
+                          <span>Risk: <span className="text-neutral-200">{insight.risk.toUpperCase()}</span></span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </section>
           </div>
