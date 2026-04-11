@@ -9,6 +9,7 @@ import {
   getOutcomeLabel,
 } from '../helpers';
 import { MarketStatus, MarketOutcome } from '../../types/market';
+import { isMultiMarket } from '../../types/market';
 
 describe('parseMarketData', () => {
   it('parses valid market data correctly', () => {
@@ -259,5 +260,41 @@ describe('getOutcomeLabel', () => {
     expect(getOutcomeLabel(0 as MarketOutcome)).toBe('Pending');
     expect(getOutcomeLabel(1 as MarketOutcome)).toBe('Yes');
     expect(getOutcomeLabel(2 as MarketOutcome)).toBe('No');
+  });
+});
+
+describe('isMultiMarket', () => {
+  it('returns false for binary market shape', () => {
+    const market = {
+      id: 1,
+      question: 'Will it rain?',
+      creator: 'SP123',
+      endDate: 100,
+      resolutionDate: 110,
+      totalYesStake: 10,
+      totalNoStake: 20,
+      status: MarketStatus.ACTIVE,
+      outcome: MarketOutcome.NONE,
+      createdAt: 90,
+    };
+
+    expect(isMultiMarket(market)).toBe(false);
+  });
+
+  it('returns true for multi market shape', () => {
+    const market = {
+      id: 2,
+      question: 'Who wins?',
+      creator: 'SP123',
+      outcomes: [{ index: 0, name: 'A', stake: 100, percentage: 100 }],
+      outcomeCount: 1,
+      endDate: 100,
+      resolutionDate: 110,
+      status: 0,
+      winningOutcome: null,
+      createdAt: 90,
+    };
+
+    expect(isMultiMarket(market as any)).toBe(true);
   });
 });
