@@ -59,6 +59,7 @@ export function useMultiMarkets() {
         }
       });
 
+      parsed.sort((a, b) => b.createdAt - a.createdAt);
       setMarkets(parsed);
       setError(null);
     } catch (err) {
