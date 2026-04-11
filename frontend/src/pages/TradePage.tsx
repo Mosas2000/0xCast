@@ -8,6 +8,7 @@ import { parseMarketData, calculateOdds, formatStx, getStatusLabel, formatAddres
 import { CONTRACT_ADDRESS, CONTRACT_NAME, MIN_STAKE, MAX_STAKE } from '../constants';
 import { useWallet } from '../components/WalletProvider';
 import { useStake } from '../hooks/useStake';
+import { useRealtimeSignal } from '../hooks/useRealtimeSignal';
 import { validateAmount, validateMarketId } from '../utils/validation';
 import { SocialButtons } from '../components/SocialButtons';
 
@@ -33,6 +34,7 @@ export function TradePage() {
   
   const { isConnected, connect } = useWallet();
   const { placeYesStake, placeNoStake, isLoading: isStaking, error: stakeError, txId } = useStake();
+  const { signal, source, isSocketConnected } = useRealtimeSignal({ enabled: true });
   
   const [market, setMarket] = useState<Market | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -84,6 +86,11 @@ export function TradePage() {
   useEffect(() => {
     fetchMarket();
   }, [fetchMarket]);
+
+  useEffect(() => {
+    if (signal === 0) return;
+    fetchMarket();
+  }, [signal, fetchMarket]);
 
   // Clear success messages when starting new trade or changing selection
   const resetTradeState = useCallback(() => {
@@ -195,6 +202,9 @@ export function TradePage() {
                 {getStatusLabel(market.status)}
               </span>
               <span className="text-sm text-neutral-500 font-mono">#{market.id}</span>
+              <span className="text-xs text-neutral-500">
+                Live: {isSocketConnected ? 'Connected' : 'Polling'} ({source})
+              </span>
             </div>
 
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white leading-tight">
