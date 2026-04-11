@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMultiMarkets } from '../hooks/useMultiMarkets';
 import { useMultiStake } from '../hooks/useMultiStake';
+import { useRealtimeSignal } from '../hooks/useRealtimeSignal';
 import { formatStx } from '../utils/helpers';
 import { validateAmount } from '../utils/validation';
 import { MIN_STAKE, MAX_STAKE } from '../constants';
@@ -12,6 +13,7 @@ export function MultiTradePage() {
   const marketId = id ? Number(id) : NaN;
   const { markets, isLoading, error, refetch } = useMultiMarkets();
   const { placeOutcomeStake, isLoading: isStaking, error: stakeError, txId } = useMultiStake();
+  const { signal, source, isSocketConnected } = useRealtimeSignal({ enabled: true });
   const { isConnected, connect } = useWallet();
   const [selectedOutcome, setSelectedOutcome] = useState<number | null>(null);
   const [stakeAmount, setStakeAmount] = useState('10');
@@ -27,6 +29,13 @@ export function MultiTradePage() {
     () => validateAmount(stakeAmount, MIN_STAKE, MAX_STAKE),
     [stakeAmount]
   );
+
+  useEffect(() => {
+    if (signal === 0) {
+      return;
+    }
+    refetch();
+  }, [signal, refetch]);
 
   const handleStake = async () => {
     if (!market || selectedOutcome === null) return;
@@ -77,6 +86,9 @@ export function MultiTradePage() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-black dark:text-white mb-2">{market.question}</h1>
             <p className="text-neutral-600 dark:text-neutral-400">Total Pool: {formatStx(totalPool)}</p>
+            <p className="text-xs text-neutral-500 mt-1">
+              Live: {isSocketConnected ? 'Connected' : 'Polling'} ({source})
+            </p>
           </div>
 
           <div className="card p-4 sm:p-6 lg:p-8 space-y-4">
