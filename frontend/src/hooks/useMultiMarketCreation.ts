@@ -33,13 +33,27 @@ export function useMultiMarketCreation() {
 
   const createMultiMarket = useCallback(
     async (input: CreateMultiMarketInput) => {
+      const question = input.question.trim();
+      const outcomes = input.outcomes.map((value) => value.trim()).filter(Boolean);
+
       if (!isConnected) {
         setState({ ...initialState, error: 'Wallet not connected' });
         return;
       }
 
-      if (input.outcomes.length < 3 || input.outcomes.length > 10) {
+      if (question.length < 10) {
+        setState({ ...initialState, error: 'Question must be at least 10 characters' });
+        return;
+      }
+
+      if (outcomes.length < 3 || outcomes.length > 10) {
         setState({ ...initialState, error: 'Outcomes must be between 3 and 10' });
+        return;
+      }
+
+      const normalized = outcomes.map((value) => value.toLowerCase());
+      if (new Set(normalized).size !== normalized.length) {
+        setState({ ...initialState, error: 'Outcomes must be unique' });
         return;
       }
 
@@ -57,8 +71,8 @@ export function useMultiMarketCreation() {
           contractName: MARKET_MULTI_CONTRACT.name,
           functionName: 'create-multi-market',
           functionArgs: [
-            stringUtf8CV(input.question),
-            listCV(input.outcomes.map((outcome) => stringUtf8CV(outcome))),
+            stringUtf8CV(question),
+            listCV(outcomes.map((outcome) => stringUtf8CV(outcome))),
             uintCV(input.endDate),
             uintCV(input.resolutionDate),
           ],
