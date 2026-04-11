@@ -4,7 +4,7 @@ import { uintCV, PostConditionMode, Pc } from '@stacks/transactions';
 import { stxToMicroStx, MIN_STAKE, MAX_STAKE } from '../constants';
 import { useWallet } from '../components/WalletProvider';
 import { useNetwork } from '../contexts/NetworkContext';
-import { CONTRACT_NAMES, getContractAddress } from '../config/contracts';
+import { MARKET_MULTI_CONTRACT } from '../config/contracts';
 import { validateAmount, validateMarketId } from '../utils/validation';
 
 interface UseMultiStakeReturn {
@@ -22,7 +22,7 @@ interface UseMultiStakeReturn {
 
 export function useMultiStake(): UseMultiStakeReturn {
   const { address } = useWallet();
-  const { stacksNetwork, network } = useNetwork();
+  const { stacksNetwork } = useNetwork();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [txId, setTxId] = useState<string | null>(null);
@@ -63,14 +63,12 @@ export function useMultiStake(): UseMultiStakeReturn {
 
       try {
         const stakeMicroStx = stxToMicroStx(amount);
-        const contractAddress = getContractAddress(CONTRACT_NAMES.MARKET_MULTI, network);
-
         const postConditions = [Pc.principal(address).willSendEq(stakeMicroStx).ustx()];
 
         await openContractCall({
           network: stacksNetwork,
-          contractAddress,
-          contractName: CONTRACT_NAMES.MARKET_MULTI,
+          contractAddress: MARKET_MULTI_CONTRACT.address,
+          contractName: MARKET_MULTI_CONTRACT.name,
           functionName: 'stake-on-outcome',
           functionArgs: [uintCV(marketId), uintCV(outcomeIndex), uintCV(stakeMicroStx)],
           postConditionMode: PostConditionMode.Deny,
@@ -90,7 +88,7 @@ export function useMultiStake(): UseMultiStakeReturn {
         setIsLoading(false);
       }
     },
-    [address, network, stacksNetwork]
+    [address, stacksNetwork]
   );
 
   return { placeOutcomeStake, isLoading, error, txId, reset };
