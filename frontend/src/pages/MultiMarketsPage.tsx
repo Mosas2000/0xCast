@@ -1,20 +1,35 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMultiMarkets } from '../hooks/useMultiMarkets';
+import { useRealtimeSignal } from '../hooks/useRealtimeSignal';
 import { formatAddress, formatStx } from '../utils/helpers';
 
 export function MultiMarketsPage() {
   const { markets, isLoading, error, refetch } = useMultiMarkets();
+  const { signal, source, isSocketConnected } = useRealtimeSignal({ enabled: true });
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date>(new Date());
+
+  useEffect(() => {
+    if (signal === 0) {
+      return;
+    }
+    refetch();
+    setLastUpdatedAt(new Date());
+  }, [signal, refetch]);
 
   return (
     <div style={{ paddingTop: 72, minHeight: '100vh', background: '#000' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '64px 24px' }}>
         <div style={{ marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h1 style={{ fontSize: 36, fontWeight: 700, color: '#fff', margin: 0 }}>Multi-Outcome Markets</h1>
-            <p style={{ fontSize: 18, color: '#737373', marginTop: 12 }}>
-              Trade across markets with three or more outcomes.
-            </p>
-          </div>
+              <h1 style={{ fontSize: 36, fontWeight: 700, color: '#fff', margin: 0 }}>Multi-Outcome Markets</h1>
+              <p style={{ fontSize: 18, color: '#737373', marginTop: 12 }}>
+                Trade across markets with three or more outcomes.
+              </p>
+              <p style={{ fontSize: 13, color: '#6B7280', marginTop: 8 }}>
+                Live updates: {isSocketConnected ? 'Connected' : 'Polling'} via {source} • Last update {lastUpdatedAt.toLocaleTimeString()}
+              </p>
+            </div>
           <div style={{ display: 'flex', gap: 12 }}>
             <button
               onClick={refetch}
