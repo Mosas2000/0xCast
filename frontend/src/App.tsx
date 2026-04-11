@@ -22,6 +22,9 @@ import { OraclePage } from './pages/OraclePage';
 import { LiquidityPage } from './pages/LiquidityPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
+import { MultiMarketsPage } from './pages/MultiMarketsPage';
+import { MultiTradePage } from './pages/MultiTradePage';
+import { CreateMultiMarketPage } from './pages/CreateMultiMarketPage';
 
 function App() {
   return (
@@ -95,6 +98,21 @@ function App() {
                   <Route path="/leaderboard" element={
                     <PageErrorBoundary pageName="Leaderboard">
                       <LeaderboardPage />
+                    </PageErrorBoundary>
+                  } />
+                  <Route path="/multi-markets" element={
+                    <PageErrorBoundary pageName="Multi Markets">
+                      <MultiMarketsPage />
+                    </PageErrorBoundary>
+                  } />
+                  <Route path="/multi-trade/:id" element={
+                    <PageErrorBoundary pageName="Multi Trade">
+                      <MultiTradePage />
+                    </PageErrorBoundary>
+                  } />
+                  <Route path="/create-multi-market" element={
+                    <PageErrorBoundary pageName="Create Multi Market">
+                      <CreateMultiMarketPage />
                     </PageErrorBoundary>
                   } />
                 </Routes>
