@@ -77,6 +77,24 @@ export interface PersonalStats {
   favoriteCategory?: string;
 }
 
+export interface MarketHealthStats {
+  activeRate: number;
+  resolvedRate: number;
+  averagePoolFormatted: string;
+  medianPoolFormatted: string;
+  largestPoolFormatted: string;
+  concentrationTop3: number;
+}
+
+export interface PredictiveInsight {
+  marketId: number;
+  question: string;
+  projectedWinner: 'yes' | 'no' | 'balanced';
+  confidence: number;
+  projectedFinalPoolFormatted: string;
+  risk: 'low' | 'medium' | 'high';
+}
+
 // Position history entry
 export interface PositionHistory {
   marketId: number;
@@ -101,6 +119,8 @@ export interface AnalyticsState {
   categoryDistribution: CategoryData[];
   userActivity: UserActivityData[];
   personalStats: PersonalStats | null;
+  marketHealth: MarketHealthStats | null;
+  predictiveInsights: PredictiveInsight[];
   positionHistory: PositionHistory[];
   isLoading: boolean;
   error: string | null;
