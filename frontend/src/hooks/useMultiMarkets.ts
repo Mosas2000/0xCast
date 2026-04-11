@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { cvToJSON, fetchCallReadOnlyFunction, uintCV } from '@stacks/transactions';
 import { useNetwork } from '../contexts/NetworkContext';
-import { CONTRACT_NAMES, getContractAddress } from '../config/contracts';
+import { MARKET_MULTI_CONTRACT } from '../config/contracts';
 import type { MultiMarket } from '../types/market';
 import { parseMultiMarketData } from '../utils/multiMarket';
 
 export function useMultiMarkets() {
-  const { stacksNetwork, network } = useNetwork();
+  const { stacksNetwork } = useNetwork();
   const [markets, setMarkets] = useState<MultiMarket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -14,8 +14,8 @@ export function useMultiMarkets() {
   const fetchMarkets = useCallback(async () => {
     try {
       setIsLoading(true);
-      const contractAddress = getContractAddress(CONTRACT_NAMES.MARKET_MULTI, network);
-      const contractName = CONTRACT_NAMES.MARKET_MULTI;
+      const contractAddress = MARKET_MULTI_CONTRACT.address;
+      const contractName = MARKET_MULTI_CONTRACT.name;
 
       const counter = await fetchCallReadOnlyFunction({
         network: stacksNetwork,
@@ -66,7 +66,7 @@ export function useMultiMarkets() {
     } finally {
       setIsLoading(false);
     }
-  }, [network, stacksNetwork]);
+  }, [stacksNetwork]);
 
   useEffect(() => {
     fetchMarkets();
