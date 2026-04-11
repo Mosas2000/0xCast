@@ -17,62 +17,14 @@ import type {
   PersonalStats,
   TimeRange,
 } from '../types/analytics';
-import { CATEGORY_COLORS } from '../types/analytics';
-
-// Mock data generator for demo purposes
-// In production, this would fetch from blockchain/API
-function generateMockVolumeData(days: number): VolumeDataPoint[] {
-  const data: VolumeDataPoint[] = [];
-  const now = Date.now();
-  const dayMs = 24 * 60 * 60 * 1000;
-  
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date(now - i * dayMs);
-    const baseVolume = 5000 + Math.random() * 10000;
-    const volume = Math.floor(baseVolume * (1 + Math.sin(i / 3) * 0.3));
-    
-    data.push({
-      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      timestamp: date.getTime(),
-      volume,
-      volumeFormatted: volume.toLocaleString(),
-      transactions: Math.floor(volume / 100),
-    });
-  }
-  
-  return data;
-}
-
-function generateMockActivityData(days: number): UserActivityData[] {
-  const data: UserActivityData[] = [];
-  const now = Date.now();
-  const dayMs = 24 * 60 * 60 * 1000;
-  
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date(now - i * dayMs);
-    const baseUsers = 50 + Math.random() * 100;
-    
-    data.push({
-      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      activeUsers: Math.floor(baseUsers),
-      newUsers: Math.floor(baseUsers * 0.1),
-      transactions: Math.floor(baseUsers * 2),
-    });
-  }
-  
-  return data;
-}
-
-function getDaysFromTimeRange(range: TimeRange): number {
-  switch (range) {
-    case '24h': return 1;
-    case '7d': return 7;
-    case '30d': return 30;
-    case '90d': return 90;
-    case 'all': return 365;
-    default: return 30;
-  }
-}
+import {
+  buildCategoryDistribution,
+  buildMarketHealth,
+  buildPredictiveInsights,
+  buildUserActivity,
+  buildVolumeHistory,
+  getDaysFromTimeRange,
+} from '../utils/analytics';
 
 export function useAnalytics(initialTimeRange: TimeRange = '30d') {
   const { markets, isLoading: marketsLoading } = useMarkets();
@@ -153,54 +105,21 @@ export function useAnalytics(initialTimeRange: TimeRange = '30d') {
   }, [markets]);
 
   // Generate category distribution
-  const categoryDistribution = useMemo<CategoryData[]>(() => {
-    // Categorize markets by keywords in questions
-    const categories: Record<string, number> = {};
-    
-    markets.forEach(market => {
-      const q = market.question.toLowerCase();
-      let category = 'Other';
-      
-      if (q.includes('btc') || q.includes('bitcoin') || q.includes('eth') || q.includes('crypto')) {
-        category = 'Crypto';
-      } else if (q.includes('election') || q.includes('president') || q.includes('vote')) {
-        category = 'Politics';
-      } else if (q.includes('game') || q.includes('match') || q.includes('win') || q.includes('championship')) {
-        category = 'Sports';
-      } else if (q.includes('movie') || q.includes('oscar') || q.includes('award')) {
-        category = 'Entertainment';
-      } else if (q.includes('ai') || q.includes('tech') || q.includes('launch')) {
-        category = 'Technology';
-      } else if (q.includes('stock') || q.includes('market') || q.includes('price')) {
-        category = 'Finance';
-      }
-      
-      categories[category] = (categories[category] || 0) + 1;
-    });
-    
-    const total = Object.values(categories).reduce((a, b) => a + b, 0);
-    
-    return Object.entries(categories)
-      .map(([name, count]) => ({
-        name,
-        value: total > 0 ? (count / total) * 100 : 0,
-        count,
-        color: CATEGORY_COLORS[name] || CATEGORY_COLORS.Other,
-      }))
-      .sort((a, b) => b.value - a.value);
-  }, [markets]);
+  const categoryDistribution = useMemo<CategoryData[]>(() => buildCategoryDistribution(markets), [markets]);
 
-  // Volume history (mock data for now)
+  // Volume history derived from market creation and pool activity
   const volumeHistory = useMemo<VolumeDataPoint[]>(() => {
     const days = getDaysFromTimeRange(timeRange);
-    return generateMockVolumeData(days);
-  }, [timeRange]);
+    return buildVolumeHistory(markets, days);
+  }, [markets, timeRange]);
 
-  // User activity (mock data for now)
+  // User activity inferred from transaction counts
   const userActivity = useMemo<UserActivityData[]>(() => {
-    const days = getDaysFromTimeRange(timeRange);
-    return generateMockActivityData(Math.min(days, 30));
-  }, [timeRange]);
+    return buildUserActivity(volumeHistory);
+  }, [volumeHistory]);
+
+  const marketHealth = useMemo(() => buildMarketHealth(markets), [markets]);
+  const predictiveInsights = useMemo(() => buildPredictiveInsights(markets), [markets]);
 
   // Personal stats (mock for now)
   const personalStats = useMemo<PersonalStats | null>(() => {
@@ -245,6 +164,8 @@ export function useAnalytics(initialTimeRange: TimeRange = '30d') {
     categoryDistribution,
     userActivity,
     personalStats,
+    marketHealth,
+    predictiveInsights,
     
     // State
     isLoading,
