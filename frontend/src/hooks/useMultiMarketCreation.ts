@@ -3,7 +3,7 @@ import { openContractCall } from '@stacks/connect';
 import { uintCV, stringUtf8CV, listCV, PostConditionMode } from '@stacks/transactions';
 import { useWallet } from '../components/WalletProvider';
 import { useNetwork } from '../contexts/NetworkContext';
-import { CONTRACT_NAMES, getContractAddress } from '../config/contracts';
+import { MARKET_MULTI_CONTRACT } from '../config/contracts';
 
 export interface CreateMultiMarketInput {
   question: string;
@@ -28,7 +28,7 @@ const initialState: MultiMarketCreationState = {
 
 export function useMultiMarketCreation() {
   const { isConnected } = useWallet();
-  const { network, stacksNetwork } = useNetwork();
+  const { stacksNetwork } = useNetwork();
   const [state, setState] = useState<MultiMarketCreationState>(initialState);
 
   const createMultiMarket = useCallback(
@@ -51,11 +51,10 @@ export function useMultiMarketCreation() {
       setState({ ...initialState, isCreating: true });
 
       try {
-        const contractAddress = getContractAddress(CONTRACT_NAMES.MARKET_MULTI, network);
         await openContractCall({
           network: stacksNetwork,
-          contractAddress,
-          contractName: CONTRACT_NAMES.MARKET_MULTI,
+          contractAddress: MARKET_MULTI_CONTRACT.address,
+          contractName: MARKET_MULTI_CONTRACT.name,
           functionName: 'create-multi-market',
           functionArgs: [
             stringUtf8CV(input.question),
@@ -81,7 +80,7 @@ export function useMultiMarketCreation() {
         });
       }
     },
-    [isConnected, network, stacksNetwork]
+    [isConnected, stacksNetwork]
   );
 
   const resetState = useCallback(() => {
