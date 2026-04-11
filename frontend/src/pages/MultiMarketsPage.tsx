@@ -18,16 +18,18 @@ export function MultiMarketsPage() {
           <div style={{ display: 'flex', gap: 12 }}>
             <button
               onClick={refetch}
+              disabled={isLoading}
               style={{
                 padding: '12px 20px',
                 background: '#1a1a1a',
                 border: '1px solid #333',
                 borderRadius: 10,
                 color: '#fff',
-                cursor: 'pointer',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                opacity: isLoading ? 0.7 : 1,
               }}
             >
-              Refresh
+              {isLoading ? 'Refreshing...' : 'Refresh'}
             </button>
             <Link
               to="/create-multi-market"
