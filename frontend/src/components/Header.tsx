@@ -18,6 +18,7 @@ export function Header() {
     { path: '/markets', label: 'Markets' },
     { path: '/create-market', label: 'Create', highlight: true },
     { path: '/portfolio', label: 'Portfolio' },
+    { path: '/multi-markets', label: 'Multi Markets' },
     { path: '/liquidity', label: 'Liquidity' },
     { path: '/analytics', label: 'Analytics' },
     { path: '/transactions', label: 'Activity' },

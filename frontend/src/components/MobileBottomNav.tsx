@@ -55,6 +55,15 @@ export function MobileBottomNav() {
         </svg>
       ),
     },
+    {
+      path: '/multi-markets',
+      label: 'Multi',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h13M8 12h13M8 17h13M3 7h.01M3 12h.01M3 17h.01" />
+        </svg>
+      ),
+    },
   ];
 
   return (

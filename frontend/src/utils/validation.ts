@@ -18,6 +18,9 @@ export const VALIDATION_LIMITS = {
   MAX_MARKET_QUESTION_LENGTH: 500,
   STACKS_ADDRESS_LENGTH: 41,
   MEMO_MAX_LENGTH: 34,
+  MIN_MULTI_OUTCOMES: 3,
+  MAX_MULTI_OUTCOMES: 10,
+  MAX_OUTCOME_LABEL_LENGTH: 100,
 } as const;
 
 /**
@@ -106,6 +109,49 @@ export function validateMarketQuestion(question: string): ValidationResult {
   const wordCount = trimmedQuestion.split(/\s+/).filter(word => word.length > 0).length;
   if (wordCount < 3) {
     return { isValid: false, error: 'Question must contain at least 3 words' };
+  }
+
+  return { isValid: true };
+}
+
+export function validateMultiOutcomeInputs(
+  question: string,
+  outcomes: string[]
+): ValidationResult {
+  const questionValidation = validateMarketQuestion(question);
+  if (!questionValidation.isValid) {
+    return questionValidation;
+  }
+
+  const normalizedOutcomes = outcomes.map((value) => value.trim()).filter(Boolean);
+
+  if (normalizedOutcomes.length < VALIDATION_LIMITS.MIN_MULTI_OUTCOMES) {
+    return {
+      isValid: false,
+      error: `At least ${VALIDATION_LIMITS.MIN_MULTI_OUTCOMES} outcomes are required`,
+    };
+  }
+
+  if (normalizedOutcomes.length > VALIDATION_LIMITS.MAX_MULTI_OUTCOMES) {
+    return {
+      isValid: false,
+      error: `Maximum ${VALIDATION_LIMITS.MAX_MULTI_OUTCOMES} outcomes are allowed`,
+    };
+  }
+
+  const tooLongOutcome = normalizedOutcomes.find(
+    (value) => value.length > VALIDATION_LIMITS.MAX_OUTCOME_LABEL_LENGTH
+  );
+  if (tooLongOutcome) {
+    return {
+      isValid: false,
+      error: `Outcome labels must be ${VALIDATION_LIMITS.MAX_OUTCOME_LABEL_LENGTH} characters or less`,
+    };
+  }
+
+  const normalizedKeys = normalizedOutcomes.map((value) => value.toLowerCase());
+  if (new Set(normalizedKeys).size !== normalizedKeys.length) {
+    return { isValid: false, error: 'Outcomes must be unique' };
   }
 
   return { isValid: true };
@@ -222,6 +268,7 @@ export default {
   validateAmount,
   validateStacksAddress,
   validateMarketQuestion,
+  validateMultiOutcomeInputs,
   validateMemo,
   validateMarketId,
   validateUrl,

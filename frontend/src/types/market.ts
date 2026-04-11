@@ -36,6 +36,30 @@ export interface Position {
   claimed: boolean;
 }
 
+export interface MultiOutcomeOption {
+  index: number;
+  name: string;
+  stake: number;
+  percentage: number;
+}
+
+export interface MultiMarket {
+  id: number;
+  question: string;
+  creator: string;
+  outcomes: MultiOutcomeOption[];
+  outcomeCount: number;
+  endDate: number;
+  resolutionDate: number;
+  status: number;
+  winningOutcome: number | null;
+  createdAt: number;
+}
+
+export function isMultiMarket(market: Market | MultiMarket): market is MultiMarket {
+  return 'outcomes' in market;
+}
+
 export interface TransactionStatus {
   pending: boolean;
   success: boolean;
@@ -138,4 +162,3 @@ export const CATEGORY_METADATA: Record<MarketCategory, CategoryMetadata> = {
     icon: '🔮',
   },
 };
-
