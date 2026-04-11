@@ -6,6 +6,7 @@ import {
   validateMemo,
   validateMarketId,
   validateUrl,
+  validateMultiOutcomeInputs,
   sanitizeInput,
   sanitizeHtml,
   VALIDATION_LIMITS,
@@ -148,6 +149,41 @@ describe('validateMarketQuestion', () => {
   it('handles whitespace correctly', () => {
     const result = validateMarketQuestion('   Will this happen today?   ');
     expect(result.isValid).toBe(true);
+  });
+});
+
+describe('validateMultiOutcomeInputs', () => {
+  it('accepts valid question and outcomes', () => {
+    const result = validateMultiOutcomeInputs('Who will win the final match?', ['A', 'B', 'C']);
+    expect(result.isValid).toBe(true);
+  });
+
+  it('rejects fewer than minimum outcomes', () => {
+    const result = validateMultiOutcomeInputs('Who will win the final match?', ['A', 'B']);
+    expect(result.isValid).toBe(false);
+    expect(result.error).toContain(`${VALIDATION_LIMITS.MIN_MULTI_OUTCOMES}`);
+  });
+
+  it('rejects more than maximum outcomes', () => {
+    const result = validateMultiOutcomeInputs(
+      'Who will win the final match?',
+      ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K']
+    );
+    expect(result.isValid).toBe(false);
+    expect(result.error).toContain(`${VALIDATION_LIMITS.MAX_MULTI_OUTCOMES}`);
+  });
+
+  it('rejects duplicate outcomes', () => {
+    const result = validateMultiOutcomeInputs('Who will win the final match?', ['A', 'B', 'a']);
+    expect(result.isValid).toBe(false);
+    expect(result.error).toBe('Outcomes must be unique');
+  });
+
+  it('rejects overly long outcomes', () => {
+    const long = 'X'.repeat(VALIDATION_LIMITS.MAX_OUTCOME_LABEL_LENGTH + 1);
+    const result = validateMultiOutcomeInputs('Who will win the final match?', ['A', 'B', long]);
+    expect(result.isValid).toBe(false);
+    expect(result.error).toContain(`${VALIDATION_LIMITS.MAX_OUTCOME_LABEL_LENGTH}`);
   });
 });
 
