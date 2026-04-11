@@ -1,12 +1,16 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMarkets } from '../hooks/useMarkets';
 import { useMarketFiltering } from '../hooks/useMarketFiltering';
+import { useRealtimeSignal } from '../hooks/useRealtimeSignal';
 import { MarketCard } from '../components/MarketCard';
 import { MarketFilter } from '../components/MarketFilter';
 import { getCategoryConfig, CATEGORIES, MarketCategory } from '../utils/marketCategories';
 
 export function MarketsPage() {
   const { markets, isLoading, error, refetch } = useMarkets();
+  const { signal, source, isSocketConnected } = useRealtimeSignal({ enabled: true });
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date>(new Date());
   const {
     filteredMarkets,
     category,
@@ -22,6 +26,14 @@ export function MarketsPage() {
   } = useMarketFiltering({ markets, syncWithUrl: true });
 
   const activeCategory = getCategoryConfig(category);
+
+  useEffect(() => {
+    if (signal === 0) {
+      return;
+    }
+    refetch();
+    setLastUpdatedAt(new Date());
+  }, [signal, refetch]);
 
   return (
     <div style={{ paddingTop: 72, minHeight: '100vh', background: '#000' }}>
@@ -74,6 +86,9 @@ export function MarketsPage() {
           </div>
           <p style={{ fontSize: 18, color: '#737373' }}>
             Browse and trade on prediction markets
+          </p>
+          <p style={{ fontSize: 13, color: '#6B7280', marginTop: 8 }}>
+            Live updates: {isSocketConnected ? 'Connected' : 'Polling'} via {source} • Last update {lastUpdatedAt.toLocaleTimeString()}
           </p>
         </div>
 
