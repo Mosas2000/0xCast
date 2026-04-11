@@ -28,9 +28,11 @@ export function CreateMultiMarketPage() {
   const canSubmit = useMemo(() => {
     return (
       inputValidation.isValid &&
+      durationDays >= 1 &&
+      resolutionDelayDays >= 1 &&
       endDate < resolutionDate
     );
-  }, [inputValidation.isValid, endDate, resolutionDate]);
+  }, [durationDays, resolutionDelayDays, inputValidation.isValid, endDate, resolutionDate]);
 
   const updateOutcome = (index: number, value: string) => {
     setOutcomes((prev) => prev.map((item, idx) => (idx === index ? value : item)));
