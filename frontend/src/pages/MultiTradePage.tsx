@@ -32,10 +32,12 @@ export function MultiTradePage() {
     if (!market || selectedOutcome === null) return;
     if (!stakeValidation.isValid) return;
     const amount = Number(stakeAmount);
+    if (!Number.isFinite(amount)) return;
     setTradeSuccess(false);
     await placeOutcomeStake(market.id, selectedOutcome, amount, async () => {
       setTradeSuccess(true);
       setSelectedOutcome(null);
+      setStakeAmount('10');
       await refetch();
     });
   };
