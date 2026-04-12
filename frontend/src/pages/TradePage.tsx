@@ -11,6 +11,7 @@ import { useStake } from '../hooks/useStake';
 import { useRealtimeSignal } from '../hooks/useRealtimeSignal';
 import { validateAmount, validateMarketId } from '../utils/validation';
 import { SocialButtons } from '../components/SocialButtons';
+import { getStakeHistoryForMarketUser, getStakeHistoryTotals, type StakeHistoryEntry } from '../utils/stakeHistory';
 
 /**
  * TradePage Component
@@ -32,7 +33,8 @@ export function TradePage() {
     return validateMarketId(marketId);
   }, [marketId]);
   
-  const { isConnected, connect } = useWallet();
+  const { isConnected, connect, address } = useWallet();
+  const userAddress = isConnected ? address : null;
   const { placeYesStake, placeNoStake, isLoading: isStaking, error: stakeError, txId } = useStake();
   const { signal, source, isSocketConnected } = useRealtimeSignal({ enabled: true });
   
@@ -42,6 +44,7 @@ export function TradePage() {
   const [selectedOutcome, setSelectedOutcome] = useState<'yes' | 'no' | null>(null);
   const [stakeAmount, setStakeAmount] = useState<string>('10');
   const [tradeSuccess, setTradeSuccess] = useState(false);
+  const [stakeHistory, setStakeHistory] = useState<StakeHistoryEntry[]>([]);
   // Note: validationError stored for future UI display of validation errors
   const [, setValidationError] = useState<string | null>(null);
 
@@ -118,7 +121,6 @@ export function TradePage() {
     
     // Reset success state before new trade
     resetTradeState();
-    resetTradeState();
     
     const onSuccess = () => {
       // Update UI state instead of reloading page
@@ -181,6 +183,19 @@ export function TradePage() {
   const stake = parseFloat(stakeAmount) || 0;
   const potentialWinYes = stake > 0 && odds.yes > 0 ? (stake / odds.yes) * 100 : 0;
   const potentialWinNo = stake > 0 && odds.no > 0 ? (stake / odds.no) * 100 : 0;
+  const historyTotals = getStakeHistoryTotals(stakeHistory);
+
+  const refreshStakeHistory = useCallback(() => {
+    if (marketId === null || !userAddress) {
+      setStakeHistory([]);
+      return;
+    }
+    setStakeHistory(getStakeHistoryForMarketUser(marketId, userAddress));
+  }, [marketId, userAddress]);
+
+  useEffect(() => {
+    refreshStakeHistory();
+  }, [refreshStakeHistory, txId]);
 
   return (
     <div className="pt-[72px] min-h-screen">
@@ -429,6 +444,23 @@ export function TradePage() {
                     <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
                       <p className="font-semibold">Stake placed successfully!</p>
                       <p className="text-xs text-emerald-400/80">Market data will refresh shortly.</p>
+                    </div>
+                  )}
+
+                  {stakeHistory.length > 0 && (
+                    <div className="p-4 rounded-xl bg-neutral-900 border border-neutral-800">
+                      <p className="text-sm text-neutral-300 mb-2">Your stake history on this market</p>
+                      <div className="text-xs text-neutral-400 mb-2">
+                        YES: {historyTotals.yes.toFixed(2)} STX • NO: {historyTotals.no.toFixed(2)} STX • TOTAL: {historyTotals.total.toFixed(2)} STX
+                      </div>
+                      <div className="max-h-32 overflow-auto space-y-1">
+                        {stakeHistory.slice(0, 6).map((entry) => (
+                          <div key={entry.txId} className="text-xs text-neutral-500 flex justify-between">
+                            <span>{entry.outcome.toUpperCase()} • {entry.amountStx.toFixed(2)} STX</span>
+                            <span>{new Date(entry.timestamp).toLocaleTimeString()}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 
