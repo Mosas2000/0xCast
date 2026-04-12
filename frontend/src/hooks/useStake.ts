@@ -5,6 +5,7 @@ import { MARKET_CONTRACT } from '../config/contracts';
 import { stxToMicroStx, MIN_STAKE, MAX_STAKE } from '../constants';
 import { useWallet } from '../components/WalletProvider';
 import { validateAmount, validateMarketId } from '../utils/validation';
+import { addStakeHistoryEntry, type StakeOutcome } from '../utils/stakeHistory';
 
 interface UseStakeReturn {
   placeYesStake: (marketId: number, amount: number, onSuccess?: () => void) => Promise<void>;
@@ -32,6 +33,7 @@ export function useStake(): UseStakeReturn {
       marketId: number,
       amount: number,
       functionName: 'place-yes-stake' | 'place-no-stake',
+      outcome: StakeOutcome,
       onSuccess?: () => void
     ) => {
       if (!address) {
@@ -73,6 +75,14 @@ export function useStake(): UseStakeReturn {
           postConditions,
           onFinish: (data) => {
             setTxId(data.txId);
+            addStakeHistoryEntry({
+              txId: data.txId,
+              marketId,
+              userAddress: address,
+              outcome,
+              amountStx: amount,
+              timestamp: Date.now(),
+            });
             setIsLoading(false);
             onSuccess?.();
           },
@@ -91,13 +101,13 @@ export function useStake(): UseStakeReturn {
 
   const placeYesStake = useCallback(
     (marketId: number, amount: number, onSuccess?: () => void) =>
-      placeStake(marketId, amount, 'place-yes-stake', onSuccess),
+      placeStake(marketId, amount, 'place-yes-stake', 'yes', onSuccess),
     [placeStake]
   );
 
   const placeNoStake = useCallback(
     (marketId: number, amount: number, onSuccess?: () => void) =>
-      placeStake(marketId, amount, 'place-no-stake', onSuccess),
+      placeStake(marketId, amount, 'place-no-stake', 'no', onSuccess),
     [placeStake]
   );
 
