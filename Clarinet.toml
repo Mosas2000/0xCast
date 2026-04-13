@@ -11,9 +11,9 @@ path = "contracts/oxcast.clar"
 epoch = "latest"
 
 # Legacy contracts (kept for reference, not deployed)
-# [contracts.market-core]
-# path = "contracts/market-core.clar"
-# epoch = "latest"
+[contracts.market-core]
+path = "contracts/market-core.clar"
+epoch = "latest"
 
 # [contracts.access-control]
 # path = "contracts/access-control.clar"

@@ -4,6 +4,7 @@ import { uintCV, stringUtf8CV, listCV, PostConditionMode } from '@stacks/transac
 import { useWallet } from '../components/WalletProvider';
 import { useNetwork } from '../contexts/NetworkContext';
 import { MARKET_MULTI_CONTRACT } from '../config/contracts';
+import { useContractPause } from './useContractPause';
 
 export interface CreateMultiMarketInput {
   question: string;
@@ -29,6 +30,7 @@ const initialState: MultiMarketCreationState = {
 export function useMultiMarketCreation() {
   const { isConnected } = useWallet();
   const { stacksNetwork } = useNetwork();
+  const { isPaused: isContractPaused } = useContractPause();
   const [state, setState] = useState<MultiMarketCreationState>(initialState);
 
   const createMultiMarket = useCallback(
@@ -38,6 +40,10 @@ export function useMultiMarketCreation() {
 
       if (!isConnected) {
         setState({ ...initialState, error: 'Wallet not connected' });
+        return;
+      }
+      if (isContractPaused) {
+        setState({ ...initialState, error: 'Market creation is temporarily paused by protocol administrators' });
         return;
       }
 
@@ -94,12 +100,12 @@ export function useMultiMarketCreation() {
         });
       }
     },
-    [isConnected, stacksNetwork]
+    [isConnected, stacksNetwork, isContractPaused]
   );
 
   const resetState = useCallback(() => {
     setState(initialState);
   }, []);
 
-  return { createMultiMarket, state, resetState };
+  return { createMultiMarket, state, resetState, isContractPaused };
 }

@@ -8,7 +8,7 @@ function getCurrentBlockEstimate(): number {
 }
 
 export function CreateMultiMarketPage() {
-  const { createMultiMarket, state } = useMultiMarketCreation();
+  const { createMultiMarket, state, isContractPaused } = useMultiMarketCreation();
   const [question, setQuestion] = useState('');
   const [outcomes, setOutcomes] = useState(['', '', '']);
   const [durationDays, setDurationDays] = useState(7);
@@ -149,6 +149,11 @@ export function CreateMultiMarketPage() {
           )}
 
           {state.error && <p className="text-sm text-red-500">{state.error}</p>}
+          {isContractPaused && (
+            <p className="text-sm text-amber-500">
+              Market creation is temporarily paused. Claim and refund operations remain available.
+            </p>
+          )}
           {state.success && (
             <p className="text-sm text-emerald-500">
               Multi-outcome market creation transaction submitted successfully.
@@ -156,7 +161,7 @@ export function CreateMultiMarketPage() {
           )}
           {state.txId && <p className="text-xs text-neutral-500 break-all">Transaction: {state.txId}</p>}
 
-          <button type="submit" className="btn btn-primary" disabled={!canSubmit || state.isCreating}>
+          <button type="submit" className="btn btn-primary" disabled={!canSubmit || state.isCreating || isContractPaused}>
             {state.isCreating ? 'Creating Market...' : 'Create Multi-Outcome Market'}
           </button>
         </form>

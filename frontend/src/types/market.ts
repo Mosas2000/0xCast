@@ -26,6 +26,7 @@ export interface Market {
   status: MarketStatus;
   outcome: MarketOutcome;
   createdAt: number;
+  paused?: boolean;
 }
 
 export interface Position {

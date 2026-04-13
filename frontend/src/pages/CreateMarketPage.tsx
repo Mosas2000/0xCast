@@ -27,7 +27,7 @@ import type { CreateMarketFormData } from '../types/market';
 export function CreateMarketPage() {
   const navigate = useNavigate();
   const { isConnected, connect } = useWallet();
-  const { createMarket, state, resetState } = useMarketCreation();
+  const { createMarket, state, resetState, isContractPaused } = useMarketCreation();
   
   const [redirecting, setRedirecting] = useState(false);
 
@@ -240,9 +240,22 @@ export function CreateMarketPage() {
         ) : (
           /* Create Form */
           <div style={cardStyle}>
+            {isContractPaused && (
+              <div style={{
+                marginBottom: '16px',
+                padding: '12px 14px',
+                border: '1px solid #F59E0B55',
+                backgroundColor: '#F59E0B22',
+                borderRadius: '10px',
+                color: '#FCD34D',
+                fontSize: '14px',
+              }}>
+                Market creation is temporarily paused. Claim and refund operations remain available.
+              </div>
+            )}
             <MarketForm 
               onSubmit={handleSubmit}
-              isSubmitting={state.isCreating}
+              isSubmitting={state.isCreating || isContractPaused}
               error={state.error}
             />
           </div>

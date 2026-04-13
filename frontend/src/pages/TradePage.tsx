@@ -35,7 +35,7 @@ export function TradePage() {
   
   const { isConnected, connect, address } = useWallet();
   const userAddress = isConnected ? address : null;
-  const { placeYesStake, placeNoStake, isLoading: isStaking, error: stakeError, txId } = useStake();
+  const { placeYesStake, placeNoStake, isLoading: isStaking, error: stakeError, txId, isContractPaused } = useStake();
   const { signal, source, isSocketConnected } = useRealtimeSignal({ enabled: true });
   
   const [market, setMarket] = useState<Market | null>(null);
@@ -343,6 +343,11 @@ export function TradePage() {
                 </div>
               ) : (
                 <div className="space-y-6 sm:space-y-8">
+                  {isContractPaused && (
+                    <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm">
+                      New stakes are temporarily paused. Claim and refund operations remain available.
+                    </div>
+                  )}
                   {/* Outcome Selection */}
                   <div>
                     <label className="block text-sm text-neutral-400 mb-3 sm:mb-4">Select Outcome</label>
@@ -467,7 +472,7 @@ export function TradePage() {
                   {/* Trade Button */}
                   <button
                     onClick={handleTrade}
-                    disabled={!selectedOutcome || !stakeAmount || isStaking || stake < MIN_STAKE}
+                    disabled={!selectedOutcome || !stakeAmount || isStaking || stake < MIN_STAKE || isContractPaused}
                     className={`w-full py-4 rounded-xl font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                       selectedOutcome === 'yes' ? 'bg-emerald-600 hover:bg-emerald-500' :
                       selectedOutcome === 'no' ? 'bg-rose-600 hover:bg-rose-500' :

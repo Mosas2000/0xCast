@@ -6,6 +6,7 @@ import { useWallet } from '../components/WalletProvider';
 import { useNetwork } from '../contexts/NetworkContext';
 import { MARKET_MULTI_CONTRACT } from '../config/contracts';
 import { validateAmount, validateMarketId } from '../utils/validation';
+import { useContractPause } from './useContractPause';
 
 interface UseMultiStakeReturn {
   placeOutcomeStake: (
@@ -17,12 +18,14 @@ interface UseMultiStakeReturn {
   isLoading: boolean;
   error: string | null;
   txId: string | null;
+  isContractPaused: boolean;
   reset: () => void;
 }
 
 export function useMultiStake(): UseMultiStakeReturn {
   const { address } = useWallet();
   const { stacksNetwork } = useNetwork();
+  const { isPaused: isContractPaused } = useContractPause();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [txId, setTxId] = useState<string | null>(null);
@@ -37,6 +40,10 @@ export function useMultiStake(): UseMultiStakeReturn {
     async (marketId: number, outcomeIndex: number, amount: number, onSuccess?: () => void) => {
       if (!address) {
         setError('Wallet not connected');
+        return;
+      }
+      if (isContractPaused) {
+        setError('Staking is temporarily paused by protocol administrators');
         return;
       }
 
@@ -88,8 +95,8 @@ export function useMultiStake(): UseMultiStakeReturn {
         setIsLoading(false);
       }
     },
-    [address, stacksNetwork]
+    [address, stacksNetwork, isContractPaused]
   );
 
-  return { placeOutcomeStake, isLoading, error, txId, reset };
+  return { placeOutcomeStake, isLoading, error, txId, isContractPaused, reset };
 }

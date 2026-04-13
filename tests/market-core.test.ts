@@ -1003,4 +1003,160 @@ describe("market-core contract tests", () => {
             expect(loserClaim.result).toBeErr(Cl.uint(109)); // ERR-NO-WINNINGS
         });
     });
+
+    describe("Emergency Pause", () => {
+        it("should allow only owner to set pause state", () => {
+            const unauthorized = simnet.callPublicFn(
+                contractName,
+                "set-contract-paused",
+                [Cl.bool(true)],
+                wallet1
+            );
+            expect(unauthorized.result).toBeErr(Cl.uint(100)); // ERR-NOT-AUTHORIZED
+
+            const authorized = simnet.callPublicFn(
+                contractName,
+                "set-contract-paused",
+                [Cl.bool(true)],
+                deployer
+            );
+            expect(authorized.result).toBeOk({ type: "true" } as any);
+
+            const paused = simnet.callReadOnlyFn(contractName, "is-contract-paused", [], deployer);
+            expect(paused.result).toEqual({ type: "true" });
+        });
+
+        it("should block create-market while paused", () => {
+            const currentBlock = simnet.blockHeight;
+            const pause = simnet.callPublicFn(
+                contractName,
+                "set-contract-paused",
+                [Cl.bool(true)],
+                deployer
+            );
+            expect(pause.result).toBeOk({ type: "true" } as any);
+
+            const create = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Pause should block creation"),
+                    Cl.uint(currentBlock + 50),
+                    Cl.uint(currentBlock + 100),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+            expect(create.result).toBeErr(Cl.uint(119)); // ERR-CONTRACT-PAUSED
+        });
+
+        it("should block both stake entrypoints while paused", () => {
+            const currentBlock = simnet.blockHeight;
+            const create = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Pause should block staking"),
+                    Cl.uint(currentBlock + 50),
+                    Cl.uint(currentBlock + 100),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+            expect(create.result).toBeOk(Cl.uint(0));
+
+            const pause = simnet.callPublicFn(
+                contractName,
+                "set-contract-paused",
+                [Cl.bool(true)],
+                deployer
+            );
+            expect(pause.result).toBeOk({ type: "true" } as any);
+
+            const yesStake = simnet.callPublicFn(
+                contractName,
+                "place-yes-stake",
+                [Cl.uint(0), Cl.uint(1_000_000)],
+                wallet1
+            );
+            expect(yesStake.result).toBeErr(Cl.uint(119)); // ERR-CONTRACT-PAUSED
+
+            const noStake = simnet.callPublicFn(
+                contractName,
+                "place-no-stake",
+                [Cl.uint(0), Cl.uint(1_000_000)],
+                wallet2
+            );
+            expect(noStake.result).toBeErr(Cl.uint(119)); // ERR-CONTRACT-PAUSED
+        });
+
+        it("should allow claim-winnings while paused", () => {
+            const currentBlock = simnet.blockHeight;
+            const endDate = currentBlock + 10;
+            const resolutionDate = currentBlock + 20;
+
+            const create = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Claims should remain available during pause"),
+                    Cl.uint(endDate),
+                    Cl.uint(resolutionDate),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+            expect(create.result).toBeOk(Cl.uint(0));
+
+            const yesStake = simnet.callPublicFn(
+                contractName,
+                "place-yes-stake",
+                [Cl.uint(0), Cl.uint(3_000_000)],
+                wallet1
+            );
+            expect(yesStake.result).toBeOk({ type: "true" } as any);
+
+            const noStake = simnet.callPublicFn(
+                contractName,
+                "place-no-stake",
+                [Cl.uint(0), Cl.uint(1_000_000)],
+                wallet2
+            );
+            expect(noStake.result).toBeOk({ type: "true" } as any);
+
+            simnet.mineEmptyBlocks(Math.max(0, resolutionDate - simnet.blockHeight));
+            const resolve = simnet.callPublicFn(
+                contractName,
+                "resolve-market",
+                [Cl.uint(0), Cl.uint(1)],
+                deployer
+            );
+            expect(resolve.result).toBeOk({ type: "true" } as any);
+
+            simnet.mineEmptyBlocks(150);
+            const finalize = simnet.callPublicFn(
+                contractName,
+                "finalize-market",
+                [Cl.uint(0)],
+                deployer
+            );
+            expect(finalize.result).toBeOk({ type: "true" } as any);
+
+            const pause = simnet.callPublicFn(
+                contractName,
+                "set-contract-paused",
+                [Cl.bool(true)],
+                deployer
+            );
+            expect(pause.result).toBeOk({ type: "true" } as any);
+
+            const claim = simnet.callPublicFn(
+                contractName,
+                "claim-winnings",
+                [Cl.uint(0)],
+                wallet1
+            );
+            expect(claim.result).toBeOk(Cl.uint(4_000_000));
+        });
+    });
 });

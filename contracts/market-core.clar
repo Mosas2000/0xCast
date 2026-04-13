@@ -44,6 +44,7 @@
 (define-constant ERR-MARKET-NOT-FINALIZED (err u116))
 (define-constant ERR-FINALIZATION-NOT-READY (err u117))
 (define-constant ERR-MARKET-NOT-DISPUTED (err u118))
+(define-constant ERR-CONTRACT-PAUSED (err u119))
 
 ;; Only the oracle integration contract may invoke oracle/dispute entrypoints
 (define-constant ORACLE-INTEGRATION .oracle-integration)
@@ -54,6 +55,12 @@
 
 ;; Dispute window for any resolution (~24 hours in blocks)
 (define-data-var dispute-period uint u144)
+
+;; Emergency pause switch (owner-controlled)
+(define-data-var contract-paused bool false)
+
+;; Contract owner (deployer principal)
+(define-constant CONTRACT-OWNER 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM)
 
 ;; ============================================
 ;; Data Variables
@@ -186,6 +193,14 @@
   )
 )
 
+;; Prevent write actions while contract is paused
+(define-private (assert-not-paused)
+  (if (var-get contract-paused)
+    ERR-CONTRACT-PAUSED
+    (ok true)
+  )
+)
+
 ;; ============================================
 ;; Public Functions
 ;; ============================================
@@ -204,6 +219,7 @@
       (resolution-deadline (+ resolution-date (var-get abandonment-period)))
     )
     ;; Validate that end-date is in the future
+    (try! (assert-not-paused))
     (asserts! (> end-date current-block) ERR-INVALID-DATES)
     
     ;; Validate that resolution-date is after end-date
@@ -264,6 +280,7 @@
         (map-get? user-positions { market-id: market-id, user: tx-sender })
       ))
     )
+    (try! (assert-not-paused))
     ;; Validate market is still active
     (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-MARKET-ALREADY-RESOLVED)
     
@@ -303,6 +320,7 @@
         (map-get? user-positions { market-id: market-id, user: tx-sender })
       ))
     )
+    (try! (assert-not-paused))
     ;; Validate market is still active
     (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-MARKET-ALREADY-RESOLVED)
     
@@ -640,6 +658,18 @@
   )
 )
 
+;; Owner-only emergency pause controls
+(define-public (set-contract-paused (paused bool))
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (ok (var-set contract-paused paused))
+  )
+)
+
+(define-read-only (is-contract-paused)
+  (var-get contract-paused)
+)
+
 (define-read-only (get-abandonment-period)
   (var-get abandonment-period))
 
@@ -649,4 +679,3 @@
       (is-eq (get status market) MARKET-STATUS-ACTIVE)
       (> stacks-block-height (get resolution-deadline market)))
     false))
-

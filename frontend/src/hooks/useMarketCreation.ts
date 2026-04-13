@@ -26,6 +26,7 @@
 import { useState, useCallback } from 'react';
 import { useContract } from './useContract';
 import type { CreateMarketFormData } from '../types/market';
+import { useContractPause } from './useContractPause';
 
 interface MarketCreationState {
   isCreating: boolean;
@@ -37,6 +38,7 @@ interface MarketCreationState {
 interface UseMarketCreationReturn {
   createMarket: (data: CreateMarketFormData) => Promise<void>;
   state: MarketCreationState;
+  isContractPaused: boolean;
   resetState: () => void;
 }
 
@@ -49,10 +51,16 @@ const initialState: MarketCreationState = {
 
 export function useMarketCreation(): UseMarketCreationReturn {
   const { createMarket: createMarketContract } = useContract();
+  const { isPaused: isContractPaused } = useContractPause();
   const [state, setState] = useState<MarketCreationState>(initialState);
 
   const createMarket = useCallback(
     async (data: CreateMarketFormData) => {
+      if (isContractPaused) {
+        const pauseError = 'Market creation is temporarily paused by protocol administrators';
+        setState(prev => ({ ...prev, isCreating: false, error: pauseError, success: false }));
+        throw new Error(pauseError);
+      }
       setState(prev => ({ ...prev, isCreating: true, error: null }));
 
       try {
@@ -90,7 +98,7 @@ export function useMarketCreation(): UseMarketCreationReturn {
         throw error;
       }
     },
-    [createMarketContract]
+    [createMarketContract, isContractPaused]
   );
 
   const resetState = useCallback(() => {
@@ -100,6 +108,7 @@ export function useMarketCreation(): UseMarketCreationReturn {
   return {
     createMarket,
     state,
+    isContractPaused,
     resetState,
   };
 }
