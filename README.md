@@ -156,3 +156,14 @@ MIT License - see LICENSE file for details
 - [Stacks Documentation](https://docs.stacks.co/)
 - [Clarity Language Reference](https://docs.stacks.co/clarity/overview)
 - [Stacks Explorer](https://explorer.stacks.co/)
+
+## Documentation
+
+- [Docs index](docs/README.md)
+- [Contract API: market-core](docs/contracts/market-core.md)
+- [Contract API: oxcast](docs/contracts/oxcast.md)
+- [Contract API: governance-core](docs/contracts/governance.md)
+- [Frontend hooks reference](docs/frontend/hooks.md)
+- [Frontend components integration](docs/frontend/components.md)
+- [Integration guide](docs/integration-guide.md)
+- [API reference](docs/api-reference.md)
