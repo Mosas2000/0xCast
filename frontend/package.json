@@ -10,8 +10,8 @@
     "preview": "vite preview",
     "interact": "node scripts/interact.js",
     "test": "vitest",
-    "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage",
+    "test:run": "node ./scripts/run-tracked-vitest.mjs",
+    "test:coverage": "node ./scripts/run-tracked-vitest.mjs --coverage",
     "test:ui": "vitest --ui"
   },
   "dependencies": {
