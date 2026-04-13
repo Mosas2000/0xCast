@@ -23,24 +23,28 @@ describe('validateAmount', () => {
     const result = validateAmount('not a number');
     expect(result.isValid).toBe(false);
     expect(result.error).toBe('Please enter a valid number');
+    expect(result.code).toBe('ERR_INVALID_NUMBER');
   });
 
   it('rejects zero amounts', () => {
     const result = validateAmount(0);
     expect(result.isValid).toBe(false);
     expect(result.error).toBe('Amount must be greater than zero');
+    expect(result.code).toBe('ERR_NON_POSITIVE_AMOUNT');
   });
 
   it('rejects negative amounts', () => {
     const result = validateAmount(-10);
     expect(result.isValid).toBe(false);
     expect(result.error).toBe('Amount must be greater than zero');
+    expect(result.code).toBe('ERR_NON_POSITIVE_AMOUNT');
   });
 
   it('rejects amounts below minimum', () => {
     const result = validateAmount(0.5, 1, 1000);
     expect(result.isValid).toBe(false);
     expect(result.error).toBe('Minimum amount is 1 STX');
+    expect(result.code).toBe('ERR_MIN_STAKE_REQUIRED');
   });
 
   it('rejects amounts above maximum', () => {
