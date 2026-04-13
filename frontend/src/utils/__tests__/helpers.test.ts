@@ -38,6 +38,7 @@ describe('parseMarketData', () => {
       status: MarketStatus.ACTIVE,
       outcome: MarketOutcome.NONE,
       createdAt: 1703980800,
+      paused: undefined,
     });
   });
 

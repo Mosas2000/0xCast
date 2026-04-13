@@ -14,6 +14,7 @@ export function parseMarketData(marketId: number, rawData: any): Market {
     status: Number(rawData.status) as MarketStatus,
     outcome: Number(rawData.outcome) as MarketOutcome,
     createdAt: Number(rawData['created-at']),
+    paused: rawData.paused !== undefined ? Boolean(rawData.paused) : undefined,
   };
 }
 
