@@ -50,7 +50,7 @@ export function useStake(): UseStakeReturn {
 
       const amountValidation = validateAmount(amount, MIN_STAKE, MAX_STAKE);
       if (!amountValidation.isValid) {
-        setError(amountValidation.error || 'Invalid stake amount');
+        setError(amountValidation.error || 'ERR_MIN_STAKE_REQUIRED');
         return;
       }
 
