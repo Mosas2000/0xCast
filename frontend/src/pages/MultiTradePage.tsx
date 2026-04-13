@@ -12,7 +12,7 @@ export function MultiTradePage() {
   const { id } = useParams<{ id: string }>();
   const marketId = id ? Number(id) : NaN;
   const { markets, isLoading, error, refetch } = useMultiMarkets();
-  const { placeOutcomeStake, isLoading: isStaking, error: stakeError, txId } = useMultiStake();
+  const { placeOutcomeStake, isLoading: isStaking, error: stakeError, txId, isContractPaused } = useMultiStake();
   const { signal, source, isSocketConnected } = useRealtimeSignal({ enabled: true });
   const { isConnected, connect } = useWallet();
   const [selectedOutcome, setSelectedOutcome] = useState<number | null>(null);
@@ -126,6 +126,11 @@ export function MultiTradePage() {
               </button>
             ) : (
               <>
+                {isContractPaused && (
+                  <p className="text-sm text-amber-500">
+                    New stakes are temporarily paused. Claim and refund operations remain available.
+                  </p>
+                )}
                 <input
                   type="number"
                   min={MIN_STAKE}
@@ -140,7 +145,7 @@ export function MultiTradePage() {
                 <button
                   type="button"
                   className="btn btn-primary"
-                  disabled={selectedOutcome === null || !stakeValidation.isValid || isStaking}
+                  disabled={selectedOutcome === null || !stakeValidation.isValid || isStaking || isContractPaused}
                   onClick={handleStake}
                 >
                   {isStaking ? 'Submitting...' : 'Stake on Selected Outcome'}
