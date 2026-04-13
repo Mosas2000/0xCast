@@ -25,7 +25,9 @@ describe('validateAmount', () => {
   });
 
   it('should enforce min/max limits', () => {
-    expect(validateAmount(0.5, 1, 100).isValid).toBe(false);
+    const belowMin = validateAmount(0.5, 1, 100);
+    expect(belowMin.isValid).toBe(false);
+    expect(belowMin.code).toBe('ERR_MIN_STAKE_REQUIRED');
     expect(validateAmount(150, 1, 100).isValid).toBe(false);
     expect(validateAmount(50, 1, 100).isValid).toBe(true);
   });

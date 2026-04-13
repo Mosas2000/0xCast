@@ -8,6 +8,7 @@
 export interface ValidationResult {
   isValid: boolean;
   error?: string;
+  code?: string;
 }
 
 // Constants for validation
@@ -34,25 +35,25 @@ export function validateAmount(
   const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
 
   if (isNaN(numAmount)) {
-    return { isValid: false, error: 'Please enter a valid number' };
+    return { isValid: false, error: 'Please enter a valid number', code: 'ERR_INVALID_NUMBER' };
   }
 
   if (numAmount <= 0) {
-    return { isValid: false, error: 'Amount must be greater than zero' };
+    return { isValid: false, error: 'Amount must be greater than zero', code: 'ERR_NON_POSITIVE_AMOUNT' };
   }
 
   if (numAmount < min) {
-    return { isValid: false, error: `Minimum amount is ${min} STX` };
+    return { isValid: false, error: `Minimum amount is ${min} STX`, code: 'ERR_MIN_STAKE_REQUIRED' };
   }
 
   if (numAmount > max) {
-    return { isValid: false, error: `Maximum amount is ${max} STX` };
+    return { isValid: false, error: `Maximum amount is ${max} STX`, code: 'ERR_MAX_STAKE_EXCEEDED' };
   }
 
   // Check for excessive decimal places
   const decimalPlaces = (amount.toString().split('.')[1] || '').length;
   if (decimalPlaces > 6) {
-    return { isValid: false, error: 'Maximum 6 decimal places allowed' };
+    return { isValid: false, error: 'Maximum 6 decimal places allowed', code: 'ERR_TOO_MANY_DECIMALS' };
   }
 
   return { isValid: true };
