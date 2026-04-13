@@ -6,6 +6,7 @@ import { stxToMicroStx, MIN_STAKE, MAX_STAKE } from '../constants';
 import { useWallet } from '../components/WalletProvider';
 import { validateAmount, validateMarketId } from '../utils/validation';
 import { addStakeHistoryEntry, type StakeOutcome } from '../utils/stakeHistory';
+import { useContractPause } from './useContractPause';
 
 interface UseStakeReturn {
   placeYesStake: (marketId: number, amount: number, onSuccess?: () => void) => Promise<void>;
@@ -13,6 +14,7 @@ interface UseStakeReturn {
   isLoading: boolean;
   error: string | null;
   txId: string | null;
+  isContractPaused: boolean;
   reset: () => void;
 }
 
@@ -21,6 +23,7 @@ export function useStake(): UseStakeReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [txId, setTxId] = useState<string | null>(null);
+  const { isPaused: isContractPaused, refetch: refetchPauseState } = useContractPause();
 
   const reset = useCallback(() => {
     setIsLoading(false);
@@ -38,6 +41,10 @@ export function useStake(): UseStakeReturn {
     ) => {
       if (!address) {
         setError('Wallet not connected');
+        return;
+      }
+      if (isContractPaused) {
+        setError('Staking is temporarily paused by protocol administrators');
         return;
       }
 
@@ -84,6 +91,7 @@ export function useStake(): UseStakeReturn {
               timestamp: Date.now(),
             });
             setIsLoading(false);
+            refetchPauseState();
             onSuccess?.();
           },
           onCancel: () => {
@@ -96,7 +104,7 @@ export function useStake(): UseStakeReturn {
         setIsLoading(false);
       }
     },
-    [address]
+    [address, isContractPaused, refetchPauseState]
   );
 
   const placeYesStake = useCallback(
@@ -111,5 +119,5 @@ export function useStake(): UseStakeReturn {
     [placeStake]
   );
 
-  return { placeYesStake, placeNoStake, isLoading, error, txId, reset };
+  return { placeYesStake, placeNoStake, isLoading, error, txId, isContractPaused, reset };
 }
