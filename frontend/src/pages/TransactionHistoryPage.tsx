@@ -6,19 +6,21 @@ import { TransactionHistory } from '../components/TransactionHistory';
 import { useWallet } from '../components/WalletProvider';
 import { TransactionStatus, getStatusColor } from '../utils/transactions';
 
+function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div className="bg-neutral-950 border border-neutral-800 rounded-xl p-4 sm:p-5 text-center">
+      <div className="text-[10px] sm:text-xs text-neutral-400 mb-2 uppercase tracking-wide">{label}</div>
+      <div className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color }}>{value}</div>
+    </div>
+  );
+}
+
 export function TransactionHistoryPage() {
   const { isConnected, connect } = useWallet();
   const { transactions, pendingCount, clearHistory, isChecking } = useTransactions();
 
   const successCount = transactions.filter(tx => tx.status === TransactionStatus.SUCCESS).length;
   const failedCount = transactions.filter(tx => tx.status === TransactionStatus.FAILED).length;
-
-  const StatCard = ({ label, value, color }: { label: string; value: number; color: string }) => (
-    <div className="bg-neutral-950 border border-neutral-800 rounded-xl p-4 sm:p-5 text-center">
-      <div className="text-[10px] sm:text-xs text-neutral-400 mb-2 uppercase tracking-wide">{label}</div>
-      <div className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color }}>{value}</div>
-    </div>
-  );
 
   if (!isConnected) {
     return (

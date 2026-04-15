@@ -12,9 +12,50 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  type TooltipContentProps,
 } from 'recharts';
 import type { MarketStats } from '../../types/analytics';
 import { CHART_COLORS } from '../../types/analytics';
+
+function CustomTooltip({ active, payload }: TooltipContentProps<number, string>) {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload as {
+      fullQuestion: string;
+      yes: number;
+      no: number;
+      totalPool: string;
+      predictors: number;
+    };
+    return (
+      <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-3 shadow-xl max-w-xs">
+        <p className="text-sm text-white font-medium mb-2 line-clamp-2">
+          {data.fullQuestion}
+        </p>
+        <div className="space-y-1">
+          <div className="flex justify-between">
+            <span className="text-emerald-400 text-sm">Yes:</span>
+            <span className="text-white text-sm font-medium">{data.yes.toFixed(1)}%</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-red-400 text-sm">No:</span>
+            <span className="text-white text-sm font-medium">{data.no.toFixed(1)}%</span>
+          </div>
+          <div className="border-t border-neutral-700 pt-1 mt-1">
+            <div className="flex justify-between">
+              <span className="text-neutral-400 text-xs">Pool:</span>
+              <span className="text-neutral-300 text-xs">{data.totalPool} STX</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-neutral-400 text-xs">Predictors:</span>
+              <span className="text-neutral-300 text-xs">{data.predictors}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return null;
+}
 
 interface MarketDistributionChartProps {
   data: MarketStats[];
@@ -52,40 +93,6 @@ export function MarketDistributionChart({
     );
   }
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-3 shadow-xl max-w-xs">
-          <p className="text-sm text-white font-medium mb-2 line-clamp-2">
-            {data.fullQuestion}
-          </p>
-          <div className="space-y-1">
-            <div className="flex justify-between">
-              <span className="text-emerald-400 text-sm">Yes:</span>
-              <span className="text-white text-sm font-medium">{data.yes.toFixed(1)}%</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-red-400 text-sm">No:</span>
-              <span className="text-white text-sm font-medium">{data.no.toFixed(1)}%</span>
-            </div>
-            <div className="border-t border-neutral-700 pt-1 mt-1">
-              <div className="flex justify-between">
-                <span className="text-neutral-400 text-xs">Pool:</span>
-                <span className="text-neutral-300 text-xs">{data.totalPool} STX</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-400 text-xs">Predictors:</span>
-                <span className="text-neutral-300 text-xs">{data.predictors}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
     <div className="w-full" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
@@ -117,7 +124,7 @@ export function MarketDistributionChart({
             axisLine={false}
             width={120}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+          <Tooltip content={CustomTooltip} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
           <Bar
             dataKey="yes"
             stackId="distribution"

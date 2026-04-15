@@ -2,29 +2,54 @@ import type { Market, Position } from '../types/market';
 import { MarketStatus, MarketOutcome } from '../types/market';
 import { microStxToStx } from '../constants';
 
-export function parseMarketData(marketId: number, rawData: any): Market {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function toNumber(value: unknown, fallback = 0): number {
+  if (typeof value === 'number') {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+  if (typeof value === 'bigint') {
+    return Number(value);
+  }
+  if (isRecord(value) && 'value' in value) {
+    return toNumber(value.value, fallback);
+  }
+  return fallback;
+}
+
+export function parseMarketData(marketId: number, rawData: unknown): Market {
+  const data = isRecord(rawData) ? rawData : {};
+
   return {
     id: marketId,
-    question: rawData.question,
-    creator: rawData.creator,
-    endDate: Number(rawData['end-date']),
-    resolutionDate: Number(rawData['resolution-date']),
-    totalYesStake: Number(rawData['total-yes-stake']),
-    totalNoStake: Number(rawData['total-no-stake']),
-    status: Number(rawData.status) as MarketStatus,
-    outcome: Number(rawData.outcome) as MarketOutcome,
-    createdAt: Number(rawData['created-at']),
-    paused: rawData.paused !== undefined ? Boolean(rawData.paused) : undefined,
+    question: typeof data.question === 'string' ? data.question : '',
+    creator: typeof data.creator === 'string' ? data.creator : '',
+    endDate: toNumber(data['end-date']),
+    resolutionDate: toNumber(data['resolution-date']),
+    totalYesStake: toNumber(data['total-yes-stake']),
+    totalNoStake: toNumber(data['total-no-stake']),
+    status: toNumber(data.status) as MarketStatus,
+    outcome: toNumber(data.outcome) as MarketOutcome,
+    createdAt: toNumber(data['created-at']),
+    paused: data.paused !== undefined ? Boolean(data.paused) : undefined,
   };
 }
 
-export function parsePosition(marketId: number, user: string, rawData: any): Position {
+export function parsePosition(marketId: number, user: string, rawData: unknown): Position {
+  const data = isRecord(rawData) ? rawData : {};
+
   return {
     marketId,
     user,
-    yesStake: Number(rawData['yes-stake']),
-    noStake: Number(rawData['no-stake']),
-    claimed: Boolean(rawData.claimed),
+    yesStake: toNumber(data['yes-stake']),
+    noStake: toNumber(data['no-stake']),
+    claimed: Boolean(data.claimed),
   };
 }
 

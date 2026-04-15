@@ -234,7 +234,8 @@ function TVLChart({ timeRange, currentTVL }: TVLChartProps) {
     let value = currentTVL * 0.8; // Start at 80% of current
 
     for (let i = 0; i < points; i++) {
-      const change = (Math.random() - 0.4) * 0.1; // Slight upward bias
+      const drift = Math.sin(i * 1.7 + currentTVL) * 0.03;
+      const change = drift + 0.02; // Slight upward bias
       value = Math.max(0, value * (1 + change));
       data.push(value);
     }

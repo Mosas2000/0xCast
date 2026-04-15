@@ -11,8 +11,58 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  type TooltipContentProps,
+  type DefaultLegendContentProps,
 } from 'recharts';
 import type { CategoryData } from '../../types/analytics';
+
+function CustomTooltip({ active, payload }: TooltipContentProps<number, string>) {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload as CategoryData;
+    return (
+      <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-3 shadow-xl">
+        <div className="flex items-center gap-2 mb-1">
+          <span
+            className="w-3 h-3 rounded-full"
+            style={{ backgroundColor: data.color }}
+          />
+          <span className="text-sm font-medium text-white">{data.name}</span>
+        </div>
+        <p className="text-lg font-bold text-white">
+          {data.value.toFixed(1)}%
+        </p>
+        <p className="text-xs text-neutral-500">
+          {data.count} market{data.count !== 1 ? 's' : ''}
+        </p>
+      </div>
+    );
+  }
+  return null;
+}
+
+function CustomLegend({ payload }: DefaultLegendContentProps) {
+  if (!payload) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-wrap justify-center gap-4 mt-4">
+      {payload.map((entry, index) => {
+        const label = typeof entry.dataKey === 'string' ? entry.dataKey : entry.value;
+
+        return (
+        <div key={`legend-${index}`} className="flex items-center gap-2">
+          <span
+            className="w-3 h-3 rounded-full"
+            style={{ backgroundColor: entry.color }}
+          />
+          <span className="text-sm text-neutral-400">{label}</span>
+        </div>
+        );
+      })}
+    </div>
+  );
+}
 
 interface CategoryPieChartProps {
   data: CategoryData[];
@@ -40,46 +90,6 @@ export function CategoryPieChart({
     );
   }
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-3 shadow-xl">
-          <div className="flex items-center gap-2 mb-1">
-            <span 
-              className="w-3 h-3 rounded-full" 
-              style={{ backgroundColor: data.color }}
-            />
-            <span className="text-sm font-medium text-white">{data.name}</span>
-          </div>
-          <p className="text-lg font-bold text-white">
-            {data.value.toFixed(1)}%
-          </p>
-          <p className="text-xs text-neutral-500">
-            {data.count} market{data.count !== 1 ? 's' : ''}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const CustomLegend = ({ payload }: any) => {
-    return (
-      <div className="flex flex-wrap justify-center gap-4 mt-4">
-        {payload.map((entry: any, index: number) => (
-          <div key={`legend-${index}`} className="flex items-center gap-2">
-            <span 
-              className="w-3 h-3 rounded-full" 
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-sm text-neutral-400">{entry.value}</span>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   return (
     <div className="w-full" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
@@ -102,8 +112,8 @@ export function CategoryPieChart({
               />
             ))}
           </Pie>
-          <Tooltip content={<CustomTooltip />} />
-          {showLegend && <Legend content={<CustomLegend />} />}
+          <Tooltip content={CustomTooltip} />
+          {showLegend && <Legend content={CustomLegend} />}
         </PieChart>
       </ResponsiveContainer>
     </div>

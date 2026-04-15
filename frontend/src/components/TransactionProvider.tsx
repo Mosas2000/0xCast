@@ -1,9 +1,10 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * Transaction Context
  * 
  * Provides global transaction tracking state throughout the app.
  */
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from 'react';
 import { useTransactionTracking } from '../hooks/useTransactionTracking';
 import { TransactionToast } from './TransactionToast';
 import {
@@ -29,6 +30,7 @@ export function TransactionProvider({ children }: TransactionProviderProps) {
   const tracking = useTransactionTracking();
   const [activeToast, setActiveToast] = useState<Transaction | null>(null);
   const [lastTxId, setLastTxId] = useState<string | null>(null);
+  const [dismissedTxId, setDismissedTxId] = useState<string | null>(null);
 
   // Show toast for new transactions
   const handleAddTransaction = useCallback((tx: Omit<Transaction, 'timestamp' | 'status'>) => {
@@ -42,21 +44,24 @@ export function TransactionProvider({ children }: TransactionProviderProps) {
     };
     setActiveToast(newTx);
     setLastTxId(tx.txId);
+    setDismissedTxId(null);
   }, [tracking]);
 
-  // Update toast when transaction status changes
-  useEffect(() => {
-    if (lastTxId && tracking.transactions.length > 0) {
-      const updatedTx = tracking.transactions.find(tx => tx.txId === lastTxId);
-      if (updatedTx && updatedTx.status !== TransactionStatus.PENDING) {
-        setActiveToast(updatedTx);
-      }
+  const derivedToast = useMemo(() => {
+    if (!lastTxId || dismissedTxId === lastTxId) {
+      return null;
     }
-  }, [tracking.transactions, lastTxId]);
+
+    const updatedTx = tracking.transactions.find(tx => tx.txId === lastTxId);
+    return updatedTx ?? activeToast;
+  }, [tracking.transactions, lastTxId, dismissedTxId, activeToast]);
 
   const dismissToast = useCallback(() => {
     setActiveToast(null);
-  }, []);
+    if (lastTxId) {
+      setDismissedTxId(lastTxId);
+    }
+  }, [lastTxId]);
 
   return (
     <TransactionContext.Provider
@@ -69,9 +74,9 @@ export function TransactionProvider({ children }: TransactionProviderProps) {
       }}
     >
       {children}
-      {activeToast && (
+      {derivedToast && (
         <TransactionToast
-          transaction={activeToast}
+          transaction={derivedToast}
           onDismiss={dismissToast}
         />
       )}

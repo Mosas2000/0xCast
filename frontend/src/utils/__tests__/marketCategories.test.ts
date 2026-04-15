@@ -197,7 +197,7 @@ describe('getCategoryConfig', () => {
   });
 
   it('returns first category (ALL) for unknown category', () => {
-    const config = getCategoryConfig('unknown' as any);
+    const config = getCategoryConfig('unknown' as never);
     expect(config.value).toBe(MarketCategory.ALL);
   });
 
@@ -217,7 +217,7 @@ describe('getSortConfig', () => {
   });
 
   it('returns first option for unknown sort', () => {
-    const config = getSortConfig('unknown' as any);
+    const config = getSortConfig('unknown' as never);
     expect(config.value).toBe(SortOption.NEWEST);
   });
 

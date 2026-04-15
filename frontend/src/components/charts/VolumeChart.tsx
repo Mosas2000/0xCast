@@ -12,9 +12,28 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  type TooltipContentProps,
 } from 'recharts';
 import type { VolumeDataPoint } from '../../types/analytics';
 import { CHART_COLORS } from '../../types/analytics';
+
+function CustomTooltip({ active, payload, label }: TooltipContentProps<number, string>) {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload as VolumeDataPoint;
+    return (
+      <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-3 shadow-xl">
+        <p className="text-sm text-neutral-400 mb-1">{label}</p>
+        <p className="text-lg font-bold text-white">
+          {data.volumeFormatted} STX
+        </p>
+        <p className="text-xs text-neutral-500">
+          {data.transactions} transactions
+        </p>
+      </div>
+    );
+  }
+  return null;
+}
 
 interface VolumeChartProps {
   data: VolumeDataPoint[];
@@ -48,23 +67,6 @@ export function VolumeChart({
       return `${(value / 1000).toFixed(1)}K`;
     }
     return value.toString();
-  };
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-3 shadow-xl">
-          <p className="text-sm text-neutral-400 mb-1">{label}</p>
-          <p className="text-lg font-bold text-white">
-            {payload[0].payload.volumeFormatted} STX
-          </p>
-          <p className="text-xs text-neutral-500">
-            {payload[0].payload.transactions} transactions
-          </p>
-        </div>
-      );
-    }
-    return null;
   };
 
   return (
@@ -104,7 +106,7 @@ export function VolumeChart({
             tickFormatter={formatYAxis}
             width={50}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={CustomTooltip} />
           <Area
             type="monotone"
             dataKey="volume"

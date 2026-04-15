@@ -101,6 +101,18 @@ export function TradePage() {
     setValidationError(null);
   }, []);
 
+  const refreshStakeHistory = useCallback(() => {
+    if (marketId === null || !userAddress) {
+      setStakeHistory([]);
+      return;
+    }
+    setStakeHistory(getStakeHistoryForMarketUser(marketId, userAddress));
+  }, [marketId, userAddress]);
+
+  useEffect(() => {
+    refreshStakeHistory();
+  }, [refreshStakeHistory, txId]);
+
   const handleTrade = async () => {
     if (!market || !selectedOutcome || !stakeAmount) return;
     
@@ -184,18 +196,6 @@ export function TradePage() {
   const potentialWinYes = stake > 0 && odds.yes > 0 ? (stake / odds.yes) * 100 : 0;
   const potentialWinNo = stake > 0 && odds.no > 0 ? (stake / odds.no) * 100 : 0;
   const historyTotals = getStakeHistoryTotals(stakeHistory);
-
-  const refreshStakeHistory = useCallback(() => {
-    if (marketId === null || !userAddress) {
-      setStakeHistory([]);
-      return;
-    }
-    setStakeHistory(getStakeHistoryForMarketUser(marketId, userAddress));
-  }, [marketId, userAddress]);
-
-  useEffect(() => {
-    refreshStakeHistory();
-  }, [refreshStakeHistory, txId]);
 
   return (
     <div className="pt-[72px] min-h-screen">

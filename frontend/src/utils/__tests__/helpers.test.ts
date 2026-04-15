@@ -296,6 +296,6 @@ describe('isMultiMarket', () => {
       createdAt: 90,
     };
 
-    expect(isMultiMarket(market as any)).toBe(true);
+    expect(isMultiMarket(market as never)).toBe(true);
   });
 });

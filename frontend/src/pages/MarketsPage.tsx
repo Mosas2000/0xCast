@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useReducer } from 'react';
 import { Link } from 'react-router-dom';
 import { useMarkets } from '../hooks/useMarkets';
 import { useMarketFiltering } from '../hooks/useMarketFiltering';
@@ -10,7 +10,6 @@ import { getCategoryConfig, CATEGORIES, MarketCategory } from '../utils/marketCa
 export function MarketsPage() {
   const { markets, isLoading, error, refetch } = useMarkets();
   const { signal, source, isSocketConnected } = useRealtimeSignal({ enabled: true });
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date>(new Date());
   const {
     filteredMarkets,
     category,
@@ -26,13 +25,14 @@ export function MarketsPage() {
   } = useMarketFiltering({ markets, syncWithUrl: true });
 
   const activeCategory = getCategoryConfig(category);
+  const [lastUpdatedAt, refreshLastUpdatedAt] = useReducer(() => new Date(), new Date());
 
   useEffect(() => {
     if (signal === 0) {
       return;
     }
     refetch();
-    setLastUpdatedAt(new Date());
+    refreshLastUpdatedAt();
   }, [signal, refetch]);
 
   return (

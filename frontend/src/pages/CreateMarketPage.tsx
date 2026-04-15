@@ -17,7 +17,7 @@
  * Routes to: /create-market
  */
 
-import { useState, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWallet } from '../components/WalletProvider';
 import { useMarketCreation } from '../hooks/useMarketCreation';
@@ -28,19 +28,25 @@ export function CreateMarketPage() {
   const navigate = useNavigate();
   const { isConnected, connect } = useWallet();
   const { createMarket, state, resetState, isContractPaused } = useMarketCreation();
-  
-  const [redirecting, setRedirecting] = useState(false);
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Auto-redirect on success
   useEffect(() => {
-    if (state.success && !redirecting) {
-      setRedirecting(true);
-      const timer = setTimeout(() => {
-        navigate('/markets');
-      }, 2500);
-      return () => clearTimeout(timer);
+    if (!state.success || redirectTimerRef.current !== null) {
+      return;
     }
-  }, [state.success, navigate, redirecting]);
+
+    redirectTimerRef.current = setTimeout(() => {
+      navigate('/markets');
+    }, 2500);
+
+    return () => {
+      if (redirectTimerRef.current !== null) {
+        clearTimeout(redirectTimerRef.current);
+        redirectTimerRef.current = null;
+      }
+    };
+  }, [state.success, navigate]);
 
   // Reset state on unmount
   useEffect(() => {

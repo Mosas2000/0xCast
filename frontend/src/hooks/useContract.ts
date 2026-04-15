@@ -166,12 +166,12 @@ export const buildMemoCV = (memo?: string) => {
 
 export function useContract() {
   const { address, isConnected } = useWallet();
-  const { network, stacksNetwork, contractAddress } = useNetwork();
+  const { stacksNetwork, contractAddress } = useNetwork();
   
   // Get token contract for current network
   const tokenContract = useMemo(() => {
     return getContract(CONTRACT_NAMES.OXCAST);
-  }, [network]);
+  }, []);
 
   // Create a new prediction market
   const createMarket = useCallback(
@@ -360,8 +360,6 @@ export function useContract() {
     transferTokens,
     isConnected,
     address,
-    // Expose network info for debugging
-    network,
     contractAddress,
   };
 }

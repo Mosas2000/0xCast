@@ -273,7 +273,7 @@ export function useGovernance(userAddress?: string): GovernanceData {
       const contractProposals = await Promise.all(proposalPromises);
       
       // Fetch user votes if connected
-      let userVotes: Map<number, VoteType | null> = new Map();
+      const userVotes: Map<number, VoteType | null> = new Map();
       let votingPower = 0n;
       
       if (userAddress) {
@@ -458,4 +458,3 @@ export function calculateVotePercentage(votes: bigint, total: bigint): number {
 export function isQuorumReached(totalVotes: bigint, quorum: bigint): boolean {
   return totalVotes >= quorum;
 }
-

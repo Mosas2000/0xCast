@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useReducer } from 'react';
 import { Link } from 'react-router-dom';
 import { useMultiMarkets } from '../hooks/useMultiMarkets';
 import { useRealtimeSignal } from '../hooks/useRealtimeSignal';
@@ -7,14 +7,14 @@ import { formatAddress, formatStx } from '../utils/helpers';
 export function MultiMarketsPage() {
   const { markets, isLoading, error, refetch } = useMultiMarkets();
   const { signal, source, isSocketConnected } = useRealtimeSignal({ enabled: true });
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date>(new Date());
+  const [lastUpdatedAt, refreshLastUpdatedAt] = useReducer(() => new Date(), new Date());
 
   useEffect(() => {
     if (signal === 0) {
       return;
     }
     refetch();
-    setLastUpdatedAt(new Date());
+    refreshLastUpdatedAt();
   }, [signal, refetch]);
 
   return (

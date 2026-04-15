@@ -4,11 +4,10 @@
  * Form for creating a new prediction market.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import type { 
   CreateMarketFormData, 
-  MarketCategory,
-  MarketValidationResult 
+  MarketCategory
 } from '../types/market';
 import { 
   MARKET_CATEGORIES, 
@@ -35,11 +34,6 @@ export function MarketForm({ onSubmit, isSubmitting, error }: MarketFormProps) {
     durationPreset: 'ONE_WEEK',
   });
   
-  const [validation, setValidation] = useState<MarketValidationResult>({
-    isValid: false,
-    errors: {},
-  });
-  
   const [touched, setTouched] = useState({
     question: false,
     category: false,
@@ -47,21 +41,14 @@ export function MarketForm({ onSubmit, isSubmitting, error }: MarketFormProps) {
   });
   
   const [showPreview, setShowPreview] = useState(false);
-  const [questionSuggestions, setQuestionSuggestions] = useState<string[]>([]);
   const [customDurationDays, setCustomDurationDays] = useState('');
   const [showCustomDuration, setShowCustomDuration] = useState(false);
 
-  // Validate form whenever data changes
-  useEffect(() => {
-    const result = validateMarketForm(formData);
-    setValidation(result);
-  }, [formData]);
-
-  // Update question suggestions
-  useEffect(() => {
-    const suggestions = suggestQuestionImprovements(formData.question);
-    setQuestionSuggestions(suggestions);
-  }, [formData.question]);
+  const validation = useMemo(() => validateMarketForm(formData), [formData]);
+  const questionSuggestions = useMemo(
+    () => suggestQuestionImprovements(formData.question),
+    [formData.question],
+  );
 
   const handleQuestionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setFormData(prev => ({ ...prev, question: e.target.value }));
@@ -96,20 +83,20 @@ export function MarketForm({ onSubmit, isSubmitting, error }: MarketFormProps) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Mark all fields as touched
     setTouched({
       question: true,
       category: true,
       duration: true,
     });
-    
+
     if (validation.isValid) {
       onSubmit(formData);
     }
-  };
+  }, [validation.isValid, onSubmit, formData]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -126,7 +113,7 @@ export function MarketForm({ onSubmit, isSubmitting, error }: MarketFormProps) {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [validation.isValid, isSubmitting, showPreview]);
+  }, [validation.isValid, isSubmitting, showPreview, handleSubmit]);
 
   const inputStyle: React.CSSProperties = {
     width: '100%',

@@ -70,7 +70,7 @@ export function RecentMarkets() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {recentMarkets.map((market) => {
         const totalStake = market.totalYesStake + market.totalNoStake;
-        const blocksRemaining = market.endDate - Date.now() / 1000;
+        const blocksRemaining = Math.max(0, market.endDate - market.createdAt);
         
         return (
           <Link
@@ -106,7 +106,7 @@ export function RecentMarkets() {
                   fontSize: '13px',
                   color: '#6B7280',
                 }}>
-                  {formatBlocksToTime(Math.floor(blocksRemaining / 600))} remaining
+                  Ends in {formatBlocksToTime(blocksRemaining)}
                 </div>
               </div>
             </div>

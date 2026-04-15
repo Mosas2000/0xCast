@@ -3,7 +3,7 @@
  * 
  * Shows a toast notification for transaction status updates.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   type Transaction,
   TransactionStatus,
@@ -27,6 +27,11 @@ export function TransactionToast({
   const [isVisible, setIsVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
 
+  const handleDismiss = useCallback(() => {
+    setIsExiting(true);
+    setTimeout(onDismiss, 300);
+  }, [onDismiss]);
+
   useEffect(() => {
     // Trigger entrance animation
     requestAnimationFrame(() => setIsVisible(true));
@@ -39,12 +44,7 @@ export function TransactionToast({
       
       return () => clearTimeout(timer);
     }
-  }, [transaction.status, autoDismissMs]);
-
-  const handleDismiss = () => {
-    setIsExiting(true);
-    setTimeout(onDismiss, 300);
-  };
+  }, [transaction.status, autoDismissMs, handleDismiss]);
 
   const getIcon = () => {
     switch (transaction.status) {

@@ -37,10 +37,33 @@ function parseOutcomeStake(raw: unknown): number {
   return 0;
 }
 
-export function parseMultiMarketData(marketId: number, rawData: any): MultiMarket {
-  const namesRaw = rawData['outcome-names'] ?? [];
-  const stakesRaw = rawData['outcome-stakes'] ?? [];
-  const outcomeCount = Number(rawData['outcome-count'] ?? 0);
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function toNumber(value: unknown, fallback = 0): number {
+  if (typeof value === 'number') {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+  if (typeof value === 'bigint') {
+    return Number(value);
+  }
+  if (isRecord(value) && 'value' in value) {
+    return toNumber(value.value, fallback);
+  }
+  return fallback;
+}
+
+export function parseMultiMarketData(marketId: number, rawData: unknown): MultiMarket {
+  const data = isRecord(rawData) ? rawData : {};
+  const namesRaw = data['outcome-names'] ?? [];
+  const stakesRaw = data['outcome-stakes'] ?? [];
+  const outcomeCount = toNumber(data['outcome-count']);
+  const winningOutcomeRaw = data['winning-outcome'];
 
   const stakes: number[] = Array.isArray(stakesRaw)
     ? stakesRaw.map((value) => parseOutcomeStake(value))
@@ -64,18 +87,15 @@ export function parseMultiMarketData(marketId: number, rawData: any): MultiMarke
 
   return {
     id: marketId,
-    question: rawData.question,
-    creator: rawData.creator,
+    question: typeof data.question === 'string' ? data.question : '',
+    creator: typeof data.creator === 'string' ? data.creator : '',
     outcomes,
     outcomeCount,
-    endDate: Number(rawData['end-date']),
-    resolutionDate: Number(rawData['resolution-date']),
-    status: Number(rawData.status),
-    winningOutcome:
-      rawData['winning-outcome'] && typeof rawData['winning-outcome'] === 'object' && 'value' in rawData['winning-outcome']
-        ? Number(rawData['winning-outcome'].value)
-        : null,
-    createdAt: Number(rawData['created-at']),
+    endDate: toNumber(data['end-date']),
+    resolutionDate: toNumber(data['resolution-date']),
+    status: toNumber(data.status),
+    winningOutcome: isRecord(winningOutcomeRaw) && 'value' in winningOutcomeRaw ? toNumber(winningOutcomeRaw.value) : null,
+    createdAt: toNumber(data['created-at']),
   };
 }
 

@@ -74,15 +74,12 @@ async function fetchTransactionStatus(txId: string): Promise<{
 }
 
 export function useTransactionTracking(): UseTransactionTrackingReturn {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>(() => getTransactionHistory());
   const [isChecking, setIsChecking] = useState(false);
   const isMountedRef = useRef(true);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Load transaction history on mount
   useEffect(() => {
-    setTransactions(getTransactionHistory());
-    
     return () => {
       isMountedRef.current = false;
       if (pollIntervalRef.current) {
