@@ -59,8 +59,8 @@
 ;; Emergency pause switch (owner-controlled)
 (define-data-var contract-paused bool false)
 
-;; Contract owner (deployer principal)
-(define-constant CONTRACT-OWNER 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM)
+;; Contract owner (set to the deploying principal)
+(define-constant CONTRACT-OWNER tx-sender)
 
 ;; ============================================
 ;; Data Variables
