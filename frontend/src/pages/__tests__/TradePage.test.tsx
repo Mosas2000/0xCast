@@ -9,6 +9,7 @@ const cvToJSONMock = vi.fn();
 const parseMarketDataMock = vi.fn();
 
 const networkContext = {
+  network: 'testnet',
   stacksNetwork: { network: 'testnet' },
   contractAddress: 'STTESTCONTRACT',
   contractName: 'market-core',
@@ -87,7 +88,7 @@ describe('TradePage', () => {
     });
     fetchCallReadOnlyFunctionMock.mockResolvedValue({});
 
-    render(
+    const { container } = render(
       React.createElement(
         MemoryRouter,
         { initialEntries: ['/trade/1'] },
@@ -109,5 +110,9 @@ describe('TradePage', () => {
       contractName: networkContext.contractName,
       functionName: 'get-market',
     });
+
+    expect(
+      container.querySelector('a[href="https://explorer.hiro.so/address/SPTEST?chain=testnet"]')
+    ).toBeTruthy();
   });
 });
