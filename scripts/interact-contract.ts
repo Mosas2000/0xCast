@@ -12,6 +12,7 @@ import { STACKS_MAINNET } from '@stacks/network';
 import { generateWallet } from '@stacks/wallet-sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
+import { categoryFromQuestion } from './utils/market-categories.js';
 import fs from 'fs';
 import toml from 'toml';
 import path from 'path';
@@ -106,7 +107,7 @@ async function getPrivateKey(): Promise<string> {
 /**
  * Create a new prediction market
  */
-async function createMarket(privateKey: string): Promise<string> {
+async function createMarket(privateKey: string, category: number): Promise<string> {
     console.log('\n📊 Creating market...');
     console.log(`Question: "${MARKET_QUESTION}"`);
     console.log(`End block: ${END_BLOCK_HEIGHT}`);
@@ -120,6 +121,7 @@ async function createMarket(privateKey: string): Promise<string> {
             stringAsciiCV(MARKET_QUESTION),
             uintCV(END_BLOCK_HEIGHT),
             uintCV(RESOLUTION_BLOCK_HEIGHT),
+            uintCV(category),
         ],
         senderKey: privateKey,
         network,
@@ -267,7 +269,7 @@ async function main() {
         }
 
         // Step 1: Create market
-        const createMarketTxId = await createMarket(privateKey);
+        const createMarketTxId = await createMarket(privateKey, categoryFromQuestion(MARKET_QUESTION));
 
         // Wait for user to confirm market creation before proceeding
         console.log('\n⏳ Please wait for the market creation transaction to confirm...');

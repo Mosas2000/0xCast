@@ -22,6 +22,7 @@ import {
     validateBlockHeights,
     TransactionTracker,
 } from './utils/transaction-helpers.js';
+import { categoryFromTopic } from './utils/market-categories.js';
 import { getRandomQuestions, getCategories } from './config/market-questions.js';
 
 // Load environment variables
@@ -41,7 +42,8 @@ async function createMarket(
     privateKey: string,
     question: string,
     endBlock: number,
-    resolutionBlock: number
+    resolutionBlock: number,
+    category: number
 ): Promise<string> {
     const txOptions = {
         contractAddress: CONTRACT_ADDRESS,
@@ -51,6 +53,7 @@ async function createMarket(
             stringAsciiCV(question),
             uintCV(endBlock),
             uintCV(resolutionBlock),
+            uintCV(category),
         ],
         senderKey: privateKey,
         network,
@@ -193,7 +196,8 @@ async function main() {
                     privateKey,
                     question.question,
                     endBlock,
-                    resolutionBlock
+                    resolutionBlock,
+                    categoryFromTopic(question.category)
                 );
 
                 tracker.add('Market Creation', txid, {

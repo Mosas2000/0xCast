@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { cvToJSON, fetchCallReadOnlyFunction, uintCV, principalCV } from '@stacks/transactions';
-import { STACKS_MAINNET } from '@stacks/network';
 import { useWallet } from '../components/WalletProvider';
+import { useNetwork } from '../contexts/NetworkContext';
 import { useMarkets } from '../hooks/useMarkets';
 import { useContract } from '../hooks/useContract';
 import type { Market, Position } from '../types/market';
 import { MarketStatus, MarketOutcome } from '../types/market';
 import { parsePosition, formatStx, calculateOdds } from '../utils/helpers';
-import { CONTRACT_ADDRESS, CONTRACT_NAME } from '../constants';
 import { validateMarketId } from '../utils/validation';
 
 interface PositionWithMarket extends Position {
@@ -17,6 +16,7 @@ interface PositionWithMarket extends Position {
 
 export function PortfolioPage() {
   const { isConnected, connect, address } = useWallet();
+  const { stacksNetwork, contractAddress, contractName } = useNetwork();
   const { markets, isLoading: marketsLoading } = useMarkets();
   const { claimWinnings } = useContract();
   const [positions, setPositions] = useState<PositionWithMarket[]>([]);
@@ -38,12 +38,12 @@ export function PortfolioPage() {
       for (const market of markets) {
         try {
           const result = await fetchCallReadOnlyFunction({
-            network: STACKS_MAINNET,
-            contractAddress: CONTRACT_ADDRESS,
-            contractName: CONTRACT_NAME,
+            network: stacksNetwork,
+            contractAddress,
+            contractName,
             functionName: 'get-user-position',
             functionArgs: [uintCV(market.id), principalCV(address)],
-            senderAddress: CONTRACT_ADDRESS,
+            senderAddress: contractAddress,
           });
 
           const jsonResult = cvToJSON(result);
@@ -63,7 +63,7 @@ export function PortfolioPage() {
     }
 
     fetchPositions();
-  }, [address, markets]);
+  }, [address, markets, stacksNetwork, contractAddress, contractName]);
 
   const refetchPositions = async () => {
     if (!address || markets.length === 0) return;
@@ -72,12 +72,12 @@ export function PortfolioPage() {
     for (const market of markets) {
       try {
         const result = await fetchCallReadOnlyFunction({
-          network: STACKS_MAINNET,
-          contractAddress: CONTRACT_ADDRESS,
-          contractName: CONTRACT_NAME,
+          network: stacksNetwork,
+          contractAddress,
+          contractName,
           functionName: 'get-user-position',
           functionArgs: [uintCV(market.id), principalCV(address)],
-          senderAddress: CONTRACT_ADDRESS,
+          senderAddress: contractAddress,
         });
 
         const jsonResult = cvToJSON(result);
