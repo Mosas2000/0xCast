@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { cvToJSON, fetchCallReadOnlyFunction, uintCV } from '@stacks/transactions';
-import { STACKS_MAINNET } from '@stacks/network';
 import type { Market } from '../types/market';
 import { MarketStatus, MarketOutcome } from '../types/market';
 import { parseMarketData, calculateOdds, formatStx, getStatusLabel, formatAddress } from '../utils/helpers';
-import { CONTRACT_ADDRESS, CONTRACT_NAME, MIN_STAKE, MAX_STAKE } from '../constants';
+import { MIN_STAKE, MAX_STAKE } from '../constants';
 import { useWallet } from '../components/WalletProvider';
+import { useNetwork } from '../contexts/NetworkContext';
 import { useStake } from '../hooks/useStake';
 import { useRealtimeSignal } from '../hooks/useRealtimeSignal';
 import { validateAmount, validateMarketId } from '../utils/validation';
@@ -34,6 +34,7 @@ export function TradePage() {
   }, [marketId]);
   
   const { isConnected, connect, address } = useWallet();
+  const { stacksNetwork, contractAddress, contractName } = useNetwork();
   const userAddress = isConnected ? address : null;
   const { placeYesStake, placeNoStake, isLoading: isStaking, error: stakeError, txId, isContractPaused } = useStake();
   const { signal, source, isSocketConnected } = useRealtimeSignal({ enabled: true });
@@ -64,12 +65,12 @@ export function TradePage() {
 
     try {
       const result = await fetchCallReadOnlyFunction({
-        network: STACKS_MAINNET,
-        contractAddress: CONTRACT_ADDRESS,
-        contractName: CONTRACT_NAME,
+        network: stacksNetwork,
+        contractAddress,
+        contractName,
         functionName: 'get-market',
         functionArgs: [uintCV(marketId)],
-        senderAddress: CONTRACT_ADDRESS,
+        senderAddress: contractAddress,
       });
 
       const jsonResult = cvToJSON(result);
@@ -83,7 +84,7 @@ export function TradePage() {
     } finally {
       setIsLoading(false);
     }
-  }, [marketId]);
+  }, [marketId, stacksNetwork, contractAddress, contractName]);
 
   // Initial market data fetch on mount
   useEffect(() => {

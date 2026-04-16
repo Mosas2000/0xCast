@@ -23,6 +23,7 @@ import {
     validateBlockHeights,
     TransactionTracker,
 } from './utils/transaction-helpers.js';
+import { categoryFromQuestion } from './utils/market-categories.js';
 import { getRandomQuestions } from './config/market-questions.js';
 
 // Load environment variables
@@ -112,7 +113,8 @@ async function createMarket(
     privateKey: string,
     question: string,
     endBlock: number,
-    resolutionBlock: number
+    resolutionBlock: number,
+    category: number
 ): Promise<{ txid: string; responseTime: number }> {
     const startTime = Date.now();
 
@@ -124,6 +126,7 @@ async function createMarket(
             stringAsciiCV(question),
             uintCV(endBlock),
             uintCV(resolutionBlock),
+            uintCV(category),
         ],
         senderKey: privateKey,
         network,
@@ -279,7 +282,13 @@ async function main() {
                 if (testType === 'markets') {
                     // Market creation stress test
                     const question = getRandomQuestions(1)[0];
-                    result = await createMarket(privateKey, question.question, endBlock, resolutionBlock);
+                    result = await createMarket(
+                        privateKey,
+                        question.question,
+                        endBlock,
+                        resolutionBlock,
+                        categoryFromQuestion(question.question)
+                    );
                     txType = 'Market Creation';
                     tracker.add(txType, result.txid, { question: question.question });
 
@@ -315,7 +324,13 @@ async function main() {
                     } else {
                         // 30% market creation
                         const question = getRandomQuestions(1)[0];
-                        result = await createMarket(privateKey, question.question, endBlock, resolutionBlock);
+                        result = await createMarket(
+                            privateKey,
+                            question.question,
+                            endBlock,
+                            resolutionBlock,
+                            categoryFromQuestion(question.question)
+                        );
                         txType = 'Market Creation';
                         tracker.add(txType, result.txid, { question: question.question });
                     }
