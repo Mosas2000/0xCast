@@ -1,7 +1,11 @@
 import { Link } from 'react-router-dom';
 import { Logo } from './Logo';
+import { useNetwork } from '../contexts/NetworkContext';
+import { getExplorerAddressUrl } from '../utils/transactions';
 
 export function Footer() {
+  const { network, contractAddress } = useNetwork();
+
   return (
     <footer className="border-t border-neutral-300 dark:border-neutral-800/50 bg-white dark:bg-black mt-auto">
       <div className="container py-16">
@@ -33,7 +37,7 @@ export function Footer() {
               <li><Link to="/markets" className="text-neutral-600 dark:text-neutral-500 hover:text-black dark:hover:text-white text-sm transition-colors">Markets</Link></li>
               <li><Link to="/portfolio" className="text-neutral-600 dark:text-neutral-500 hover:text-black dark:hover:text-white text-sm transition-colors">Portfolio</Link></li>
               <li>
-                <a href="https://explorer.hiro.so/address/SP31PKQVQZVZCK3FM3NH67CGD6G1FMR17VQVS2W5T?chain=mainnet" target="_blank" rel="noopener noreferrer" className="text-neutral-600 dark:text-neutral-500 hover:text-black dark:hover:text-white text-sm transition-colors">
+                <a href={getExplorerAddressUrl(contractAddress, network)} target="_blank" rel="noopener noreferrer" className="text-neutral-600 dark:text-neutral-500 hover:text-black dark:hover:text-white text-sm transition-colors">
                   Contract
                 </a>
               </li>

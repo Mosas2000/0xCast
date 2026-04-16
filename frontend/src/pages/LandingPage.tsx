@@ -4,10 +4,13 @@ import { useMarkets } from '../hooks/useMarkets';
 import { MarketCard } from '../components/MarketCard';
 import { MarketStatus } from '../types/market';
 import { formatStx } from '../utils/helpers';
+import { useNetwork } from '../contexts/NetworkContext';
+import { getExplorerAddressUrl } from '../utils/transactions';
 
 export function LandingPage() {
   const { connect, isConnected } = useWallet();
   const { markets, isLoading } = useMarkets();
+  const { network, contractAddress } = useNetwork();
 
   const featuredMarkets = markets
     .filter((m) => m.status === MarketStatus.ACTIVE)
@@ -136,11 +139,11 @@ export function LandingPage() {
                 Get Started
               </button>
             )}
-            <a
-              href="https://explorer.hiro.so/address/SP31PKQVQZVZCK3FM3NH67CGD6G1FMR17VQVS2W5T?chain=mainnet"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
+              <a
+                href={getExplorerAddressUrl(contractAddress, network)}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
                 display: 'block',
                 padding: '16px 32px',
                 background: 'transparent',

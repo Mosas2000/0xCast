@@ -12,6 +12,7 @@ import { useRealtimeSignal } from '../hooks/useRealtimeSignal';
 import { validateAmount, validateMarketId } from '../utils/validation';
 import { SocialButtons } from '../components/SocialButtons';
 import { getStakeHistoryForMarketUser, getStakeHistoryTotals, type StakeHistoryEntry } from '../utils/stakeHistory';
+import { getExplorerAddressUrl, getExplorerUrl } from '../utils/transactions';
 
 /**
  * TradePage Component
@@ -34,7 +35,7 @@ export function TradePage() {
   }, [marketId]);
   
   const { isConnected, connect, address } = useWallet();
-  const { stacksNetwork, contractAddress, contractName } = useNetwork();
+  const { network, stacksNetwork, contractAddress, contractName } = useNetwork();
   const userAddress = isConnected ? address : null;
   const { placeYesStake, placeNoStake, isLoading: isStaking, error: stakeError, txId, isContractPaused } = useStake();
   const { signal, source, isSocketConnected } = useRealtimeSignal({ enabled: true });
@@ -305,12 +306,12 @@ export function TradePage() {
               <div className="space-y-4 sm:space-y-5">
                 <div className="flex justify-between items-center flex-wrap gap-2">
                   <span className="text-neutral-500 text-sm">Creator</span>
-                  <a
-                    href={`https://explorer.hiro.so/address/${market.creator}?chain=mainnet`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:underline font-mono text-sm"
-                  >
+                    <a
+                      href={getExplorerAddressUrl(market.creator, network)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:underline font-mono text-sm"
+                    >
                     {formatAddress(market.creator)}
                   </a>
                 </div>
@@ -432,7 +433,7 @@ export function TradePage() {
                       <p className="font-semibold mb-1">Transaction submitted!</p>
                       <p className="text-xs text-emerald-400/80 mb-2">Your stake is being processed on the blockchain.</p>
                       <a 
-                        href={`https://explorer.hiro.so/txid/${txId}?chain=mainnet`} 
+                        href={getExplorerUrl(txId, network)} 
                         target="_blank" 
                         rel="noopener noreferrer" 
                         className="inline-flex items-center gap-1 underline hover:no-underline"
