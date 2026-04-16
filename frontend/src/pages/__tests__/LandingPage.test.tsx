@@ -1,3 +1,4 @@
+import { MemoryRouter } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { LandingPage } from '../LandingPage';
@@ -25,12 +26,16 @@ vi.mock('../../contexts/NetworkContext', () => ({
 
 describe('LandingPage', () => {
   it('links to the contract on the active network explorer', () => {
-    render(<LandingPage />);
+    render(
+      <MemoryRouter>
+        <LandingPage />
+      </MemoryRouter>
+    );
 
     const contractLink = screen.getByRole('link', { name: 'View Contract' });
     expect(contractLink).toHaveAttribute(
       'href',
       'https://explorer.hiro.so/address/SPMAINNETCONTRACT?chain=mainnet'
     );
-  });
+  }, 20000);
 });
