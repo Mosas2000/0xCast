@@ -40,5 +40,6 @@ describe('Header', () => {
     );
 
     expect(screen.getByRole('link', { name: 'Watchlist' })).toHaveAttribute('href', '/watchlist');
+    expect(screen.getByRole('link', { name: 'Recent' })).toHaveAttribute('href', '/recently-viewed');
   });
 });
