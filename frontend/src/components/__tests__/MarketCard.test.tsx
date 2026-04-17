@@ -1,9 +1,10 @@
 import { MemoryRouter } from 'react-router-dom';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, expect, it, beforeEach } from 'vitest';
 import { MarketCard } from '../MarketCard';
 import { WatchlistProvider } from '../../contexts/WatchlistContext';
 import { MarketStatus, MarketOutcome } from '../../types/market';
+import { loadWatchlistIds, saveWatchlistIds } from '../../utils/watchlist';
 
 const market = {
   id: 7,
@@ -30,10 +31,10 @@ function renderCard() {
 
 describe('MarketCard watchlist control', () => {
   beforeEach(() => {
-    localStorage.clear();
+    saveWatchlistIds([]);
   });
 
-  it('toggles watchlist state without breaking the card link', () => {
+  it('toggles watchlist state without breaking the card link', async () => {
     renderCard();
 
     expect(screen.getByRole('link', { name: /open market/i })).toHaveAttribute('href', '/trade/7');
@@ -42,6 +43,8 @@ describe('MarketCard watchlist control', () => {
     fireEvent.click(button);
 
     expect(screen.getByRole('button', { name: 'Remove from watchlist' })).toBeTruthy();
-    expect(localStorage.getItem('0xcast_watchlist')).toBe(JSON.stringify([7]));
+    await waitFor(() => {
+      expect(loadWatchlistIds()).toEqual([7]);
+    });
   });
 });

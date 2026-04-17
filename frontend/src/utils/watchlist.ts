@@ -1,7 +1,8 @@
 export const WATCHLIST_STORAGE_KEY = '0xcast_watchlist';
+let watchlistMemoryIds: number[] = [];
 
-function hasWindowStorage(): boolean {
-  return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+function getStorage(): Storage | undefined {
+  return typeof globalThis.localStorage !== 'undefined' ? globalThis.localStorage : undefined;
 }
 
 export function normalizeWatchlistIds(ids: unknown[]): number[] {
@@ -21,31 +22,40 @@ export function normalizeWatchlistIds(ids: unknown[]): number[] {
 }
 
 export function loadWatchlistIds(): number[] {
-  if (!hasWindowStorage()) {
-    return [];
-  }
+  const storage = getStorage();
+  let persistedIds: number[] | null = null;
 
-  try {
-    const stored = window.localStorage.getItem(WATCHLIST_STORAGE_KEY);
-    if (!stored) {
-      return [];
+  if (storage) {
+    try {
+      const stored = storage.getItem(WATCHLIST_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        persistedIds = Array.isArray(parsed) ? normalizeWatchlistIds(parsed) : [];
+      }
+    } catch (error) {
+      console.warn('Failed to load watchlist:', error);
     }
-
-    const parsed = JSON.parse(stored);
-    return Array.isArray(parsed) ? normalizeWatchlistIds(parsed) : [];
-  } catch (error) {
-    console.warn('Failed to load watchlist:', error);
-    return [];
   }
+
+  if (persistedIds !== null) {
+    watchlistMemoryIds = persistedIds;
+    return persistedIds;
+  }
+
+  return [...watchlistMemoryIds];
 }
 
 export function saveWatchlistIds(ids: number[]): void {
-  if (!hasWindowStorage()) {
+  const normalized = normalizeWatchlistIds(ids);
+  watchlistMemoryIds = [...normalized];
+
+  const storage = getStorage();
+  if (!storage) {
     return;
   }
 
   try {
-    window.localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(normalizeWatchlistIds(ids)));
+    storage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(normalized));
   } catch (error) {
     console.warn('Failed to save watchlist:', error);
   }
