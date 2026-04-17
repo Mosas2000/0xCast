@@ -24,6 +24,12 @@ vi.mock('../../contexts/NetworkContext', () => ({
   }),
 }));
 
+vi.mock('../../contexts/RecentlyViewedContext', () => ({
+  useRecentlyViewed: () => ({
+    entries: [],
+  }),
+}));
+
 describe('LandingPage', () => {
   it('links to the contract on the active network explorer', () => {
     render(
