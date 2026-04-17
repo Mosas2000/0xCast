@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useWallet } from '../components/WalletProvider';
 import { useMarkets } from '../hooks/useMarkets';
@@ -6,11 +7,14 @@ import { MarketStatus } from '../types/market';
 import { formatStx } from '../utils/helpers';
 import { useNetwork } from '../contexts/NetworkContext';
 import { getExplorerAddressUrl } from '../utils/transactions';
+import { useRecentlyViewed } from '../contexts/RecentlyViewedContext';
+import type { Market } from '../types/market';
 
 export function LandingPage() {
   const { connect, isConnected } = useWallet();
   const { markets, isLoading } = useMarkets();
   const { network, contractAddress } = useNetwork();
+  const { entries: recentlyViewedEntries } = useRecentlyViewed();
 
   const featuredMarkets = markets
     .filter((m) => m.status === MarketStatus.ACTIVE)
@@ -19,6 +23,16 @@ export function LandingPage() {
 
   const totalVolume = markets.reduce((sum, m) => sum + m.totalYesStake + m.totalNoStake, 0);
   const activeMarkets = markets.filter((m) => m.status === MarketStatus.ACTIVE).length;
+  const recentlyViewedMarkets = useMemo(() => {
+    const marketById = new Map(markets.map((market) => [market.id, market]));
+    return recentlyViewedEntries
+      .map((entry) => ({
+        market: marketById.get(entry.marketId),
+        viewedAt: entry.viewedAt,
+      }))
+      .filter((entry): entry is { market: Market; viewedAt: number } => entry.market !== undefined)
+      .slice(0, 3);
+  }, [markets, recentlyViewedEntries]);
 
   const howItWorks = [
     { step: '01', title: 'Connect Wallet', desc: 'Link your Stacks wallet to start trading', icon: '\u{1F517}' },
@@ -461,6 +475,66 @@ export function LandingPage() {
           )}
         </div>
       </section>
+
+      {/* Recently Viewed */}
+      {recentlyViewedMarkets.length > 0 && (
+        <section style={{ 
+          background: '#0a0a0a',
+          paddingTop: 96,
+          paddingBottom: 96
+        }}>
+          <div style={{ 
+            maxWidth: 1200, 
+            margin: '0 auto', 
+            padding: '0 24px'
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              flexWrap: 'wrap',
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              gap: 24,
+              marginBottom: 48
+            }}>
+              <div>
+                <h2 style={{ fontSize: 32, fontWeight: 700, color: '#fff', marginBottom: 8 }}>
+                  Recently Viewed
+                </h2>
+                <p style={{ fontSize: 16, color: '#737373' }}>Jump back into the markets you opened most recently</p>
+              </div>
+              <Link 
+                to="/recently-viewed"
+                style={{
+                  padding: '12px 24px',
+                  background: '#1a1a1a',
+                  color: '#fff',
+                  border: '1px solid #333',
+                  borderRadius: 10,
+                  fontWeight: 500,
+                  textDecoration: 'none'
+                }}
+              >
+                View Full History
+              </Link>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: 32
+            }}>
+              {recentlyViewedMarkets.map(({ market, viewedAt }) => (
+                <div key={`${market.id}-${viewedAt}`} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ fontSize: 12, color: '#737373', textTransform: 'uppercase', letterSpacing: '0.18em' }}>
+                    Viewed {new Date(viewedAt).toLocaleString()}
+                  </div>
+                  <MarketCard market={market} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Security Section */}
       <section style={{ 
