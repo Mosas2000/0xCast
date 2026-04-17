@@ -7,6 +7,7 @@ import { TradePage } from '../TradePage';
 const fetchCallReadOnlyFunctionMock = vi.fn();
 const cvToJSONMock = vi.fn();
 const parseMarketDataMock = vi.fn();
+const recordMarketMock = vi.fn();
 
 const networkContext = {
   network: 'testnet',
@@ -23,6 +24,12 @@ vi.mock('@stacks/transactions', () => ({
 
 vi.mock('../../contexts/NetworkContext', () => ({
   useNetwork: () => networkContext,
+}));
+
+vi.mock('../../contexts/RecentlyViewedContext', () => ({
+  useRecentlyViewed: () => ({
+    recordMarket: recordMarketMock,
+  }),
 }));
 
 vi.mock('../../components/WalletProvider', () => ({
@@ -109,6 +116,10 @@ describe('TradePage', () => {
       contractAddress: networkContext.contractAddress,
       contractName: networkContext.contractName,
       functionName: 'get-market',
+    });
+
+    await waitFor(() => {
+      expect(recordMarketMock).toHaveBeenCalledWith(1);
     });
 
     expect(
