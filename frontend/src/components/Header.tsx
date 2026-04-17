@@ -19,6 +19,7 @@ export function Header() {
     { path: '/create-market', label: 'Create', highlight: true },
     { path: '/portfolio', label: 'Portfolio' },
     { path: '/watchlist', label: 'Watchlist' },
+    { path: '/recently-viewed', label: 'Recent' },
     { path: '/multi-markets', label: 'Multi Markets' },
     { path: '/liquidity', label: 'Liquidity' },
     { path: '/analytics', label: 'Analytics' },
