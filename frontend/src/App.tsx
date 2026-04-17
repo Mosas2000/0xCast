@@ -3,6 +3,7 @@ import { WalletProvider } from './components/WalletProvider';
 import { TransactionProvider } from './components/TransactionProvider';
 import { NetworkProvider } from './contexts/NetworkContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { WatchlistProvider } from './contexts/WatchlistContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PageErrorBoundary } from './components/PageErrorBoundary';
 import { Header } from './components/Header';
@@ -25,6 +26,7 @@ import { LeaderboardPage } from './pages/LeaderboardPage';
 import { MultiMarketsPage } from './pages/MultiMarketsPage';
 import { MultiTradePage } from './pages/MultiTradePage';
 import { CreateMultiMarketPage } from './pages/CreateMultiMarketPage';
+import { WatchlistPage } from './pages/WatchlistPage';
 
 function App() {
   return (
@@ -32,97 +34,104 @@ function App() {
       <ThemeProvider>
         <NetworkProvider>
           <WalletProvider>
-            <TransactionProvider>
-              <BrowserRouter>
-                <div className="min-h-screen flex flex-col bg-white dark:bg-black pb-16 md:pb-0">
-                <TestnetWarningBanner />
-                <Header />
-              <main className="flex-1">
-                <Routes>
-                  <Route path="/" element={<LandingPage />} />
-                  <Route path="/markets" element={
-                    <PageErrorBoundary pageName="Markets">
-                      <MarketsPage />
-                    </PageErrorBoundary>
-                  } />
-                  <Route path="/trade/:id" element={
-                    <PageErrorBoundary pageName="Trade">
-                      <TradePage />
-                    </PageErrorBoundary>
-                  } />
-                  <Route path="/portfolio" element={
-                    <PageErrorBoundary pageName="Portfolio">
-                      <PortfolioPage />
-                    </PageErrorBoundary>
-                  } />
-                  <Route path="/token" element={
-                    <PageErrorBoundary pageName="Token">
-                      <TokenPage />
-                    </PageErrorBoundary>
-                  } />
-                  <Route path="/staking" element={
-                    <PageErrorBoundary pageName="Staking">
-                      <StakingPage />
-                    </PageErrorBoundary>
-                  } />
-                  <Route path="/governance" element={
-                    <PageErrorBoundary pageName="Governance">
-                      <GovernancePage />
-                    </PageErrorBoundary>
-                  } />
-                  <Route path="/transactions" element={
-                    <PageErrorBoundary pageName="Transactions">
-                      <TransactionHistoryPage />
-                    </PageErrorBoundary>
-                  } />
-                  <Route path="/create-market" element={
-                    <PageErrorBoundary pageName="Create Market">
-                      <CreateMarketPage />
-                    </PageErrorBoundary>
-                  } />
-                  <Route path="/oracle" element={
-                    <PageErrorBoundary pageName="Oracle">
-                      <OraclePage />
-                    </PageErrorBoundary>
-                  } />
-                  <Route path="/liquidity" element={
-                    <PageErrorBoundary pageName="Liquidity">
-                      <LiquidityPage />
-                    </PageErrorBoundary>
-                  } />
-                  <Route path="/analytics" element={
-                    <PageErrorBoundary pageName="Analytics">
-                      <AnalyticsPage />
-                    </PageErrorBoundary>
-                  } />
-                  <Route path="/leaderboard" element={
-                    <PageErrorBoundary pageName="Leaderboard">
-                      <LeaderboardPage />
-                    </PageErrorBoundary>
-                  } />
-                  <Route path="/multi-markets" element={
-                    <PageErrorBoundary pageName="Multi Markets">
-                      <MultiMarketsPage />
-                    </PageErrorBoundary>
-                  } />
-                  <Route path="/multi-trade/:id" element={
-                    <PageErrorBoundary pageName="Multi Trade">
-                      <MultiTradePage />
-                    </PageErrorBoundary>
-                  } />
-                  <Route path="/create-multi-market" element={
-                    <PageErrorBoundary pageName="Create Multi Market">
-                      <CreateMultiMarketPage />
-                    </PageErrorBoundary>
-                  } />
-                </Routes>
-              </main>
-              <Footer />
-              <MobileBottomNav />
-            </div>
-            </BrowserRouter>
-          </TransactionProvider>
-        </WalletProvider>
+            <WatchlistProvider>
+              <TransactionProvider>
+                <BrowserRouter>
+                  <div className="min-h-screen flex flex-col bg-white dark:bg-black pb-16 md:pb-0">
+                  <TestnetWarningBanner />
+                  <Header />
+                <main className="flex-1">
+                  <Routes>
+                    <Route path="/" element={<LandingPage />} />
+                    <Route path="/markets" element={
+                      <PageErrorBoundary pageName="Markets">
+                        <MarketsPage />
+                      </PageErrorBoundary>
+                    } />
+                    <Route path="/trade/:id" element={
+                      <PageErrorBoundary pageName="Trade">
+                        <TradePage />
+                      </PageErrorBoundary>
+                    } />
+                    <Route path="/portfolio" element={
+                      <PageErrorBoundary pageName="Portfolio">
+                        <PortfolioPage />
+                      </PageErrorBoundary>
+                    } />
+                    <Route path="/watchlist" element={
+                      <PageErrorBoundary pageName="Watchlist">
+                        <WatchlistPage />
+                      </PageErrorBoundary>
+                    } />
+                    <Route path="/token" element={
+                      <PageErrorBoundary pageName="Token">
+                        <TokenPage />
+                      </PageErrorBoundary>
+                    } />
+                    <Route path="/staking" element={
+                      <PageErrorBoundary pageName="Staking">
+                        <StakingPage />
+                      </PageErrorBoundary>
+                    } />
+                    <Route path="/governance" element={
+                      <PageErrorBoundary pageName="Governance">
+                        <GovernancePage />
+                      </PageErrorBoundary>
+                    } />
+                    <Route path="/transactions" element={
+                      <PageErrorBoundary pageName="Transactions">
+                        <TransactionHistoryPage />
+                      </PageErrorBoundary>
+                    } />
+                    <Route path="/create-market" element={
+                      <PageErrorBoundary pageName="Create Market">
+                        <CreateMarketPage />
+                      </PageErrorBoundary>
+                    } />
+                    <Route path="/oracle" element={
+                      <PageErrorBoundary pageName="Oracle">
+                        <OraclePage />
+                      </PageErrorBoundary>
+                    } />
+                    <Route path="/liquidity" element={
+                      <PageErrorBoundary pageName="Liquidity">
+                        <LiquidityPage />
+                      </PageErrorBoundary>
+                    } />
+                    <Route path="/analytics" element={
+                      <PageErrorBoundary pageName="Analytics">
+                        <AnalyticsPage />
+                      </PageErrorBoundary>
+                    } />
+                    <Route path="/leaderboard" element={
+                      <PageErrorBoundary pageName="Leaderboard">
+                        <LeaderboardPage />
+                      </PageErrorBoundary>
+                    } />
+                    <Route path="/multi-markets" element={
+                      <PageErrorBoundary pageName="Multi Markets">
+                        <MultiMarketsPage />
+                      </PageErrorBoundary>
+                    } />
+                    <Route path="/multi-trade/:id" element={
+                      <PageErrorBoundary pageName="Multi Trade">
+                        <MultiTradePage />
+                      </PageErrorBoundary>
+                    } />
+                    <Route path="/create-multi-market" element={
+                      <PageErrorBoundary pageName="Create Multi Market">
+                        <CreateMultiMarketPage />
+                      </PageErrorBoundary>
+                    } />
+                  </Routes>
+                </main>
+                <Footer />
+                <MobileBottomNav />
+              </div>
+                </BrowserRouter>
+              </TransactionProvider>
+            </WatchlistProvider>
+          </WalletProvider>
       </NetworkProvider>
       </ThemeProvider>
     </ErrorBoundary>

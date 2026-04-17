@@ -3,6 +3,8 @@ import type { Market } from '../types/market';
 import { MarketStatus } from '../types/market';
 import { calculateOdds, formatStx, getStatusLabel } from '../utils/helpers';
 import { categorizeMarket, getCategoryConfig } from '../utils/marketCategories';
+import { useWatchlist } from '../contexts/WatchlistContext';
+import type { MouseEvent } from 'react';
 
 interface MarketCardProps {
   market: Market;
@@ -15,10 +17,50 @@ export function MarketCard({ market, showCategory = true }: MarketCardProps) {
   const isActive = market.status === MarketStatus.ACTIVE;
   const category = categorizeMarket(market.question);
   const categoryConfig = getCategoryConfig(category);
+  const { isWatched, toggleMarket } = useWatchlist();
+  const watched = isWatched(market.id);
+
+  const handleToggleWatchlist = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleMarket(market.id);
+  };
 
   return (
-    <Link to={`/trade/${market.id}`} className="block h-full no-underline">
-      <div className="h-full p-5 sm:p-6 lg:p-8 bg-neutral-50 dark:bg-neutral-900 rounded-2xl border border-neutral-300 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-700 flex flex-col transition-colors cursor-pointer">
+    <div className="relative block h-full">
+      <Link
+        to={`/trade/${market.id}`}
+        aria-label={`Open market ${market.question}`}
+        className="absolute inset-0 z-0 pointer-events-auto rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-black"
+      >
+        <span className="sr-only">Open market {market.question}</span>
+      </Link>
+      <div className="relative z-10 h-full p-5 sm:p-6 lg:p-8 bg-neutral-50 dark:bg-neutral-900 rounded-2xl border border-neutral-300 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-700 flex flex-col transition-colors cursor-pointer pointer-events-none">
+        <button
+          type="button"
+          onClick={handleToggleWatchlist}
+          aria-pressed={watched}
+          aria-label={watched ? 'Remove from watchlist' : 'Add to watchlist'}
+          className={`pointer-events-auto absolute top-4 right-4 inline-flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${
+            watched
+              ? 'border-rose-500/40 bg-rose-500/15 text-rose-400 hover:bg-rose-500/25'
+              : 'border-neutral-300 dark:border-neutral-700 bg-white/90 dark:bg-neutral-950/90 text-neutral-500 hover:border-blue-500/40 hover:text-blue-500'
+          }`}
+        >
+          <svg
+            className="h-5 w-5"
+            fill={watched ? 'currentColor' : 'none'}
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M11.645 20.91l-1.157-1.051C5.696 15.855 2.5 12.968 2.5 9.4 2.5 6.51 4.73 4.25 7.5 4.25c1.56 0 3.042.75 3.966 1.94A5.13 5.13 0 0 1 15.5 4.25c2.77 0 5 2.26 5 5.15 0 3.568-3.196 6.455-7.988 10.459l-0.867 0.718z"
+            />
+          </svg>
+        </button>
         {/* Header */}
         <div className="flex justify-between items-start gap-2 mb-4 sm:mb-5">
           <div className="flex gap-2 items-center flex-wrap">
@@ -75,6 +117,6 @@ export function MarketCard({ market, showCategory = true }: MarketCardProps) {
           </span>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

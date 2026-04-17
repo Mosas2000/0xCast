@@ -56,6 +56,15 @@ export function MobileBottomNav() {
       ),
     },
     {
+      path: '/watchlist',
+      label: 'Watchlist',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.645 20.91l-1.157-1.051C5.696 15.855 2.5 12.968 2.5 9.4 2.5 6.51 4.73 4.25 7.5 4.25c1.56 0 3.042.75 3.966 1.94A5.13 5.13 0 0 1 15.5 4.25c2.77 0 5 2.26 5 5.15 0 3.568-3.196 6.455-7.988 10.459l-0.867 0.718z" />
+        </svg>
+      ),
+    },
+    {
       path: '/multi-markets',
       label: 'Multi',
       icon: (
