@@ -1,8 +1,11 @@
 /**
  * Transaction Status Types and Utilities
- * 
+ *
  * Provides types and functions for tracking transaction status on Stacks blockchain.
  */
+
+import { getExplorerUrls } from '../config/network';
+import type { NetworkType } from '../types/network';
 
 export const TransactionStatus = {
   PENDING: 'pending',
@@ -159,6 +162,13 @@ export function getStatusLabel(status: TransactionStatus): string {
 /**
  * Build explorer URL for transaction
  */
-export function getExplorerUrl(txId: string): string {
-  return `https://explorer.hiro.so/txid/${txId}?chain=mainnet`;
+export function getExplorerUrl(txId: string, network?: NetworkType): string {
+  return getExplorerUrls(network).tx(txId);
+}
+
+/**
+ * Build explorer URL for an address
+ */
+export function getExplorerAddressUrl(address: string, network?: NetworkType): string {
+  return getExplorerUrls(network).address(address);
 }
