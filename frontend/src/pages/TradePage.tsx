@@ -13,6 +13,7 @@ import { validateAmount, validateMarketId } from '../utils/validation';
 import { SocialButtons } from '../components/SocialButtons';
 import { getStakeHistoryForMarketUser, getStakeHistoryTotals, type StakeHistoryEntry } from '../utils/stakeHistory';
 import { getExplorerAddressUrl, getExplorerUrl } from '../utils/transactions';
+import { useRecentlyViewed } from '../contexts/RecentlyViewedContext';
 
 /**
  * TradePage Component
@@ -36,6 +37,7 @@ export function TradePage() {
   
   const { isConnected, connect, address } = useWallet();
   const { network, stacksNetwork, contractAddress, contractName } = useNetwork();
+  const { recordMarket } = useRecentlyViewed();
   const userAddress = isConnected ? address : null;
   const { placeYesStake, placeNoStake, isLoading: isStaking, error: stakeError, txId, isContractPaused } = useStake();
   const { signal, source, isSocketConnected } = useRealtimeSignal({ enabled: true });
@@ -91,6 +93,14 @@ export function TradePage() {
   useEffect(() => {
     fetchMarket();
   }, [fetchMarket]);
+
+  useEffect(() => {
+    if (!market) {
+      return;
+    }
+
+    recordMarket(market.id);
+  }, [market, recordMarket]);
 
   useEffect(() => {
     if (signal === 0) return;
