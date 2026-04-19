@@ -1,0 +1,248 @@
+import { NotificationType } from '../types/notifications';
+
+export interface EmailTemplate {
+  subject: string;
+  htmlBody: string;
+  textBody: string;
+}
+
+export class NotificationTemplates {
+  static priceMovementEmail(assetName: string, change: number, percentage: number): EmailTemplate {
+    const direction = change >= 0 ? 'increased' : 'decreased';
+    const directionEmoji = change >= 0 ? '📈' : '📉';
+
+    const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; }
+    .content { background: #f9fafb; padding: 20px; border-radius: 0 0 8px 8px; }
+    .alert-box { background: white; border-left: 4px solid ${change >= 0 ? '#10b981' : '#ef4444'}; padding: 15px; margin: 15px 0; border-radius: 4px; }
+    .stat { font-size: 24px; font-weight: bold; color: ${change >= 0 ? '#10b981' : '#ef4444'}; }
+    .button { background: #667eea; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; display: inline-block; margin-top: 10px; }
+    .footer { color: #6b7280; font-size: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>${directionEmoji} ${assetName} Price Alert</h2>
+    </div>
+    <div class="content">
+      <p>The price of <strong>${assetName}</strong> has ${direction} significantly.</p>
+      <div class="alert-box">
+        <p>Price Change: <span class="stat">${change >= 0 ? '+' : ''}${change.toFixed(2)}</span></p>
+        <p>Percentage: <span class="stat">${percentage >= 0 ? '+' : ''}${percentage.toFixed(2)}%</span></p>
+      </div>
+      <p>This could be a good opportunity to review your positions.</p>
+      <a href="https://0xcast.io/markets" class="button">View Markets</a>
+      <div class="footer">
+        <p>This is an automated notification from 0xCast. You can manage your notification preferences in your account settings.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+
+    const textBody = `
+${assetName} Price Alert
+
+The price of ${assetName} has ${direction} significantly.
+
+Price Change: ${change >= 0 ? '+' : ''}${change.toFixed(2)}
+Percentage: ${percentage >= 0 ? '+' : ''}${percentage.toFixed(2)}%
+
+View Markets: https://0xcast.io/markets
+
+This is an automated notification from 0xCast.
+    `;
+
+    return {
+      subject: `${directionEmoji} ${assetName} Price Alert: ${direction} ${percentage >= 0 ? '+' : ''}${percentage.toFixed(2)}%`,
+      htmlBody,
+      textBody,
+    };
+  }
+
+  static marketExpiryEmail(marketName: string, daysUntilExpiry: number, marketUrl: string): EmailTemplate {
+    const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; }
+    .content { background: #f9fafb; padding: 20px; border-radius: 0 0 8px 8px; }
+    .warning-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 15px 0; border-radius: 4px; }
+    .days { font-size: 32px; font-weight: bold; color: #f59e0b; }
+    .button { background: #f5576c; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; display: inline-block; margin-top: 10px; }
+    .footer { color: #6b7280; font-size: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>⏰ Market Expiring Soon</h2>
+    </div>
+    <div class="content">
+      <p>Your market <strong>${marketName}</strong> is expiring soon.</p>
+      <div class="warning-box">
+        <p>Time Remaining: <span class="days">${daysUntilExpiry}</span> days</p>
+        <p>Make sure to resolve or close out your position before expiration.</p>
+      </div>
+      <a href="${marketUrl}" class="button">View Market</a>
+      <div class="footer">
+        <p>This is an automated notification from 0xCast. You can manage your notification preferences in your account settings.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+
+    const textBody = `
+Market Expiring Soon
+
+Your market "${marketName}" is expiring soon.
+
+Time Remaining: ${daysUntilExpiry} days
+
+Make sure to resolve or close out your position before expiration.
+
+View Market: ${marketUrl}
+
+This is an automated notification from 0xCast.
+    `;
+
+    return {
+      subject: `⏰ ${marketName} Expiring in ${daysUntilExpiry} Days`,
+      htmlBody,
+      textBody,
+    };
+  }
+
+  static resolutionEmail(marketName: string, outcome: string, marketUrl: string): EmailTemplate {
+    const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; }
+    .content { background: #f9fafb; padding: 20px; border-radius: 0 0 8px 8px; }
+    .outcome-box { background: white; border-left: 4px solid #10b981; padding: 15px; margin: 15px 0; border-radius: 4px; }
+    .outcome { font-size: 24px; font-weight: bold; color: #10b981; }
+    .button { background: #667eea; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; display: inline-block; margin-top: 10px; }
+    .footer { color: #6b7280; font-size: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>✓ Market Resolved</h2>
+    </div>
+    <div class="content">
+      <p>The market <strong>${marketName}</strong> has been resolved.</p>
+      <div class="outcome-box">
+        <p>Outcome: <span class="outcome">${outcome}</span></p>
+      </div>
+      <p>View the market details and claim your winnings if applicable.</p>
+      <a href="${marketUrl}" class="button">View Results</a>
+      <div class="footer">
+        <p>This is an automated notification from 0xCast. You can manage your notification preferences in your account settings.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+
+    const textBody = `
+Market Resolved
+
+The market "${marketName}" has been resolved.
+
+Outcome: ${outcome}
+
+View the market details and claim your winnings if applicable.
+
+View Results: ${marketUrl}
+
+This is an automated notification from 0xCast.
+    `;
+
+    return {
+      subject: `✓ ${marketName} Resolved: ${outcome}`,
+      htmlBody,
+      textBody,
+    };
+  }
+
+  static rewardEmail(marketName: string, rewardAmount: number, claimUrl: string): EmailTemplate {
+    const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; }
+    .content { background: #f9fafb; padding: 20px; border-radius: 0 0 8px 8px; }
+    .reward-box { background: white; border-left: 4px solid #f59e0b; padding: 15px; margin: 15px 0; border-radius: 4px; }
+    .amount { font-size: 28px; font-weight: bold; color: #f59e0b; }
+    .button { background: #f5576c; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; display: inline-block; margin-top: 10px; }
+    .footer { color: #6b7280; font-size: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>💰 Liquidity Reward Available</h2>
+    </div>
+    <div class="content">
+      <p>You have earned a liquidity reward for <strong>${marketName}</strong>!</p>
+      <div class="reward-box">
+        <p>Reward Amount: <span class="amount">${rewardAmount.toFixed(2)} USDC</span></p>
+        <p>Claim your reward before it expires.</p>
+      </div>
+      <a href="${claimUrl}" class="button">Claim Reward</a>
+      <div class="footer">
+        <p>This is an automated notification from 0xCast. You can manage your notification preferences in your account settings.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+
+    const textBody = `
+Liquidity Reward Available
+
+You have earned a liquidity reward for "${marketName}"!
+
+Reward Amount: ${rewardAmount.toFixed(2)} USDC
+
+Claim your reward before it expires.
+
+Claim Reward: ${claimUrl}
+
+This is an automated notification from 0xCast.
+    `;
+
+    return {
+      subject: `💰 Liquidity Reward: ${rewardAmount.toFixed(2)} USDC Available`,
+      htmlBody,
+      textBody,
+    };
+  }
+}
