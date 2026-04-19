@@ -1,8 +1,6 @@
 ;; Referral and Affiliate System Contract
 ;; Tracks referrals, manages rewards, and handles affiliate payouts
 
-(impl-trait .trait-sip10.sip-010-trait)
-
 ;; ============================================
 ;; CONSTANTS
 ;; ============================================
