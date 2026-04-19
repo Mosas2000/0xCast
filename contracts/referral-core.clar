@@ -21,7 +21,6 @@
 
 ;; Reward configuration in basis points (100 = 1%)
 (define-constant REFERRAL-REWARD-RATE u500) ;; 5% of referred user's spending
-(define-constant AFFILIATE-REWARD-RATE u300) ;; 3% of referred user's spending
 (define-constant MIN-REWARD-THRESHOLD u100000) ;; 0.1 OXC in microunits
 
 ;; Fraud prevention
@@ -34,7 +33,7 @@
 
 ;; Referral code to principal mapping
 (define-map referral-codes
-  (string-ascii 16)
+  (buff 16)
   {
     owner: principal,
     created-at: uint,
@@ -47,7 +46,7 @@
   principal
   {
     referrer: (optional principal),
-    referral-code: (string-ascii 16),
+    referral-code: (buff 16),
     referred-at: uint
   })
 
@@ -83,9 +82,6 @@
 ;; HELPER FUNCTIONS
 ;; ============================================
 
-(define-private (generate-code-hash (user principal) (nonce uint))
-  (substring (sha256 (concat (unwrap-panic (to-consensus-buff? user)) (to-consensus-buff? nonce))) u0 u16))
-
 (define-private (get-default-stats)
   {
     total-referred: u0,
@@ -96,8 +92,16 @@
     last-referral-block: u0
   })
 
-(define-private (string-to-ascii (input (string-ascii 16)))
-  input)
+(define-private (validate-referral-integrity (user principal) (referrer principal))
+  (let (
+    (user-stats (default-to (get-default-stats) (map-get? affiliate-stats user)))
+    (last-block (get last-referral-block user-stats))
+    (referral-count (get active-referrals user-stats))
+    (block-diff (if (is-eq last-block u0) REFERRAL-COOLDOWN (- stacks-block-height last-block)))
+  )
+    (asserts! (or (is-eq last-block u0) (>= block-diff REFERRAL-COOLDOWN)) ERR-FRAUD-DETECTED)
+    (asserts! (< referral-count MAX-REFERRALS-PER-ADDRESS) ERR-FRAUD-DETECTED)
+    (ok true)))
 
 ;; ============================================
 ;; REFERRAL CODE MANAGEMENT
@@ -106,28 +110,30 @@
 (define-public (generate-referral-code)
   (let (
     (nonce (var-get reward-counter))
-    (code-raw (generate-code-hash tx-sender nonce))
-    (code (string-to-ascii (slice code-raw u0 u16)))
+    (code (concat 
+      (sha256 (concat (unwrap-panic (to-consensus-buff? tx-sender)) (to-consensus-buff? nonce)))
+    ))
   )
-    (asserts! (is-none (map-get? referral-codes code)) ERR-CODE-EXISTS)
+    (asserts! (is-none (map-get? referral-codes (slice code u0 u16))) ERR-CODE-EXISTS)
     
-    (map-set referral-codes code {
-      owner: tx-sender,
-      created-at: stacks-block-height,
-      active: true,
-      total-referrals: u0
-    })
-    
-    (map-set user-referrals tx-sender (merge
-      (default-to 
-        { referrer: none, referral-code: code, referred-at: u0 }
-        (map-get? user-referrals tx-sender))
-      { referral-code: code }))
-    
-    (var-set reward-counter (+ nonce u1))
-    (ok code)))
+    (let ((final-code (slice code u0 u16)))
+      (map-set referral-codes final-code {
+        owner: tx-sender,
+        created-at: stacks-block-height,
+        active: true,
+        total-referrals: u0
+      })
+      
+      (map-set user-referrals tx-sender (merge
+        (default-to 
+          { referrer: none, referral-code: final-code, referred-at: u0 }
+          (map-get? user-referrals tx-sender))
+        { referral-code: final-code }))
+      
+      (var-set reward-counter (+ nonce u1))
+      (ok final-code))))
 
-(define-public (register-referral-with-code (referral-code (string-ascii 16)))
+(define-public (register-referral-with-code (referral-code (buff 16)))
   (let (
     (referrer-opt (map-get? referral-codes referral-code))
     (stats (default-to (get-default-stats) (map-get? affiliate-stats tx-sender)))
@@ -141,6 +147,7 @@
       (referrer-stats (default-to (get-default-stats) (map-get? affiliate-stats referrer)))
     )
       (asserts! (not (is-eq referrer tx-sender)) ERR-SELF-REFERRAL)
+      (try! (validate-referral-integrity tx-sender referrer))
       
       ;; Register the referral
       (map-set user-referrals tx-sender {
@@ -224,39 +231,6 @@
     (ok pending)))
 
 ;; ============================================
-;; FRAUD DETECTION
-;; ============================================
-
-(define-private (validate-referral-integrity (user principal) (referrer principal))
-  (let (
-    (user-stats (default-to (get-default-stats) (map-get? affiliate-stats user)))
-    (last-block (get last-referral-block user-stats))
-    (referral-count (get active-referrals user-stats))
-    (block-diff (- stacks-block-height last-block))
-  )
-    ;; Check cooldown between referrals
-    (asserts! (or (is-eq last-block u0) (>= block-diff REFERRAL-COOLDOWN)) ERR-FRAUD-DETECTED)
-    ;; Check maximum referrals limit
-    (asserts! (< referral-count MAX-REFERRALS-PER-ADDRESS) ERR-FRAUD-DETECTED)
-    (ok true)))
-
-(define-public (validate-referral (referral-code (string-ascii 16)) (user principal))
-  (let (
-    (referrer-opt (map-get? referral-codes referral-code))
-  )
-    (asserts! (is-some referrer-opt) ERR-INVALID-CODE)
-    
-    (let (
-      (referrer-data (unwrap! referrer-opt ERR-NOT-FOUND))
-      (referrer (get owner referrer-data))
-    )
-      (asserts! (get active referrer-data) ERR-INVALID-CODE)
-      (asserts! (not (is-eq referrer user)) ERR-SELF-REFERRAL)
-      (asserts! (is-none (map-get? user-referrals user)) ERR-ALREADY-REFERRED)
-      (try! (validate-referral-integrity referrer user))
-      (ok true))))
-
-;; ============================================
 ;; ADMIN FUNCTIONS
 ;; ============================================
 
@@ -266,7 +240,7 @@
     (asserts! (and (< referral-rate u10000) (< affiliate-rate u10000)) ERR-INVALID-RATE)
     (ok true)))
 
-(define-public (deactivate-code (referral-code (string-ascii 16)))
+(define-public (deactivate-code (referral-code (buff 16)))
   (let (
     (code-data (map-get? referral-codes referral-code))
   )
@@ -283,7 +257,7 @@
 ;; READ-ONLY FUNCTIONS
 ;; ============================================
 
-(define-read-only (get-referral-code-info (code (string-ascii 16)))
+(define-read-only (get-referral-code-info (code (buff 16)))
   (map-get? referral-codes code))
 
 (define-read-only (get-user-referral-info (user principal))
