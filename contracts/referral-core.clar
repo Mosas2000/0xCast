@@ -110,28 +110,26 @@
 (define-public (generate-referral-code)
   (let (
     (nonce (var-get reward-counter))
-    (code (concat 
-      (sha256 (concat (unwrap-panic (to-consensus-buff? tx-sender)) (to-consensus-buff? nonce)))
-    ))
+    (code-hash (sha256 (concat (unwrap-panic (to-consensus-buff? tx-sender)) (to-consensus-buff? nonce))))
+    (final-code (slice code-hash u0 u16))
   )
-    (asserts! (is-none (map-get? referral-codes (slice code u0 u16))) ERR-CODE-EXISTS)
+    (asserts! (is-none (map-get? referral-codes final-code)) ERR-CODE-EXISTS)
     
-    (let ((final-code (slice code u0 u16)))
-      (map-set referral-codes final-code {
-        owner: tx-sender,
-        created-at: stacks-block-height,
-        active: true,
-        total-referrals: u0
-      })
-      
-      (map-set user-referrals tx-sender (merge
-        (default-to 
-          { referrer: none, referral-code: final-code, referred-at: u0 }
-          (map-get? user-referrals tx-sender))
-        { referral-code: final-code }))
-      
-      (var-set reward-counter (+ nonce u1))
-      (ok final-code))))
+    (map-set referral-codes final-code {
+      owner: tx-sender,
+      created-at: stacks-block-height,
+      active: true,
+      total-referrals: u0
+    })
+    
+    (map-set user-referrals tx-sender (merge
+      (default-to 
+        { referrer: none, referral-code: final-code, referred-at: u0 }
+        (map-get? user-referrals tx-sender))
+      { referral-code: final-code }))
+    
+    (var-set reward-counter (+ nonce u1))
+    (ok final-code)))
 
 (define-public (register-referral-with-code (referral-code (buff 16)))
   (let (
