@@ -1,0 +1,292 @@
+import { AMMPool, SwapQuote } from '@/types/amm';
+
+export class AMMCalculator {
+  calculateSpotPrice(reserveA: bigint, reserveB: bigint): number {
+    if (reserveA === 0n) return 0;
+    return Number(reserveB) / Number(reserveA);
+  }
+
+  calculateExecutionPrice(amountIn: bigint, amountOut: bigint): number {
+    if (amountOut === 0n) return 0;
+    return Number(amountIn) / Number(amountOut);
+  }
+
+  calculatePriceImpact(spotPrice: number, executionPrice: number): number {
+    if (spotPrice === 0) return 0;
+    return Math.abs((executionPrice - spotPrice) / spotPrice);
+  }
+
+  calculateSlippage(priceImpact: number): number {
+    return priceImpact * 100;
+  }
+
+  calculateInvariant(reserveA: bigint, reserveB: bigint): bigint {
+    return reserveA * reserveB;
+  }
+
+  calculateLPTokens(
+    amountA: bigint,
+    amountB: bigint,
+    reserveA: bigint,
+    reserveB: bigint,
+    totalSupply: bigint
+  ): bigint {
+    if (reserveA === 0n || reserveB === 0n) {
+      return this.calculateInvariant(amountA, amountB);
+    }
+
+    const lpA = (amountA * totalSupply) / reserveA;
+    const lpB = (amountB * totalSupply) / reserveB;
+
+    return lpA < lpB ? lpA : lpB;
+  }
+
+  calculateRemovalAmounts(
+    lpTokens: bigint,
+    reserveA: bigint,
+    reserveB: bigint,
+    totalSupply: bigint
+  ): { amountA: bigint; amountB: bigint } {
+    return {
+      amountA: (lpTokens * reserveA) / totalSupply,
+      amountB: (lpTokens * reserveB) / totalSupply,
+    };
+  }
+
+  calculateFee(amountIn: bigint, feePercentage: number): bigint {
+    return (amountIn * BigInt(Math.floor(feePercentage * 100000))) / 100000000n;
+  }
+
+  calculateOutputAfterFee(amountIn: bigint, feePercentage: number): bigint {
+    const fee = this.calculateFee(amountIn, feePercentage);
+    return amountIn - fee;
+  }
+
+  estimateMinimumOutput(
+    amountOut: bigint,
+    slippagePercentage: number
+  ): bigint {
+    const slippageMultiplier = (100 - slippagePercentage) / 100;
+    return BigInt(Math.floor(Number(amountOut) * slippageMultiplier));
+  }
+
+  calculateOptimalAmountForReserves(
+    amountA: bigint,
+    reserveA: bigint,
+    reserveB: bigint
+  ): bigint {
+    const ratio = Number(reserveB) / Number(reserveA);
+    return BigInt(Math.floor(Number(amountA) * ratio));
+  }
+
+  calculateSwapAmount(
+    targetPrice: number,
+    spotPrice: number,
+    reserveA: bigint,
+    reserveB: bigint
+  ): bigint {
+    if (spotPrice === targetPrice) return 0n;
+
+    const priceDifference = Math.abs(targetPrice - spotPrice) / spotPrice;
+    const estimatedAmount = BigInt(
+      Math.floor(Number(reserveA) * priceDifference * 0.5)
+    );
+
+    return estimatedAmount;
+  }
+}
+
+export class AMMMetrics {
+  calculateCapitalUtilization(
+    activeLiquidity: bigint,
+    totalLiquidity: bigint
+  ): number {
+    if (totalLiquidity === 0n) return 0;
+    return (Number(activeLiquidity) / Number(totalLiquidity)) * 100;
+  }
+
+  calculateAnnualizedFeeYield(
+    feesCollected: bigint,
+    totalLiquidity: bigint,
+    daysElapsed: number
+  ): number {
+    if (totalLiquidity === 0n) return 0;
+
+    const dailyYield = Number(feesCollected) / Number(totalLiquidity);
+    const annualizedYield = dailyYield * (365 / daysElapsed);
+
+    return annualizedYield * 100;
+  }
+
+  calculateVolumeSinceInception(swaps: SwapQuote[]): bigint {
+    return swaps.reduce((sum, swap) => sum + swap.amountIn, 0n);
+  }
+
+  calculateAveragePriceImpact(swaps: SwapQuote[]): number {
+    if (swaps.length === 0) return 0;
+    const sum = swaps.reduce((acc, swap) => acc + swap.priceImpact, 0);
+    return sum / swaps.length;
+  }
+
+  calculateAverageSlippage(swaps: SwapQuote[]): number {
+    if (swaps.length === 0) return 0;
+    const sum = swaps.reduce((acc, swap) => acc + swap.slippage, 0);
+    return sum / swaps.length;
+  }
+
+  calculateLiquidityScore(
+    volumeTraded: bigint,
+    totalLiquidity: bigint,
+    averageSlippage: number
+  ): number {
+    const volumeRatio = Number(volumeTraded) / Number(totalLiquidity);
+    const slippageScore = Math.max(0, 10 - averageSlippage);
+    const score = (volumeRatio * 0.5 + slippageScore * 0.5) * 10;
+
+    return Math.min(100, score);
+  }
+
+  calculateRiskMetrics(pool: AMMPool): {
+    concentrationRisk: number;
+    volatilityRisk: number;
+    liquidityRisk: number;
+    overallRisk: number;
+  } {
+    const ratio = Number(pool.reserveA) / Number(pool.reserveB);
+    const concentrationRisk = Math.abs(1 - ratio) * 100;
+
+    const reserveRatio = Math.min(
+      Number(pool.reserveA),
+      Number(pool.reserveB)
+    ) / Math.max(Number(pool.reserveA), Number(pool.reserveB));
+    const liquidityRisk = (1 - reserveRatio) * 100;
+
+    const volatilityRisk = 50;
+
+    const overallRisk =
+      (concentrationRisk * 0.3 + liquidityRisk * 0.4 + volatilityRisk * 0.3) /
+      100;
+
+    return {
+      concentrationRisk: Math.min(100, concentrationRisk),
+      liquidityRisk: Math.min(100, liquidityRisk),
+      volatilityRisk,
+      overallRisk: Math.min(100, overallRisk),
+    };
+  }
+}
+
+export class AMMPathFinder {
+  findOptimalPath(
+    pools: AMMPool[],
+    amountIn: bigint,
+    maxHops: number = 3
+  ): { path: string[]; expectedOutput: bigint; totalImpact: number } | null {
+    if (pools.length === 0) return null;
+
+    let bestPath: string[] = [];
+    let bestOutput = 0n;
+    let bestImpact = 1;
+
+    const paths = this.generatePaths(
+      pools.map(p => p.id),
+      maxHops
+    );
+
+    for (const path of paths) {
+      let currentAmount = amountIn;
+      let totalImpact = 0;
+
+      for (let i = 0; i < path.length; i++) {
+        const pool = pools.find(p => p.id === path[i]);
+        if (!pool) break;
+
+        const spotPrice = Number(pool.reserveB) / Number(pool.reserveA);
+        const newReserveA = pool.reserveA + currentAmount;
+        const newReserveB = (pool.reserveA * pool.reserveB) / newReserveA;
+        const output = pool.reserveB > newReserveB ? pool.reserveB - newReserveB : 0n;
+
+        if (output === 0n) break;
+
+        const executionPrice = Number(currentAmount) / Number(output);
+        const impact = Math.abs((executionPrice - spotPrice) / spotPrice);
+        totalImpact += impact;
+
+        currentAmount = output;
+      }
+
+      if (currentAmount > bestOutput) {
+        bestOutput = currentAmount;
+        bestPath = path;
+        bestImpact = totalImpact;
+      }
+    }
+
+    return bestPath.length > 0
+      ? { path: bestPath, expectedOutput: bestOutput, totalImpact: bestImpact }
+      : null;
+  }
+
+  private generatePaths(poolIds: string[], maxLength: number): string[][] {
+    const paths: string[][] = [];
+
+    function backtrack(current: string[]) {
+      if (current.length > 0) {
+        paths.push([...current]);
+      }
+
+      if (current.length < maxLength) {
+        for (const id of poolIds) {
+          if (!current.includes(id)) {
+            current.push(id);
+            backtrack(current);
+            current.pop();
+          }
+        }
+      }
+    }
+
+    backtrack([]);
+    return paths.sort((a, b) => b.length - a.length);
+  }
+}
+
+export class AMMArbitrage {
+  calculateArbitrageOpportunity(
+    poolA: AMMPool,
+    poolB: AMMPool
+  ): { profitable: boolean; profitPercentage: number; amountToTrade: bigint } | null {
+    if (poolA.tokenA !== poolB.tokenA || poolA.tokenB !== poolB.tokenB) {
+      return null;
+    }
+
+    const priceA = Number(poolA.reserveB) / Number(poolA.reserveA);
+    const priceB = Number(poolB.reserveB) / Number(poolB.reserveA);
+
+    const priceDifference = Math.abs(priceA - priceB) / Math.min(priceA, priceB);
+    const profitable = priceDifference > 0.01;
+
+    const minAmount = poolA.reserveA < poolB.reserveA ? poolA.reserveA : poolB.reserveA;
+    const amountToTrade = (minAmount * 1n) / 100n;
+
+    return {
+      profitable,
+      profitPercentage: priceDifference * 100,
+      amountToTrade,
+    };
+  }
+
+  calculateFlashSwapArbitrage(
+    amount: bigint,
+    flashFeePercent: number,
+    spotPriceDifference: number
+  ): { profitable: boolean; profit: bigint } {
+    const fee = (amount * BigInt(Math.floor(flashFeePercent * 10000))) / 1000000n;
+    const profit = (amount * BigInt(Math.floor(spotPriceDifference * 10000))) / 1000000n;
+
+    return {
+      profitable: profit > fee,
+      profit: profit > fee ? profit - fee : 0n,
+    };
+  }
+}
