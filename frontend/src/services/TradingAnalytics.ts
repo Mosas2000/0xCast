@@ -1,0 +1,293 @@
+import { SwapQuote, AMMPool } from '@/types/amm';
+
+export interface TradeMetrics {
+  totalTrades: number;
+  totalVolume: bigint;
+  totalFees: bigint;
+  averageSlippage: number;
+  averagePriceImpact: number;
+  winRate: number;
+  profitableTrades: number;
+  lossTrades: number;
+}
+
+export interface UserTradeRecord {
+  id: string;
+  poolId: string;
+  timestamp: number;
+  amountIn: bigint;
+  amountOut: bigint;
+  fee: bigint;
+  slippage: number;
+  priceImpact: number;
+  profitable: boolean;
+}
+
+export class TradingAnalytics {
+  private trades: Map<string, UserTradeRecord[]>;
+  private poolMetrics: Map<string, TradeMetrics>;
+
+  constructor() {
+    this.trades = new Map();
+    this.poolMetrics = new Map();
+  }
+
+  recordTrade(userId: string, poolId: string, quote: SwapQuote): UserTradeRecord {
+    const trade: UserTradeRecord = {
+      id: `trade-${Date.now()}-${Math.random()}`,
+      poolId,
+      timestamp: Date.now(),
+      amountIn: quote.amountIn,
+      amountOut: quote.amountOut,
+      fee: quote.fee,
+      slippage: quote.slippage,
+      priceImpact: quote.priceImpact,
+      profitable: quote.amountOut > quote.amountIn - quote.fee,
+    };
+
+    if (!this.trades.has(userId)) {
+      this.trades.set(userId, []);
+    }
+
+    this.trades.get(userId)?.push(trade);
+    this.updatePoolMetrics(poolId, trade);
+
+    return trade;
+  }
+
+  private updatePoolMetrics(poolId: string, trade: UserTradeRecord): void {
+    const current = this.poolMetrics.get(poolId) || {
+      totalTrades: 0,
+      totalVolume: 0n,
+      totalFees: 0n,
+      averageSlippage: 0,
+      averagePriceImpact: 0,
+      winRate: 0,
+      profitableTrades: 0,
+      lossTrades: 0,
+    };
+
+    current.totalTrades += 1;
+    current.totalVolume += trade.amountIn;
+    current.totalFees += trade.fee;
+
+    if (trade.profitable) {
+      current.profitableTrades += 1;
+    } else {
+      current.lossTrades += 1;
+    }
+
+    current.winRate = current.profitableTrades / current.totalTrades;
+
+    this.poolMetrics.set(poolId, current);
+  }
+
+  getUserMetrics(userId: string): TradeMetrics | null {
+    const userTrades = this.trades.get(userId);
+    if (!userTrades || userTrades.length === 0) return null;
+
+    const profitableTrades = userTrades.filter(t => t.profitable).length;
+    const lossTrades = userTrades.length - profitableTrades;
+
+    const avgSlippage = userTrades.reduce((sum, t) => sum + t.slippage, 0) / userTrades.length;
+    const avgPriceImpact =
+      userTrades.reduce((sum, t) => sum + t.priceImpact, 0) / userTrades.length;
+    const totalVolume = userTrades.reduce((sum, t) => sum + t.amountIn, 0n);
+    const totalFees = userTrades.reduce((sum, t) => sum + t.fee, 0n);
+
+    return {
+      totalTrades: userTrades.length,
+      totalVolume,
+      totalFees,
+      averageSlippage: avgSlippage,
+      averagePriceImpact: avgPriceImpact,
+      winRate: profitableTrades / userTrades.length,
+      profitableTrades,
+      lossTrades,
+    };
+  }
+
+  getPoolMetrics(poolId: string): TradeMetrics | undefined {
+    return this.poolMetrics.get(poolId);
+  }
+
+  getUserTrades(userId: string): UserTradeRecord[] {
+    return this.trades.get(userId) || [];
+  }
+
+  getUserTradesInRange(
+    userId: string,
+    startTime: number,
+    endTime: number
+  ): UserTradeRecord[] {
+    const userTrades = this.trades.get(userId) || [];
+    return userTrades.filter(t => t.timestamp >= startTime && t.timestamp <= endTime);
+  }
+
+  getTopPools(limit: number = 10): { poolId: string; volume: bigint; trades: number }[] {
+    return Array.from(this.poolMetrics.entries())
+      .map(([poolId, metrics]) => ({
+        poolId,
+        volume: metrics.totalVolume,
+        trades: metrics.totalTrades,
+      }))
+      .sort((a, b) => (b.volume > a.volume ? 1 : -1))
+      .slice(0, limit);
+  }
+
+  calculatePnL(userId: string, conversionRate: number = 1): number {
+    const userTrades = this.trades.get(userId) || [];
+    if (userTrades.length === 0) return 0;
+
+    let pnl = 0;
+
+    for (const trade of userTrades) {
+      const profit = Number(trade.amountOut) - Number(trade.amountIn);
+      pnl += profit * conversionRate;
+    }
+
+    return pnl;
+  }
+
+  calculateROI(userId: string): number {
+    const userTrades = this.trades.get(userId) || [];
+    if (userTrades.length === 0) return 0;
+
+    const totalInvested = userTrades.reduce((sum, t) => sum + Number(t.amountIn), 0);
+    const totalReturned = userTrades.reduce((sum, t) => sum + Number(t.amountOut), 0);
+
+    if (totalInvested === 0) return 0;
+
+    return ((totalReturned - totalInvested) / totalInvested) * 100;
+  }
+
+  getAverageTradeSize(userId: string): bigint {
+    const userTrades = this.trades.get(userId) || [];
+    if (userTrades.length === 0) return 0n;
+
+    const totalVolume = userTrades.reduce((sum, t) => sum + t.amountIn, 0n);
+    return totalVolume / BigInt(userTrades.length);
+  }
+
+  getMostTradedPool(userId: string): string | null {
+    const userTrades = this.trades.get(userId) || [];
+    if (userTrades.length === 0) return null;
+
+    const poolCounts: { [key: string]: number } = {};
+
+    for (const trade of userTrades) {
+      poolCounts[trade.poolId] = (poolCounts[trade.poolId] || 0) + 1;
+    }
+
+    return Object.entries(poolCounts).sort((a, b) => b[1] - a[1])[0][0];
+  }
+
+  getTradeFrequency(userId: string, windowMs: number): number {
+    const userTrades = this.trades.get(userId) || [];
+    const cutoffTime = Date.now() - windowMs;
+    const recentTrades = userTrades.filter(t => t.timestamp >= cutoffTime);
+
+    return recentTrades.length;
+  }
+
+  calculateSuccessRate(userId: string): number {
+    const metrics = this.getUserMetrics(userId);
+    if (!metrics) return 0;
+
+    return metrics.winRate * 100;
+  }
+
+  exportUserAnalytics(userId: string): {
+    trades: UserTradeRecord[];
+    metrics: TradeMetrics | null;
+    pnl: number;
+    roi: number;
+    successRate: number;
+  } {
+    return {
+      trades: this.getUserTrades(userId),
+      metrics: this.getUserMetrics(userId),
+      pnl: this.calculatePnL(userId),
+      roi: this.calculateROI(userId),
+      successRate: this.calculateSuccessRate(userId),
+    };
+  }
+
+  clearUserData(userId: string): boolean {
+    return this.trades.delete(userId);
+  }
+
+  getGlobalStats(): {
+    totalUsers: number;
+    totalTrades: number;
+    totalVolume: bigint;
+    totalFees: bigint;
+    averageTradeSize: bigint;
+  } {
+    let totalTrades = 0;
+    let totalVolume = 0n;
+    let totalFees = 0n;
+
+    for (const userTrades of this.trades.values()) {
+      totalTrades += userTrades.length;
+      totalVolume += userTrades.reduce((sum, t) => sum + t.amountIn, 0n);
+      totalFees += userTrades.reduce((sum, t) => sum + t.fee, 0n);
+    }
+
+    const averageTradeSize = totalTrades > 0 ? totalVolume / BigInt(totalTrades) : 0n;
+
+    return {
+      totalUsers: this.trades.size,
+      totalTrades,
+      totalVolume,
+      totalFees,
+      averageTradeSize,
+    };
+  }
+}
+
+export class PerformanceComparison {
+  compareUsers(
+    analytics: TradingAnalytics,
+    userIds: string[]
+  ): Array<{
+    userId: string;
+    roi: number;
+    winRate: number;
+    pnl: number;
+    trades: number;
+  }> {
+    return userIds
+      .map(userId => ({
+        userId,
+        roi: analytics.calculateROI(userId),
+        winRate: analytics.calculateSuccessRate(userId),
+        pnl: analytics.calculatePnL(userId),
+        trades: analytics.getUserTrades(userId).length,
+      }))
+      .sort((a, b) => b.roi - a.roi);
+  }
+
+  findBestPerformer(
+    analytics: TradingAnalytics,
+    userIds: string[]
+  ): string | null {
+    const comparison = this.compareUsers(analytics, userIds);
+    return comparison.length > 0 ? comparison[0].userId : null;
+  }
+
+  calculateAveragePerformance(
+    analytics: TradingAnalytics,
+    userIds: string[]
+  ): { avgRoi: number; avgWinRate: number } {
+    const metrics = userIds.map(id => ({
+      roi: analytics.calculateROI(id),
+      winRate: analytics.calculateSuccessRate(id),
+    }));
+
+    const avgRoi = metrics.reduce((sum, m) => sum + m.roi, 0) / metrics.length;
+    const avgWinRate = metrics.reduce((sum, m) => sum + m.winRate, 0) / metrics.length;
+
+    return { avgRoi, avgWinRate };
+  }
+}
