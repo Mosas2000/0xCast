@@ -1,0 +1,243 @@
+import { AMMPool, SwapQuote } from '@/types/amm';
+import { ConstantProductAMM } from '@/services/ConstantProductAMM';
+import { StableSwapAMM } from '@/services/StableSwapAMM';
+import { ConcentratedLiquidityAMM } from '@/services/ConcentratedLiquidityAMM';
+
+export class AMMRouter {
+  private pools: Map<string, AMMPool>;
+  private constantProductAMMs: Map<string, ConstantProductAMM>;
+  private stableSwapAMMs: Map<string, StableSwapAMM>;
+  private concentratedLiquidityAMMs: Map<string, ConcentratedLiquidityAMM>;
+
+  constructor() {
+    this.pools = new Map();
+    this.constantProductAMMs = new Map();
+    this.stableSwapAMMs = new Map();
+    this.concentratedLiquidityAMMs = new Map();
+  }
+
+  addPool(pool: AMMPool, modelType: 'constant-product' | 'stable-swap' | 'concentrated-liquidity'): void {
+    this.pools.set(pool.id, pool);
+
+    if (modelType === 'constant-product') {
+      this.constantProductAMMs.set(pool.id, new ConstantProductAMM(pool));
+    } else if (modelType === 'stable-swap') {
+      this.stableSwapAMMs.set(pool.id, new StableSwapAMM(pool));
+    } else if (modelType === 'concentrated-liquidity') {
+      this.concentratedLiquidityAMMs.set(pool.id, new ConcentratedLiquidityAMM(pool));
+    }
+  }
+
+  getPool(poolId: string): AMMPool | undefined {
+    return this.pools.get(poolId);
+  }
+
+  getAllPools(): AMMPool[] {
+    return Array.from(this.pools.values());
+  }
+
+  removePool(poolId: string): boolean {
+    const removed = this.pools.delete(poolId);
+    this.constantProductAMMs.delete(poolId);
+    this.stableSwapAMMs.delete(poolId);
+    this.concentratedLiquidityAMMs.delete(poolId);
+    return removed;
+  }
+
+  quoteExactInputSingleHop(
+    poolId: string,
+    amountIn: bigint,
+    tokenAtoB: boolean
+  ): SwapQuote | null {
+    const pool = this.pools.get(poolId);
+    if (!pool) return null;
+
+    if (this.constantProductAMMs.has(poolId)) {
+      const amm = this.constantProductAMMs.get(poolId);
+      return amm?.quoteSwapAtoB(amountIn) || null;
+    } else if (this.stableSwapAMMs.has(poolId)) {
+      const amm = this.stableSwapAMMs.get(poolId);
+      return amm?.quoteSwapAtoB(amountIn) || null;
+    } else if (this.concentratedLiquidityAMMs.has(poolId)) {
+      const amm = this.concentratedLiquidityAMMs.get(poolId);
+      return amm?.quoteSwapWithConcentration(amountIn, tokenAtoB) || null;
+    }
+
+    return null;
+  }
+
+  findBestPoolForSwap(
+    amountIn: bigint,
+    tokenAtoB: boolean
+  ): { poolId: string; quote: SwapQuote } | null {
+    let bestQuote: SwapQuote | null = null;
+    let bestPoolId: string | null = null;
+    let bestAmountOut = 0n;
+
+    for (const [poolId, pool] of this.pools.entries()) {
+      try {
+        let quote: SwapQuote | null = null;
+
+        if (this.constantProductAMMs.has(poolId)) {
+          const amm = this.constantProductAMMs.get(poolId);
+          quote = tokenAtoB
+            ? amm?.quoteSwapAtoB(amountIn) || null
+            : amm?.quoteSwapBtoA(amountIn) || null;
+        } else if (this.stableSwapAMMs.has(poolId)) {
+          const amm = this.stableSwapAMMs.get(poolId);
+          quote = tokenAtoB
+            ? amm?.quoteSwapAtoB(amountIn) || null
+            : amm?.quoteSwapBtoA(amountIn) || null;
+        } else if (this.concentratedLiquidityAMMs.has(poolId)) {
+          const amm = this.concentratedLiquidityAMMs.get(poolId);
+          quote = amm?.quoteSwapWithConcentration(amountIn, tokenAtoB) || null;
+        }
+
+        if (quote && quote.amountOut > bestAmountOut) {
+          bestAmountOut = quote.amountOut;
+          bestQuote = quote;
+          bestPoolId = poolId;
+        }
+      } catch {
+      }
+    }
+
+    if (bestPoolId && bestQuote) {
+      return { poolId: bestPoolId, quote: bestQuote };
+    }
+
+    return null;
+  }
+
+  executeSwapExactInput(
+    poolId: string,
+    amountIn: bigint,
+    minAmountOut: bigint,
+    tokenAtoB: boolean
+  ): bigint {
+    const quote = this.quoteExactInputSingleHop(poolId, amountIn, tokenAtoB);
+    if (!quote || quote.amountOut < minAmountOut) {
+      throw new Error('Slippage exceeds minimum amount out');
+    }
+
+    if (this.constantProductAMMs.has(poolId)) {
+      const amm = this.constantProductAMMs.get(poolId);
+      return tokenAtoB
+        ? amm?.executeSwapAtoB(amountIn) || 0n
+        : amm?.executeSwapBtoA(amountIn) || 0n;
+    } else if (this.stableSwapAMMs.has(poolId)) {
+      const amm = this.stableSwapAMMs.get(poolId);
+      return tokenAtoB
+        ? amm?.executeSwapAtoB(amountIn) || 0n
+        : amm?.executeSwapBtoA(amountIn) || 0n;
+    } else if (this.concentratedLiquidityAMMs.has(poolId)) {
+      const amm = this.concentratedLiquidityAMMs.get(poolId);
+      return amm?.executeConcentratedSwap(amountIn, tokenAtoB) || 0n;
+    }
+
+    throw new Error('Pool not found or model not supported');
+  }
+
+  multiHopSwap(
+    poolIds: string[],
+    amountIn: bigint,
+    minAmountOut: bigint
+  ): { amountOut: bigint; hop: number; poolIds: string[] } {
+    if (poolIds.length === 0) {
+      throw new Error('No pools specified for multi-hop swap');
+    }
+
+    let currentAmount = amountIn;
+
+    for (let i = 0; i < poolIds.length; i++) {
+      const poolId = poolIds[i];
+      const isLastHop = i === poolIds.length - 1;
+
+      try {
+        const minOut = isLastHop ? minAmountOut : 0n;
+        currentAmount = this.executeSwapExactInput(poolId, currentAmount, minOut, true);
+      } catch (error) {
+        throw new Error(`Multi-hop swap failed at pool ${i + 1}: ${error}`);
+      }
+    }
+
+    return {
+      amountOut: currentAmount,
+      hop: poolIds.length,
+      poolIds,
+    };
+  }
+
+  estimateMultiHopPrice(
+    poolIds: string[],
+    amountIn: bigint
+  ): { expectedAmountOut: bigint; priceImpact: number; poolIds: string[] } {
+    let currentAmount = amountIn;
+    let totalPriceImpact = 0;
+
+    for (const poolId of poolIds) {
+      const quote = this.quoteExactInputSingleHop(poolId, currentAmount, true);
+      if (!quote) {
+        throw new Error(`Cannot quote pool ${poolId}`);
+      }
+
+      totalPriceImpact += quote.priceImpact;
+      currentAmount = quote.amountOut;
+    }
+
+    return {
+      expectedAmountOut: currentAmount,
+      priceImpact: totalPriceImpact,
+      poolIds,
+    };
+  }
+
+  getPoolStatistics(poolId: string): any {
+    const pool = this.pools.get(poolId);
+    if (!pool) return null;
+
+    const stats: any = {
+      poolId,
+      reserveA: pool.reserveA,
+      reserveB: pool.reserveB,
+      fee: pool.fee,
+      totalLiquidity: pool.totalLiquidity,
+    };
+
+    if (this.constantProductAMMs.has(poolId)) {
+      const amm = this.constantProductAMMs.get(poolId);
+      stats.model = 'constant-product';
+      stats.stats = amm?.getStats();
+    } else if (this.stableSwapAMMs.has(poolId)) {
+      const amm = this.stableSwapAMMs.get(poolId);
+      stats.model = 'stable-swap';
+      stats.stats = amm?.getStats();
+    } else if (this.concentratedLiquidityAMMs.has(poolId)) {
+      const amm = this.concentratedLiquidityAMMs.get(poolId);
+      stats.model = 'concentrated-liquidity';
+      stats.capitalEfficiency = amm?.getCapitalEfficiency();
+    }
+
+    return stats;
+  }
+
+  getAvailablePools(): Array<{ poolId: string; model: string }> {
+    const available: Array<{ poolId: string; model: string }> = [];
+
+    for (const poolId of this.pools.keys()) {
+      let model = 'unknown';
+
+      if (this.constantProductAMMs.has(poolId)) {
+        model = 'constant-product';
+      } else if (this.stableSwapAMMs.has(poolId)) {
+        model = 'stable-swap';
+      } else if (this.concentratedLiquidityAMMs.has(poolId)) {
+        model = 'concentrated-liquidity';
+      }
+
+      available.push({ poolId, model });
+    }
+
+    return available;
+  }
+}
