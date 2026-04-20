@@ -1,0 +1,323 @@
+import { ChartScale } from '@/types/charting';
+
+export interface ZoomLevel {
+  level: number;
+  description: string;
+  candlesVisible: number;
+}
+
+export interface PanState {
+  xOffset: number;
+  yOffset: number;
+  isDragging: boolean;
+  dragStart?: { x: number; y: number };
+}
+
+export class ChartZoomPanService {
+  private readonly zoomLevels: ZoomLevel[] = [
+    { level: 0.5, description: '50%', candlesVisible: 200 },
+    { level: 0.75, description: '75%', candlesVisible: 150 },
+    { level: 1.0, description: '100%', candlesVisible: 100 },
+    { level: 1.5, description: '150%', candlesVisible: 67 },
+    { level: 2.0, description: '200%', candlesVisible: 50 },
+    { level: 3.0, description: '300%', candlesVisible: 33 },
+    { level: 4.0, description: '400%', candlesVisible: 25 },
+    { level: 5.0, description: '500%', candlesVisible: 20 },
+  ];
+
+  private currentZoomLevel: number = 1.0;
+  private panState: PanState = {
+    xOffset: 0,
+    yOffset: 0,
+    isDragging: false,
+  };
+
+  getZoomLevels(): ZoomLevel[] {
+    return this.zoomLevels;
+  }
+
+  getCurrentZoomLevel(): number {
+    return this.currentZoomLevel;
+  }
+
+  setZoomLevel(level: number): ChartScale | null {
+    const zoomLevel = this.zoomLevels.find(z => z.level === level);
+    if (!zoomLevel) return null;
+
+    this.currentZoomLevel = level;
+    return {
+      min: 0,
+      max: 100,
+      padding: 10,
+    };
+  }
+
+  zoomIn(): number {
+    const currentIndex = this.zoomLevels.findIndex(z => z.level === this.currentZoomLevel);
+    if (currentIndex < this.zoomLevels.length - 1) {
+      this.currentZoomLevel = this.zoomLevels[currentIndex + 1].level;
+    }
+    return this.currentZoomLevel;
+  }
+
+  zoomOut(): number {
+    const currentIndex = this.zoomLevels.findIndex(z => z.level === this.currentZoomLevel);
+    if (currentIndex > 0) {
+      this.currentZoomLevel = this.zoomLevels[currentIndex - 1].level;
+    }
+    return this.currentZoomLevel;
+  }
+
+  resetZoom(): number {
+    this.currentZoomLevel = 1.0;
+    return this.currentZoomLevel;
+  }
+
+  handleMouseWheel(deltaY: number, centerX?: number, centerY?: number): { zoom: number; pan: PanState } {
+    const zoomFactor = deltaY > 0 ? 0.9 : 1.1;
+    const newZoom = this.currentZoomLevel * zoomFactor;
+
+    const clampedZoom = Math.max(
+      this.zoomLevels[0].level,
+      Math.min(newZoom, this.zoomLevels[this.zoomLevels.length - 1].level)
+    );
+
+    if (centerX !== undefined && centerY !== undefined) {
+      this.adjustPanForZoom(clampedZoom, centerX, centerY);
+    }
+
+    this.currentZoomLevel = clampedZoom;
+
+    return {
+      zoom: this.currentZoomLevel,
+      pan: this.panState,
+    };
+  }
+
+  startDrag(x: number, y: number): void {
+    this.panState.isDragging = true;
+    this.panState.dragStart = { x, y };
+  }
+
+  updateDrag(x: number, y: number): PanState {
+    if (!this.panState.isDragging || !this.panState.dragStart) {
+      return this.panState;
+    }
+
+    const deltaX = x - this.panState.dragStart.x;
+    const deltaY = y - this.panState.dragStart.y;
+
+    this.panState.xOffset += deltaX;
+    this.panState.yOffset += deltaY;
+
+    this.panState.dragStart = { x, y };
+
+    return this.panState;
+  }
+
+  endDrag(): PanState {
+    this.panState.isDragging = false;
+    this.panState.dragStart = undefined;
+    return this.panState;
+  }
+
+  resetPan(): PanState {
+    this.panState = {
+      xOffset: 0,
+      yOffset: 0,
+      isDragging: false,
+    };
+    return this.panState;
+  }
+
+  getPanState(): PanState {
+    return { ...this.panState };
+  }
+
+  private adjustPanForZoom(newZoom: number, centerX: number, centerY: number): void {
+    const zoomFactor = newZoom / this.currentZoomLevel;
+
+    this.panState.xOffset = centerX - (centerX - this.panState.xOffset) * zoomFactor;
+    this.panState.yOffset = centerY - (centerY - this.panState.yOffset) * zoomFactor;
+  }
+
+  getVisibleCandleCount(): number {
+    const currentLevel = this.zoomLevels.find(z => z.level === this.currentZoomLevel);
+    return currentLevel?.candlesVisible || 100;
+  }
+
+  calculateCandleWidth(containerWidth: number): number {
+    const visibleCandles = this.getVisibleCandleCount();
+    const baseWidth = containerWidth / visibleCandles;
+    return baseWidth * this.currentZoomLevel;
+  }
+
+  calculatePriceScale(minPrice: number, maxPrice: number, containerHeight: number): {
+    scale: number;
+    offset: number;
+  } {
+    const priceRange = maxPrice - minPrice;
+    if (priceRange === 0) {
+      return { scale: 0, offset: 0 };
+    }
+
+    const scale = containerHeight / priceRange;
+    const offset = minPrice;
+
+    return { scale, offset };
+  }
+
+  getTransformMatrix(): DOMMatrix {
+    const matrix = new DOMMatrix();
+    return matrix.translate(this.panState.xOffset, this.panState.yOffset).scale(this.currentZoomLevel);
+  }
+
+  clampPan(maxX: number, maxY: number): void {
+    this.panState.xOffset = Math.max(Math.min(this.panState.xOffset, maxX), -maxX);
+    this.panState.yOffset = Math.max(Math.min(this.panState.yOffset, maxY), -maxY);
+  }
+
+  fitToView(dataWidth: number, dataHeight: number, containerWidth: number, containerHeight: number): void {
+    if (dataWidth <= 0 || dataHeight <= 0 || containerWidth <= 0 || containerHeight <= 0) {
+      return;
+    }
+
+    const zoomX = containerWidth / dataWidth;
+    const zoomY = containerHeight / dataHeight;
+    const fitZoom = Math.min(zoomX, zoomY);
+
+    this.currentZoomLevel = Math.min(fitZoom, this.zoomLevels[this.zoomLevels.length - 1].level);
+    this.resetPan();
+  }
+}
+
+export class CrosshairTool {
+  private x: number = 0;
+  private y: number = 0;
+  private visible: boolean = false;
+  private readonly color = '#999999';
+  private readonly width = 1;
+
+  setPosition(x: number, y: number): void {
+    this.x = x;
+    this.y = y;
+  }
+
+  getPosition(): { x: number; y: number } {
+    return { x: this.x, y: this.y };
+  }
+
+  show(): void {
+    this.visible = true;
+  }
+
+  hide(): void {
+    this.visible = false;
+  }
+
+  isVisible(): boolean {
+    return this.visible;
+  }
+
+  render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    if (!this.visible) return;
+
+    ctx.save();
+    ctx.strokeStyle = this.color;
+    ctx.lineWidth = this.width;
+    ctx.setLineDash([5, 5]);
+
+    ctx.beginPath();
+    ctx.moveTo(this.x, 0);
+    ctx.lineTo(this.x, height);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(0, this.y);
+    ctx.lineTo(width, this.y);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+}
+
+export interface MeasurementData {
+  fromPrice: number;
+  toPrice: number;
+  fromTime: string;
+  toTime: string;
+  priceDifference: number;
+  percentChange: number;
+}
+
+export class MeasurementTool {
+  private startX: number = 0;
+  private startY: number = 0;
+  private endX: number = 0;
+  private endY: number = 0;
+  private isActive: boolean = false;
+
+  startMeasurement(x: number, y: number): void {
+    this.startX = x;
+    this.startY = y;
+    this.isActive = true;
+  }
+
+  updateMeasurement(x: number, y: number): void {
+    if (!this.isActive) return;
+    this.endX = x;
+    this.endY = y;
+  }
+
+  endMeasurement(): void {
+    this.isActive = false;
+  }
+
+  getMeasurementData(
+    priceRange: { min: number; max: number },
+    timeRange: { start: string; end: string }
+  ): MeasurementData | null {
+    if (!this.isActive && (this.startX === this.endX || this.startY === this.endY)) {
+      return null;
+    }
+
+    const priceDifference = Math.abs(this.endY - this.startY);
+    const timeDifference = Math.abs(this.endX - this.startX);
+
+    const pricePerPixel = (priceRange.max - priceRange.min) / 100;
+    const priceChange = priceDifference * pricePerPixel;
+
+    const fromPrice = priceRange.min + (Math.min(this.startY, this.endY) * pricePerPixel);
+    const toPrice = fromPrice + priceChange;
+
+    const percentChange = (priceChange / fromPrice) * 100;
+
+    return {
+      fromPrice,
+      toPrice,
+      fromTime: timeRange.start,
+      toTime: timeRange.end,
+      priceDifference: priceChange,
+      percentChange,
+    };
+  }
+
+  render(ctx: CanvasRenderingContext2D): void {
+    if (!this.isActive) return;
+
+    ctx.save();
+    ctx.strokeStyle = '#FF6B6B';
+    ctx.fillStyle = 'rgba(255, 107, 107, 0.1)';
+    ctx.lineWidth = 2;
+
+    const width = Math.abs(this.endX - this.startX);
+    const height = Math.abs(this.endY - this.startY);
+    const x = Math.min(this.startX, this.endX);
+    const y = Math.min(this.startY, this.endY);
+
+    ctx.fillRect(x, y, width, height);
+    ctx.strokeRect(x, y, width, height);
+
+    ctx.restore();
+  }
+}
