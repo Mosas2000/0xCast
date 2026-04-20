@@ -1,0 +1,248 @@
+import { OraclePrice, AggregatedPrice, ProviderHealth } from '@/types/oracle';
+
+export interface OraclePriceRecord {
+  id: string;
+  marketId: string;
+  value: number;
+  timestamp: number;
+  source: string;
+  confidence: number;
+  createdAt: number;
+}
+
+export interface AggregatedPriceRecord {
+  id: string;
+  marketId: string;
+  value: number;
+  timestamp: number;
+  sources: string[];
+  confidence: number;
+  consensusReached: boolean;
+  method: string;
+  createdAt: number;
+}
+
+export interface ProviderHealthRecord {
+  id: string;
+  providerId: string;
+  successRate: number;
+  uptime: number;
+  averageLatency: number;
+  responseCount: number;
+  errorCount: number;
+  healthScore: number;
+  timestamp: number;
+  createdAt: number;
+}
+
+export interface PriceHistoryRecord {
+  id: string;
+  marketId: string;
+  prices: OraclePrice[];
+  startTime: number;
+  endTime: number;
+  createdAt: number;
+}
+
+export abstract class OraclePersistenceLayer {
+  abstract savePriceRecord(record: OraclePriceRecord): Promise<void>;
+  abstract getPriceRecords(
+    marketId: string,
+    startTime?: number,
+    endTime?: number
+  ): Promise<OraclePriceRecord[]>;
+  abstract deleteOldPrices(olderThan: number): Promise<number>;
+
+  abstract saveAggregatedPrice(record: AggregatedPriceRecord): Promise<void>;
+  abstract getAggregatedPrices(
+    marketId: string,
+    limit?: number
+  ): Promise<AggregatedPriceRecord[]>;
+
+  abstract saveProviderHealth(record: ProviderHealthRecord): Promise<void>;
+  abstract getProviderHealth(
+    providerId: string,
+    limit?: number
+  ): Promise<ProviderHealthRecord[]>;
+  abstract getLatestProviderHealth(providerId: string): Promise<ProviderHealthRecord | null>;
+
+  abstract savePriceHistory(record: PriceHistoryRecord): Promise<void>;
+  abstract getPriceHistory(
+    marketId: string,
+    startTime?: number,
+    endTime?: number
+  ): Promise<PriceHistoryRecord[]>;
+
+  abstract clearOldData(olderThan: number): Promise<void>;
+  abstract close(): Promise<void>;
+}
+
+export class InMemoryOraclePersistence extends OraclePersistenceLayer {
+  private prices: Map<string, OraclePriceRecord[]> = new Map();
+  private aggregated: Map<string, AggregatedPriceRecord[]> = new Map();
+  private health: Map<string, ProviderHealthRecord[]> = new Map();
+  private history: Map<string, PriceHistoryRecord[]> = new Map();
+
+  async savePriceRecord(record: OraclePriceRecord): Promise<void> {
+    const key = record.marketId;
+    if (!this.prices.has(key)) {
+      this.prices.set(key, []);
+    }
+    this.prices.get(key)!.push(record);
+
+    if (this.prices.get(key)!.length > 10000) {
+      this.prices.get(key)!.shift();
+    }
+  }
+
+  async getPriceRecords(
+    marketId: string,
+    startTime?: number,
+    endTime?: number
+  ): Promise<OraclePriceRecord[]> {
+    const records = this.prices.get(marketId) || [];
+
+    return records.filter((r) => {
+      if (startTime && r.timestamp < startTime) return false;
+      if (endTime && r.timestamp > endTime) return false;
+      return true;
+    });
+  }
+
+  async deleteOldPrices(olderThan: number): Promise<number> {
+    let deleted = 0;
+
+    for (const [key, records] of this.prices.entries()) {
+      const filtered = records.filter((r) => r.timestamp >= olderThan);
+      deleted += records.length - filtered.length;
+      this.prices.set(key, filtered);
+    }
+
+    return deleted;
+  }
+
+  async saveAggregatedPrice(record: AggregatedPriceRecord): Promise<void> {
+    const key = record.marketId;
+    if (!this.aggregated.has(key)) {
+      this.aggregated.set(key, []);
+    }
+    this.aggregated.get(key)!.push(record);
+
+    if (this.aggregated.get(key)!.length > 1000) {
+      this.aggregated.get(key)!.shift();
+    }
+  }
+
+  async getAggregatedPrices(
+    marketId: string,
+    limit?: number
+  ): Promise<AggregatedPriceRecord[]> {
+    const records = this.aggregated.get(marketId) || [];
+    if (limit) {
+      return records.slice(-limit);
+    }
+    return records;
+  }
+
+  async saveProviderHealth(record: ProviderHealthRecord): Promise<void> {
+    const key = record.providerId;
+    if (!this.health.has(key)) {
+      this.health.set(key, []);
+    }
+    this.health.get(key)!.push(record);
+
+    if (this.health.get(key)!.length > 1000) {
+      this.health.get(key)!.shift();
+    }
+  }
+
+  async getProviderHealth(
+    providerId: string,
+    limit?: number
+  ): Promise<ProviderHealthRecord[]> {
+    const records = this.health.get(providerId) || [];
+    if (limit) {
+      return records.slice(-limit);
+    }
+    return records;
+  }
+
+  async getLatestProviderHealth(providerId: string): Promise<ProviderHealthRecord | null> {
+    const records = this.health.get(providerId) || [];
+    return records.length > 0 ? records[records.length - 1] : null;
+  }
+
+  async savePriceHistory(record: PriceHistoryRecord): Promise<void> {
+    const key = record.marketId;
+    if (!this.history.has(key)) {
+      this.history.set(key, []);
+    }
+    this.history.get(key)!.push(record);
+
+    if (this.history.get(key)!.length > 100) {
+      this.history.get(key)!.shift();
+    }
+  }
+
+  async getPriceHistory(
+    marketId: string,
+    startTime?: number,
+    endTime?: number
+  ): Promise<PriceHistoryRecord[]> {
+    const records = this.history.get(marketId) || [];
+
+    return records.filter((r) => {
+      if (startTime && r.endTime < startTime) return false;
+      if (endTime && r.startTime > endTime) return false;
+      return true;
+    });
+  }
+
+  async clearOldData(olderThan: number): Promise<void> {
+    for (const [key, records] of this.prices.entries()) {
+      this.prices.set(key, records.filter((r) => r.timestamp >= olderThan));
+    }
+
+    for (const [key, records] of this.aggregated.entries()) {
+      this.aggregated.set(key, records.filter((r) => r.timestamp >= olderThan));
+    }
+
+    for (const [key, records] of this.history.entries()) {
+      this.history.set(key, records.filter((r) => r.endTime >= olderThan));
+    }
+  }
+
+  async close(): Promise<void> {
+    this.prices.clear();
+    this.aggregated.clear();
+    this.health.clear();
+    this.history.clear();
+  }
+
+  getStats(): {
+    prices: number;
+    aggregated: number;
+    health: number;
+    history: number;
+  } {
+    let prices = 0;
+    let aggregated = 0;
+    let health = 0;
+    let history = 0;
+
+    for (const records of this.prices.values()) {
+      prices += records.length;
+    }
+    for (const records of this.aggregated.values()) {
+      aggregated += records.length;
+    }
+    for (const records of this.health.values()) {
+      health += records.length;
+    }
+    for (const records of this.history.values()) {
+      history += records.length;
+    }
+
+    return { prices, aggregated, health, history };
+  }
+}
