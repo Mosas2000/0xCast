@@ -1,0 +1,236 @@
+import { AMMPool } from '@/types/amm';
+
+export interface PoolConfig {
+  id: string;
+  tokenA: string;
+  tokenB: string;
+  initialReserveA: bigint;
+  initialReserveB: bigint;
+  fee?: number;
+  model: 'CONSTANT_PRODUCT' | 'STABLE_SWAP' | 'CONCENTRATED_LIQUIDITY';
+}
+
+export class AMMPoolFactory {
+  createPool(config: PoolConfig): AMMPool {
+    const fee = config.fee ?? 3000;
+
+    if (config.initialReserveA <= 0n || config.initialReserveB <= 0n) {
+      throw new Error('Initial reserves must be positive');
+    }
+
+    if (fee < 0 || fee > 100000) {
+      throw new Error('Fee must be between 0 and 100000 basis points');
+    }
+
+    const pool: AMMPool = {
+      id: config.id,
+      tokenA: config.tokenA,
+      tokenB: config.tokenB,
+      reserveA: config.initialReserveA,
+      reserveB: config.initialReserveB,
+      fee,
+      totalLiquidity: this.calculateInitialLiquidity(
+        config.initialReserveA,
+        config.initialReserveB
+      ),
+      model: config.model,
+    };
+
+    return pool;
+  }
+
+  createConstantProductPool(
+    id: string,
+    tokenA: string,
+    tokenB: string,
+    initialReserveA: bigint,
+    initialReserveB: bigint,
+    fee: number = 3000
+  ): AMMPool {
+    return this.createPool({
+      id,
+      tokenA,
+      tokenB,
+      initialReserveA,
+      initialReserveB,
+      fee,
+      model: 'CONSTANT_PRODUCT',
+    });
+  }
+
+  createStableSwapPool(
+    id: string,
+    tokenA: string,
+    tokenB: string,
+    initialReserveA: bigint,
+    initialReserveB: bigint,
+    fee: number = 1000
+  ): AMMPool {
+    return this.createPool({
+      id,
+      tokenA,
+      tokenB,
+      initialReserveA,
+      initialReserveB,
+      fee,
+      model: 'STABLE_SWAP',
+    });
+  }
+
+  createConcentratedLiquidityPool(
+    id: string,
+    tokenA: string,
+    tokenB: string,
+    initialReserveA: bigint,
+    initialReserveB: bigint,
+    fee: number = 500
+  ): AMMPool {
+    return this.createPool({
+      id,
+      tokenA,
+      tokenB,
+      initialReserveA,
+      initialReserveB,
+      fee,
+      model: 'CONCENTRATED_LIQUIDITY',
+    });
+  }
+
+  private calculateInitialLiquidity(reserveA: bigint, reserveB: bigint): bigint {
+    const product = reserveA * reserveB;
+    return BigInt(Math.floor(Math.sqrt(Number(product))));
+  }
+
+  updateReserves(pool: AMMPool, newReserveA: bigint, newReserveB: bigint): void {
+    if (newReserveA < 0n || newReserveB < 0n) {
+      throw new Error('Reserves cannot be negative');
+    }
+
+    pool.reserveA = newReserveA;
+    pool.reserveB = newReserveB;
+  }
+
+  updateFee(pool: AMMPool, newFee: number): void {
+    if (newFee < 0 || newFee > 100000) {
+      throw new Error('Fee must be between 0 and 100000 basis points');
+    }
+
+    pool.fee = newFee;
+  }
+
+  clonePool(pool: AMMPool, newId?: string): AMMPool {
+    return {
+      id: newId ?? pool.id,
+      tokenA: pool.tokenA,
+      tokenB: pool.tokenB,
+      reserveA: pool.reserveA,
+      reserveB: pool.reserveB,
+      fee: pool.fee,
+      totalLiquidity: pool.totalLiquidity,
+      model: pool.model,
+    };
+  }
+}
+
+export class PoolRegistry {
+  private pools: Map<string, AMMPool> = new Map();
+  private factory: AMMPoolFactory;
+
+  constructor() {
+    this.factory = new AMMPoolFactory();
+  }
+
+  registerPool(pool: AMMPool): void {
+    if (this.pools.has(pool.id)) {
+      throw new Error(`Pool with id ${pool.id} already exists`);
+    }
+
+    this.pools.set(pool.id, pool);
+  }
+
+  getPool(poolId: string): AMMPool | undefined {
+    return this.pools.get(poolId);
+  }
+
+  getAllPools(): AMMPool[] {
+    return Array.from(this.pools.values());
+  }
+
+  removePool(poolId: string): boolean {
+    return this.pools.delete(poolId);
+  }
+
+  getPoolsByToken(token: string): AMMPool[] {
+    return this.getAllPools().filter(
+      pool => pool.tokenA === token || pool.tokenB === token
+    );
+  }
+
+  getPoolsByTokenPair(tokenA: string, tokenB: string): AMMPool[] {
+    return this.getAllPools().filter(
+      pool =>
+        (pool.tokenA === tokenA && pool.tokenB === tokenB) ||
+        (pool.tokenA === tokenB && pool.tokenB === tokenA)
+    );
+  }
+
+  getPoolsByModel(model: string): AMMPool[] {
+    return this.getAllPools().filter(pool => pool.model === model);
+  }
+
+  updatePoolReserves(poolId: string, reserveA: bigint, reserveB: bigint): void {
+    const pool = this.getPool(poolId);
+    if (!pool) {
+      throw new Error(`Pool ${poolId} not found`);
+    }
+
+    this.factory.updateReserves(pool, reserveA, reserveB);
+  }
+
+  updatePoolFee(poolId: string, fee: number): void {
+    const pool = this.getPool(poolId);
+    if (!pool) {
+      throw new Error(`Pool ${poolId} not found`);
+    }
+
+    this.factory.updateFee(pool, fee);
+  }
+
+  getTotalLiquidity(): bigint {
+    return this.getAllPools().reduce((sum, pool) => sum + pool.totalLiquidity, 0n);
+  }
+
+  getTotalVolume(): { [key: string]: bigint } {
+    const volume: { [key: string]: bigint } = {};
+
+    for (const pool of this.getAllPools()) {
+      const key = `${pool.tokenA}-${pool.tokenB}`;
+      volume[key] = (volume[key] ?? 0n) + (pool.reserveA + pool.reserveB);
+    }
+
+    return volume;
+  }
+
+  getRegistryStats(): {
+    totalPools: number;
+    totalLiquidity: bigint;
+    poolsByModel: { [key: string]: number };
+    averageFee: number;
+  } {
+    const pools = this.getAllPools();
+    const models: { [key: string]: number } = {};
+    let totalFee = 0;
+
+    for (const pool of pools) {
+      models[pool.model] = (models[pool.model] ?? 0) + 1;
+      totalFee += pool.fee;
+    }
+
+    return {
+      totalPools: pools.length,
+      totalLiquidity: this.getTotalLiquidity(),
+      poolsByModel: models,
+      averageFee: pools.length > 0 ? totalFee / pools.length : 0,
+    };
+  }
+}
