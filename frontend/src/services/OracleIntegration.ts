@@ -1,0 +1,223 @@
+import { AMMPool, PricePoint } from '@/types/amm';
+
+export interface OraclePrice {
+  price: number;
+  timestamp: number;
+  source: string;
+  confidence: number;
+}
+
+export interface OraclePriceUpdate {
+  tokenPair: string;
+  prices: OraclePrice[];
+  consensusPrice: number;
+  aggregatedAt: number;
+}
+
+export class OracleIntegration {
+  private prices: Map<string, OraclePrice[]>;
+  private consensusPrices: Map<string, OraclePriceUpdate>;
+  private priceUpdateInterval: number;
+  private maxPriceDivergence: number;
+
+  constructor(priceUpdateIntervalMs: number = 60000, maxDivergencePercent: number = 5) {
+    this.prices = new Map();
+    this.consensusPrices = new Map();
+    this.priceUpdateInterval = priceUpdateIntervalMs;
+    this.maxPriceDivergence = maxDivergencePercent;
+  }
+
+  addOraclePrice(tokenPair: string, price: OraclePrice): void {
+    if (!this.prices.has(tokenPair)) {
+      this.prices.set(tokenPair, []);
+    }
+
+    const priceList = this.prices.get(tokenPair);
+    if (priceList) {
+      priceList.push(price);
+
+      const maxAge = Date.now() - this.priceUpdateInterval * 2;
+      const filtered = priceList.filter(p => p.timestamp > maxAge);
+      this.prices.set(tokenPair, filtered);
+    }
+  }
+
+  getConsensusPrice(tokenPair: string): number | null {
+    const prices = this.prices.get(tokenPair);
+    if (!prices || prices.length === 0) return null;
+
+    const validPrices = prices
+      .filter(p => this.isPriceValid(p))
+      .map(p => ({ price: p.price, confidence: p.confidence }));
+
+    if (validPrices.length === 0) return null;
+
+    const totalConfidence = validPrices.reduce((sum, p) => sum + p.confidence, 0);
+    const weightedPrice = validPrices.reduce(
+      (sum, p) => sum + p.price * (p.confidence / totalConfidence),
+      0
+    );
+
+    return weightedPrice;
+  }
+
+  private isPriceValid(price: OraclePrice): boolean {
+    const age = Date.now() - price.timestamp;
+    return age <= this.priceUpdateInterval && price.confidence > 0.5;
+  }
+
+  aggregatePrices(tokenPair: string): OraclePriceUpdate | null {
+    const prices = this.prices.get(tokenPair);
+    if (!prices || prices.length === 0) return null;
+
+    const consensusPrice = this.getConsensusPrice(tokenPair);
+    if (consensusPrice === null) return null;
+
+    const update: OraclePriceUpdate = {
+      tokenPair,
+      prices: prices.filter(p => this.isPriceValid(p)),
+      consensusPrice,
+      aggregatedAt: Date.now(),
+    };
+
+    this.consensusPrices.set(tokenPair, update);
+    return update;
+  }
+
+  validatePriceConsistency(tokenPair: string): {
+    consistent: boolean;
+    divergence: number;
+  } {
+    const prices = this.prices.get(tokenPair);
+    if (!prices || prices.length < 2) {
+      return { consistent: true, divergence: 0 };
+    }
+
+    const validPrices = prices.filter(p => this.isPriceValid(p));
+    if (validPrices.length < 2) {
+      return { consistent: true, divergence: 0 };
+    }
+
+    const minPrice = Math.min(...validPrices.map(p => p.price));
+    const maxPrice = Math.max(...validPrices.map(p => p.price));
+    const avgPrice = validPrices.reduce((sum, p) => sum + p.price, 0) / validPrices.length;
+
+    const divergence = ((maxPrice - minPrice) / avgPrice) * 100;
+    const consistent = divergence <= this.maxPriceDivergence;
+
+    return {
+      consistent,
+      divergence,
+    };
+  }
+
+  updatePoolWithOraclePrice(pool: AMMPool, tokenPair: string): boolean {
+    const consensusPrice = this.getConsensusPrice(tokenPair);
+    if (consensusPrice === null) return false;
+
+    const targetPrice = consensusPrice;
+    const currentPrice = Number(pool.reserveB) / Number(pool.reserveA);
+
+    if (Math.abs((targetPrice - currentPrice) / currentPrice) > 0.1) {
+      return false;
+    }
+
+    return true;
+  }
+
+  getPriceHistory(tokenPair: string, limitSize: number = 100): OraclePrice[] {
+    const prices = this.prices.get(tokenPair) || [];
+    return prices.slice(-limitSize);
+  }
+
+  getPriceVolatility(tokenPair: string): number {
+    const prices = this.prices.get(tokenPair) || [];
+    if (prices.length < 2) return 0;
+
+    const validPrices = prices
+      .filter(p => this.isPriceValid(p))
+      .map(p => p.price);
+
+    if (validPrices.length < 2) return 0;
+
+    const mean = validPrices.reduce((a, b) => a + b, 0) / validPrices.length;
+    const variance =
+      validPrices.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / validPrices.length;
+    const stdDev = Math.sqrt(variance);
+
+    return (stdDev / mean) * 100;
+  }
+
+  clearPrices(tokenPair?: string): void {
+    if (tokenPair) {
+      this.prices.delete(tokenPair);
+      this.consensusPrices.delete(tokenPair);
+    } else {
+      this.prices.clear();
+      this.consensusPrices.clear();
+    }
+  }
+
+  setMaxPriceDivergence(divergencePercent: number): void {
+    if (divergencePercent <= 0 || divergencePercent > 100) {
+      throw new Error('Max price divergence must be between 0 and 100');
+    }
+    this.maxPriceDivergence = divergencePercent;
+  }
+
+  getOracleStats(): {
+    totalTokenPairs: number;
+    pricesPerTokenPair: { [key: string]: number };
+    lastUpdate: number;
+  } {
+    const stats = {
+      totalTokenPairs: this.prices.size,
+      pricesPerTokenPair: {} as { [key: string]: number },
+      lastUpdate: 0,
+    };
+
+    for (const [tokenPair, prices] of this.prices.entries()) {
+      stats.pricesPerTokenPair[tokenPair] = prices.length;
+      if (prices.length > 0) {
+        const lastTimestamp = Math.max(...prices.map(p => p.timestamp));
+        stats.lastUpdate = Math.max(stats.lastUpdate, lastTimestamp);
+      }
+    }
+
+    return stats;
+  }
+}
+
+export class PriceAggregator {
+  aggregateMultipleSources(prices: OraclePrice[]): number {
+    if (prices.length === 0) return 0;
+
+    const sorted = [...prices].sort((a, b) => b.confidence - a.confidence);
+    const topPrices = sorted.slice(0, Math.ceil(sorted.length * 0.8));
+
+    if (topPrices.length === 0) return 0;
+
+    const sum = topPrices.reduce((acc, p) => acc + p.price, 0);
+    return sum / topPrices.length;
+  }
+
+  getMedianPrice(prices: OraclePrice[]): number {
+    if (prices.length === 0) return 0;
+
+    const sorted = [...prices]
+      .sort((a, b) => a.price - b.price)
+      .map(p => p.price);
+
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  }
+
+  getWeightedPrice(prices: OraclePrice[]): number {
+    if (prices.length === 0) return 0;
+
+    const totalConfidence = prices.reduce((sum, p) => sum + p.confidence, 0);
+    if (totalConfidence === 0) return 0;
+
+    return prices.reduce((sum, p) => sum + p.price * (p.confidence / totalConfidence), 0);
+  }
+}

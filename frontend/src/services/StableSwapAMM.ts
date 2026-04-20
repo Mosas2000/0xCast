@@ -1,0 +1,182 @@
+import { AMMPool, SwapQuote, AMMStats } from '@/types/amm';
+
+export class StableSwapAMM {
+  private pool: AMMPool;
+  private stats: AMMStats;
+  private amplificationFactor: number;
+
+  constructor(pool: AMMPool, amplificationFactor: number = 1000) {
+    this.pool = pool;
+    this.amplificationFactor = amplificationFactor;
+    this.stats = {
+      volumeTraded: 0n,
+      feesCollected: 0n,
+      liquidityUtilization: 0,
+      slippageAverage: 0,
+      priceImpactAverage: 0,
+    };
+  }
+
+  private calculateInvariant(reserveA: bigint, reserveB: bigint): bigint {
+    const sum = reserveA + reserveB;
+    const product = reserveA * reserveB;
+
+    const amp = BigInt(this.amplificationFactor);
+    const n = 2n;
+
+    const invariant = (amp * n * (reserveA + reserveB) +
+      product) / (amp * n * n - product / (sum * sum) + 1n);
+
+    return invariant;
+  }
+
+  getPrice(): number {
+    if (this.pool.reserveB === 0n) return 0;
+    return Number(this.pool.reserveA) / Number(this.pool.reserveB);
+  }
+
+  quoteSwapAtoB(amountIn: bigint): SwapQuote {
+    const feeAmount = (amountIn * BigInt(this.pool.fee)) / 100000n;
+    const amountInAfterFee = amountIn - feeAmount;
+
+    const invariant = this.calculateInvariant(this.pool.reserveA, this.pool.reserveB);
+    const newReserveA = this.pool.reserveA + amountInAfterFee;
+
+    let newReserveB = this.pool.reserveB;
+    for (let i = 0; i < 10; i++) {
+      const ampSum = BigInt(this.amplificationFactor) * 4n * (newReserveA + newReserveB);
+      const ampProduct = BigInt(this.amplificationFactor) * 4n * newReserveA * newReserveB;
+
+      const nextReserveB = (ampSum * newReserveB + ampProduct / (newReserveA + 1n) - invariant) /
+        (ampSum - ampProduct / ((newReserveA + 1n) * (newReserveA + 1n)));
+
+      if (nextReserveB >= newReserveB * 999n / 1000n &&
+        nextReserveB <= newReserveB * 1001n / 1000n) {
+        break;
+      }
+      newReserveB = nextReserveB;
+    }
+
+    const amountOut = this.pool.reserveB - newReserveB;
+    const executionPrice = Number(amountIn) / Number(amountOut);
+    const spotPrice = this.getPrice();
+    const priceImpact = Math.abs((executionPrice - spotPrice) / spotPrice);
+    const slippage = priceImpact * 100;
+
+    return {
+      amountIn,
+      amountOut,
+      priceImpact,
+      executionPrice,
+      slippage,
+      fee: feeAmount,
+    };
+  }
+
+  quoteSwapBtoA(amountIn: bigint): SwapQuote {
+    const feeAmount = (amountIn * BigInt(this.pool.fee)) / 100000n;
+    const amountInAfterFee = amountIn - feeAmount;
+
+    const invariant = this.calculateInvariant(this.pool.reserveA, this.pool.reserveB);
+    const newReserveB = this.pool.reserveB + amountInAfterFee;
+
+    let newReserveA = this.pool.reserveA;
+    for (let i = 0; i < 10; i++) {
+      const ampSum = BigInt(this.amplificationFactor) * 4n * (newReserveA + newReserveB);
+      const ampProduct = BigInt(this.amplificationFactor) * 4n * newReserveA * newReserveB;
+
+      const nextReserveA = (ampSum * newReserveA + ampProduct / (newReserveB + 1n) - invariant) /
+        (ampSum - ampProduct / ((newReserveB + 1n) * (newReserveB + 1n)));
+
+      if (nextReserveA >= newReserveA * 999n / 1000n &&
+        nextReserveA <= newReserveA * 1001n / 1000n) {
+        break;
+      }
+      newReserveA = nextReserveA;
+    }
+
+    const amountOut = this.pool.reserveA - newReserveA;
+    const executionPrice = Number(amountIn) / Number(amountOut);
+    const spotPrice = 1 / this.getPrice();
+    const priceImpact = Math.abs((executionPrice - spotPrice) / spotPrice);
+    const slippage = priceImpact * 100;
+
+    return {
+      amountIn,
+      amountOut,
+      priceImpact,
+      executionPrice,
+      slippage,
+      fee: feeAmount,
+    };
+  }
+
+  executeSwapAtoB(amountIn: bigint): bigint {
+    const quote = this.quoteSwapAtoB(amountIn);
+
+    this.pool.reserveA += amountIn - quote.fee;
+    this.pool.reserveB -= quote.amountOut;
+
+    this.stats.volumeTraded += amountIn;
+    this.stats.feesCollected += quote.fee;
+
+    return quote.amountOut;
+  }
+
+  executeSwapBtoA(amountIn: bigint): bigint {
+    const quote = this.quoteSwapBtoA(amountIn);
+
+    this.pool.reserveB += amountIn - quote.fee;
+    this.pool.reserveA -= quote.amountOut;
+
+    this.stats.volumeTraded += amountIn;
+    this.stats.feesCollected += quote.fee;
+
+    return quote.amountOut;
+  }
+
+  addLiquidity(amountA: bigint, amountB: bigint): bigint {
+    const balanceA = this.pool.reserveA;
+    const balanceB = this.pool.reserveB;
+
+    const fairPriceA = balanceB / balanceA;
+    const fairPriceB = balanceA / balanceB;
+
+    const liquidityA = (amountA * fairPriceA * this.pool.totalLiquidity) / (balanceA * fairPriceA + balanceB);
+    const liquidityB = (amountB * fairPriceB * this.pool.totalLiquidity) / (balanceA * fairPriceA + balanceB);
+
+    const liquidity = liquidityA < liquidityB ? liquidityA : liquidityB;
+
+    this.pool.reserveA += amountA;
+    this.pool.reserveB += amountB;
+    this.pool.totalLiquidity += liquidity;
+
+    return liquidity;
+  }
+
+  removeLiquidity(liquidityTokens: bigint): { amountA: bigint; amountB: bigint } {
+    const amountA = (liquidityTokens * this.pool.reserveA) / this.pool.totalLiquidity;
+    const amountB = (liquidityTokens * this.pool.reserveB) / this.pool.totalLiquidity;
+
+    this.pool.reserveA -= amountA;
+    this.pool.reserveB -= amountB;
+    this.pool.totalLiquidity -= liquidityTokens;
+
+    return { amountA, amountB };
+  }
+
+  getStats(): AMMStats {
+    this.stats.liquidityUtilization = this.calculateLiquidityUtilization();
+    return { ...this.stats };
+  }
+
+  private calculateLiquidityUtilization(): number {
+    const maxPossibleVolume = (this.pool.reserveA + this.pool.reserveB) / 2n;
+    if (maxPossibleVolume === 0n) return 0;
+    return Number(this.stats.volumeTraded) / Number(maxPossibleVolume);
+  }
+
+  setAmplificationFactor(newAmplification: number): void {
+    this.amplificationFactor = newAmplification;
+  }
+}

@@ -1,0 +1,185 @@
+import { AMMPool } from '@/types/amm';
+import { AMMRouter } from '@/services/AMMRouter';
+import { AMMPoolFactory } from '@/services/AMMPoolFactory';
+import { OracleIntegration } from '@/services/OracleIntegration';
+import { TradingAnalytics } from '@/services/TradingAnalytics';
+import { PriceMonitor } from '@/services/PriceMonitor';
+
+export interface AMMConfig {
+  pools?: AMMPool[];
+  oracleConfig?: {
+    maxPriceDivergence: number;
+    priceUpdateIntervalMs: number;
+  };
+  analyticsConfig?: {
+    enableTracking: boolean;
+    storageLimit: number;
+  };
+  priceMonitorConfig?: {
+    maxHistorySize: number;
+  };
+}
+
+export class AMMInitializer {
+  private router: AMMRouter;
+  private factory: AMMPoolFactory;
+  private oracle: OracleIntegration | null;
+  private analytics: TradingAnalytics | null;
+  private priceMonitor: PriceMonitor | null;
+
+  constructor() {
+    this.router = new AMMRouter();
+    this.factory = new AMMPoolFactory();
+    this.oracle = null;
+    this.analytics = null;
+    this.priceMonitor = null;
+  }
+
+  initialize(config: AMMConfig): void {
+    this.initializeOracle(config.oracleConfig);
+    this.initializeAnalytics(config.analyticsConfig);
+    this.initializePriceMonitor(config.priceMonitorConfig);
+    this.initializePools(config.pools);
+  }
+
+  private initializeOracle(config?: { maxPriceDivergence: number; priceUpdateIntervalMs: number }): void {
+    if (!config) return;
+
+    this.oracle = new OracleIntegration(
+      config.priceUpdateIntervalMs,
+      config.maxPriceDivergence
+    );
+  }
+
+  private initializeAnalytics(config?: { enableTracking: boolean; storageLimit: number }): void {
+    if (!config || !config.enableTracking) return;
+
+    this.analytics = new TradingAnalytics();
+  }
+
+  private initializePriceMonitor(config?: { maxHistorySize: number }): void {
+    const maxSize = config?.maxHistorySize ?? 1000;
+    this.priceMonitor = new PriceMonitor(maxSize);
+  }
+
+  private initializePools(pools?: AMMPool[]): void {
+    if (!pools || pools.length === 0) return;
+
+    for (const pool of pools) {
+      const modelType = this.mapModelToType(pool.model);
+      this.router.addPool(pool, modelType);
+    }
+  }
+
+  private mapModelToType(
+    model: string
+  ): 'constant-product' | 'stable-swap' | 'concentrated-liquidity' {
+    switch (model) {
+      case 'CONSTANT_PRODUCT':
+        return 'constant-product';
+      case 'STABLE_SWAP':
+        return 'stable-swap';
+      case 'CONCENTRATED_LIQUIDITY':
+        return 'concentrated-liquidity';
+      default:
+        return 'constant-product';
+    }
+  }
+
+  getRouter(): AMMRouter {
+    return this.router;
+  }
+
+  getFactory(): AMMPoolFactory {
+    return this.factory;
+  }
+
+  getOracle(): OracleIntegration | null {
+    return this.oracle;
+  }
+
+  getAnalytics(): TradingAnalytics | null {
+    return this.analytics;
+  }
+
+  getPriceMonitor(): PriceMonitor | null {
+    return this.priceMonitor;
+  }
+
+  createPool(
+    id: string,
+    tokenA: string,
+    tokenB: string,
+    reserveA: bigint,
+    reserveB: bigint,
+    fee: number,
+    model: 'CONSTANT_PRODUCT' | 'STABLE_SWAP' | 'CONCENTRATED_LIQUIDITY'
+  ): AMMPool {
+    let pool: AMMPool;
+
+    switch (model) {
+      case 'CONSTANT_PRODUCT':
+        pool = this.factory.createConstantProductPool(
+          id,
+          tokenA,
+          tokenB,
+          reserveA,
+          reserveB,
+          fee
+        );
+        break;
+      case 'STABLE_SWAP':
+        pool = this.factory.createStableSwapPool(
+          id,
+          tokenA,
+          tokenB,
+          reserveA,
+          reserveB,
+          fee
+        );
+        break;
+      case 'CONCENTRATED_LIQUIDITY':
+        pool = this.factory.createConcentratedLiquidityPool(
+          id,
+          tokenA,
+          tokenB,
+          reserveA,
+          reserveB,
+          fee
+        );
+        break;
+    }
+
+    const modelType = this.mapModelToType(model);
+    this.router.addPool(pool, modelType);
+
+    return pool;
+  }
+
+  shutdown(): void {
+    this.router = new AMMRouter();
+    this.oracle = null;
+    this.analytics = null;
+    this.priceMonitor = null;
+  }
+}
+
+export const defaultAMMConfig: AMMConfig = {
+  oracleConfig: {
+    maxPriceDivergence: 5,
+    priceUpdateIntervalMs: 60000,
+  },
+  analyticsConfig: {
+    enableTracking: true,
+    storageLimit: 10000,
+  },
+  priceMonitorConfig: {
+    maxHistorySize: 1000,
+  },
+};
+
+export function initializeAMM(config: AMMConfig = defaultAMMConfig): AMMInitializer {
+  const initializer = new AMMInitializer();
+  initializer.initialize(config);
+  return initializer;
+}

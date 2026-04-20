@@ -1,0 +1,207 @@
+import { AccessControlService } from '@/services/AccessControlService';
+import { RoleHierarchyManager } from '@/services/RoleHierarchyManager';
+import { PermissionMatrixManager } from '@/services/PermissionMatrixManager';
+import { RoleAssignmentService } from '@/services/RoleAssignmentService';
+import { AuditLogger } from '@/services/AuditLogger';
+import { RBACAPIService } from '@/services/RBACAPIService';
+import { Permission, RoleType } from '@/types/rbac';
+
+export interface RBACServiceContainer {
+  accessControl: AccessControlService;
+  roleHierarchy: RoleHierarchyManager;
+  permissionMatrix: PermissionMatrixManager;
+  roleAssignment: RoleAssignmentService;
+  auditLogger: AuditLogger;
+  api: RBACAPIService;
+}
+
+export function initializeRBAC(): RBACServiceContainer {
+  const roleHierarchy = new RoleHierarchyManager();
+  const permissionMatrix = new PermissionMatrixManager();
+  const auditLogger = new AuditLogger();
+  const accessControl = new AccessControlService(roleHierarchy, permissionMatrix, auditLogger);
+  const roleAssignment = new RoleAssignmentService(accessControl, auditLogger);
+
+  const api = new RBACAPIService(
+    accessControl,
+    roleAssignment,
+    auditLogger,
+    roleHierarchy,
+    permissionMatrix
+  );
+
+  return {
+    accessControl,
+    roleHierarchy,
+    permissionMatrix,
+    roleAssignment,
+    auditLogger,
+    api,
+  };
+}
+
+export function initializeDefaultPermissions(permissionMatrix: PermissionMatrixManager): void {
+  const rolePermissions = {
+    [RoleType.SUPER_ADMIN]: Object.values(Permission),
+    [RoleType.ADMIN]: [
+      Permission.MANAGE_USERS,
+      Permission.MANAGE_ROLES,
+      Permission.MANAGE_PERMISSIONS,
+      Permission.VIEW_AUDIT_LOGS,
+      Permission.MANAGE_SYSTEM_SETTINGS,
+      Permission.CREATE_MARKET,
+      Permission.MODERATE_CONTENT,
+      Permission.MANAGE_LIQUIDITY,
+      Permission.TRADE,
+      Permission.VIEW_ANALYTICS,
+    ],
+    [RoleType.MODERATOR]: [
+      Permission.MODERATE_CONTENT,
+      Permission.VIEW_AUDIT_LOGS,
+      Permission.VIEW_ANALYTICS,
+    ],
+    [RoleType.ANALYST]: [
+      Permission.VIEW_ANALYTICS,
+      Permission.CREATE_MARKET,
+    ],
+    [RoleType.TRADER]: [
+      Permission.TRADE,
+      Permission.CREATE_MARKET,
+      Permission.VIEW_ANALYTICS,
+    ],
+    [RoleType.USER]: [
+      Permission.TRADE,
+      Permission.CREATE_MARKET,
+    ],
+    [RoleType.GUEST]: [
+      Permission.VIEW_ANALYTICS,
+    ],
+  };
+
+  Object.entries(rolePermissions).forEach(([roleId, permissions]) => {
+    permissions.forEach(permission => {
+      permissionMatrix.grantPermission(roleId, permission);
+    });
+  });
+}
+
+export function registerDefaultUsers(
+  accessControl: AccessControlService,
+  userData?: { userId: string; role: string }[]
+): void {
+  const defaultUsers = userData || [
+    { userId: 'system-admin', role: RoleType.SUPER_ADMIN },
+    { userId: 'admin', role: RoleType.ADMIN },
+    { userId: 'moderator', role: RoleType.MODERATOR },
+  ];
+
+  defaultUsers.forEach(user => {
+    accessControl.registerUser(user.userId, user.role);
+  });
+}
+
+export function setupRBACMiddleware(container: RBACServiceContainer) {
+  return {
+    checkPermission: (userId: string, permission: Permission) => {
+      return container.accessControl.checkPermission(userId, permission);
+    },
+    checkRole: (userId: string, requiredRoles: string[]) => {
+      const userRole = container.accessControl.getRoleForUser(userId);
+      return userRole ? requiredRoles.includes(userRole.id) : false;
+    },
+    checkResourceAccess: (userId: string, resourceId: string, accessType: 'read' | 'write' | 'delete' | 'admin') => {
+      return container.accessControl.checkResourceAccess(userId, resourceId, accessType);
+    },
+    logAction: (userId: string, action: string, resource: string, resourceId: string, status: string) => {
+      container.auditLogger.logAction(userId, action, resource, resourceId, status);
+    },
+  };
+}
+
+export function setupInitialRoles(
+  roleAssignment: RoleAssignmentService,
+  accessControl: AccessControlService,
+  systemAdminId: string
+): void {
+  const usersToSetup = [
+    { userId: 'content-moderator-1', role: RoleType.MODERATOR },
+    { userId: 'analyst-1', role: RoleType.ANALYST },
+    { userId: 'trader-1', role: RoleType.TRADER },
+  ];
+
+  usersToSetup.forEach(user => {
+    try {
+      accessControl.registerUser(user.userId, RoleType.USER);
+      roleAssignment.assignRole(
+        user.userId,
+        user.role,
+        systemAdminId,
+        `Initial ${user.role} assignment`
+      );
+    } catch (error) {
+      console.error(`Failed to setup user ${user.userId}:`, error);
+    }
+  });
+}
+
+export function validateRBACSetup(container: RBACServiceContainer): {
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+} {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  const roleHierarchy = container.roleHierarchy.getRoleHierarchy();
+  if (roleHierarchy.size !== 7) {
+    errors.push(`Expected 7 roles, found ${roleHierarchy.size}`);
+  }
+
+  const allLogs = container.auditLogger.getLogs();
+  if (allLogs.length === 0) {
+    warnings.push('No audit logs recorded - audit logging may not be initialized');
+  }
+
+  const allRoles = Array.from(roleHierarchy.values());
+  const rolesWithoutPermissions = allRoles.filter(role => {
+    const permissions = container.permissionMatrix.getRolePermissions(role.id);
+    return permissions.length === 0;
+  });
+
+  if (rolesWithoutPermissions.length > 0) {
+    warnings.push(
+      `${rolesWithoutPermissions.length} roles have no permissions assigned: ${
+        rolesWithoutPermissions.map(r => r.name).join(', ')
+      }`
+    );
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings,
+  };
+}
+
+export function getSystemHealth(container: RBACServiceContainer): {
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  components: {
+    [key: string]: boolean;
+  };
+} {
+  const components = {
+    roleHierarchy: container.roleHierarchy.getRoleHierarchy().size === 7,
+    permissionMatrix: Object.values(Permission).length > 0,
+    accessControl: true,
+    roleAssignment: true,
+    auditLogger: container.auditLogger.getLogs().length >= 0,
+  };
+
+  const allHealthy = Object.values(components).every(v => v);
+  const status = allHealthy ? 'healthy' : 'degraded';
+
+  return {
+    status,
+    components,
+  };
+}
