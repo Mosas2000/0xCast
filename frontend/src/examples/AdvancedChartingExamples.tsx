@@ -1,0 +1,385 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { AdvancedChart } from '@/components/AdvancedChart';
+import { PriceOverlay } from '@/components/PriceOverlay';
+import { TimeframeSelector } from '@/components/TimeframeSelector';
+import { IndicatorPanel } from '@/components/IndicatorPanel';
+import { DrawingToolsPanel } from '@/components/DrawingToolsPanel';
+import { MeasurementToolbar } from '@/components/MeasurementTools';
+import { ResponsiveChartWrapper, MobileChartControls } from '@/components/ResponsiveChart';
+import { TechnicalIndicatorCalculator } from '@/services/TechnicalIndicatorCalculator';
+import { RealTimeDataService } from '@/services/RealTimeDataService';
+import { PollingDataService } from '@/services/RealTimeDataService';
+import { ChartExportService } from '@/services/ChartExportService';
+import { PatternRecognitionService } from '@/services/PatternRecognitionService';
+import { Candlestick } from '@/types/charting';
+
+export function AdvancedChartingExample() {
+  const [candles, setCandles] = useState<Candlestick[]>([]);
+  const [timeframe, setTimeframe] = useState('1h');
+  const [selectedIndicators, setSelectedIndicators] = useState(['SMA', 'RSI']);
+  const [isRealTime, setIsRealTime] = useState(false);
+  const [patterns, setPatterns] = useState([]);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const indicatorCalculator = useRef(new TechnicalIndicatorCalculator());
+  const patternService = useRef(new PatternRecognitionService());
+  const exportService = useRef(new ChartExportService());
+
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  useEffect(() => {
+    if (isRealTime) {
+      setupRealTimeData();
+    } else {
+      setupPollingData();
+    }
+  }, [isRealTime]);
+
+  useEffect(() => {
+    if (candles.length > 0) {
+      const detectedPatterns = patternService.current.detectPatterns(candles);
+      setPatterns(detectedPatterns);
+    }
+  }, [candles]);
+
+  const loadInitialData = async () => {
+    try {
+      const data = await fetch(`/api/market/candles?timeframe=${timeframe}`);
+      const json = await data.json();
+      setCandles(json.candles);
+    } catch (error) {
+      console.error('Failed to load candles:', error);
+    }
+  };
+
+  const setupRealTimeData = () => {
+    const rtService = new RealTimeDataService({
+      url: 'wss://api.example.com/market',
+      heartbeatInterval: 30000,
+    });
+
+    rtService.connect().then(() => {
+      rtService.subscribe('candle_update', (candle: Candlestick) => {
+        setCandles(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = candle;
+          return updated;
+        });
+      });
+
+      rtService.subscribe('candle_new', (candle: Candlestick) => {
+        setCandles(prev => [...prev, candle]);
+      });
+    });
+  };
+
+  const setupPollingData = () => {
+    const pollService = new PollingDataService(1000);
+
+    pollService.startPolling(
+      async () => {
+        const response = await fetch(
+          `/api/market/candles?timeframe=${timeframe}`
+        );
+        return await response.json();
+      },
+      2000
+    );
+
+    pollService.subscribe('update', (data: Candlestick[]) => {
+      setCandles(data);
+    });
+  };
+
+  const handleIndicatorAdd = (name: string) => {
+    if (!selectedIndicators.includes(name)) {
+      setSelectedIndicators([...selectedIndicators, name]);
+    }
+  };
+
+  const handleIndicatorRemove = (name: string) => {
+    setSelectedIndicators(selectedIndicators.filter(ind => ind !== name));
+  };
+
+  const handleExport = async () => {
+    if (!canvasRef.current) return;
+
+    try {
+      await exportService.current.exportAsImage(canvasRef.current, {
+        format: 'png',
+        filename: `chart-${timeframe}-${Date.now()}`,
+        resolution: 'high',
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+    }
+  };
+
+  const handleExportData = async () => {
+    try {
+      const indicatorsData = selectedIndicators.map(name => {
+        const calculator = new TechnicalIndicatorCalculator();
+        return {
+          name,
+          value: 0, // Calculate actual value
+        };
+      });
+
+      await exportService.current.exportAsData(
+        {
+          candles,
+          indicators: indicatorsData,
+          metadata: {
+            exportedAt: new Date().toISOString(),
+            timeframe,
+            candleCount: candles.length,
+            priceRange: {
+              min: Math.min(...candles.map(c => c.low)),
+              max: Math.max(...candles.map(c => c.high)),
+            },
+          },
+        },
+        {
+          format: 'csv',
+          filename: `chart-data-${timeframe}`,
+        }
+      );
+    } catch (error) {
+      console.error('Data export failed:', error);
+    }
+  };
+
+  const indicatorList = selectedIndicators.map(name => ({
+    name,
+    value: 0, // Calculate from candles
+    signal: 'neutral',
+  }));
+
+  return (
+    <ResponsiveChartWrapper onBreakpointChange={handleBreakpoint}>
+      <div className="charting-container">
+        <div className="chart-header">
+          <h1>Market Analysis</h1>
+
+          <div className="controls">
+            <TimeframeSelector
+              selected={timeframe}
+              onSelect={setTimeframe}
+            />
+
+            <button
+              className={`toggle-btn ${isRealTime ? 'active' : ''}`}
+              onClick={() => setIsRealTime(!isRealTime)}
+            >
+              {isRealTime ? 'Live' : 'Polling'}
+            </button>
+
+            <button className="export-btn" onClick={handleExport}>
+              Export Chart
+            </button>
+
+            <button className="export-btn" onClick={handleExportData}>
+              Export Data
+            </button>
+          </div>
+        </div>
+
+        <div className="chart-main">
+          <div className="chart-area">
+            <AdvancedChart
+              ref={canvasRef}
+              candles={candles}
+              width={1000}
+              height={600}
+              timeframe={timeframe}
+              enableIndicators={true}
+              enableDrawingTools={true}
+              realTimeUpdates={isRealTime}
+            />
+          </div>
+
+          <div className="chart-sidebar">
+            <IndicatorPanel
+              indicators={indicatorList}
+              onAddIndicator={handleIndicatorAdd}
+              onRemoveIndicator={handleIndicatorRemove}
+            />
+
+            <div className="patterns-section">
+              <h3>Detected Patterns</h3>
+              {patterns.length === 0 ? (
+                <p>No patterns detected</p>
+              ) : (
+                patterns.map(pattern => (
+                  <div key={pattern.id} className="pattern-item">
+                    <span className="pattern-name">{pattern.name}</span>
+                    <span className="pattern-confidence">
+                      {(pattern.confidence * 100).toFixed(0)}%
+                    </span>
+                    <span className={`pattern-type ${pattern.type}`}>
+                      {pattern.type}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="chart-footer">
+          <MeasurementToolbar
+            onToggleCrosshair={() => {}}
+            onToggleMeasurement={() => {}}
+            isCrosshairEnabled={false}
+            isMeasurementEnabled={false}
+          />
+
+          <DrawingToolsPanel
+            tools={[]}
+            onStartDrawing={() => {}}
+            onRemoveTool={() => {}}
+            onToggleToolVisibility={() => {}}
+            onUpdateToolColor={() => {}}
+            onClearAll={() => {}}
+          />
+        </div>
+      </div>
+    </ResponsiveChartWrapper>
+  );
+}
+
+function handleBreakpoint(breakpoint: string) {
+  console.log('Breakpoint changed to:', breakpoint);
+}
+
+export function SimpleChartExample() {
+  const [candles, setCandles] = useState<Candlestick[]>([]);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const response = await fetch('/api/market/candles?timeframe=1h&limit=100');
+      const data = await response.json();
+      setCandles(data.candles);
+    } catch (error) {
+      console.error('Failed to load data:', error);
+    }
+  };
+
+  if (candles.length === 0) {
+    return <div>Loading chart...</div>;
+  }
+
+  return (
+    <AdvancedChart
+      candles={candles}
+      width={800}
+      height={600}
+      timeframe="1h"
+      enableIndicators={true}
+      enableDrawingTools={true}
+    />
+  );
+}
+
+export function MobileChartExample() {
+  const [candles, setCandles] = useState<Candlestick[]>([]);
+  const [zoom, setZoom] = useState(1.0);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const response = await fetch('/api/market/candles?timeframe=5m&limit=50');
+      const data = await response.json();
+      setCandles(data.candles);
+    } catch (error) {
+      console.error('Failed to load data:', error);
+    }
+  };
+
+  return (
+    <ResponsiveChartWrapper>
+      <div className="mobile-chart-wrapper">
+        <AdvancedChart
+          candles={candles}
+          width={320}
+          height={400}
+          timeframe="5m"
+          enableIndicators={true}
+        />
+
+        <MobileChartControls
+          currentZoom={zoom}
+          onZoomIn={() => setZoom(z => z * 1.2)}
+          onZoomOut={() => setZoom(z => z / 1.2)}
+          onResetZoom={() => setZoom(1.0)}
+        />
+      </div>
+    </ResponsiveChartWrapper>
+  );
+}
+
+export function RealtimeChartExample() {
+  const [candles, setCandles] = useState<Candlestick[]>([]);
+  const rtServiceRef = useRef<RealTimeDataService | null>(null);
+
+  useEffect(() => {
+    setupRealTimeConnection();
+
+    return () => {
+      rtServiceRef.current?.disconnect();
+    };
+  }, []);
+
+  const setupRealTimeConnection = async () => {
+    const service = new RealTimeDataService({
+      url: 'wss://api.example.com/market',
+      reconnectAttempts: 5,
+      reconnectDelay: 3000,
+      heartbeatInterval: 30000,
+    });
+
+    rtServiceRef.current = service;
+
+    try {
+      await service.connect();
+
+      service.subscribe('candle_new', (candle: Candlestick) => {
+        setCandles(prev => [...prev, candle]);
+      });
+
+      service.subscribe('candle_update', (candle: Candlestick) => {
+        setCandles(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = candle;
+          return updated;
+        });
+      });
+
+      service.subscribe('error', (error: Error) => {
+        console.error('Stream error:', error);
+      });
+    } catch (error) {
+      console.error('Connection failed:', error);
+    }
+  };
+
+  return (
+    <AdvancedChart
+      candles={candles}
+      width={800}
+      height={600}
+      timeframe="1m"
+      enableIndicators={true}
+      realTimeUpdates={true}
+    />
+  );
+}
