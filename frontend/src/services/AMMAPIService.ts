@@ -1,0 +1,302 @@
+import { AMMPool, SwapQuote } from '@/types/amm';
+import { AMMRouter } from '@/services/AMMRouter';
+
+export interface SwapRequest {
+  poolId: string;
+  amountIn: bigint;
+  minAmountOut: bigint;
+  slippage: number;
+  tokenAtoB: boolean;
+}
+
+export interface LiquidityRequest {
+  poolId: string;
+  amountA: bigint;
+  amountB: bigint;
+  operation: 'add' | 'remove';
+}
+
+export interface SwapResponse {
+  success: boolean;
+  amountOut: bigint;
+  fee: bigint;
+  slippage: number;
+  error?: string;
+}
+
+export interface PoolResponse {
+  id: string;
+  tokenA: string;
+  tokenB: string;
+  reserveA: bigint;
+  reserveB: bigint;
+  fee: number;
+  model: string;
+  statistics?: {
+    volumeTraded: bigint;
+    feesCollected: bigint;
+    averageSlippage: number;
+  };
+}
+
+export class AMMAPIService {
+  private router: AMMRouter;
+
+  constructor(router: AMMRouter) {
+    this.router = router;
+  }
+
+  async getPool(poolId: string): Promise<PoolResponse | null> {
+    const pool = this.router.getPool(poolId);
+
+    if (!pool) return null;
+
+    const stats = this.router.getPoolStatistics(poolId);
+
+    return {
+      id: pool.id,
+      tokenA: pool.tokenA,
+      tokenB: pool.tokenB,
+      reserveA: pool.reserveA,
+      reserveB: pool.reserveB,
+      fee: pool.fee,
+      model: pool.model,
+      statistics: stats?.stats,
+    };
+  }
+
+  async listPools(): Promise<PoolResponse[]> {
+    const pools = this.router.getAllPools();
+
+    return pools.map(pool => {
+      const stats = this.router.getPoolStatistics(pool.id);
+
+      return {
+        id: pool.id,
+        tokenA: pool.tokenA,
+        tokenB: pool.tokenB,
+        reserveA: pool.reserveA,
+        reserveB: pool.reserveB,
+        fee: pool.fee,
+        model: pool.model,
+        statistics: stats?.stats,
+      };
+    });
+  }
+
+  async getQuote(
+    poolId: string,
+    amountIn: bigint,
+    tokenAtoB: boolean
+  ): Promise<SwapQuote | null> {
+    try {
+      return this.router.quoteExactInputSingleHop(poolId, amountIn, tokenAtoB);
+    } catch (error) {
+      console.error('Quote error:', error);
+      return null;
+    }
+  }
+
+  async executeSwap(request: SwapRequest): Promise<SwapResponse> {
+    try {
+      const quote = await this.getQuote(request.poolId, request.amountIn, request.tokenAtoB);
+
+      if (!quote) {
+        return {
+          success: false,
+          amountOut: 0n,
+          fee: 0n,
+          slippage: 0,
+          error: 'Failed to get quote',
+        };
+      }
+
+      if (quote.slippage > request.slippage) {
+        return {
+          success: false,
+          amountOut: 0n,
+          fee: 0n,
+          slippage: quote.slippage,
+          error: 'Slippage exceeds limit',
+        };
+      }
+
+      const result = this.router.executeSwapExactInput(
+        request.poolId,
+        request.amountIn,
+        request.minAmountOut,
+        request.tokenAtoB
+      );
+
+      return {
+        success: true,
+        amountOut: result,
+        fee: quote.fee,
+        slippage: quote.slippage,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        amountOut: 0n,
+        fee: 0n,
+        slippage: 0,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  async getMultiHopQuote(
+    poolIds: string[],
+    amountIn: bigint
+  ): Promise<{ expectedOutput: bigint; priceImpact: number } | null> {
+    try {
+      const estimate = this.router.estimateMultiHopPrice(poolIds, amountIn);
+      return {
+        expectedOutput: estimate.expectedAmountOut,
+        priceImpact: estimate.priceImpact,
+      };
+    } catch (error) {
+      console.error('Multi-hop quote error:', error);
+      return null;
+    }
+  }
+
+  async executeMultiHopSwap(
+    poolIds: string[],
+    amountIn: bigint,
+    minAmountOut: bigint
+  ): Promise<SwapResponse> {
+    try {
+      const result = this.router.multiHopSwap(poolIds, amountIn, minAmountOut);
+
+      return {
+        success: true,
+        amountOut: result.amountOut,
+        fee: 0n,
+        slippage: 0,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        amountOut: 0n,
+        fee: 0n,
+        slippage: 0,
+        error: error instanceof Error ? error.message : 'Multi-hop swap failed',
+      };
+    }
+  }
+
+  async findBestSwap(
+    amountIn: bigint,
+    tokenAtoB: boolean
+  ): Promise<{ poolId: string; amountOut: bigint; priceImpact: number } | null> {
+    try {
+      const result = this.router.findBestPoolForSwap(amountIn, tokenAtoB);
+
+      if (!result) return null;
+
+      return {
+        poolId: result.poolId,
+        amountOut: result.quote.amountOut,
+        priceImpact: result.quote.priceImpact,
+      };
+    } catch (error) {
+      console.error('Best swap error:', error);
+      return null;
+    }
+  }
+
+  async getPoolsByToken(token: string): Promise<PoolResponse[]> {
+    const pools = this.router.getAllPools().filter(
+      pool => pool.tokenA === token || pool.tokenB === token
+    );
+
+    return pools.map(pool => {
+      const stats = this.router.getPoolStatistics(pool.id);
+
+      return {
+        id: pool.id,
+        tokenA: pool.tokenA,
+        tokenB: pool.tokenB,
+        reserveA: pool.reserveA,
+        reserveB: pool.reserveB,
+        fee: pool.fee,
+        model: pool.model,
+        statistics: stats?.stats,
+      };
+    });
+  }
+
+  getAvailableModels(): string[] {
+    const pools = this.router.getAllPools();
+    const models = new Set(pools.map(p => p.model));
+    return Array.from(models);
+  }
+
+  getPoolCount(): number {
+    return this.router.getAllPools().length;
+  }
+
+  health(): { status: 'ok' | 'degraded'; poolCount: number; timestamp: number } {
+    const poolCount = this.getPoolCount();
+
+    return {
+      status: poolCount > 0 ? 'ok' : 'degraded',
+      poolCount,
+      timestamp: Date.now(),
+    };
+  }
+}
+
+export class RateLimitedAMMAPI extends AMMAPIService {
+  private callCount: number = 0;
+  private resetTime: number = Date.now();
+  private maxCallsPerMinute: number;
+
+  constructor(router: AMMRouter, maxCallsPerMinute: number = 1000) {
+    super(router);
+    this.maxCallsPerMinute = maxCallsPerMinute;
+  }
+
+  private checkRateLimit(): boolean {
+    const now = Date.now();
+
+    if (now - this.resetTime > 60000) {
+      this.callCount = 0;
+      this.resetTime = now;
+    }
+
+    if (this.callCount >= this.maxCallsPerMinute) {
+      return false;
+    }
+
+    this.callCount++;
+    return true;
+  }
+
+  async getPool(poolId: string): Promise<PoolResponse | null> {
+    if (!this.checkRateLimit()) {
+      throw new Error('Rate limit exceeded');
+    }
+
+    return super.getPool(poolId);
+  }
+
+  async executeSwap(request: SwapRequest): Promise<SwapResponse> {
+    if (!this.checkRateLimit()) {
+      return {
+        success: false,
+        amountOut: 0n,
+        fee: 0n,
+        slippage: 0,
+        error: 'Rate limit exceeded',
+      };
+    }
+
+    return super.executeSwap(request);
+  }
+
+  getRemainingCalls(): number {
+    return Math.max(0, this.maxCallsPerMinute - this.callCount);
+  }
+}
