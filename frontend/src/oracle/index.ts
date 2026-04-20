@@ -1,9 +1,18 @@
-export * from '@/types/oracle';
-
 export { OracleNetworkService } from '@/services/OracleNetworkService';
 export { ConsensusMechanismService } from '@/services/ConsensusMechanismService';
 export { FallbackResolutionService } from '@/services/FallbackResolutionService';
 export { OracleMonitoringService } from '@/services/OracleMonitoringService';
+export { PriceAggregationService } from '@/services/PriceAggregationService';
+export {
+  CacheService,
+  RateLimitService,
+  RetryService,
+  CircuitBreakerService,
+  DataValidationService,
+  LoggingService,
+} from '@/services/OracleUtilityServices';
+export { AggregationValidator } from '@/services/AggregationValidator';
+export { PriceHistoryAnalyzer } from '@/services/PriceHistoryAnalyzer';
 
 export {
   useOracleNetwork,
@@ -14,50 +23,51 @@ export {
 } from '@/hooks/useOracleNetwork';
 
 export {
-  formatPrice,
-  formatPriceWithCurrency,
-  calculatePriceDifference,
-  calculatePriceRange,
-  getProviderStatus,
-  getConsensusColor,
-  getConsensusLabel,
-  calculateConfidenceScore,
-  formatConfidencePercentage,
-  isRecentPrice,
-  formatTimestamp,
-  formatRelativeTime,
-  getHealthColor,
-  getUptimeColor,
-  formatLatency,
-  calculateAverageLatency,
-  formatPercentage,
-  calculateWeightedAverage,
-  calculateMedian,
-  calculateStandardDeviation,
-  isOutlier,
-  filterOutliers,
-  sortPricesByValue,
-  sortProvidersByHealth,
-  groupPricesBySource,
-  validatePriceData,
-  validateAggregation,
-} from '@/utils/oracleHelpers';
+  usePriceHistory,
+  useProviderMetrics,
+  useOracleHealthAlert,
+  usePriceDeviation,
+  usePriceVolatility,
+  usePriceTrend,
+  usePricePrediction,
+  useNetworkValidation,
+} from '@/hooks/useOracleAdvanced';
+
+export { OracleHealthDashboard } from '@/components/OracleHealthDashboard';
+export { PriceAggregationCard } from '@/components/PriceAggregationCard';
+export { OracleNetworkStatus } from '@/components/OracleNetworkStatus';
+export { ProviderComparisonView } from '@/components/ProviderComparisonView';
 
 export {
-  ORACLE_NETWORK_CONFIG,
-  FALLBACK_STRATEGY_CONFIG,
-  HEALTH_CHECK_CONFIG,
-  PRICE_VALIDATION_CONFIG,
-  ALERT_THRESHOLDS,
-  ALERT_SEVERITY,
-  CONSENSUS_LEVELS,
-  PROVIDER_STATUS,
-  FALLBACK_TYPES,
-  AGGREGATION_METHODS,
-  DEFAULT_ORACLE_PROVIDERS,
-  MONITORING_CONFIG,
-  NETWORK_HEALTH_THRESHOLDS,
-  CONFIDENCE_LEVELS,
-  UPTIME_THRESHOLDS,
-  LATENCY_THRESHOLDS,
-} from '@/utils/oracleConstants';
+  SimpleOraclePriceDisplay,
+  PriceWithTrendAnalysis,
+  ComprehensiveOracleDashboard,
+  MarketPriceWidget,
+  ProviderStatusWidget,
+} from '@/examples/OracleIntegrationExamples';
+
+export { PriceFormatter, PriceParser } from '@/utils/oraclePriceFormatter';
+export {
+  ErrorHandler,
+  OracleError,
+  ValidationError,
+  ProviderError,
+  ConsensusError,
+  TimeoutError,
+  NetworkError,
+  FallbackError,
+} from '@/utils/oracleErrorHandling';
+
+export {
+  OracleConfigBuilder,
+  DEFAULT_ORACLE_CONFIG,
+  type OracleConfig,
+  type ProviderConfig,
+  type ConsensusConfig,
+  type FallbackConfig,
+  type MonitoringConfig,
+  type CacheConfig,
+  type NetworkConfig,
+} from '@/config/oracleConfig';
+
+export type { OraclePrice, AggregatedPrice, ProviderHealth } from '@/types/oracle';
