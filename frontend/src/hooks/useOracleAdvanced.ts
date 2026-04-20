@@ -1,0 +1,226 @@
+import { useState, useEffect, useCallback } from 'react';
+import { OraclePrice, AggregatedPrice, ProviderHealth } from '@/types/oracle';
+import { OracleNetworkService } from '@/services/OracleNetworkService';
+import { PriceHistoryAnalyzer } from '@/services/PriceHistoryAnalyzer';
+import { AggregationValidator } from '@/services/AggregationValidator';
+
+export const usePriceHistory = (marketId: string, maxPrices: number = 100) => {
+  const [history, setHistory] = useState<OraclePrice[]>([]);
+  const [analysis, setAnalysis] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  const updateHistory = useCallback((price: OraclePrice) => {
+    setHistory((prev) => {
+      const updated = [...prev, price];
+      if (updated.length > maxPrices) {
+        updated.shift();
+      }
+      return updated;
+    });
+  }, [maxPrices]);
+
+  useEffect(() => {
+    if (history.length > 0) {
+      const newAnalysis = PriceHistoryAnalyzer.generateAnalysis(history);
+      setAnalysis(newAnalysis);
+    }
+  }, [history]);
+
+  return { history, analysis, updateHistory, loading };
+};
+
+export const useProviderMetrics = (refreshInterval: number = 30000) => {
+  const [metrics, setMetrics] = useState<ProviderHealth[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const stats = await OracleNetworkService.getProviderStats();
+        setMetrics(stats);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch metrics');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMetrics();
+    const interval = setInterval(fetchMetrics, refreshInterval);
+
+    return () => clearInterval(interval);
+  }, [refreshInterval]);
+
+  return { metrics, loading, error };
+};
+
+export const useOracleHealthAlert = (
+  threshold: number = 0.7,
+  checkInterval: number = 5000
+) => {
+  const [alert, setAlert] = useState<{
+    active: boolean;
+    message: string;
+    severity: 'low' | 'medium' | 'high';
+  } | null>(null);
+
+  const { metrics } = useProviderMetrics(checkInterval);
+
+  useEffect(() => {
+    if (metrics.length === 0) return;
+
+    const unhealthyProviders = metrics.filter((m) => m.healthScore < threshold);
+    const avgHealth = metrics.reduce((sum, m) => sum + m.healthScore, 0) / metrics.length;
+
+    if (avgHealth < threshold) {
+      if (unhealthyProviders.length > metrics.length / 2) {
+        setAlert({
+          active: true,
+          message: `${unhealthyProviders.length} of ${metrics.length} providers are unhealthy`,
+          severity: 'high',
+        });
+      } else {
+        setAlert({
+          active: true,
+          message: `Network health at ${(avgHealth * 100).toFixed(0)}%`,
+          severity: 'medium',
+        });
+      }
+    } else {
+      setAlert(null);
+    }
+  }, [metrics, threshold]);
+
+  return alert;
+};
+
+export const usePriceDeviation = (
+  aggregatedPrice: AggregatedPrice | null,
+  baselinePrice: number
+) => {
+  const [deviation, setDeviation] = useState<{
+    absolute: number;
+    percentage: number;
+    direction: 'above' | 'below';
+  } | null>(null);
+
+  useEffect(() => {
+    if (!aggregatedPrice) return;
+
+    const absolute = aggregatedPrice.value - baselinePrice;
+    const percentage = baselinePrice === 0 ? 0 : (absolute / baselinePrice) * 100;
+    const direction = absolute >= 0 ? 'above' : 'below';
+
+    setDeviation({ absolute, percentage, direction });
+  }, [aggregatedPrice, baselinePrice]);
+
+  return deviation;
+};
+
+export const usePriceVolatility = (prices: OraclePrice[], period: number = 20) => {
+  const [volatility, setVolatility] = useState<{
+    value: number;
+    level: 'low' | 'medium' | 'high';
+  } | null>(null);
+
+  useEffect(() => {
+    if (prices.length < period) return;
+
+    const vol = PriceHistoryAnalyzer.calculateVolatility(prices, period);
+    const mean = prices.reduce((sum, p) => sum + p.value, 0) / prices.length;
+    const cv = vol / (mean || 1);
+
+    let level: 'low' | 'medium' | 'high';
+    if (cv < 0.02) {
+      level = 'low';
+    } else if (cv < 0.05) {
+      level = 'medium';
+    } else {
+      level = 'high';
+    }
+
+    setVolatility({ value: vol, level });
+  }, [prices, period]);
+
+  return volatility;
+};
+
+export const usePriceTrend = (prices: OraclePrice[]) => {
+  const [trend, setTrend] = useState<{
+    direction: 'up' | 'down' | 'neutral';
+    strength: number;
+    confidence: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (prices.length < 3) return;
+
+    const trendData = PriceHistoryAnalyzer.calculateTrendStrength(prices);
+    setTrend(trendData);
+  }, [prices]);
+
+  return trend;
+};
+
+export const usePricePrediction = (prices: OraclePrice[]) => {
+  const [prediction, setPrediction] = useState<{
+    predicted: number;
+    confidence: number;
+    change: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (prices.length < 2) return;
+
+    const pred = PriceHistoryAnalyzer.predictNextPrice(prices);
+    const current = prices[prices.length - 1].value;
+    const change = ((pred.predicted - current) / current) * 100;
+
+    setPrediction({
+      predicted: pred.predicted,
+      confidence: pred.confidence,
+      change,
+    });
+  }, [prices]);
+
+  return prediction;
+};
+
+export const useNetworkValidation = (aggregatedPrice: AggregatedPrice | null) => {
+  const [validation, setValidation] = useState<{
+    isValid: boolean;
+    confidence: number;
+    issues: string[];
+  } | null>(null);
+
+  useEffect(() => {
+    if (!aggregatedPrice) return;
+
+    const validator = new AggregationValidator();
+    const isFresh = validator.validateDataFreshness([{
+      value: aggregatedPrice.value,
+      timestamp: aggregatedPrice.timestamp,
+      source: 'aggregated',
+      confidence: aggregatedPrice.confidence,
+    }]);
+
+    const issues: string[] = [];
+    if (!isFresh.isFresh) {
+      issues.push('Data is stale');
+    }
+    if (!aggregatedPrice.consensusReached) {
+      issues.push('No consensus reached');
+    }
+
+    setValidation({
+      isValid: isFresh.isFresh && aggregatedPrice.consensusReached,
+      confidence: aggregatedPrice.confidence,
+      issues,
+    });
+  }, [aggregatedPrice]);
+
+  return validation;
+};
