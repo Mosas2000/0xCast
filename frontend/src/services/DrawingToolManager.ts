@@ -1,0 +1,223 @@
+import { DrawingTool, ChartScale } from '@/types/charting';
+
+export class DrawingToolManager {
+  private tools: DrawingTool[] = [];
+  private selectedTool: DrawingTool | null = null;
+  private isDrawing: boolean = false;
+  private currentPath: Array<{ x: number; y: number }> = [];
+  private nextId: number = 1;
+
+  addTool(type: DrawingTool['type'], color: string = '#2196F3', width: number = 2): DrawingTool {
+    const tool: DrawingTool = {
+      id: `tool-${this.nextId++}`,
+      type,
+      points: [],
+      color,
+      width,
+      visible: true,
+    };
+
+    this.tools.push(tool);
+    return tool;
+  }
+
+  addPoint(x: number, y: number): void {
+    this.currentPath.push({ x, y });
+  }
+
+  finalizeTool(label?: string): DrawingTool | null {
+    if (this.currentPath.length === 0) return null;
+
+    const tool = this.addTool(this.selectedTool?.type || 'freehand');
+    tool.points = [...this.currentPath];
+    if (label) tool.label = label;
+
+    this.currentPath = [];
+    return tool;
+  }
+
+  removeTool(toolId: string): void {
+    this.tools = this.tools.filter(t => t.id !== toolId);
+  }
+
+  selectTool(toolId: string): void {
+    this.selectedTool = this.tools.find(t => t.id === toolId) || null;
+  }
+
+  toggleToolVisibility(toolId: string): void {
+    const tool = this.tools.find(t => t.id === toolId);
+    if (tool) {
+      tool.visible = !tool.visible;
+    }
+  }
+
+  updateToolColor(toolId: string, color: string): void {
+    const tool = this.tools.find(t => t.id === toolId);
+    if (tool) {
+      tool.color = color;
+    }
+  }
+
+  updateToolWidth(toolId: string, width: number): void {
+    const tool = this.tools.find(t => t.id === toolId);
+    if (tool) {
+      tool.width = width;
+    }
+  }
+
+  getTools(): DrawingTool[] {
+    return this.tools.filter(t => t.visible);
+  }
+
+  getAllTools(): DrawingTool[] {
+    return this.tools;
+  }
+
+  clearTools(): void {
+    this.tools = [];
+    this.selectedTool = null;
+  }
+
+  renderTools(ctx: CanvasRenderingContext2D, scale: ChartScale, canvasHeight: number): void {
+    for (const tool of this.getTools()) {
+      ctx.strokeStyle = tool.color;
+      ctx.lineWidth = tool.width;
+      ctx.fillStyle = tool.color;
+
+      switch (tool.type) {
+        case 'line':
+          this.renderLine(ctx, tool, scale, canvasHeight);
+          break;
+        case 'rectangle':
+          this.renderRectangle(ctx, tool, scale, canvasHeight);
+          break;
+        case 'circle':
+          this.renderCircle(ctx, tool, scale, canvasHeight);
+          break;
+        case 'triangle':
+          this.renderTriangle(ctx, tool, scale, canvasHeight);
+          break;
+        case 'freehand':
+          this.renderFreehand(ctx, tool, scale, canvasHeight);
+          break;
+        case 'trendline':
+          this.renderTrendline(ctx, tool, scale, canvasHeight);
+          break;
+      }
+    }
+  }
+
+  private renderLine(ctx: CanvasRenderingContext2D, tool: DrawingTool, scale: ChartScale, canvasHeight: number): void {
+    if (tool.points.length < 2) return;
+
+    ctx.beginPath();
+    ctx.moveTo(tool.points[0].x, tool.points[0].y);
+    ctx.lineTo(tool.points[1].x, tool.points[1].y);
+    ctx.stroke();
+  }
+
+  private renderRectangle(ctx: CanvasRenderingContext2D, tool: DrawingTool, scale: ChartScale, canvasHeight: number): void {
+    if (tool.points.length < 2) return;
+
+    const x = Math.min(tool.points[0].x, tool.points[1].x);
+    const y = Math.min(tool.points[0].y, tool.points[1].y);
+    const width = Math.abs(tool.points[1].x - tool.points[0].x);
+    const height = Math.abs(tool.points[1].y - tool.points[0].y);
+
+    ctx.strokeRect(x, y, width, height);
+  }
+
+  private renderCircle(ctx: CanvasRenderingContext2D, tool: DrawingTool, scale: ChartScale, canvasHeight: number): void {
+    if (tool.points.length < 2) return;
+
+    const dx = tool.points[1].x - tool.points[0].x;
+    const dy = tool.points[1].y - tool.points[0].y;
+    const radius = Math.sqrt(dx * dx + dy * dy);
+
+    ctx.beginPath();
+    ctx.arc(tool.points[0].x, tool.points[0].y, radius, 0, 2 * Math.PI);
+    ctx.stroke();
+  }
+
+  private renderTriangle(ctx: CanvasRenderingContext2D, tool: DrawingTool, scale: ChartScale, canvasHeight: number): void {
+    if (tool.points.length < 3) return;
+
+    ctx.beginPath();
+    ctx.moveTo(tool.points[0].x, tool.points[0].y);
+    ctx.lineTo(tool.points[1].x, tool.points[1].y);
+    ctx.lineTo(tool.points[2].x, tool.points[2].y);
+    ctx.closePath();
+    ctx.stroke();
+  }
+
+  private renderFreehand(ctx: CanvasRenderingContext2D, tool: DrawingTool, scale: ChartScale, canvasHeight: number): void {
+    if (tool.points.length < 2) return;
+
+    ctx.beginPath();
+    ctx.moveTo(tool.points[0].x, tool.points[0].y);
+
+    for (let i = 1; i < tool.points.length; i++) {
+      ctx.lineTo(tool.points[i].x, tool.points[i].y);
+    }
+
+    ctx.stroke();
+  }
+
+  private renderTrendline(ctx: CanvasRenderingContext2D, tool: DrawingTool, scale: ChartScale, canvasHeight: number): void {
+    if (tool.points.length < 2) return;
+
+    const p1 = tool.points[0];
+    const p2 = tool.points[1];
+
+    const slope = (p2.y - p1.y) / (p2.x - p1.x);
+    const intercept = p1.y - slope * p1.x;
+
+    ctx.beginPath();
+    const startX = 0;
+    const endX = ctx.canvas.width;
+    const startY = slope * startX + intercept;
+    const endY = slope * endX + intercept;
+
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
+  }
+
+  getToolAtPoint(x: number, y: number, threshold: number = 5): DrawingTool | null {
+    for (let i = this.tools.length - 1; i >= 0; i--) {
+      const tool = this.tools[i];
+
+      for (const point of tool.points) {
+        const distance = Math.sqrt(Math.pow(point.x - x, 2) + Math.pow(point.y - y, 2));
+        if (distance <= threshold) {
+          return tool;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  moveToolPoint(toolId: string, pointIndex: number, newX: number, newY: number): void {
+    const tool = this.tools.find(t => t.id === toolId);
+    if (tool && pointIndex < tool.points.length) {
+      tool.points[pointIndex] = { x: newX, y: newY };
+    }
+  }
+
+  getCurrentPath(): Array<{ x: number; y: number }> {
+    return this.currentPath;
+  }
+
+  exportTools(): string {
+    return JSON.stringify(this.tools);
+  }
+
+  importTools(data: string): void {
+    try {
+      this.tools = JSON.parse(data);
+    } catch (error) {
+      console.error('Failed to import tools', error);
+    }
+  }
+}

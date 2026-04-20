@@ -1,0 +1,311 @@
+import { OHLCV, IndicatorValue, TechnicalIndicator } from '@/types/charting';
+
+export class TechnicalIndicatorCalculator {
+  static calculateSMA(data: OHLCV[], period: number): IndicatorValue[] {
+    const result: IndicatorValue[] = [];
+    
+    for (let i = 0; i < data.length; i++) {
+      if (i < period - 1) {
+        result.push({ time: data[i].time, value: null });
+        continue;
+      }
+
+      const sum = data.slice(i - period + 1, i + 1).reduce((acc, candle) => acc + candle.close, 0);
+      const sma = sum / period;
+      result.push({ time: data[i].time, value: sma });
+    }
+
+    return result;
+  }
+
+  static calculateEMA(data: OHLCV[], period: number): IndicatorValue[] {
+    const result: IndicatorValue[] = [];
+    const multiplier = 2 / (period + 1);
+
+    let ema: number | null = null;
+
+    for (let i = 0; i < data.length; i++) {
+      if (ema === null && i < period - 1) {
+        result.push({ time: data[i].time, value: null });
+        continue;
+      }
+
+      if (ema === null) {
+        ema = data.slice(0, period).reduce((acc, candle) => acc + candle.close, 0) / period;
+      } else {
+        ema = data[i].close * multiplier + ema * (1 - multiplier);
+      }
+
+      result.push({ time: data[i].time, value: ema });
+    }
+
+    return result;
+  }
+
+  static calculateRSI(data: OHLCV[], period: number = 14): IndicatorValue[] {
+    const result: IndicatorValue[] = [];
+    const deltas: number[] = [];
+
+    for (let i = 1; i < data.length; i++) {
+      deltas.push(data[i].close - data[i - 1].close);
+    }
+
+    let gains = 0;
+    let losses = 0;
+
+    for (let i = 0; i < period && i < deltas.length; i++) {
+      if (deltas[i] > 0) gains += deltas[i];
+      else losses -= deltas[i];
+    }
+
+    let avgGain = gains / period;
+    let avgLoss = losses / period;
+
+    result.push({ time: data[0].time, value: null });
+
+    for (let i = 1; i < data.length; i++) {
+      const delta = deltas[i - 1];
+
+      if (delta > 0) gains = delta;
+      else gains = 0;
+
+      if (delta < 0) losses = -delta;
+      else losses = 0;
+
+      avgGain = (avgGain * (period - 1) + gains) / period;
+      avgLoss = (avgLoss * (period - 1) + losses) / period;
+
+      const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+      const rsi = 100 - 100 / (1 + rs);
+
+      result.push({ time: data[i].time, value: rsi });
+    }
+
+    return result;
+  }
+
+  static calculateMACD(data: OHLCV[], fastPeriod: number = 12, slowPeriod: number = 26, signalPeriod: number = 9): TechnicalIndicator[] {
+    const fastEMA = this.calculateEMA(data, fastPeriod);
+    const slowEMA = this.calculateEMA(data, slowPeriod);
+
+    const macdLine: IndicatorValue[] = [];
+    for (let i = 0; i < data.length; i++) {
+      const fast = fastEMA[i].value as number;
+      const slow = slowEMA[i].value as number;
+      const value = fast !== null && slow !== null ? fast - slow : null;
+      macdLine.push({ time: data[i].time, value });
+    }
+
+    const signalLine = this.calculateEMA(
+      macdLine.map((m, i) => ({ ...data[i], close: m.value as number })),
+      signalPeriod
+    );
+
+    const histogram: IndicatorValue[] = [];
+    for (let i = 0; i < data.length; i++) {
+      const macd = macdLine[i].value as number;
+      const signal = signalLine[i].value as number;
+      const value = macd !== null && signal !== null ? macd - signal : null;
+      histogram.push({ time: data[i].time, value });
+    }
+
+    return [
+      { name: 'MACD', type: 'line', color: '#2962FF', values: macdLine, visible: true },
+      { name: 'Signal Line', type: 'line', color: '#FF6E40', values: signalLine, visible: true },
+      { name: 'Histogram', type: 'histogram', color: '#1E88E5', values: histogram, visible: true },
+    ];
+  }
+
+  static calculateBollingerBands(data: OHLCV[], period: number = 20, stdDevMultiplier: number = 2): IndicatorValue[][] {
+    const sma = this.calculateSMA(data, period);
+    const upperBand: IndicatorValue[] = [];
+    const lowerBand: IndicatorValue[] = [];
+
+    for (let i = 0; i < data.length; i++) {
+      if (i < period - 1) {
+        upperBand.push({ time: data[i].time, value: null });
+        lowerBand.push({ time: data[i].time, value: null });
+        continue;
+      }
+
+      const closes = data.slice(i - period + 1, i + 1).map(c => c.close);
+      const mean = closes.reduce((a, b) => a + b) / closes.length;
+      const variance = closes.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / closes.length;
+      const stdDev = Math.sqrt(variance);
+
+      const upper = (sma[i].value as number) + stdDevMultiplier * stdDev;
+      const lower = (sma[i].value as number) - stdDevMultiplier * stdDev;
+
+      upperBand.push({ time: data[i].time, value: upper });
+      lowerBand.push({ time: data[i].time, value: lower });
+    }
+
+    return [sma, upperBand, lowerBand];
+  }
+
+  static calculateStochastic(data: OHLCV[], kPeriod: number = 14, dPeriod: number = 3): TechnicalIndicator[] {
+    const kLine: IndicatorValue[] = [];
+    const dLine: IndicatorValue[] = [];
+
+    for (let i = 0; i < data.length; i++) {
+      if (i < kPeriod - 1) {
+        kLine.push({ time: data[i].time, value: null });
+        continue;
+      }
+
+      const slice = data.slice(i - kPeriod + 1, i + 1);
+      const low = Math.min(...slice.map(c => c.low));
+      const high = Math.max(...slice.map(c => c.high));
+      const close = data[i].close;
+
+      const k = high === low ? 50 : ((close - low) / (high - low)) * 100;
+      kLine.push({ time: data[i].time, value: k });
+    }
+
+    for (let i = 0; i < kLine.length; i++) {
+      if (i < dPeriod - 1) {
+        dLine.push({ time: data[i].time, value: null });
+        continue;
+      }
+
+      const kValues = kLine.slice(i - dPeriod + 1, i + 1).map(v => v.value as number);
+      const d = kValues.reduce((a, b) => a + b, 0) / kValues.length;
+      dLine.push({ time: data[i].time, value: d });
+    }
+
+    return [
+      { name: 'Stochastic K', type: 'line', color: '#2962FF', values: kLine, visible: true },
+      { name: 'Stochastic D', type: 'line', color: '#FF6E40', values: dLine, visible: true },
+    ];
+  }
+
+  static calculateATR(data: OHLCV[], period: number = 14): IndicatorValue[] {
+    const trueRanges: number[] = [];
+
+    for (let i = 0; i < data.length; i++) {
+      let tr = data[i].high - data[i].low;
+
+      if (i > 0) {
+        tr = Math.max(tr, Math.abs(data[i].high - data[i - 1].close));
+        tr = Math.max(tr, Math.abs(data[i].low - data[i - 1].close));
+      }
+
+      trueRanges.push(tr);
+    }
+
+    const result: IndicatorValue[] = [];
+    for (let i = 0; i < data.length; i++) {
+      if (i < period - 1) {
+        result.push({ time: data[i].time, value: null });
+        continue;
+      }
+
+      const atr = trueRanges.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0) / period;
+      result.push({ time: data[i].time, value: atr });
+    }
+
+    return result;
+  }
+
+  static calculateOBV(data: OHLCV[]): IndicatorValue[] {
+    const result: IndicatorValue[] = [];
+    let obv = 0;
+
+    for (let i = 0; i < data.length; i++) {
+      if (i === 0) {
+        obv = data[i].volume;
+      } else {
+        if (data[i].close > data[i - 1].close) {
+          obv += data[i].volume;
+        } else if (data[i].close < data[i - 1].close) {
+          obv -= data[i].volume;
+        }
+      }
+
+      result.push({ time: data[i].time, value: obv });
+    }
+
+    return result;
+  }
+
+  static calculateADX(data: OHLCV[], period: number = 14): TechnicalIndicator[] {
+    const plusDM: number[] = [];
+    const minusDM: number[] = [];
+    const tr: number[] = [];
+
+    for (let i = 0; i < data.length; i++) {
+      let trValue = data[i].high - data[i].low;
+
+      if (i > 0) {
+        const upMove = data[i].high - data[i - 1].high;
+        const downMove = data[i - 1].low - data[i].low;
+
+        let plusValue = 0;
+        let minusValue = 0;
+
+        if (upMove > 0 && upMove > downMove) plusValue = upMove;
+        if (downMove > 0 && downMove > upMove) minusValue = downMove;
+
+        plusDM.push(plusValue);
+        minusDM.push(minusValue);
+
+        trValue = Math.max(trValue, Math.abs(data[i].high - data[i - 1].close));
+        trValue = Math.max(trValue, Math.abs(data[i].low - data[i - 1].close));
+      } else {
+        plusDM.push(0);
+        minusDM.push(0);
+      }
+
+      tr.push(trValue);
+    }
+
+    const diPlus: IndicatorValue[] = [];
+    const diMinus: IndicatorValue[] = [];
+    const adx: IndicatorValue[] = [];
+
+    let sumPlusDM = 0;
+    let sumMinusDM = 0;
+    let sumTR = 0;
+
+    for (let i = 0; i < data.length; i++) {
+      if (i < period - 1) {
+        if (i === 0) {
+          sumPlusDM += plusDM[i];
+          sumMinusDM += minusDM[i];
+          sumTR += tr[i];
+        } else if (i < period - 1) {
+          sumPlusDM += plusDM[i];
+          sumMinusDM += minusDM[i];
+          sumTR += tr[i];
+        }
+      }
+
+      if (i === period - 1) {
+        sumPlusDM += plusDM[i];
+        sumMinusDM += minusDM[i];
+        sumTR += tr[i];
+      }
+
+      if (i < period - 1) {
+        diPlus.push({ time: data[i].time, value: null });
+        diMinus.push({ time: data[i].time, value: null });
+        adx.push({ time: data[i].time, value: null });
+      } else {
+        const di = sumTR === 0 ? 0 : (sumPlusDM / sumTR) * 100;
+        const miDi = sumTR === 0 ? 0 : (sumMinusDM / sumTR) * 100;
+
+        diPlus.push({ time: data[i].time, value: di });
+        diMinus.push({ time: data[i].time, value: miDi });
+
+        const adxValue = Math.abs(di - miDi) / (di + miDi) * 100;
+        adx.push({ time: data[i].time, value: isNaN(adxValue) ? 0 : adxValue });
+      }
+    }
+
+    return [
+      { name: 'DI+', type: 'line', color: '#4CAF50', values: diPlus, visible: true },
+      { name: 'DI-', type: 'line', color: '#F44336', values: diMinus, visible: true },
+      { name: 'ADX', type: 'line', color: '#FF9800', values: adx, visible: true },
+    ];
+  }
+}
