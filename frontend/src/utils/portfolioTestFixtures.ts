@@ -1,0 +1,220 @@
+// frontend/src/utils/portfolioTestFixtures.ts
+
+import { Portfolio, PortfolioPosition, RiskMetrics, PortfolioRecommendation } from '@/types/portfolio';
+
+export const createMockPosition = (overrides?: Partial<PortfolioPosition>): PortfolioPosition => ({
+  marketId: 'market-1',
+  marketName: 'Test Market',
+  outcome: 'YES',
+  quantity: 100,
+  currentPrice: 0.75,
+  entryPrice: 0.60,
+  currentValue: 75,
+  pnl: 15,
+  pnlPercentage: 0.25,
+  weight: 0.25,
+  ...overrides,
+});
+
+export const createMockPortfolio = (overrides?: Partial<Portfolio>): Portfolio => ({
+  userId: 'user-1',
+  totalValue: 10000,
+  positions: [
+    createMockPosition({ marketId: 'market-1', marketName: 'Market A', weight: 0.25, currentValue: 2500 }),
+    createMockPosition({ marketId: 'market-2', marketName: 'Market B', weight: 0.25, currentValue: 2500 }),
+    createMockPosition({ marketId: 'market-3', marketName: 'Market C', weight: 0.25, currentValue: 2500 }),
+    createMockPosition({ marketId: 'market-4', marketName: 'Market D', weight: 0.25, currentValue: 2500 }),
+  ],
+  cash: 0,
+  lastUpdated: new Date(),
+  createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+  ...overrides,
+});
+
+export const createMockPortfolioWithConcentration = (): Portfolio => 
+  createMockPortfolio({
+    positions: [
+      createMockPosition({ marketId: 'market-1', marketName: 'Market A', weight: 0.6, currentValue: 6000 }),
+      createMockPosition({ marketId: 'market-2', marketName: 'Market B', weight: 0.2, currentValue: 2000 }),
+      createMockPosition({ marketId: 'market-3', marketName: 'Market C', weight: 0.2, currentValue: 2000 }),
+    ],
+    totalValue: 10000,
+  });
+
+export const createMockPortfolioWithLosses = (): Portfolio =>
+  createMockPortfolio({
+    positions: [
+      createMockPosition({ 
+        marketId: 'market-1', 
+        marketName: 'Market A', 
+        weight: 0.25, 
+        currentValue: 2500,
+        pnl: -1000,
+        pnlPercentage: -0.4,
+      }),
+      createMockPosition({ marketId: 'market-2', marketName: 'Market B', weight: 0.25, currentValue: 2500 }),
+      createMockPosition({ marketId: 'market-3', marketName: 'Market C', weight: 0.25, currentValue: 2500 }),
+      createMockPosition({ marketId: 'market-4', marketName: 'Market D', weight: 0.25, currentValue: 2500 }),
+    ],
+  });
+
+export const createMockRiskMetrics = (overrides?: Partial<RiskMetrics>): RiskMetrics => ({
+  volatility: 0.15,
+  sharpeRatio: 1.5,
+  maxDrawdown: -0.12,
+  beta: 1.0,
+  concentration: 0.35,
+  diversificationScore: 75,
+  riskLevel: 'medium',
+  ...overrides,
+});
+
+export const createMockRecommendation = (overrides?: Partial<PortfolioRecommendation>): PortfolioRecommendation => ({
+  id: 'rec-1',
+  type: 'rebalancing',
+  title: 'Rebalance Portfolio',
+  description: 'Your portfolio is out of balance. Consider rebalancing positions.',
+  actionItems: [
+    {
+      id: 'action-1',
+      marketId: 'market-1',
+      marketName: 'Market A',
+      action: 'reduce',
+      quantity: 10,
+      targetPrice: 0.75,
+      estimatedCost: -75,
+    },
+    {
+      id: 'action-2',
+      marketId: 'market-2',
+      marketName: 'Market B',
+      action: 'increase',
+      quantity: 10,
+      targetPrice: 0.65,
+      estimatedCost: 65,
+    },
+  ],
+  expectedBenefit: 'Better diversification and lower concentration risk',
+  priority: 'medium',
+  confidenceScore: 0.85,
+  expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  ...overrides,
+});
+
+export const createMockHighPriorityRecommendation = (): PortfolioRecommendation =>
+  createMockRecommendation({
+    type: 'risk_management',
+    title: 'Reduce Risk',
+    priority: 'high',
+    confidenceScore: 0.95,
+  });
+
+export const createMockLowPriorityRecommendation = (): PortfolioRecommendation =>
+  createMockRecommendation({
+    type: 'opportunity',
+    title: 'Increase Winner',
+    priority: 'low',
+    confidenceScore: 0.70,
+  });
+
+export const createMockBenchmarkComparison = () => ({
+  alpha: 0.025,
+  beta: 1.1,
+  correlation: 0.85,
+  tracking_error: 0.05,
+  information_ratio: 0.5,
+  out_performance: 0.03,
+  portfolio: {
+    totalReturn: 0.12,
+    averageReturn: 0.0005,
+    volatility: 0.15,
+    sharpeRatio: 1.5,
+    sortinoRatio: 2.1,
+    maxDrawdown: -0.12,
+    winRate: 0.65,
+    consecutiveWins: 5,
+    consecutiveLosses: 2,
+  },
+  benchmark: {
+    totalReturn: 0.09,
+    averageReturn: 0.0004,
+    volatility: 0.12,
+    sharpeRatio: 1.2,
+    sortinoRatio: 1.8,
+    maxDrawdown: -0.15,
+    winRate: 0.60,
+    consecutiveWins: 4,
+    consecutiveLosses: 3,
+  },
+});
+
+export const createMockOptimizationResult = () => ({
+  suggestedAllocations: [0.3, 0.3, 0.2, 0.2],
+  trades: [
+    {
+      id: 'trade-1',
+      marketId: 'market-1',
+      marketName: 'Market A',
+      action: 'reduce',
+      quantity: 50,
+      targetPrice: 0.75,
+      transactionCost: 37.5,
+    },
+    {
+      id: 'trade-2',
+      marketId: 'market-3',
+      marketName: 'Market C',
+      action: 'increase',
+      quantity: 25,
+      targetPrice: 0.65,
+      transactionCost: 16.25,
+    },
+  ],
+  expectedReturn: 0.14,
+  expectedRisk: 0.13,
+  expectedImprovement: 0.08,
+  totalTransactionCost: 53.75,
+});
+
+export const createMockPortfolioAnalysis = () => ({
+  totalValue: 10000,
+  dailyReturn: 0.015,
+  totalReturn: 0.12,
+  cash: 0,
+  leverage: 1,
+  riskMetrics: createMockRiskMetrics(),
+  diversification: {
+    herfindahlIndex: 0.12,
+    diversificationScore: 75,
+    concentrationRisk: 'moderate',
+    largestPosition: 0.35,
+    topThreePositions: 0.85,
+    recommendations: ['Consider reducing largest position', 'Add 1-2 more positions'],
+  },
+  topPositions: [
+    createMockPosition({ marketId: 'market-1', marketName: 'Market A', weight: 0.35 }),
+    createMockPosition({ marketId: 'market-2', marketName: 'Market B', weight: 0.30 }),
+    createMockPosition({ marketId: 'market-3', marketName: 'Market C', weight: 0.20 }),
+  ],
+  historicalPerformance: Array.from({ length: 30 }, (_, i) => ({
+    date: new Date(Date.now() - (30 - i) * 24 * 60 * 60 * 1000),
+    value: 9500 + Math.random() * 1000,
+    return: (Math.random() - 0.4) * 0.02,
+    cumulativeReturn: (i * 0.004),
+    drawdown: -(Math.random() * 0.15),
+  })),
+});
+
+export const fixtureData = {
+  mockPosition: createMockPosition,
+  mockPortfolio: createMockPortfolio,
+  mockPortfolioWithConcentration: createMockPortfolioWithConcentration,
+  mockPortfolioWithLosses: createMockPortfolioWithLosses,
+  mockRiskMetrics: createMockRiskMetrics,
+  mockRecommendation: createMockRecommendation,
+  mockHighPriorityRecommendation: createMockHighPriorityRecommendation,
+  mockLowPriorityRecommendation: createMockLowPriorityRecommendation,
+  mockBenchmarkComparison: createMockBenchmarkComparison,
+  mockOptimizationResult: createMockOptimizationResult,
+  mockPortfolioAnalysis: createMockPortfolioAnalysis,
+};

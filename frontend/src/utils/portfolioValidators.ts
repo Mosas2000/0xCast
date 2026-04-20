@@ -1,0 +1,403 @@
+// frontend/src/utils/portfolioValidators.ts
+
+import { Portfolio, PortfolioPosition } from '@/types/portfolio';
+import { PORTFOLIO_CONSTANTS } from './portfolioConstants';
+
+export interface ValidationError {
+  field: string;
+  message: string;
+  severity: 'error' | 'warning' | 'info';
+}
+
+export interface ValidationResult {
+  valid: boolean;
+  errors: ValidationError[];
+}
+
+export class PortfolioValidator {
+  static validatePortfolio(portfolio: Portfolio): ValidationResult {
+    const errors: ValidationError[] = [];
+
+    if (!portfolio) {
+      errors.push({
+        field: 'portfolio',
+        message: 'Portfolio is required',
+        severity: 'error',
+      });
+      return { valid: false, errors };
+    }
+
+    if (!portfolio.userId) {
+      errors.push({
+        field: 'userId',
+        message: 'User ID is required',
+        severity: 'error',
+      });
+    }
+
+    if (portfolio.totalValue < 0) {
+      errors.push({
+        field: 'totalValue',
+        message: 'Portfolio value cannot be negative',
+        severity: 'error',
+      });
+    }
+
+    if (portfolio.totalValue === 0) {
+      errors.push({
+        field: 'totalValue',
+        message: 'Portfolio value must be greater than zero',
+        severity: 'warning',
+      });
+    }
+
+    if (!portfolio.positions || portfolio.positions.length === 0) {
+      errors.push({
+        field: 'positions',
+        message: 'Portfolio must have at least one position',
+        severity: 'warning',
+      });
+    }
+
+    if (portfolio.cash < 0) {
+      errors.push({
+        field: 'cash',
+        message: 'Cash balance cannot be negative',
+        severity: 'error',
+      });
+    }
+
+    portfolio.positions?.forEach((position, idx) => {
+      const positionErrors = this.validatePosition(position);
+      positionErrors.errors.forEach((error) => {
+        errors.push({
+          ...error,
+          field: `positions[${idx}].${error.field}`,
+        });
+      });
+    });
+
+    const weightSum = (portfolio.positions?.reduce((sum, p) => sum + (p.weight || 0), 0) || 0);
+    if (Math.abs(weightSum - 1) > 0.01) {
+      errors.push({
+        field: 'positions.weights',
+        message: `Position weights must sum to 100% (currently ${(weightSum * 100).toFixed(2)}%)`,
+        severity: 'warning',
+      });
+    }
+
+    return {
+      valid: errors.every((e) => e.severity !== 'error'),
+      errors,
+    };
+  }
+
+  static validatePosition(position: PortfolioPosition): ValidationResult {
+    const errors: ValidationError[] = [];
+
+    if (!position.marketId) {
+      errors.push({
+        field: 'marketId',
+        message: 'Market ID is required',
+        severity: 'error',
+      });
+    }
+
+    if (!position.marketName) {
+      errors.push({
+        field: 'marketName',
+        message: 'Market name is required',
+        severity: 'error',
+      });
+    }
+
+    if (!position.outcome) {
+      errors.push({
+        field: 'outcome',
+        message: 'Outcome is required',
+        severity: 'error',
+      });
+    }
+
+    if (position.quantity <= 0) {
+      errors.push({
+        field: 'quantity',
+        message: 'Position quantity must be greater than zero',
+        severity: 'error',
+      });
+    }
+
+    if (position.currentPrice < 0) {
+      errors.push({
+        field: 'currentPrice',
+        message: 'Current price cannot be negative',
+        severity: 'error',
+      });
+    }
+
+    if (position.entryPrice < 0) {
+      errors.push({
+        field: 'entryPrice',
+        message: 'Entry price cannot be negative',
+        severity: 'error',
+      });
+    }
+
+    if (position.currentValue < 0) {
+      errors.push({
+        field: 'currentValue',
+        message: 'Position value cannot be negative',
+        severity: 'error',
+      });
+    }
+
+    if (position.weight < 0 || position.weight > 1) {
+      errors.push({
+        field: 'weight',
+        message: 'Position weight must be between 0 and 1',
+        severity: 'error',
+      });
+    }
+
+    if (position.weight > PORTFOLIO_CONSTANTS.DEFAULT_MAX_POSITION_SIZE) {
+      errors.push({
+        field: 'weight',
+        message: `Position weight exceeds maximum allowed (${(PORTFOLIO_CONSTANTS.DEFAULT_MAX_POSITION_SIZE * 100).toFixed(0)}%)`,
+        severity: 'warning',
+      });
+    }
+
+    if (position.weight < PORTFOLIO_CONSTANTS.DEFAULT_MIN_POSITION_SIZE) {
+      errors.push({
+        field: 'weight',
+        message: `Position weight below minimum (${(PORTFOLIO_CONSTANTS.DEFAULT_MIN_POSITION_SIZE * 100).toFixed(0)}%)`,
+        severity: 'info',
+      });
+    }
+
+    return {
+      valid: errors.every((e) => e.severity !== 'error'),
+      errors,
+    };
+  }
+
+  static validateRiskMetrics(metrics: any): ValidationResult {
+    const errors: ValidationError[] = [];
+
+    if (typeof metrics.volatility !== 'number' || metrics.volatility < 0 || metrics.volatility > 1) {
+      errors.push({
+        field: 'volatility',
+        message: 'Volatility must be a number between 0 and 1',
+        severity: 'error',
+      });
+    }
+
+    if (typeof metrics.sharpeRatio !== 'number') {
+      errors.push({
+        field: 'sharpeRatio',
+        message: 'Sharpe ratio must be a number',
+        severity: 'error',
+      });
+    }
+
+    if (typeof metrics.beta !== 'number' || metrics.beta < 0) {
+      errors.push({
+        field: 'beta',
+        message: 'Beta must be a positive number',
+        severity: 'error',
+      });
+    }
+
+    if (typeof metrics.maxDrawdown !== 'number' || metrics.maxDrawdown > 0 || metrics.maxDrawdown < -1) {
+      errors.push({
+        field: 'maxDrawdown',
+        message: 'Max drawdown must be a number between -1 and 0',
+        severity: 'error',
+      });
+    }
+
+    if (typeof metrics.concentration !== 'number' || metrics.concentration < 0 || metrics.concentration > 1) {
+      errors.push({
+        field: 'concentration',
+        message: 'Concentration must be a number between 0 and 1',
+        severity: 'error',
+      });
+    }
+
+    return {
+      valid: errors.every((e) => e.severity !== 'error'),
+      errors,
+    };
+  }
+
+  static validateRecommendation(recommendation: any): ValidationResult {
+    const errors: ValidationError[] = [];
+
+    if (!recommendation.id) {
+      errors.push({
+        field: 'id',
+        message: 'Recommendation ID is required',
+        severity: 'error',
+      });
+    }
+
+    if (!recommendation.type) {
+      errors.push({
+        field: 'type',
+        message: 'Recommendation type is required',
+        severity: 'error',
+      });
+    }
+
+    const validTypes = ['rebalancing', 'diversification', 'risk_management', 'opportunity'];
+    if (!validTypes.includes(recommendation.type)) {
+      errors.push({
+        field: 'type',
+        message: `Recommendation type must be one of: ${validTypes.join(', ')}`,
+        severity: 'error',
+      });
+    }
+
+    if (!recommendation.title) {
+      errors.push({
+        field: 'title',
+        message: 'Recommendation title is required',
+        severity: 'error',
+      });
+    }
+
+    if (!recommendation.description) {
+      errors.push({
+        field: 'description',
+        message: 'Recommendation description is required',
+        severity: 'error',
+      });
+    }
+
+    if (typeof recommendation.confidenceScore !== 'number' || recommendation.confidenceScore < 0 || recommendation.confidenceScore > 1) {
+      errors.push({
+        field: 'confidenceScore',
+        message: 'Confidence score must be a number between 0 and 1',
+        severity: 'error',
+      });
+    }
+
+    const validPriorities = ['high', 'medium', 'low'];
+    if (!validPriorities.includes(recommendation.priority)) {
+      errors.push({
+        field: 'priority',
+        message: `Priority must be one of: ${validPriorities.join(', ')}`,
+        severity: 'error',
+      });
+    }
+
+    if (!Array.isArray(recommendation.actionItems)) {
+      errors.push({
+        field: 'actionItems',
+        message: 'Action items must be an array',
+        severity: 'error',
+      });
+    }
+
+    return {
+      valid: errors.every((e) => e.severity !== 'error'),
+      errors,
+    };
+  }
+
+  static validateOptimizationResult(result: any): ValidationResult {
+    const errors: ValidationError[] = [];
+
+    if (!Array.isArray(result.suggestedAllocations)) {
+      errors.push({
+        field: 'suggestedAllocations',
+        message: 'Suggested allocations must be an array',
+        severity: 'error',
+      });
+    } else {
+      const allocationSum = result.suggestedAllocations.reduce((sum: number, a: number) => sum + a, 0);
+      if (Math.abs(allocationSum - 1) > 0.01) {
+        errors.push({
+          field: 'suggestedAllocations',
+          message: 'Suggested allocations must sum to 100%',
+          severity: 'error',
+        });
+      }
+    }
+
+    if (!Array.isArray(result.trades)) {
+      errors.push({
+        field: 'trades',
+        message: 'Trades must be an array',
+        severity: 'error',
+      });
+    }
+
+    if (typeof result.expectedReturn !== 'number' || result.expectedReturn < -1 || result.expectedReturn > 10) {
+      errors.push({
+        field: 'expectedReturn',
+        message: 'Expected return must be a reasonable number',
+        severity: 'warning',
+      });
+    }
+
+    if (typeof result.expectedRisk !== 'number' || result.expectedRisk < 0 || result.expectedRisk > 2) {
+      errors.push({
+        field: 'expectedRisk',
+        message: 'Expected risk must be a positive number',
+        severity: 'warning',
+      });
+    }
+
+    return {
+      valid: errors.every((e) => e.severity !== 'error'),
+      errors,
+    };
+  }
+
+  static hasHighRisk(portfolio: Portfolio): boolean {
+    if (!portfolio.positions) return false;
+    
+    const maxPosition = Math.max(...(portfolio.positions?.map((p) => p.weight) || [0]));
+    const negativePositions = portfolio.positions?.filter((p) => p.pnlPercentage < -0.2).length || 0;
+    
+    return maxPosition > 0.5 || negativePositions > portfolio.positions.length * 0.3;
+  }
+
+  static isPoorlyDiversified(portfolio: Portfolio): boolean {
+    if (!portfolio.positions || portfolio.positions.length < 3) return true;
+    
+    const topThreeSum = portfolio.positions
+      .sort((a, b) => b.weight - a.weight)
+      .slice(0, 3)
+      .reduce((sum, p) => sum + p.weight, 0);
+    
+    return topThreeSum > PORTFOLIO_CONSTANTS.CONCENTRATION_RISK_THRESHOLD;
+  }
+
+  static isOptimallyAllocated(portfolio: Portfolio): boolean {
+    if (!portfolio.positions || portfolio.positions.length < 2) return false;
+    
+    const target = 1 / portfolio.positions.length;
+    const threshold = PORTFOLIO_CONSTANTS.DEFAULT_REBALANCE_THRESHOLD;
+    
+    return portfolio.positions.every(
+      (p) => Math.abs(p.weight - target) <= threshold
+    );
+  }
+
+  static getValidationSummary(result: ValidationResult): string {
+    if (result.valid) return 'Portfolio validation passed';
+    
+    const errorCount = result.errors.filter((e) => e.severity === 'error').length;
+    const warningCount = result.errors.filter((e) => e.severity === 'warning').length;
+    const infoCount = result.errors.filter((e) => e.severity === 'info').length;
+    
+    const parts = [];
+    if (errorCount > 0) parts.push(`${errorCount} error(s)`);
+    if (warningCount > 0) parts.push(`${warningCount} warning(s)`);
+    if (infoCount > 0) parts.push(`${infoCount} info`);
+    
+    return `Portfolio validation failed: ${parts.join(', ')}`;
+  }
+}
