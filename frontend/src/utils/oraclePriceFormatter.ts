@@ -1,0 +1,167 @@
+import { OraclePrice, AggregatedPrice } from '@/types/oracle';
+
+export class PriceFormatter {
+  static formatPrice(price: number, decimals: number = 8): string {
+    return price.toFixed(decimals);
+  }
+
+  static parsePrice(price: string): number {
+    const parsed = parseFloat(price);
+    if (isNaN(parsed)) {
+      throw new Error('Invalid price format');
+    }
+    return parsed;
+  }
+
+  static formatPriceWithSymbol(price: number, symbol: string = 'STX', decimals: number = 4): string {
+    return `${symbol} ${price.toFixed(decimals)}`;
+  }
+
+  static formatPercentage(value: number, decimals: number = 2): string {
+    return `${(value * 100).toFixed(decimals)}%`;
+  }
+
+  static formatChange(current: number, previous: number, decimals: number = 2): string {
+    const change = ((current - previous) / previous) * 100;
+    const sign = change >= 0 ? '+' : '';
+    return `${sign}${change.toFixed(decimals)}%`;
+  }
+
+  static formatConfidence(confidence: number): string {
+    const percentage = confidence * 100;
+    if (percentage >= 95) return 'Very High';
+    if (percentage >= 80) return 'High';
+    if (percentage >= 60) return 'Medium';
+    if (percentage >= 40) return 'Low';
+    return 'Very Low';
+  }
+
+  static formatTimestamp(timestamp: number, format: 'iso' | 'relative' | 'short' = 'iso'): string {
+    const date = new Date(timestamp);
+
+    switch (format) {
+      case 'iso':
+        return date.toISOString();
+      case 'relative':
+        return this.formatRelativeTime(timestamp);
+      case 'short':
+        return date.toLocaleString();
+      default:
+        return date.toISOString();
+    }
+  }
+
+  private static formatRelativeTime(timestamp: number): string {
+    const now = Date.now();
+    const diff = now - timestamp;
+
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (seconds < 60) return `${seconds}s ago`;
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7) return `${days}d ago`;
+
+    return new Date(timestamp).toLocaleDateString();
+  }
+
+  static formatOraclePrice(price: OraclePrice): {
+    value: string;
+    formatted: string;
+    timestamp: string;
+    confidence: string;
+  } {
+    return {
+      value: this.formatPrice(price.value, 8),
+      formatted: this.formatPriceWithSymbol(price.value, 'STX', 4),
+      timestamp: this.formatTimestamp(price.timestamp, 'relative'),
+      confidence: this.formatConfidence(price.confidence),
+    };
+  }
+
+  static formatAggregatedPrice(price: AggregatedPrice): {
+    value: string;
+    formatted: string;
+    timestamp: string;
+    confidence: string;
+    status: string;
+    method: string;
+  } {
+    return {
+      value: this.formatPrice(price.value, 8),
+      formatted: this.formatPriceWithSymbol(price.value, 'STX', 4),
+      timestamp: this.formatTimestamp(price.timestamp, 'relative'),
+      confidence: this.formatConfidence(price.confidence),
+      status: price.consensusReached ? 'Consensus Reached' : 'Consensus Failed',
+      method: this.capitalizeMethod(price.method),
+    };
+  }
+
+  private static capitalizeMethod(method: string): string {
+    return method
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+
+  static formatHealthScore(score: number): {
+    value: string;
+    label: string;
+    status: 'excellent' | 'good' | 'fair' | 'poor';
+  } {
+    const value = (score * 100).toFixed(0);
+
+    if (score >= 0.9) {
+      return { value: `${value}%`, label: 'Excellent', status: 'excellent' };
+    }
+    if (score >= 0.7) {
+      return { value: `${value}%`, label: 'Good', status: 'good' };
+    }
+    if (score >= 0.5) {
+      return { value: `${value}%`, label: 'Fair', status: 'fair' };
+    }
+    return { value: `${value}%`, label: 'Poor', status: 'poor' };
+  }
+
+  static formatBytes(bytes: number): string {
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    if (bytes === 0) return '0 Bytes';
+
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+  }
+
+  static formatDuration(milliseconds: number): string {
+    const seconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+
+    if (milliseconds < 1000) return `${milliseconds}ms`;
+    if (seconds < 60) return `${seconds}s`;
+    if (minutes < 60) return `${minutes}m ${seconds % 60}s`;
+    return `${hours}h ${minutes % 60}m`;
+  }
+}
+
+export class PriceParser {
+  static parseOracleResponse(response: any): OraclePrice {
+    return {
+      value: parseFloat(response.price || response.value || 0),
+      timestamp: response.timestamp || Date.now(),
+      source: response.source || response.provider || 'unknown',
+      confidence: parseFloat(response.confidence || response.weight || 0.5),
+    };
+  }
+
+  static parseMultiplePrices(responses: any[]): OraclePrice[] {
+    return responses.map((response) => this.parseOracleResponse(response));
+  }
+
+  static normalizePrice(price: number, decimals: number = 8): number {
+    const multiplier = Math.pow(10, decimals);
+    return Math.round(price * multiplier) / multiplier;
+  }
+}
