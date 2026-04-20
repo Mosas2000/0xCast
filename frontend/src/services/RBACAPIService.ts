@@ -1,0 +1,205 @@
+import { Permission, Role, RoleAssignment, AuditLog } from '@/types/rbac';
+import { AccessControlService } from '@/services/AccessControlService';
+import { RoleAssignmentService } from '@/services/RoleAssignmentService';
+import { AuditLogger } from '@/services/AuditLogger';
+import { RoleHierarchyManager } from '@/services/RoleHierarchyManager';
+import { PermissionMatrixManager } from '@/services/PermissionMatrixManager';
+
+export class RBACAPIService {
+  constructor(
+    private accessControl: AccessControlService,
+    private roleAssignment: RoleAssignmentService,
+    private auditLogger: AuditLogger,
+    private roleHierarchy: RoleHierarchyManager,
+    private permissionMatrix: PermissionMatrixManager
+  ) {}
+
+  async getUserPermissions(userId: string): Promise<Permission[]> {
+    return this.accessControl.getUserPermissions(userId);
+  }
+
+  async getUserRole(userId: string): Promise<Role | null> {
+    return this.accessControl.getRoleForUser(userId) || null;
+  }
+
+  async checkPermission(userId: string, permission: Permission): Promise<boolean> {
+    return this.accessControl.checkPermission(userId, permission);
+  }
+
+  async checkResourceAccess(
+    userId: string,
+    resourceId: string,
+    accessType: 'read' | 'write' | 'delete' | 'admin'
+  ): Promise<boolean> {
+    return this.accessControl.checkResourceAccess(userId, resourceId, accessType);
+  }
+
+  async assignRole(
+    userId: string,
+    roleId: string,
+    assignedBy: string,
+    reason?: string,
+    expiresAt?: number
+  ): Promise<RoleAssignment> {
+    return this.roleAssignment.assignRole(userId, roleId, assignedBy, reason, expiresAt);
+  }
+
+  async revokeRole(userId: string, roleId: string, reason?: string): Promise<void> {
+    this.roleAssignment.revokeRole(userId, roleId, reason);
+  }
+
+  async bulkAssignRole(
+    userIds: string[],
+    roleId: string,
+    assignedBy: string,
+    reason?: string
+  ): Promise<{ successful: string[]; failed: string[] }> {
+    return this.roleAssignment.bulkAssignRole(userIds, roleId, assignedBy, reason);
+  }
+
+  async grantResourceAccess(
+    userId: string,
+    resourceId: string,
+    accessType: 'read' | 'write' | 'delete' | 'admin'
+  ): Promise<void> {
+    this.accessControl.grantResourceAccess(userId, resourceId, accessType);
+  }
+
+  async revokeResourceAccess(
+    userId: string,
+    resourceId: string,
+    accessType: 'read' | 'write' | 'delete' | 'admin'
+  ): Promise<void> {
+    this.accessControl.revokeResourceAccess(userId, resourceId, accessType);
+  }
+
+  async getRoleHierarchy(): Promise<Map<string, Role>> {
+    return this.roleHierarchy.getRoleHierarchy();
+  }
+
+  async getRolePermissions(roleId: string): Promise<Permission[]> {
+    return this.permissionMatrix.getRolePermissions(roleId);
+  }
+
+  async grantPermissionToRole(roleId: string, permission: Permission): Promise<boolean> {
+    return this.permissionMatrix.grantPermission(roleId, permission);
+  }
+
+  async revokePermissionFromRole(roleId: string, permission: Permission): Promise<boolean> {
+    return this.permissionMatrix.revokePermission(roleId, permission);
+  }
+
+  async getAuditLogs(
+    filters?: {
+      userId?: string;
+      action?: string;
+      resource?: string;
+      status?: string;
+      startTime?: number;
+      endTime?: number;
+    }
+  ): Promise<AuditLog[]> {
+    let logs = this.auditLogger.getLogs();
+
+    if (filters?.userId) {
+      logs = logs.filter(log => log.userId === filters.userId);
+    }
+
+    if (filters?.action) {
+      logs = logs.filter(log => log.action === filters.action);
+    }
+
+    if (filters?.resource) {
+      logs = logs.filter(log => log.resource === filters.resource);
+    }
+
+    if (filters?.status) {
+      logs = logs.filter(log => log.status === filters.status);
+    }
+
+    if (filters?.startTime) {
+      logs = logs.filter(log => log.timestamp >= filters.startTime!);
+    }
+
+    if (filters?.endTime) {
+      logs = logs.filter(log => log.timestamp <= filters.endTime!);
+    }
+
+    return logs;
+  }
+
+  async getAuditSummary(): Promise<{
+    totalLogs: number;
+    successCount: number;
+    failureCount: number;
+    uniqueUsers: number;
+    actionCounts: { [key: string]: number };
+  }> {
+    return this.auditLogger.getAuditSummary();
+  }
+
+  async exportAuditLogs(
+    format: 'json' | 'csv',
+    filters?: {
+      userId?: string;
+      action?: string;
+      resource?: string;
+      status?: string;
+      startTime?: number;
+      endTime?: number;
+    }
+  ): Promise<string> {
+    const logs = await this.getAuditLogs(filters);
+    return this.auditLogger.exportLogs(logs, format);
+  }
+
+  async cleanupExpiredAssignments(): Promise<number> {
+    return this.roleAssignment.cleanupExpiredAssignments();
+  }
+
+  async getAssignmentsByUser(userId: string): Promise<RoleAssignment[]> {
+    return this.roleAssignment.getAssignmentsByUser(userId);
+  }
+
+  async getAssignmentsByRole(roleId: string): Promise<RoleAssignment[]> {
+    return this.roleAssignment.getAssignmentsByRole(roleId);
+  }
+
+  async getSystemStatus(): Promise<{
+    isHealthy: boolean;
+    totalRoles: number;
+    totalPermissions: number;
+    totalUsers: number;
+    totalAssignments: number;
+    lastAuditLog: AuditLog | null;
+  }> {
+    const hierarchy = this.roleHierarchy.getRoleHierarchy();
+    const allLogs = this.auditLogger.getLogs();
+    const lastLog = allLogs[allLogs.length - 1] || null;
+
+    return {
+      isHealthy: true,
+      totalRoles: hierarchy.size,
+      totalPermissions: Object.keys(Permission).length,
+      totalUsers: 0,
+      totalAssignments: 0,
+      lastAuditLog: lastLog,
+    };
+  }
+}
+
+export function createRBACAPI(
+  accessControl: AccessControlService,
+  roleAssignment: RoleAssignmentService,
+  auditLogger: AuditLogger,
+  roleHierarchy: RoleHierarchyManager,
+  permissionMatrix: PermissionMatrixManager
+): RBACAPIService {
+  return new RBACAPIService(
+    accessControl,
+    roleAssignment,
+    auditLogger,
+    roleHierarchy,
+    permissionMatrix
+  );
+}
