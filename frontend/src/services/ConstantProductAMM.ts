@@ -1,0 +1,154 @@
+import { AMMPool, SwapQuote, AMMStats } from '@/types/amm';
+
+export class ConstantProductAMM {
+  private pool: AMMPool;
+  private stats: AMMStats;
+
+  constructor(pool: AMMPool) {
+    this.pool = pool;
+    this.stats = {
+      volumeTraded: 0n,
+      feesCollected: 0n,
+      liquidityUtilization: 0,
+      slippageAverage: 0,
+      priceImpactAverage: 0,
+    };
+  }
+
+  getPrice(): number {
+    if (this.pool.reserveB === 0n) return 0;
+    return Number(this.pool.reserveA) / Number(this.pool.reserveB);
+  }
+
+  getSpotPrice(): number {
+    if (this.pool.reserveA === 0n || this.pool.reserveB === 0n) return 0;
+    return Number(this.pool.reserveB) / Number(this.pool.reserveA);
+  }
+
+  quoteSwapAtoB(amountIn: bigint): SwapQuote {
+    const feeAmount = (amountIn * BigInt(this.pool.fee)) / 100000n;
+    const amountInAfterFee = amountIn - feeAmount;
+
+    const invariant = this.pool.reserveA * this.pool.reserveB;
+    const newReserveA = this.pool.reserveA + amountInAfterFee;
+    const newReserveB = invariant / newReserveA;
+
+    if (newReserveB >= this.pool.reserveB) {
+      throw new Error('Insufficient liquidity for swap');
+    }
+
+    const amountOut = this.pool.reserveB - newReserveB;
+    const executionPrice = Number(amountIn) / Number(amountOut);
+    const spotPrice = this.getSpotPrice();
+    const priceImpact = (executionPrice - spotPrice) / spotPrice;
+    const slippage = priceImpact * 100;
+
+    return {
+      amountIn,
+      amountOut,
+      priceImpact,
+      executionPrice,
+      slippage,
+      fee: feeAmount,
+    };
+  }
+
+  quoteSwapBtoA(amountIn: bigint): SwapQuote {
+    const feeAmount = (amountIn * BigInt(this.pool.fee)) / 100000n;
+    const amountInAfterFee = amountIn - feeAmount;
+
+    const invariant = this.pool.reserveA * this.pool.reserveB;
+    const newReserveB = this.pool.reserveB + amountInAfterFee;
+    const newReserveA = invariant / newReserveB;
+
+    if (newReserveA >= this.pool.reserveA) {
+      throw new Error('Insufficient liquidity for swap');
+    }
+
+    const amountOut = this.pool.reserveA - newReserveA;
+    const executionPrice = Number(amountIn) / Number(amountOut);
+    const spotPrice = this.getPrice();
+    const priceImpact = (spotPrice - executionPrice) / spotPrice;
+    const slippage = priceImpact * 100;
+
+    return {
+      amountIn,
+      amountOut,
+      priceImpact,
+      executionPrice,
+      slippage,
+      fee: feeAmount,
+    };
+  }
+
+  executeSwapAtoB(amountIn: bigint): bigint {
+    const quote = this.quoteSwapAtoB(amountIn);
+
+    this.pool.reserveA += amountIn - quote.fee;
+    this.pool.reserveB -= quote.amountOut;
+
+    this.stats.volumeTraded += amountIn;
+    this.stats.feesCollected += quote.fee;
+
+    const swaps = (this.stats.volumeTraded > 0n) ? 1 : 0;
+    this.stats.slippageAverage =
+      (this.stats.slippageAverage * (swaps - 1) + quote.slippage) / swaps;
+    this.stats.priceImpactAverage =
+      (this.stats.priceImpactAverage * (swaps - 1) + quote.priceImpact) / swaps;
+
+    return quote.amountOut;
+  }
+
+  executeSwapBtoA(amountIn: bigint): bigint {
+    const quote = this.quoteSwapBtoA(amountIn);
+
+    this.pool.reserveB += amountIn - quote.fee;
+    this.pool.reserveA -= quote.amountOut;
+
+    this.stats.volumeTraded += amountIn;
+    this.stats.feesCollected += quote.fee;
+
+    const swaps = (this.stats.volumeTraded > 0n) ? 1 : 0;
+    this.stats.slippageAverage =
+      (this.stats.slippageAverage * (swaps - 1) + quote.slippage) / swaps;
+    this.stats.priceImpactAverage =
+      (this.stats.priceImpactAverage * (swaps - 1) + quote.priceImpact) / swaps;
+
+    return quote.amountOut;
+  }
+
+  addLiquidity(amountA: bigint, amountB: bigint): bigint {
+    const liquidityA = (amountA * this.pool.totalLiquidity) / this.pool.reserveA;
+    const liquidityB = (amountB * this.pool.totalLiquidity) / this.pool.reserveB;
+
+    const liquidity = liquidityA < liquidityB ? liquidityA : liquidityB;
+
+    this.pool.reserveA += amountA;
+    this.pool.reserveB += amountB;
+    this.pool.totalLiquidity += liquidity;
+
+    return liquidity;
+  }
+
+  removeLiquidity(liquidityTokens: bigint): { amountA: bigint; amountB: bigint } {
+    const amountA = (liquidityTokens * this.pool.reserveA) / this.pool.totalLiquidity;
+    const amountB = (liquidityTokens * this.pool.reserveB) / this.pool.totalLiquidity;
+
+    this.pool.reserveA -= amountA;
+    this.pool.reserveB -= amountB;
+    this.pool.totalLiquidity -= liquidityTokens;
+
+    return { amountA, amountB };
+  }
+
+  getStats(): AMMStats {
+    this.stats.liquidityUtilization = this.calculateLiquidityUtilization();
+    return { ...this.stats };
+  }
+
+  private calculateLiquidityUtilization(): number {
+    const maxPossibleVolume = (this.pool.reserveA + this.pool.reserveB) / 2n;
+    if (maxPossibleVolume === 0n) return 0;
+    return Number(this.stats.volumeTraded) / Number(maxPossibleVolume);
+  }
+}
