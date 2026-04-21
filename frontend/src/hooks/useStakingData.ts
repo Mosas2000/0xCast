@@ -1,11 +1,8 @@
 // Hook for fetching real staking data from the oxcast contract
 import { useState, useEffect, useCallback } from 'react';
 import { cvToJSON, fetchCallReadOnlyFunction, principalCV } from '@stacks/transactions';
-import { STACKS_MAINNET, STACKS_TESTNET } from '@stacks/network';
-import { TOKEN_CONTRACT, CURRENT_NETWORK } from '../config/contracts';
-
-// Get the appropriate network
-const getNetwork = () => CURRENT_NETWORK === 'mainnet' ? STACKS_MAINNET : STACKS_TESTNET;
+import { CONTRACT_NAMES, getContractAddress } from '../config/contracts';
+import { useNetwork } from '../contexts/NetworkContext';
 
 export interface StakingData {
   totalStaked: bigint;
@@ -17,6 +14,7 @@ export interface StakingData {
 }
 
 export function useStakingData(userAddress: string | null) {
+  const { network, networkConfig, stacksNetwork } = useNetwork();
   const [stakingData, setStakingData] = useState<StakingData>({
     totalStaked: 0n,
     userStaked: 0n,
@@ -33,16 +31,16 @@ export function useStakingData(userAddress: string | null) {
     setError(null);
 
     try {
-      const network = getNetwork();
+      const contractAddress = getContractAddress(CONTRACT_NAMES.OXCAST, network);
       
       // Fetch total staked
       const totalStakedResult = await fetchCallReadOnlyFunction({
-        network,
-        contractAddress: TOKEN_CONTRACT.address,
-        contractName: TOKEN_CONTRACT.name,
+        network: stacksNetwork,
+        contractAddress,
+        contractName: CONTRACT_NAMES.OXCAST,
         functionName: 'get-total-staked',
         functionArgs: [],
-        senderAddress: TOKEN_CONTRACT.address,
+        senderAddress: contractAddress,
       });
 
       const totalStakedJson = cvToJSON(totalStakedResult);
@@ -56,12 +54,12 @@ export function useStakingData(userAddress: string | null) {
       if (userAddress) {
         // Fetch user stake
         const userStakeResult = await fetchCallReadOnlyFunction({
-          network,
-          contractAddress: TOKEN_CONTRACT.address,
-          contractName: TOKEN_CONTRACT.name,
+          network: stacksNetwork,
+          contractAddress,
+          contractName: CONTRACT_NAMES.OXCAST,
           functionName: 'get-stake',
           functionArgs: [principalCV(userAddress)],
-          senderAddress: TOKEN_CONTRACT.address,
+          senderAddress: contractAddress,
         });
 
         const userStakeJson = cvToJSON(userStakeResult);
@@ -72,12 +70,12 @@ export function useStakingData(userAddress: string | null) {
 
         // Fetch user OXC balance
         const balanceResult = await fetchCallReadOnlyFunction({
-          network,
-          contractAddress: TOKEN_CONTRACT.address,
-          contractName: TOKEN_CONTRACT.name,
+          network: stacksNetwork,
+          contractAddress,
+          contractName: CONTRACT_NAMES.OXCAST,
           functionName: 'get-balance',
           functionArgs: [principalCV(userAddress)],
-          senderAddress: TOKEN_CONTRACT.address,
+          senderAddress: contractAddress,
         });
 
         const balanceJson = cvToJSON(balanceResult);
@@ -85,9 +83,7 @@ export function useStakingData(userAddress: string | null) {
       }
 
       // Fetch current block height from API
-      const apiUrl = CURRENT_NETWORK === 'mainnet' 
-        ? 'https://api.mainnet.hiro.so/v2/info'
-        : 'https://api.testnet.hiro.so/v2/info';
+      const apiUrl = `${networkConfig.apiUrl}/v2/info`;
       
       let currentBlock = 0;
       try {
@@ -114,7 +110,7 @@ export function useStakingData(userAddress: string | null) {
     } finally {
       setIsLoading(false);
     }
-  }, [userAddress]);
+  }, [userAddress, network, networkConfig.apiUrl, stacksNetwork]);
 
   useEffect(() => {
     fetchStakingData();
