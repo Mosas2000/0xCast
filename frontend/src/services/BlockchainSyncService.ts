@@ -1,0 +1,354 @@
+import { SyncEntity, SyncConflict, QueuedAction } from '@/types/sync';
+import { ConflictResolutionService } from './ConflictResolutionService';
+import { SyncStateManager } from './SyncStateManager';
+import { ActionQueueService } from './ActionQueueService';
+
+export class BlockchainSyncService {
+  private conflictService: ConflictResolutionService;
+  private stateManager: SyncStateManager;
+  private queueService: ActionQueueService;
+  private syncInProgress: boolean = false;
+  private syncTimer: NodeJS.Timeout | null = null;
+  private listeners: Map<string, Function[]> = new Map();
+
+  constructor(
+    conflictService: ConflictResolutionService,
+    stateManager: SyncStateManager,
+    queueService: ActionQueueService
+  ) {
+    this.conflictService = conflictService;
+    this.stateManager = stateManager;
+    this.queueService = queueService;
+  }
+
+  async synchronize(): Promise<boolean> {
+    if (this.syncInProgress) return false;
+
+    this.syncInProgress = true;
+    const startTime = Date.now();
+
+    try {
+      this.emit('sync_start');
+      this.stateManager.updateStatus({ status: 'syncing' });
+
+      const localEntities = this.stateManager.getAllEntities();
+      const remoteEntities = await this.fetchRemoteState();
+      const conflicts = await this.detectConflicts(localEntities, remoteEntities);
+
+      if (conflicts.length > 0) {
+        await this.resolveConflicts(conflicts);
+      }
+
+      const queuedActions = this.queueService.getPendingActions();
+      await this.processQueuedActions(queuedActions);
+
+      await this.reconcileState(localEntities, remoteEntities);
+
+      const duration = Date.now() - startTime;
+      this.stateManager.recordSyncAttempt(true, duration);
+      this.stateManager.updateStatus({
+        status: 'synced',
+        lastSync: Date.now(),
+        syncProgress: 100,
+      });
+
+      this.emit('sync_complete');
+      return true;
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      this.stateManager.recordSyncAttempt(false, duration);
+      this.emit('sync_error', error);
+      this.stateManager.updateStatus({ status: 'error' });
+      return false;
+    } finally {
+      this.syncInProgress = false;
+    }
+  }
+
+  private async detectConflicts(
+    localEntities: SyncEntity[],
+    remoteEntities: SyncEntity[]
+  ): Promise<SyncConflict[]> {
+    const conflicts: SyncConflict[] = [];
+    const remoteMap = new Map(remoteEntities.map(e => [e.id, e]));
+
+    for (const localEntity of localEntities) {
+      const remoteEntity = remoteMap.get(localEntity.id);
+
+      if (!remoteEntity) {
+        continue;
+      }
+
+      const hasConflict = this.conflictService.detectConflict(
+        localEntity.data,
+        remoteEntity.data,
+        localEntity.localVersion,
+        remoteEntity.remoteVersion
+      );
+
+      if (hasConflict) {
+        const conflict: SyncConflict = {
+          id: `conflict_${localEntity.id}`,
+          entityId: localEntity.id,
+          entityType: localEntity.entityType,
+          localVersion: localEntity.localVersion,
+          remoteVersion: remoteEntity.remoteVersion,
+          localData: localEntity.data,
+          remoteData: remoteEntity.data,
+          timestamp: Date.now(),
+        };
+
+        conflicts.push(conflict);
+        this.stateManager.recordConflict();
+      }
+    }
+
+    return conflicts;
+  }
+
+  private async resolveConflicts(conflicts: SyncConflict[]): Promise<void> {
+    const strategy = this.stateManager.getConfig().conflictResolution;
+
+    for (const conflict of conflicts) {
+      try {
+        const resolvedData = this.conflictService.resolveConflict(
+          conflict,
+          strategy
+        );
+
+        if (
+          this.conflictService.validateResolution(conflict, resolvedData)
+        ) {
+          conflict.resolution = strategy;
+          conflict.resolvedData = resolvedData;
+
+          await this.applyResolution(conflict);
+          this.stateManager.recordConflictResolution();
+          this.conflictService.storeResolvedConflict(conflict);
+
+          this.emit('conflict_resolved', conflict);
+        }
+      } catch (error) {
+        conflict.resolution = 'manual';
+        this.emit('manual_resolution_required', conflict);
+      }
+    }
+  }
+
+  private async applyResolution(conflict: SyncConflict): Promise<void> {
+    if (!conflict.resolvedData) return;
+
+    const entity = this.stateManager.getSyncEntity(conflict.entityId);
+    if (entity) {
+      entity.data = conflict.resolvedData;
+      entity.localVersion = conflict.remoteVersion + 1;
+      entity.lastSyncTime = Date.now();
+      this.stateManager.setSyncEntity(conflict.entityId, entity);
+    }
+  }
+
+  private async processQueuedActions(actions: QueuedAction[]): Promise<void> {
+    const batchSize = this.stateManager.getConfig().batchSize;
+    const batches = this.chunkArray(actions, batchSize);
+
+    for (const batch of batches) {
+      for (const action of batch) {
+        this.queueService.markProcessing(action.id);
+
+        try {
+          await this.executeAction(action);
+          this.queueService.markComplete(action.id);
+          this.stateManager.recordActionProcessed();
+          this.emit('action_processed', action);
+        } catch (error) {
+          const retryDelay = Math.pow(2, action.retryCount) * 1000;
+          const shouldRetry = this.queueService.markFailed(
+            action.id,
+            (error as Error).message,
+            retryDelay
+          );
+
+          if (!shouldRetry) {
+            this.emit('action_failed', {
+              action,
+              error: (error as Error).message,
+            });
+          }
+        }
+      }
+
+      const progress =
+        (batches.indexOf(batch) / batches.length) * 100;
+      this.stateManager.updateSyncProgress(progress);
+    }
+  }
+
+  private async executeAction(action: QueuedAction): Promise<void> {
+    switch (action.action) {
+      case 'create':
+        await this.createEntity(action);
+        break;
+      case 'update':
+        await this.updateEntity(action);
+        break;
+      case 'delete':
+        await this.deleteEntity(action);
+        break;
+    }
+  }
+
+  private async createEntity(action: QueuedAction): Promise<void> {
+    const response = await fetch(`/api/entities/${action.entityType}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(action.payload),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create entity: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const entity: SyncEntity = {
+      id: action.entityId,
+      entityType: action.entityType,
+      localVersion: 1,
+      remoteVersion: 1,
+      lastSyncTime: Date.now(),
+      data: data,
+      hash: this.conflictService.hashData(data),
+    };
+
+    this.stateManager.setSyncEntity(action.entityId, entity);
+  }
+
+  private async updateEntity(action: QueuedAction): Promise<void> {
+    const response = await fetch(
+      `/api/entities/${action.entityType}/${action.entityId}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(action.payload),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to update entity: ${response.statusText}`);
+    }
+
+    const entity = this.stateManager.getSyncEntity(action.entityId);
+    if (entity) {
+      entity.data = { ...entity.data, ...action.payload };
+      entity.localVersion++;
+      entity.lastSyncTime = Date.now();
+      entity.hash = this.conflictService.hashData(entity.data);
+      this.stateManager.setSyncEntity(action.entityId, entity);
+    }
+  }
+
+  private async deleteEntity(action: QueuedAction): Promise<void> {
+    const response = await fetch(
+      `/api/entities/${action.entityType}/${action.entityId}`,
+      {
+        method: 'DELETE',
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete entity: ${response.statusText}`);
+    }
+
+    this.stateManager.removeSyncEntity(action.entityId);
+  }
+
+  private async reconcileState(
+    localEntities: SyncEntity[],
+    remoteEntities: SyncEntity[]
+  ): Promise<void> {
+    const remoteMap = new Map(remoteEntities.map(e => [e.id, e]));
+
+    for (const remoteEntity of remoteEntities) {
+      const localEntity = this.stateManager.getSyncEntity(remoteEntity.id);
+
+      if (!localEntity) {
+        this.stateManager.setSyncEntity(remoteEntity.id, remoteEntity);
+      } else if (
+        remoteEntity.remoteVersion > localEntity.remoteVersion
+      ) {
+        localEntity.data = remoteEntity.data;
+        localEntity.remoteVersion = remoteEntity.remoteVersion;
+        localEntity.lastSyncTime = Date.now();
+        this.stateManager.setSyncEntity(remoteEntity.id, localEntity);
+      }
+    }
+
+    const localMap = new Map(localEntities.map(e => [e.id, e]));
+    for (const [id] of localMap) {
+      if (!remoteMap.has(id)) {
+        const queuedAction = this.queueService.getActionsByEntity(
+          id,
+          localMap.get(id)!.entityType
+        );
+        if (queuedAction.length === 0) {
+          this.stateManager.removeSyncEntity(id);
+        }
+      }
+    }
+  }
+
+  private async fetchRemoteState(): Promise<SyncEntity[]> {
+    const response = await fetch('/api/sync/state');
+    if (!response.ok) {
+      throw new Error('Failed to fetch remote state');
+    }
+    return await response.json();
+  }
+
+  startAutoSync(): void {
+    const interval = this.stateManager.getConfig().syncInterval;
+    this.syncTimer = setInterval(() => {
+      this.synchronize().catch(error => {
+        console.error('Auto sync error:', error);
+      });
+    }, interval);
+  }
+
+  stopAutoSync(): void {
+    if (this.syncTimer) {
+      clearInterval(this.syncTimer);
+      this.syncTimer = null;
+    }
+  }
+
+  subscribe(event: string, callback: Function): void {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, []);
+    }
+    this.listeners.get(event)!.push(callback);
+  }
+
+  unsubscribe(event: string, callback: Function): void {
+    const callbacks = this.listeners.get(event);
+    if (callbacks) {
+      const index = callbacks.indexOf(callback);
+      if (index > -1) {
+        callbacks.splice(index, 1);
+      }
+    }
+  }
+
+  private emit(event: string, data?: any): void {
+    const callbacks = this.listeners.get(event);
+    if (callbacks) {
+      callbacks.forEach(callback => callback(data));
+    }
+  }
+
+  private chunkArray<T>(array: T[], size: number): T[][] {
+    const chunks: T[][] = [];
+    for (let i = 0; i < array.length; i += size) {
+      chunks.push(array.slice(i, i + size));
+    }
+    return chunks;
+  }
+}

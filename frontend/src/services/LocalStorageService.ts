@@ -1,0 +1,271 @@
+import { SyncEntity, QueuedAction } from '@/types/sync';
+
+export class LocalStorageService {
+  private prefix = 'sync_';
+  private maxStorageSize = 5242880;
+
+  saveEntity(entity: SyncEntity): boolean {
+    try {
+      const key = `${this.prefix}entity_${entity.id}`;
+      const json = JSON.stringify(entity);
+
+      if (this.getStorageSize() + json.length > this.maxStorageSize) {
+        this.clearOldest();
+      }
+
+      localStorage.setItem(key, json);
+      return true;
+    } catch (error) {
+      console.error('Failed to save entity:', error);
+      return false;
+    }
+  }
+
+  getEntity(id: string): SyncEntity | null {
+    try {
+      const key = `${this.prefix}entity_${id}`;
+      const json = localStorage.getItem(key);
+      return json ? JSON.parse(json) : null;
+    } catch (error) {
+      console.error('Failed to get entity:', error);
+      return null;
+    }
+  }
+
+  getAllEntities(): SyncEntity[] {
+    try {
+      const entities: SyncEntity[] = [];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith(`${this.prefix}entity_`)) {
+          const json = localStorage.getItem(key);
+          if (json) {
+            entities.push(JSON.parse(json));
+          }
+        }
+      }
+
+      return entities;
+    } catch (error) {
+      console.error('Failed to get all entities:', error);
+      return [];
+    }
+  }
+
+  removeEntity(id: string): boolean {
+    try {
+      const key = `${this.prefix}entity_${id}`;
+      localStorage.removeItem(key);
+      return true;
+    } catch (error) {
+      console.error('Failed to remove entity:', error);
+      return false;
+    }
+  }
+
+  saveQueuedAction(action: QueuedAction): boolean {
+    try {
+      const key = `${this.prefix}action_${action.id}`;
+      const json = JSON.stringify(action);
+
+      if (this.getStorageSize() + json.length > this.maxStorageSize) {
+        this.clearOldest();
+      }
+
+      localStorage.setItem(key, json);
+      return true;
+    } catch (error) {
+      console.error('Failed to save action:', error);
+      return false;
+    }
+  }
+
+  getQueuedAction(id: string): QueuedAction | null {
+    try {
+      const key = `${this.prefix}action_${id}`;
+      const json = localStorage.getItem(key);
+      return json ? JSON.parse(json) : null;
+    } catch (error) {
+      console.error('Failed to get action:', error);
+      return null;
+    }
+  }
+
+  getAllQueuedActions(): QueuedAction[] {
+    try {
+      const actions: QueuedAction[] = [];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith(`${this.prefix}action_`)) {
+          const json = localStorage.getItem(key);
+          if (json) {
+            actions.push(JSON.parse(json));
+          }
+        }
+      }
+
+      return actions;
+    } catch (error) {
+      console.error('Failed to get all actions:', error);
+      return [];
+    }
+  }
+
+  removeQueuedAction(id: string): boolean {
+    try {
+      const key = `${this.prefix}action_${id}`;
+      localStorage.removeItem(key);
+      return true;
+    } catch (error) {
+      console.error('Failed to remove action:', error);
+      return false;
+    }
+  }
+
+  clearQueue(): void {
+    try {
+      const keysToRemove: string[] = [];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith(`${this.prefix}action_`)) {
+          keysToRemove.push(key);
+        }
+      }
+
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+    } catch (error) {
+      console.error('Failed to clear queue:', error);
+    }
+  }
+
+  clearAll(): void {
+    try {
+      const keysToRemove: string[] = [];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith(this.prefix)) {
+          keysToRemove.push(key);
+        }
+      }
+
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+    } catch (error) {
+      console.error('Failed to clear all:', error);
+    }
+  }
+
+  getStorageSize(): number {
+    try {
+      let size = 0;
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith(this.prefix)) {
+          const value = localStorage.getItem(key);
+          if (value) {
+            size += key.length + value.length;
+          }
+        }
+      }
+
+      return size;
+    } catch (error) {
+      console.error('Failed to get storage size:', error);
+      return 0;
+    }
+  }
+
+  private clearOldest(): void {
+    try {
+      const items: Array<{ key: string; timestamp: number }> = [];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith(this.prefix)) {
+          const value = localStorage.getItem(key);
+          if (value) {
+            try {
+              const parsed = JSON.parse(value);
+              items.push({
+                key,
+                timestamp: parsed.timestamp || parsed.lastSyncTime || 0,
+              });
+            } catch {
+              items.push({ key, timestamp: 0 });
+            }
+          }
+        }
+      }
+
+      items.sort((a, b) => a.timestamp - b.timestamp);
+
+      const toDelete = Math.ceil(items.length * 0.1);
+      for (let i = 0; i < toDelete; i++) {
+        localStorage.removeItem(items[i].key);
+      }
+    } catch (error) {
+      console.error('Failed to clear oldest:', error);
+    }
+  }
+
+  hasEntity(id: string): boolean {
+    try {
+      const key = `${this.prefix}entity_${id}`;
+      return localStorage.getItem(key) !== null;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  hasQueuedAction(id: string): boolean {
+    try {
+      const key = `${this.prefix}action_${id}`;
+      return localStorage.getItem(key) !== null;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  getStatistics(): {
+    entityCount: number;
+    actionCount: number;
+    storageSize: number;
+    usagePercent: number;
+  } {
+    try {
+      let entityCount = 0;
+      let actionCount = 0;
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith(`${this.prefix}entity_`)) {
+          entityCount++;
+        } else if (key?.startsWith(`${this.prefix}action_`)) {
+          actionCount++;
+        }
+      }
+
+      const size = this.getStorageSize();
+      const usagePercent = (size / this.maxStorageSize) * 100;
+
+      return {
+        entityCount,
+        actionCount,
+        storageSize: size,
+        usagePercent,
+      };
+    } catch (error) {
+      console.error('Failed to get statistics:', error);
+      return {
+        entityCount: 0,
+        actionCount: 0,
+        storageSize: 0,
+        usagePercent: 0,
+      };
+    }
+  }
+}
