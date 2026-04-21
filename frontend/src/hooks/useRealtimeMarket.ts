@@ -1,0 +1,217 @@
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { getRealtimeDataManager } from '../services/RealtimeDataManager';
+import { MarketUpdate, OrderBookUpdate, TradeUpdate } from '../types/websocket';
+
+export function useRealtimeMarketData(marketId: string) {
+  const [marketData, setMarketData] = useState<MarketUpdate | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const manager = useRef(getRealtimeDataManager());
+
+  useEffect(() => {
+    const m = manager.current;
+    m.subscribeToMarket(marketId);
+    setIsConnected(m.isConnected());
+
+    const handleUpdate = (data: MarketUpdate) => {
+      setMarketData(data);
+    };
+
+    const handleError = (err: Error) => {
+      setError(err);
+    };
+
+    const handleConnected = () => {
+      setIsConnected(true);
+    };
+
+    const handleDisconnected = () => {
+      setIsConnected(false);
+    };
+
+    m.on('market:update', handleUpdate);
+    m.on('connection:error', handleError);
+    m.on('connection:open', handleConnected);
+    m.on('connection:close', handleDisconnected);
+
+    return () => {
+      m.unsubscribeFromMarket(marketId);
+      m.off('market:update', handleUpdate);
+      m.off('connection:error', handleError);
+      m.off('connection:open', handleConnected);
+      m.off('connection:close', handleDisconnected);
+    };
+  }, [marketId]);
+
+  return { marketData, isConnected, error };
+}
+
+export function useRealtimeOrderBook(marketId: string) {
+  const [orderBook, setOrderBook] = useState<OrderBookUpdate | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const manager = useRef(getRealtimeDataManager());
+
+  useEffect(() => {
+    const m = manager.current;
+    m.subscribeToMarket(marketId);
+    setIsLoading(true);
+
+    const handleOrderBookUpdate = (data: OrderBookUpdate) => {
+      setOrderBook(data);
+      setIsLoading(false);
+    };
+
+    m.on('orderbook:update', handleOrderBookUpdate);
+
+    return () => {
+      m.off('orderbook:update', handleOrderBookUpdate);
+    };
+  }, [marketId]);
+
+  return { orderBook, isLoading };
+}
+
+export function useRealtimeTrades(marketId: string) {
+  const [trades, setTrades] = useState<TradeUpdate[]>([]);
+  const manager = useRef(getRealtimeDataManager());
+
+  useEffect(() => {
+    const m = manager.current;
+    m.subscribeToMarket(marketId);
+
+    const handleTradeUpdate = (data: TradeUpdate) => {
+      setTrades((prevTrades) => {
+        const updated = [data, ...prevTrades];
+        return updated.slice(0, 50);
+      });
+    };
+
+    m.on('trade:update', handleTradeUpdate);
+
+    return () => {
+      m.off('trade:update', handleTradeUpdate);
+    };
+  }, [marketId]);
+
+  return { trades };
+}
+
+export function useRealtimeConnection() {
+  const [isConnected, setIsConnected] = useState(false);
+  const [useWebSocket, setUseWebSocket] = useState(true);
+  const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const manager = useRef(getRealtimeDataManager());
+
+  useEffect(() => {
+    const m = manager.current;
+
+    const handleConnected = () => {
+      setIsConnected(true);
+      setReconnectAttempts(0);
+    };
+
+    const handleDisconnected = () => {
+      setIsConnected(false);
+    };
+
+    const handleError = () => {
+      setUseWebSocket(m.isUsingWebSocket());
+    };
+
+    m.on('connection:open', handleConnected);
+    m.on('connection:close', handleDisconnected);
+    m.on('connection:error', handleError);
+
+    setIsConnected(m.isConnected());
+    setUseWebSocket(m.isUsingWebSocket());
+
+    return () => {
+      m.off('connection:open', handleConnected);
+      m.off('connection:close', handleDisconnected);
+      m.off('connection:error', handleError);
+    };
+  }, []);
+
+  return { isConnected, useWebSocket, reconnectAttempts };
+}
+
+export function useRealtimeMarkets(marketIds: string[]) {
+  const [marketsData, setMarketsData] = useState<Map<string, MarketUpdate>>(new Map());
+  const manager = useRef(getRealtimeDataManager());
+
+  useEffect(() => {
+    const m = manager.current;
+
+    marketIds.forEach((id) => {
+      m.subscribeToMarket(id);
+    });
+
+    const handleUpdate = (data: MarketUpdate) => {
+      setMarketsData((prev) => {
+        const updated = new Map(prev);
+        updated.set(data.marketId, data);
+        return updated;
+      });
+    };
+
+    m.on('market:update', handleUpdate);
+
+    return () => {
+      marketIds.forEach((id) => {
+        m.unsubscribeFromMarket(id);
+      });
+      m.off('market:update', handleUpdate);
+    };
+  }, [marketIds.join(',')]);
+
+  return { marketsData };
+}
+
+export function useRealtimePrice(marketId: string) {
+  const [price, setPrice] = useState<number>(0);
+  const [change, setChange] = useState<number>(0);
+  const [changePercent, setChangePercent] = useState<number>(0);
+  const manager = useRef(getRealtimeDataManager());
+
+  useEffect(() => {
+    const m = manager.current;
+    m.subscribeToMarket(marketId);
+
+    const handleUpdate = (data: MarketUpdate) => {
+      setPrice(data.price);
+      setChange(data.change);
+      setChangePercent(data.changePercent);
+    };
+
+    m.on('market:update', handleUpdate);
+
+    return () => {
+      m.off('market:update', handleUpdate);
+    };
+  }, [marketId]);
+
+  return { price, change, changePercent };
+}
+
+export function useRealtimeVolume(marketId: string) {
+  const [volume, setVolume] = useState<number>(0);
+  const [volumeUsd, setVolumeUsd] = useState<number>(0);
+  const manager = useRef(getRealtimeDataManager());
+
+  useEffect(() => {
+    const m = manager.current;
+    m.subscribeToMarket(marketId);
+
+    const handleUpdate = (data: MarketUpdate) => {
+      setVolume(data.volume);
+    };
+
+    m.on('market:update', handleUpdate);
+
+    return () => {
+      m.off('market:update', handleUpdate);
+    };
+  }, [marketId]);
+
+  return { volume, volumeUsd };
+}
