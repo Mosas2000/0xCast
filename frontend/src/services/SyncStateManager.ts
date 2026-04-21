@@ -1,0 +1,224 @@
+import { SyncEntity, SyncState, SyncConfig, SyncEvent, SyncMetrics } from '@/types/sync';
+
+export class SyncStateManager {
+  private syncState: Map<string, SyncEntity> = new Map();
+  private currentStatus: SyncState = {
+    status: 'synced',
+    lastSync: Date.now(),
+    pendingActions: 0,
+    conflicts: 0,
+    isOffline: false,
+    syncProgress: 100,
+  };
+  private config: SyncConfig = {
+    autoSync: true,
+    syncInterval: 30000,
+    conflictResolution: 'merge',
+    maxQueueSize: 10000,
+    maxRetries: 3,
+    retryDelay: 5000,
+    batchSize: 50,
+    enableCompression: true,
+  };
+  private metrics: SyncMetrics = {
+    totalSyncAttempts: 0,
+    successfulSyncs: 0,
+    failedSyncs: 0,
+    conflictsDetected: 0,
+    conflictsResolved: 0,
+    queuedActionsProcessed: 0,
+    averageSyncTime: 0,
+    lastSyncTime: 0,
+    dataSize: 0,
+  };
+  private listeners: Map<string, Function[]> = new Map();
+
+  setConfig(config: Partial<SyncConfig>): void {
+    this.config = { ...this.config, ...config };
+  }
+
+  getConfig(): SyncConfig {
+    return { ...this.config };
+  }
+
+  setSyncEntity(key: string, entity: SyncEntity): void {
+    this.syncState.set(key, entity);
+    this.updateMetrics();
+    this.emit('entity_updated', entity);
+  }
+
+  getSyncEntity(key: string): SyncEntity | undefined {
+    return this.syncState.get(key);
+  }
+
+  getAllEntities(): SyncEntity[] {
+    return Array.from(this.syncState.values());
+  }
+
+  removeSyncEntity(key: string): boolean {
+    const exists = this.syncState.has(key);
+    if (exists) {
+      this.syncState.delete(key);
+      this.updateMetrics();
+      this.emit('entity_removed', key);
+    }
+    return exists;
+  }
+
+  updateStatus(status: Partial<SyncState>): void {
+    this.currentStatus = { ...this.currentStatus, ...status };
+    this.emit('status_changed', this.currentStatus);
+  }
+
+  getStatus(): SyncState {
+    return { ...this.currentStatus };
+  }
+
+  setOffline(offline: boolean): void {
+    this.currentStatus.isOffline = offline;
+    this.currentStatus.status = offline ? 'offline' : 'synced';
+    this.emit(offline ? 'offline' : 'online');
+  }
+
+  isOffline(): boolean {
+    return this.currentStatus.isOffline;
+  }
+
+  recordSyncAttempt(success: boolean, duration: number): void {
+    this.metrics.totalSyncAttempts++;
+    this.metrics.lastSyncTime = Date.now();
+
+    if (success) {
+      this.metrics.successfulSyncs++;
+      this.metrics.averageSyncTime =
+        (this.metrics.averageSyncTime + duration) / 2;
+    } else {
+      this.metrics.failedSyncs++;
+    }
+
+    this.emit('metrics_updated', this.metrics);
+  }
+
+  recordConflict(): void {
+    this.metrics.conflictsDetected++;
+    this.currentStatus.conflicts++;
+    this.emit('conflict_recorded');
+  }
+
+  recordConflictResolution(): void {
+    this.metrics.conflictsResolved++;
+    this.currentStatus.conflicts = Math.max(0, this.currentStatus.conflicts - 1);
+  }
+
+  recordActionProcessed(): void {
+    this.metrics.queuedActionsProcessed++;
+    this.currentStatus.pendingActions = Math.max(
+      0,
+      this.currentStatus.pendingActions - 1
+    );
+  }
+
+  getMetrics(): SyncMetrics {
+    return { ...this.metrics };
+  }
+
+  resetMetrics(): void {
+    this.metrics = {
+      totalSyncAttempts: 0,
+      successfulSyncs: 0,
+      failedSyncs: 0,
+      conflictsDetected: 0,
+      conflictsResolved: 0,
+      queuedActionsProcessed: 0,
+      averageSyncTime: 0,
+      lastSyncTime: 0,
+      dataSize: 0,
+    };
+  }
+
+  getSyncSuccessRate(): number {
+    if (this.metrics.totalSyncAttempts === 0) return 100;
+    return (
+      (this.metrics.successfulSyncs / this.metrics.totalSyncAttempts) * 100
+    );
+  }
+
+  getConflictResolutionRate(): number {
+    if (this.metrics.conflictsDetected === 0) return 100;
+    return (
+      (this.metrics.conflictsResolved / this.metrics.conflictsDetected) * 100
+    );
+  }
+
+  updatePendingActions(count: number): void {
+    this.currentStatus.pendingActions = count;
+    this.emit('pending_actions_updated', count);
+  }
+
+  updateSyncProgress(progress: number): void {
+    this.currentStatus.syncProgress = Math.min(100, Math.max(0, progress));
+    this.emit('sync_progress', this.currentStatus.syncProgress);
+  }
+
+  subscribe(event: string, callback: Function): void {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, []);
+    }
+    this.listeners.get(event)!.push(callback);
+  }
+
+  unsubscribe(event: string, callback: Function): void {
+    const callbacks = this.listeners.get(event);
+    if (callbacks) {
+      const index = callbacks.indexOf(callback);
+      if (index > -1) {
+        callbacks.splice(index, 1);
+      }
+    }
+  }
+
+  private emit(event: string, data?: any): void {
+    const callbacks = this.listeners.get(event);
+    if (callbacks) {
+      callbacks.forEach(callback => callback(data));
+    }
+  }
+
+  private updateMetrics(): void {
+    const totalSize = Array.from(this.syncState.values()).reduce(
+      (sum, entity) => sum + JSON.stringify(entity.data).length,
+      0
+    );
+    this.metrics.dataSize = totalSize;
+  }
+
+  clearAllEntities(): void {
+    this.syncState.clear();
+    this.updateMetrics();
+    this.emit('all_entities_cleared');
+  }
+
+  getEntityCount(): number {
+    return this.syncState.size;
+  }
+
+  getSyncHealth(): {
+    status: SyncState['status'];
+    successRate: number;
+    conflictRate: number;
+    pendingCount: number;
+    isHealthy: boolean;
+  } {
+    const successRate = this.getSyncSuccessRate();
+    const pendingCount = this.currentStatus.pendingActions;
+    const isHealthy = successRate >= 95 && pendingCount < 100;
+
+    return {
+      status: this.currentStatus.status,
+      successRate,
+      conflictRate: 100 - this.getConflictResolutionRate(),
+      pendingCount,
+      isHealthy,
+    };
+  }
+}
