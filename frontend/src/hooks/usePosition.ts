@@ -1,14 +1,12 @@
 import { useState, useCallback, useEffect } from 'react';
 import { cvToJSON, fetchCallReadOnlyFunction, uintCV, principalCV } from '@stacks/transactions';
-import { STACKS_MAINNET, STACKS_TESTNET } from '@stacks/network';
 import type { Position } from '../types/market';
 import { parsePosition } from '../utils/helpers';
-import { MARKET_CONTRACT, CURRENT_NETWORK } from '../config/contracts';
-
-// Get the appropriate network based on configuration
-const getNetwork = () => CURRENT_NETWORK === 'mainnet' ? STACKS_MAINNET : STACKS_TESTNET;
+import { CONTRACT_NAMES, getContractAddress } from '../config/contracts';
+import { useNetwork } from '../contexts/NetworkContext';
 
 export function usePosition(marketId: number | null, userAddress: string | null) {
+  const { stacksNetwork, network } = useNetwork();
   const [position, setPosition] = useState<Position | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,14 +21,14 @@ export function usePosition(marketId: number | null, userAddress: string | null)
     setError(null);
 
     try {
-      const network = getNetwork();
+      const contractAddress = getContractAddress(CONTRACT_NAMES.MARKET_CORE, network);
       const result = await fetchCallReadOnlyFunction({
-        network,
-        contractAddress: MARKET_CONTRACT.address,
-        contractName: MARKET_CONTRACT.name,
+        network: stacksNetwork,
+        contractAddress,
+        contractName: CONTRACT_NAMES.MARKET_CORE,
         functionName: 'get-user-position',
         functionArgs: [uintCV(marketId), principalCV(userAddress)],
-        senderAddress: MARKET_CONTRACT.address,
+        senderAddress: contractAddress,
       });
 
       const jsonResult = cvToJSON(result);
@@ -44,7 +42,7 @@ export function usePosition(marketId: number | null, userAddress: string | null)
     } finally {
       setIsLoading(false);
     }
-  }, [marketId, userAddress]);
+  }, [marketId, userAddress, network, stacksNetwork]);
 
   // Auto-fetch position when marketId or userAddress changes
   useEffect(() => {
