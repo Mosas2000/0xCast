@@ -278,56 +278,62 @@
   (request-id uint)
   (approval-count uint)
   (paused bool))
-  (response uint uint)
-  (let ((event-id (var-get circuit-breaker-log-id)))
-    (begin
-      (var-set circuit-breaker-log-id (+ event-id u1))
-      (map-set circuit-breaker-events
-        { log-id: event-id }
-        {
-          action: action,
-          actor: tx-sender,
-          reason: reason,
-          request-id: request-id,
-          approval-count: approval-count,
-          threshold: (var-get pause-approval-threshold),
-          paused: paused,
-          created-at: stacks-block-height
-        }
+  (if true
+    (let ((event-id (var-get circuit-breaker-log-id)))
+      (begin
+        (var-set circuit-breaker-log-id (+ event-id u1))
+        (map-set circuit-breaker-events
+          { log-id: event-id }
+          {
+            action: action,
+            actor: tx-sender,
+            reason: reason,
+            request-id: request-id,
+            approval-count: approval-count,
+            threshold: (var-get pause-approval-threshold),
+            paused: paused,
+            created-at: stacks-block-height
+          }
+        )
+        (ok event-id)
       )
-      (ok event-id)
     )
+    (err u0)
   )
 )
 
 (define-private (open-pause-request (reason (string-ascii 128)))
-  (response bool uint)
-  (begin
-    (var-set pause-request-id (+ (var-get pause-request-id) u1))
-    (var-set pause-request-open true)
-    (var-set pause-request-reason reason)
-    (var-set pause-approval-count u0)
-    (ok true)
+  (if true
+    (begin
+      (var-set pause-request-id (+ (var-get pause-request-id) u1))
+      (var-set pause-request-open true)
+      (var-set pause-request-reason reason)
+      (var-set pause-approval-count u0)
+      (ok true)
+    )
+    (err u0)
   )
 )
 
 (define-private (open-resume-request (reason (string-ascii 128)))
-  (response bool uint)
-  (begin
-    (var-set resume-request-id (+ (var-get resume-request-id) u1))
-    (var-set resume-request-open true)
-    (var-set resume-request-reason reason)
-    (var-set resume-approval-count u0)
-    (ok true)
+  (if true
+    (begin
+      (var-set resume-request-id (+ (var-get resume-request-id) u1))
+      (var-set resume-request-open true)
+      (var-set resume-request-reason reason)
+      (var-set resume-approval-count u0)
+      (ok true)
+    )
+    (err u0)
   )
 )
 
 (define-private (process-emergency-pause-approval (reason (string-ascii 128)))
   (let ((current-block stacks-block-height))
-    (if (not (var-get pause-request-open))
+    (try! (if (not (var-get pause-request-open))
       (open-pause-request reason)
       (ok true)
-    )
+    ))
 
     (let ((request-id (var-get pause-request-id)))
       (asserts!
@@ -368,10 +374,10 @@
 
 (define-private (process-emergency-resume-approval (reason (string-ascii 128)))
   (let ((current-block stacks-block-height))
-    (if (not (var-get resume-request-open))
+    (try! (if (not (var-get resume-request-open))
       (open-resume-request reason)
       (ok true)
-    )
+    ))
 
     (let ((request-id (var-get resume-request-id)))
       (asserts!
