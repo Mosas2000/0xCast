@@ -336,25 +336,25 @@
         { approved-at: current-block }
       )
       (var-set pause-approval-count (+ (var-get pause-approval-count) u1))
-      (try! (append-circuit-breaker-event
+      (append-circuit-breaker-event
         "pause-approval"
         (var-get pause-request-reason)
         request-id
         (var-get pause-approval-count)
         false
-      ))
+      )
 
       (if (>= (var-get pause-approval-count) (var-get pause-approval-threshold))
         (begin
           (var-set contract-paused true)
           (var-set pause-request-open false)
-          (try! (append-circuit-breaker-event
+          (append-circuit-breaker-event
             "pause-activated"
             (var-get pause-request-reason)
             request-id
             (var-get pause-approval-count)
             true
-          ))
+          )
           (ok true)
         )
         (ok true)
@@ -380,25 +380,25 @@
         { approved-at: current-block }
       )
       (var-set resume-approval-count (+ (var-get resume-approval-count) u1))
-      (try! (append-circuit-breaker-event
+      (append-circuit-breaker-event
         "resume-approval"
         (var-get resume-request-reason)
         request-id
         (var-get resume-approval-count)
         true
-      ))
+      )
 
       (if (>= (var-get resume-approval-count) (var-get pause-approval-threshold))
         (begin
           (var-set contract-paused false)
           (var-set resume-request-open false)
-          (try! (append-circuit-breaker-event
+          (append-circuit-breaker-event
             "resume-activated"
             (var-get resume-request-reason)
             request-id
             (var-get resume-approval-count)
             false
-          ))
+          )
           (ok true)
         )
         (ok true)
