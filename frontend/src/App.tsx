@@ -11,6 +11,7 @@ import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { TestnetWarningBanner } from './components/TestnetWarningBanner';
+import { EmergencyPauseBanner } from './components/EmergencyPauseBanner';
 import { LandingPage } from './pages/LandingPage';
 import { MarketsPage } from './pages/MarketsPage';
 import { TradePage } from './pages/TradePage';
@@ -39,10 +40,11 @@ function App() {
             <WatchlistProvider>
               <RecentlyViewedProvider>
                 <TransactionProvider>
-                  <BrowserRouter>
-                  <div className="min-h-screen flex flex-col bg-white dark:bg-black pb-16 md:pb-0">
-                  <TestnetWarningBanner />
-                  <Header />
+                <BrowserRouter>
+                   <div className="min-h-screen flex flex-col bg-white dark:bg-black pb-16 md:pb-0">
+                   <TestnetWarningBanner />
+                   <EmergencyPauseBanner />
+                   <Header />
                 <main className="flex-1">
                   <Routes>
                     <Route path="/" element={<LandingPage />} />
