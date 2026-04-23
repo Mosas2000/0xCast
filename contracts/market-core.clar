@@ -278,6 +278,7 @@
   (request-id uint)
   (approval-count uint)
   (paused bool))
+  (response uint uint)
   (let ((event-id (var-get circuit-breaker-log-id)))
     (begin
       (var-set circuit-breaker-log-id (+ event-id u1))
@@ -294,28 +295,30 @@
           created-at: stacks-block-height
         }
       )
-      event-id
+      (ok event-id)
     )
   )
 )
 
 (define-private (open-pause-request (reason (string-ascii 128)))
+  (response bool uint)
   (begin
     (var-set pause-request-id (+ (var-get pause-request-id) u1))
     (var-set pause-request-open true)
     (var-set pause-request-reason reason)
     (var-set pause-approval-count u0)
-    true
+    (ok true)
   )
 )
 
 (define-private (open-resume-request (reason (string-ascii 128)))
+  (response bool uint)
   (begin
     (var-set resume-request-id (+ (var-get resume-request-id) u1))
     (var-set resume-request-open true)
     (var-set resume-request-reason reason)
     (var-set resume-approval-count u0)
-    true
+    (ok true)
   )
 )
 
@@ -336,25 +339,25 @@
         { approved-at: current-block }
       )
       (var-set pause-approval-count (+ (var-get pause-approval-count) u1))
-      (append-circuit-breaker-event
+      (try! (append-circuit-breaker-event
         "pause-approval"
         (var-get pause-request-reason)
         request-id
         (var-get pause-approval-count)
         false
-      )
+      ))
 
       (if (>= (var-get pause-approval-count) (var-get pause-approval-threshold))
         (begin
           (var-set contract-paused true)
           (var-set pause-request-open false)
-          (append-circuit-breaker-event
+          (try! (append-circuit-breaker-event
             "pause-activated"
             (var-get pause-request-reason)
             request-id
             (var-get pause-approval-count)
             true
-          )
+          ))
           (ok true)
         )
         (ok true)
@@ -380,25 +383,25 @@
         { approved-at: current-block }
       )
       (var-set resume-approval-count (+ (var-get resume-approval-count) u1))
-      (append-circuit-breaker-event
+      (try! (append-circuit-breaker-event
         "resume-approval"
         (var-get resume-request-reason)
         request-id
         (var-get resume-approval-count)
         true
-      )
+      ))
 
       (if (>= (var-get resume-approval-count) (var-get pause-approval-threshold))
         (begin
           (var-set contract-paused false)
           (var-set resume-request-open false)
-          (append-circuit-breaker-event
+          (try! (append-circuit-breaker-event
             "resume-activated"
             (var-get resume-request-reason)
             request-id
             (var-get resume-approval-count)
             false
-          )
+          ))
           (ok true)
         )
         (ok true)
