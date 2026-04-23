@@ -126,7 +126,6 @@ export function useLiquidity(): UseLiquidityReturn {
     try {
       const result = await callReadOnly<{
         'stx-balance': number;
-        'token-balances': number[];
         'total-shares': number;
         active: boolean;
       } | null>('get-pool', [encodeUint(marketId)]);
@@ -136,7 +135,7 @@ export function useLiquidity(): UseLiquidityReturn {
       return {
         marketId,
         stxBalance: BigInt(result['stx-balance'] ?? 0),
-        tokenBalances: result['token-balances'] ?? [],
+        tokenBalances: [],
         totalShares: BigInt(result['total-shares'] ?? 0),
         active: result.active ?? false,
       };
