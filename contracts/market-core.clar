@@ -294,7 +294,7 @@
           created-at: stacks-block-height
         }
       )
-      (ok event-id)
+      event-id
     )
   )
 )
@@ -305,7 +305,7 @@
     (var-set pause-request-open true)
     (var-set pause-request-reason reason)
     (var-set pause-approval-count u0)
-    (ok true)
+    true
   )
 )
 
@@ -315,7 +315,7 @@
     (var-set resume-request-open true)
     (var-set resume-request-reason reason)
     (var-set resume-approval-count u0)
-    (ok true)
+    true
   )
 )
 
