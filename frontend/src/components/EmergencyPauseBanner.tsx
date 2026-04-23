@@ -9,9 +9,16 @@ export function EmergencyPauseBanner() {
   const { address } = useWallet();
   const { isPaused, isLoading } = useContractPause();
   const previousPauseState = useRef<boolean | null>(null);
+  const hasMounted = useRef(false);
 
   useEffect(() => {
     if (isLoading) {
+      return;
+    }
+
+    if (!hasMounted.current) {
+      hasMounted.current = true;
+      previousPauseState.current = isPaused;
       return;
     }
 
