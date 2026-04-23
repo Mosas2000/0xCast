@@ -1005,36 +1005,64 @@ describe("market-core contract tests", () => {
     });
 
     describe("Emergency Pause", () => {
-        it("should allow only owner to set pause state", () => {
+        it("should require multi-sig approvals before pausing and keep an audit log", () => {
+            const registerApprover = simnet.callPublicFn(
+                contractName,
+                "set-emergency-approver",
+                [Cl.standardPrincipal(wallet1), Cl.bool(true)],
+                deployer
+            );
+            expect(registerApprover.result).toBeOk(Cl.bool(true));
+
             const unauthorized = simnet.callPublicFn(
                 contractName,
-                "set-contract-paused",
-                [Cl.bool(true)],
-                wallet1
+                "approve-emergency-pause",
+                [Cl.stringAscii("unauthorized pause attempt")],
+                wallet2
             );
-            expect(unauthorized.result).toBeErr(Cl.uint(100)); // ERR-NOT-AUTHORIZED
+            expect(unauthorized.result).toBeErr(Cl.uint(122)); // ERR-PAUSE-NOT-AUTHORIZED
 
-            const authorized = simnet.callPublicFn(
+            const ownerApproval = simnet.callPublicFn(
                 contractName,
                 "set-contract-paused",
                 [Cl.bool(true)],
                 deployer
             );
-            expect(authorized.result).toBeOk({ type: "true" } as any);
+            expect(ownerApproval.result).toBeOk({ type: "true" } as any);
+
+            const stillActive = simnet.callReadOnlyFn(contractName, "is-contract-paused", [], deployer);
+            expect(stillActive.result).toEqual({ type: "false" });
+
+            const secondApproval = simnet.callPublicFn(
+                contractName,
+                "approve-emergency-pause",
+                [Cl.stringAscii("second approval")],
+                wallet1
+            );
+            expect(secondApproval.result).toBeOk({ type: "true" } as any);
 
             const paused = simnet.callReadOnlyFn(contractName, "is-contract-paused", [], deployer);
             expect(paused.result).toEqual({ type: "true" });
+
+            const logCount = simnet.callReadOnlyFn(contractName, "get-circuit-breaker-log-count", [], deployer);
+            expect(logCount.result).toBeUint(3);
+
+            const activation = simnet.callReadOnlyFn(contractName, "get-circuit-breaker-log", [Cl.uint(2)], deployer);
+            expect(activation.result).toHaveProperty("type", "some");
+            const logTuple = (activation.result as any).value.value as Record<string, any>;
+            expect(logTuple.action).toEqual({ type: "ascii", value: "pause-activated" });
+            expect(logTuple.paused).toEqual({ type: "true" });
         });
 
-        it("should block create-market while paused", () => {
+        it("should block trading while paused and allow resumption after approvals", () => {
             const currentBlock = simnet.blockHeight;
-            const pause = simnet.callPublicFn(
+            const registerApprover = simnet.callPublicFn(
                 contractName,
-                "set-contract-paused",
-                [Cl.bool(true)],
+                "set-emergency-approver",
+                [Cl.standardPrincipal(wallet1), Cl.bool(true)],
                 deployer
             );
-            expect(pause.result).toBeOk({ type: "true" } as any);
+            expect(registerApprover.result).toBeOk(Cl.bool(true));
 
             const create = simnet.callPublicFn(
                 contractName,
@@ -1047,31 +1075,39 @@ describe("market-core contract tests", () => {
                 ],
                 deployer
             );
-            expect(create.result).toBeErr(Cl.uint(119)); // ERR-CONTRACT-PAUSED
-        });
-
-        it("should block both stake entrypoints while paused", () => {
-            const currentBlock = simnet.blockHeight;
-            const create = simnet.callPublicFn(
-                contractName,
-                "create-market",
-                [
-                    Cl.stringAscii("Pause should block staking"),
-                    Cl.uint(currentBlock + 50),
-                    Cl.uint(currentBlock + 100),
-                    Cl.uint(1),
-                ],
-                deployer
-            );
             expect(create.result).toBeOk(Cl.uint(0));
 
-            const pause = simnet.callPublicFn(
+            const pauseByOwner = simnet.callPublicFn(
                 contractName,
                 "set-contract-paused",
                 [Cl.bool(true)],
                 deployer
             );
-            expect(pause.result).toBeOk({ type: "true" } as any);
+            expect(pauseByOwner.result).toBeOk({ type: "true" } as any);
+
+            const pauseBySigner = simnet.callPublicFn(
+                contractName,
+                "approve-emergency-pause",
+                [Cl.stringAscii("pause market operations")],
+                wallet1
+            );
+            expect(pauseBySigner.result).toBeOk({ type: "true" } as any);
+
+            const paused = simnet.callReadOnlyFn(contractName, "is-contract-paused", [], deployer);
+            expect(paused.result).toEqual({ type: "true" });
+
+            const createWhilePaused = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii("Pause should block creation"),
+                    Cl.uint(currentBlock + 150),
+                    Cl.uint(currentBlock + 200),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+            expect(createWhilePaused.result).toBeErr(Cl.uint(119)); // ERR-CONTRACT-PAUSED
 
             const yesStake = simnet.callPublicFn(
                 contractName,
@@ -1088,10 +1124,37 @@ describe("market-core contract tests", () => {
                 wallet2
             );
             expect(noStake.result).toBeErr(Cl.uint(119)); // ERR-CONTRACT-PAUSED
+
+            const resumeByOwner = simnet.callPublicFn(
+                contractName,
+                "set-contract-paused",
+                [Cl.bool(false)],
+                deployer
+            );
+            expect(resumeByOwner.result).toBeOk({ type: "true" } as any);
+
+            const resumeBySigner = simnet.callPublicFn(
+                contractName,
+                "approve-emergency-resume",
+                [Cl.stringAscii("resume after review")],
+                wallet1
+            );
+            expect(resumeBySigner.result).toBeOk({ type: "true" } as any);
+
+            const resumed = simnet.callReadOnlyFn(contractName, "is-contract-paused", [], deployer);
+            expect(resumed.result).toEqual({ type: "false" });
         });
 
         it("should allow claim-winnings while paused", () => {
             const currentBlock = simnet.blockHeight;
+            const registerApprover = simnet.callPublicFn(
+                contractName,
+                "set-emergency-approver",
+                [Cl.standardPrincipal(wallet1), Cl.bool(true)],
+                deployer
+            );
+            expect(registerApprover.result).toBeOk(Cl.bool(true));
+
             const endDate = currentBlock + 10;
             const resolutionDate = currentBlock + 20;
 
@@ -1142,13 +1205,21 @@ describe("market-core contract tests", () => {
             );
             expect(finalize.result).toBeOk({ type: "true" } as any);
 
-            const pause = simnet.callPublicFn(
+            const pauseByOwner = simnet.callPublicFn(
                 contractName,
                 "set-contract-paused",
                 [Cl.bool(true)],
                 deployer
             );
-            expect(pause.result).toBeOk({ type: "true" } as any);
+            expect(pauseByOwner.result).toBeOk({ type: "true" } as any);
+
+            const pauseBySigner = simnet.callPublicFn(
+                contractName,
+                "approve-emergency-pause",
+                [Cl.stringAscii("pause before claim")],
+                wallet1
+            );
+            expect(pauseBySigner.result).toBeOk({ type: "true" } as any);
 
             const claim = simnet.callPublicFn(
                 contractName,

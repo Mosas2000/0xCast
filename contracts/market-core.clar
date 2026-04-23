@@ -45,9 +45,15 @@
 (define-constant ERR-FINALIZATION-NOT-READY (err u117))
 (define-constant ERR-MARKET-NOT-DISPUTED (err u118))
 (define-constant ERR-CONTRACT-PAUSED (err u119))
+(define-constant ERR-INVALID-PAUSE-STATE (err u120))
+(define-constant ERR-PAUSE-ALREADY-APPROVED (err u121))
+(define-constant ERR-PAUSE-NOT-AUTHORIZED (err u122))
 
 ;; Only the oracle integration contract may invoke oracle/dispute entrypoints
 (define-constant ORACLE-INTEGRATION .oracle-integration)
+
+(define-constant DEFAULT-PAUSE-REASON "emergency pause request")
+(define-constant DEFAULT-RESUME-REASON "resume request")
 
 ;; Auto-resolve fallback: blocks after resolution-date before auto-resolve kicks in
 ;; ~7 days in blocks (7 * 144 = 1008)
@@ -58,6 +64,61 @@
 
 ;; Emergency pause switch (owner-controlled)
 (define-data-var contract-paused bool false)
+
+;; Emergency pause approval threshold
+(define-data-var pause-approval-threshold uint u2)
+
+;; Current pause / resume request tracking
+(define-data-var pause-request-id uint u0)
+(define-data-var pause-request-open bool false)
+(define-data-var pause-request-reason (string-ascii 128) "")
+(define-data-var pause-approval-count uint u0)
+
+(define-data-var resume-request-id uint u0)
+(define-data-var resume-request-open bool false)
+(define-data-var resume-request-reason (string-ascii 128) "")
+(define-data-var resume-approval-count uint u0)
+
+;; Approved emergency signers
+(define-map emergency-approvers
+  { signer: principal }
+  {
+    enabled: bool,
+    updated-at: uint,
+    updated-by: principal
+  }
+)
+
+;; Approval records for pause and resume requests
+(define-map pause-request-approvals
+  { request-id: uint, signer: principal }
+  {
+    approved-at: uint
+  }
+)
+
+(define-map resume-request-approvals
+  { request-id: uint, signer: principal }
+  {
+    approved-at: uint
+  }
+)
+
+;; Circuit breaker audit log
+(define-data-var circuit-breaker-log-id uint u0)
+(define-map circuit-breaker-events
+  { log-id: uint }
+  {
+    action: (string-ascii 20),
+    actor: principal,
+    reason: (string-ascii 128),
+    request-id: uint,
+    approval-count: uint,
+    threshold: uint,
+    paused: bool,
+    created-at: uint
+  }
+)
 
 ;; Contract owner (set to the deploying principal)
 (define-constant CONTRACT-OWNER tx-sender)
@@ -201,9 +262,202 @@
   )
 )
 
+(define-private (is-emergency-signer (signer principal))
+  (or
+    (is-eq signer CONTRACT-OWNER)
+    (match (map-get? emergency-approvers { signer: signer })
+      approval (get enabled approval)
+      false
+    )
+  )
+)
+
+(define-private (append-circuit-breaker-event
+  (action (string-ascii 20))
+  (reason (string-ascii 128))
+  (request-id uint)
+  (approval-count uint)
+  (paused bool))
+  (if true
+    (let ((event-id (var-get circuit-breaker-log-id)))
+      (begin
+        (var-set circuit-breaker-log-id (+ event-id u1))
+        (map-set circuit-breaker-events
+          { log-id: event-id }
+          {
+            action: action,
+            actor: tx-sender,
+            reason: reason,
+            request-id: request-id,
+            approval-count: approval-count,
+            threshold: (var-get pause-approval-threshold),
+            paused: paused,
+            created-at: stacks-block-height
+          }
+        )
+        (ok event-id)
+      )
+    )
+    (err u0)
+  )
+)
+
+(define-private (open-pause-request (reason (string-ascii 128)))
+  (if true
+    (begin
+      (var-set pause-request-id (+ (var-get pause-request-id) u1))
+      (var-set pause-request-open true)
+      (var-set pause-request-reason reason)
+      (var-set pause-approval-count u0)
+      (ok true)
+    )
+    (err u0)
+  )
+)
+
+(define-private (open-resume-request (reason (string-ascii 128)))
+  (if true
+    (begin
+      (var-set resume-request-id (+ (var-get resume-request-id) u1))
+      (var-set resume-request-open true)
+      (var-set resume-request-reason reason)
+      (var-set resume-approval-count u0)
+      (ok true)
+    )
+    (err u0)
+  )
+)
+
+(define-private (process-emergency-pause-approval (reason (string-ascii 128)))
+  (let ((current-block stacks-block-height))
+    (try! (if (not (var-get pause-request-open))
+      (open-pause-request reason)
+      (ok true)
+    ))
+
+    (let ((request-id (var-get pause-request-id)))
+      (asserts!
+        (is-none (map-get? pause-request-approvals { request-id: request-id, signer: tx-sender }))
+        ERR-PAUSE-ALREADY-APPROVED
+      )
+      (map-set pause-request-approvals
+        { request-id: request-id, signer: tx-sender }
+        { approved-at: current-block }
+      )
+      (var-set pause-approval-count (+ (var-get pause-approval-count) u1))
+      (try! (append-circuit-breaker-event
+        "pause-approval"
+        (var-get pause-request-reason)
+        request-id
+        (var-get pause-approval-count)
+        false
+      ))
+
+      (if (>= (var-get pause-approval-count) (var-get pause-approval-threshold))
+        (begin
+          (var-set contract-paused true)
+          (var-set pause-request-open false)
+          (try! (append-circuit-breaker-event
+            "pause-activated"
+            (var-get pause-request-reason)
+            request-id
+            (var-get pause-approval-count)
+            true
+          ))
+          (ok true)
+        )
+        (ok true)
+      )
+    )
+  )
+)
+
+(define-private (process-emergency-resume-approval (reason (string-ascii 128)))
+  (let ((current-block stacks-block-height))
+    (try! (if (not (var-get resume-request-open))
+      (open-resume-request reason)
+      (ok true)
+    ))
+
+    (let ((request-id (var-get resume-request-id)))
+      (asserts!
+        (is-none (map-get? resume-request-approvals { request-id: request-id, signer: tx-sender }))
+        ERR-PAUSE-ALREADY-APPROVED
+      )
+      (map-set resume-request-approvals
+        { request-id: request-id, signer: tx-sender }
+        { approved-at: current-block }
+      )
+      (var-set resume-approval-count (+ (var-get resume-approval-count) u1))
+      (try! (append-circuit-breaker-event
+        "resume-approval"
+        (var-get resume-request-reason)
+        request-id
+        (var-get resume-approval-count)
+        true
+      ))
+
+      (if (>= (var-get resume-approval-count) (var-get pause-approval-threshold))
+        (begin
+          (var-set contract-paused false)
+          (var-set resume-request-open false)
+          (try! (append-circuit-breaker-event
+            "resume-activated"
+            (var-get resume-request-reason)
+            request-id
+            (var-get resume-approval-count)
+            false
+          ))
+          (ok true)
+        )
+        (ok true)
+      )
+    )
+  )
+)
+
 ;; ============================================
 ;; Public Functions
 ;; ============================================
+
+(define-public (set-emergency-approver (approver principal) (enabled bool))
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (map-set emergency-approvers
+      { signer: approver }
+      {
+        enabled: enabled,
+        updated-at: stacks-block-height,
+        updated-by: tx-sender
+      }
+    )
+    (ok true)
+  )
+)
+
+(define-public (set-emergency-approval-threshold (threshold uint))
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (asserts! (> threshold u0) ERR-INVALID-PAUSE-STATE)
+    (ok (var-set pause-approval-threshold threshold))
+  )
+)
+
+(define-public (approve-emergency-pause (reason (string-ascii 128)))
+  (begin
+    (asserts! (is-emergency-signer tx-sender) ERR-PAUSE-NOT-AUTHORIZED)
+    (asserts! (not (var-get contract-paused)) ERR-INVALID-PAUSE-STATE)
+    (process-emergency-pause-approval reason)
+  )
+)
+
+(define-public (approve-emergency-resume (reason (string-ascii 128)))
+  (begin
+    (asserts! (is-emergency-signer tx-sender) ERR-PAUSE-NOT-AUTHORIZED)
+    (asserts! (var-get contract-paused) ERR-INVALID-PAUSE-STATE)
+    (process-emergency-resume-approval reason)
+  )
+)
 
 ;; Create a new prediction market
 ;; @param question: The market question (max 256 characters)
@@ -662,12 +916,46 @@
 (define-public (set-contract-paused (paused bool))
   (begin
     (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
-    (ok (var-set contract-paused paused))
+    (if paused
+      (process-emergency-pause-approval DEFAULT-PAUSE-REASON)
+      (process-emergency-resume-approval DEFAULT-RESUME-REASON)
+    )
   )
 )
 
 (define-read-only (is-contract-paused)
   (var-get contract-paused)
+)
+
+(define-read-only (get-emergency-approval-threshold)
+  (var-get pause-approval-threshold)
+)
+
+(define-read-only (get-circuit-breaker-status)
+  {
+    paused: (var-get contract-paused),
+    pause-request-open: (var-get pause-request-open),
+    pause-request-id: (var-get pause-request-id),
+    pause-approval-count: (var-get pause-approval-count),
+    pause-reason: (var-get pause-request-reason),
+    resume-request-open: (var-get resume-request-open),
+    resume-request-id: (var-get resume-request-id),
+    resume-approval-count: (var-get resume-approval-count),
+    resume-reason: (var-get resume-request-reason),
+    threshold: (var-get pause-approval-threshold)
+  }
+)
+
+(define-read-only (get-circuit-breaker-log (log-id uint))
+  (map-get? circuit-breaker-events { log-id: log-id })
+)
+
+(define-read-only (get-circuit-breaker-log-count)
+  (var-get circuit-breaker-log-id)
+)
+
+(define-read-only (is-emergency-approver (signer principal))
+  (is-emergency-signer signer)
 )
 
 (define-read-only (get-abandonment-period)
