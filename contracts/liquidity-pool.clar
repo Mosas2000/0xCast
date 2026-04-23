@@ -17,7 +17,6 @@
   uint ;; market-id
   {
     stx-balance: uint,
-    token-balances: (list 10 uint),
     total-shares: uint,
     active: bool
   })
@@ -42,7 +41,6 @@
     ;; In production, transfer STX to contract
     (ok (map-set liquidity-pools market-id {
       stx-balance: initial-stx,
-      token-balances: (list u0 u0), ;; Placeholder for outcome tokens
       total-shares: initial-stx,
       active: true
     }))))
