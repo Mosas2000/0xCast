@@ -22,6 +22,10 @@
 | `get-dispute-period` | none | `uint` | Current dispute window |
 | `get-resolution-deadline` | `market-id: uint` | `(response uint err)` | Deadline after which refunds apply |
 | `is-contract-paused` | none | `bool` | Emergency pause status |
+| `get-emergency-approval-threshold` | none | `uint` | Required signer approvals for pause or resume |
+| `get-circuit-breaker-status` | none | tuple | Pause/resume state and approval counters |
+| `get-circuit-breaker-log` | `log-id: uint` | `(optional log)` | Circuit breaker audit entry |
+| `get-circuit-breaker-log-count` | none | `uint` | Number of stored audit entries |
 | `get-abandonment-period` | none | `uint` | Resolution grace period |
 | `is-market-abandoned` | `market-id: uint` | `bool` | Active + deadline exceeded |
 
@@ -57,8 +61,14 @@
 | `emergency-refund` | `market-id: uint` | `(ok refunded-amount)` | Position holder |
 | `admin-force-refund` | `market-id: uint` | `(ok true)` | Market creator |
 | `claim-refund` | `market-id: uint` | `(ok refunded-amount)` | Position holder |
-| `set-contract-paused` | `paused: bool` | `(ok bool)` | Contract owner |
+| `set-emergency-approver` | `approver: principal, enabled: bool` | `(ok true)` | Contract owner |
+| `set-emergency-approval-threshold` | `threshold: uint` | `(ok uint)` | Contract owner |
+| `approve-emergency-pause` | `reason: string-ascii(128)` | `(ok true)` | Emergency signer |
+| `approve-emergency-resume` | `reason: string-ascii(128)` | `(ok true)` | Emergency signer |
+| `set-contract-paused` | `paused: bool` | `(ok true)` | Contract owner |
 | `set-dispute-period` | `new-period: uint` | `(ok bool)` | `oracle-integration` contract |
+
+> `set-contract-paused` now starts the multi-sig approval flow instead of toggling the pause state immediately. Trading and market creation are blocked only after the configured approval threshold is met. Claims and refunds remain available during pause.
 
 ## Core frontend mappings
 
