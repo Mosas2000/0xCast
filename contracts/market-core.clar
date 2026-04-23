@@ -322,7 +322,7 @@
 (define-private (process-emergency-pause-approval (reason (string-ascii 128)))
   (let ((current-block stacks-block-height))
     (if (not (var-get pause-request-open))
-      (try! (open-pause-request reason))
+      (open-pause-request reason)
       (ok true)
     )
 
@@ -366,7 +366,7 @@
 (define-private (process-emergency-resume-approval (reason (string-ascii 128)))
   (let ((current-block stacks-block-height))
     (if (not (var-get resume-request-open))
-      (try! (open-resume-request reason))
+      (open-resume-request reason)
       (ok true)
     )
 
