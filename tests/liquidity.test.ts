@@ -25,7 +25,13 @@ describe("Liquidity Pool Tests", () => {
             [Cl.uint(marketId)],
             deployer
         );
-        expect(pool.result).not.toEqual(Cl.none());
+        expect(pool.result).toBeSome(
+            Cl.tuple({
+                "stx-balance": Cl.uint(initialStx),
+                "total-shares": Cl.uint(initialStx),
+                active: Cl.bool(true),
+            })
+        );
     });
 
     it("should allow adding liquidity", () => {
