@@ -18,6 +18,8 @@ interface MarketFilterProps {
   selectedStatus: 'all' | 'active' | 'resolved';
   selectedTimeRange: TimeRange;
   selectedVolumeRange: VolumeRange;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
   onCategoryChange: (category: MarketCategory) => void;
   onSortChange: (sort: SortOption) => void;
   onStatusChange: (status: 'all' | 'active' | 'resolved') => void;
@@ -39,6 +41,8 @@ export function MarketFilter({
   selectedStatus,
   selectedTimeRange,
   selectedVolumeRange,
+  searchQuery,
+  onSearchChange,
   onCategoryChange,
   onSortChange,
   onStatusChange,
@@ -81,6 +85,7 @@ export function MarketFilter({
     flexWrap: 'wrap',
     gap: '16px',
     alignItems: 'center',
+    width: '100%',
   };
 
   const dropdownContainerStyle: React.CSSProperties = {
@@ -170,6 +175,51 @@ export function MarketFilter({
 
   return (
     <div style={containerStyle}>
+      {/* Search Bar */}
+      <div style={{ position: 'relative', flex: '1', minWidth: '300px' }}>
+        <input
+          type="text"
+          placeholder="Search markets..."
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '12px 16px',
+            paddingRight: searchQuery ? '40px' : '16px',
+            background: '#111',
+            border: '1px solid #262626',
+            borderRadius: '12px',
+            color: '#fff',
+            fontSize: '14px',
+            outline: 'none',
+            transition: 'border-color 0.2s',
+          }}
+        />
+        {searchQuery && (
+          <button
+            onClick={() => onSearchChange('')}
+            style={{
+              position: 'absolute',
+              right: '12px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              background: 'none',
+              border: 'none',
+              color: '#737373',
+              cursor: 'pointer',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
+
       {/* Status Tabs */}
       <div style={statusTabsStyle}>
         {statusFilters.map((f) => (
@@ -310,19 +360,22 @@ export function MarketFilter({
         <div style={{
           width: '100%',
           display: 'flex',
-          gap: '16px',
+          gap: '24px',
           marginTop: '8px',
-          padding: '16px',
+          padding: '24px',
           backgroundColor: '#0A0A0A',
           border: '1px solid #262626',
-          borderRadius: '12px',
+          borderRadius: '16px',
           flexWrap: 'wrap',
         }}>
           {/* Time Range */}
           <div style={{ flex: '1', minWidth: '200px' }}>
-            <label style={{ display: 'block', fontSize: '12px', color: '#737373', marginBottom: '8px', fontWeight: '600' }}>
-              TIME PERIOD
-            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <label style={{ fontSize: '12px', color: '#737373', fontWeight: '600' }}>
+                TIME PERIOD
+              </label>
+              <div style={{ fontSize: 12, color: '#525252', cursor: 'help' }} title="Filter markets created within a specific timeframe">ⓘ</div>
+            </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {timeRangeOptions.map(opt => (
                 <button
@@ -347,7 +400,7 @@ export function MarketFilter({
 
           {/* Volume Range */}
           <div style={{ flex: '1', minWidth: '200px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
               <label style={{ fontSize: '12px', color: '#737373', fontWeight: '600' }}>
                 VOLUME
               </label>
