@@ -10,14 +10,19 @@ import {
   CATEGORIES,
   SORT_OPTIONS,
 } from '../utils/marketCategories';
+import { TimeRange, VolumeRange } from '../types/filters';
 
 interface MarketFilterProps {
   selectedCategory: MarketCategory;
   selectedSort: SortOption;
   selectedStatus: 'all' | 'active' | 'resolved';
+  selectedTimeRange: TimeRange;
+  selectedVolumeRange: VolumeRange;
   onCategoryChange: (category: MarketCategory) => void;
   onSortChange: (sort: SortOption) => void;
   onStatusChange: (status: 'all' | 'active' | 'resolved') => void;
+  onTimeRangeChange: (range: TimeRange) => void;
+  onVolumeRangeChange: (range: VolumeRange) => void;
   marketCounts?: {
     all: number;
     active: number;
@@ -29,16 +34,35 @@ export function MarketFilter({
   selectedCategory,
   selectedSort,
   selectedStatus,
+  selectedTimeRange,
+  selectedVolumeRange,
   onCategoryChange,
   onSortChange,
   onStatusChange,
+  onTimeRangeChange,
+  onVolumeRangeChange,
   marketCounts,
 }: MarketFilterProps) {
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const selectedCategoryConfig = CATEGORIES.find(c => c.value === selectedCategory) || CATEGORIES[0];
   const selectedSortConfig = SORT_OPTIONS.find(s => s.value === selectedSort) || SORT_OPTIONS[0];
+
+  const timeRangeOptions: { value: TimeRange; label: string }[] = [
+    { value: 'all', label: 'All Time' },
+    { value: '24h', label: 'Last 24 Hours' },
+    { value: '7d', label: 'Last 7 Days' },
+    { value: '30d', label: 'Last 30 Days' },
+  ];
+
+  const volumeRangeOptions: { value: VolumeRange; label: string }[] = [
+    { value: 'all', label: 'Any Volume' },
+    { value: 'low', label: 'Low (< $1k)' },
+    { value: 'medium', label: 'Medium ($1k - $50k)' },
+    { value: 'high', label: 'High (> $50k)' },
+  ];
 
   const statusFilters = [
     { value: 'all' as const, label: 'All', count: marketCounts?.all },
@@ -222,6 +246,91 @@ export function MarketFilter({
           ))}
         </div>
       </div>
+
+      {/* Advanced Toggle */}
+      <button
+        style={{
+          ...dropdownButtonStyle,
+          minWidth: 'auto',
+          backgroundColor: showAdvanced ? '#1F2937' : '#111111',
+          borderColor: showAdvanced ? '#3B82F6' : '#262626',
+        }}
+        onClick={() => setShowAdvanced(!showAdvanced)}
+      >
+        <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+        </svg>
+        <span>Advanced</span>
+      </button>
+
+      {/* Advanced Filters Panel */}
+      {showAdvanced && (
+        <div style={{
+          width: '100%',
+          display: 'flex',
+          gap: '16px',
+          marginTop: '8px',
+          padding: '16px',
+          backgroundColor: '#0A0A0A',
+          border: '1px solid #262626',
+          borderRadius: '12px',
+          flexWrap: 'wrap',
+        }}>
+          {/* Time Range */}
+          <div style={{ flex: '1', minWidth: '200px' }}>
+            <label style={{ display: 'block', fontSize: '12px', color: '#737373', marginBottom: '8px', fontWeight: '600' }}>
+              TIME PERIOD
+            </label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {timeRangeOptions.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => onTimeRangeChange(opt.value)}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid #262626',
+                    backgroundColor: selectedTimeRange === opt.value ? '#1F1F1F' : 'transparent',
+                    color: selectedTimeRange === opt.value ? '#FFFFFF' : '#9CA3AF',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Volume Range */}
+          <div style={{ flex: '1', minWidth: '200px' }}>
+            <label style={{ display: 'block', fontSize: '12px', color: '#737373', marginBottom: '8px', fontWeight: '600' }}>
+              VOLUME
+            </label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {volumeRangeOptions.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => onVolumeRangeChange(opt.value)}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid #262626',
+                    backgroundColor: selectedVolumeRange === opt.value ? '#1F1F1F' : 'transparent',
+                    color: selectedVolumeRange === opt.value ? '#FFFFFF' : '#9CA3AF',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Click outside to close */}
       {(showCategoryDropdown || showSortDropdown) && (
