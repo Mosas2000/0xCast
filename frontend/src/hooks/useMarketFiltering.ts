@@ -35,6 +35,7 @@ interface UseMarketFilteringReturn {
   timeRange: TimeRange;
   volumeRange: VolumeRange;
   onlyWatchlist: boolean;
+  isSearching: boolean;
   recentSearches: string[];
   
   // Setters
@@ -120,6 +121,7 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
   const [timeRange, setTimeRangeState] = useState<TimeRange>(initialTimeRange);
   const [volumeRange, setVolumeRangeState] = useState<VolumeRange>(initialVolumeRange);
   const [onlyWatchlist, setOnlyWatchlistState] = useState(initialOnlyWatchlist);
+  const [isSearching, setIsSearching] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
     const saved = localStorage.getItem('0xcast_recent_searches');
     return saved ? JSON.parse(saved) : [];
@@ -160,6 +162,7 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
 
   const setSearchQuery = useCallback((value: string) => {
     setSearchQueryState(value);
+    setIsSearching(true);
   }, []);
 
   // Debounce search query
@@ -167,6 +170,7 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
     const handler = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
       updateUrlParams({ q: searchQuery });
+      setIsSearching(false);
       
       // Add to recent searches if not empty and not already present
       if (searchQuery.trim() && searchQuery.length > 2) {
@@ -363,6 +367,7 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
     timeRange,
     volumeRange,
     onlyWatchlist,
+    isSearching,
     recentSearches,
     setCategory,
     setSortOption,
