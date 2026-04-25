@@ -4,7 +4,7 @@
  * Provides filtering, sorting, and categorization logic for markets.
  * Supports URL query params for filter persistence.
  */
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { Market } from '../types/market';
 import { MarketStatus } from '../types/market';
@@ -103,6 +103,7 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
   const [sortOption, setSortOptionState] = useState<SortOption>(initialSort);
   const [statusFilter, setStatusFilterState] = useState<'all' | 'active' | 'resolved'>(initialStatus);
   const [searchQuery, setSearchQueryState] = useState(initialSearch);
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(initialSearch);
   const [timeRange, setTimeRangeState] = useState<TimeRange>(initialTimeRange);
   const [volumeRange, setVolumeRangeState] = useState<VolumeRange>(initialVolumeRange);
 
@@ -141,8 +142,17 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
 
   const setSearchQuery = useCallback((value: string) => {
     setSearchQueryState(value);
-    updateUrlParams({ q: value });
-  }, [updateUrlParams]);
+  }, []);
+
+  // Debounce search query
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+      updateUrlParams({ q: searchQuery });
+    }, 300);
+
+    return () => clearTimeout(handler);
+  }, [searchQuery, updateUrlParams]);
 
   const setTimeRange = useCallback((value: TimeRange) => {
     setTimeRangeState(value);
@@ -208,8 +218,8 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
     }
     
     // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+    if (debouncedSearchQuery.trim()) {
+      const query = debouncedSearchQuery.toLowerCase();
       result = result.filter(m => 
         m.question.toLowerCase().includes(query) ||
         m.creator?.toLowerCase().includes(query)
