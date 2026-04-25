@@ -291,6 +291,7 @@ export function MarketsPage() {
               onSavePreset={handleSavePreset}
               selectedOnlyWatchlist={onlyWatchlist}
               onOnlyWatchlistChange={setOnlyWatchlist}
+              isSearching={isSearching}
               marketCounts={{
                 all: counts.all,
                 active: counts.active,

@@ -28,6 +28,7 @@ interface MarketFilterProps {
   onSavePreset?: () => void;
   selectedOnlyWatchlist: boolean;
   onOnlyWatchlistChange: (only: boolean) => void;
+  isSearching?: boolean;
   marketCounts?: {
     all: number;
     active: number;
@@ -51,6 +52,7 @@ export function MarketFilter({
   onSavePreset,
   selectedOnlyWatchlist,
   onOnlyWatchlistChange,
+  isSearching,
   marketCounts,
 }: MarketFilterProps) {
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
@@ -195,7 +197,20 @@ export function MarketFilter({
             transition: 'border-color 0.2s',
           }}
         />
-        {searchQuery && (
+        {isSearching ? (
+          <div style={{
+            position: 'absolute',
+            right: '12px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: '16px',
+            height: '16px',
+            border: '2px solid #3B82F6',
+            borderTopColor: 'transparent',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+          }} />
+        ) : searchQuery && (
           <button
             onClick={() => onSearchChange('')}
             style={{
