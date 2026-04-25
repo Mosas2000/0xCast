@@ -117,6 +117,44 @@ export function MarketsPage() {
           </p>
         </div>
 
+        {/* Market Stats Summary */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: 24,
+          marginBottom: 48
+        }}>
+          <div style={{
+            padding: '24px',
+            background: '#111',
+            border: '1px solid #262626',
+            borderRadius: 16,
+          }}>
+            <div style={{ fontSize: 14, color: '#737373', marginBottom: 8, fontWeight: 500 }}>ACTIVE MARKETS</div>
+            <div style={{ fontSize: 32, fontWeight: 700, color: '#fff' }}>{counts.active}</div>
+          </div>
+          <div style={{
+            padding: '24px',
+            background: '#111',
+            border: '1px solid #262626',
+            borderRadius: 16,
+          }}>
+            <div style={{ fontSize: 14, color: '#737373', marginBottom: 8, fontWeight: 500 }}>RESOLVED MARKETS</div>
+            <div style={{ fontSize: 32, fontWeight: 700, color: '#fff' }}>{counts.resolved}</div>
+          </div>
+          <div style={{
+            padding: '24px',
+            background: '#111',
+            border: '1px solid #262626',
+            borderRadius: 16,
+          }}>
+            <div style={{ fontSize: 14, color: '#737373', marginBottom: 8, fontWeight: 500 }}>TOTAL VOLUME</div>
+            <div style={{ fontSize: 32, fontWeight: 700, color: '#3B82F6' }}>
+              {Math.round(markets.reduce((acc, m) => acc + m.totalYesStake + m.totalNoStake, 0)).toLocaleString()} STX
+            </div>
+          </div>
+        </div>
+
         {/* Filters */}
         <div style={{ 
           display: 'flex', 
