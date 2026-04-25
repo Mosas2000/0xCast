@@ -56,11 +56,37 @@ export function MarketRecommendations({ markets, isLoading }: MarketRecommendati
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-        gap: 32
+        gap: 32,
+        marginBottom: 48
       }}>
         {recommendations.map((market) => (
           <MarketCard key={market.id} market={market} />
         ))}
+      </div>
+
+      <div style={{ marginBottom: 24 }}>
+        <h3 style={{ fontSize: 18, fontWeight: 600, color: '#fff', marginBottom: 16 }}>
+          Popular Categories
+        </h3>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+          {['Crypto', 'DeFi', 'Sports', 'Politics'].map(cat => (
+            <div key={cat} style={{
+              padding: '12px 20px',
+              background: '#111',
+              border: '1px solid #262626',
+              borderRadius: 12,
+              color: '#A3A3A3',
+              fontSize: 14,
+              fontWeight: 500,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8
+            }}>
+              <span>{cat === 'Crypto' ? '₿' : cat === 'DeFi' ? '🏦' : cat === 'Sports' ? '⚽' : '🏛️'}</span>
+              {cat}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
