@@ -347,9 +347,12 @@ export function MarketFilter({
 
           {/* Volume Range */}
           <div style={{ flex: '1', minWidth: '200px' }}>
-            <label style={{ display: 'block', fontSize: '12px', color: '#737373', marginBottom: '8px', fontWeight: '600' }}>
-              VOLUME
-            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <label style={{ fontSize: '12px', color: '#737373', fontWeight: '600' }}>
+                VOLUME
+              </label>
+              <div style={{ fontSize: 12, color: '#525252', cursor: 'help' }} title="Filter markets based on their total trading volume">ⓘ</div>
+            </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {volumeRangeOptions.map(opt => (
                 <button
