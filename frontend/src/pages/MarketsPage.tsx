@@ -2,6 +2,7 @@ import { useEffect, useReducer } from 'react';
 import { Link } from 'react-router-dom';
 import { useMarkets } from '../hooks/useMarkets';
 import { useMarketFiltering } from '../hooks/useMarketFiltering';
+import { useFilterPresets } from '../hooks/useFilterPresets';
 import { useRealtimeSignal } from '../hooks/useRealtimeSignal';
 import { MarketCard } from '../components/MarketCard';
 import { MarketFilter } from '../components/MarketFilter';
@@ -27,6 +28,8 @@ export function MarketsPage() {
     counts,
     resetFilters,
   } = useMarketFiltering({ markets, syncWithUrl: true });
+
+  const { presets, activePresetId, setActivePresetId, savePreset, deletePreset } = useFilterPresets();
 
   const activeCategory = getCategoryConfig(category);
   const [lastUpdatedAt, refreshLastUpdatedAt] = useReducer(() => new Date(), new Date());
@@ -137,6 +140,41 @@ export function MarketsPage() {
                 outline: 'none'
               }}
             />
+          </div>
+
+          {/* Presets */}
+          <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4 }}>
+            {presets.map(preset => (
+              <button
+                key={preset.id}
+                onClick={() => {
+                  if (preset.filters.category) setCategory(preset.filters.category);
+                  if (preset.filters.sortOption) setSortOption(preset.filters.sortOption);
+                  if (preset.filters.status) setStatusFilter(preset.filters.status);
+                  if (preset.filters.timeRange) setTimeRange(preset.filters.timeRange);
+                  if (preset.filters.volumeRange) setVolumeRange(preset.filters.volumeRange);
+                  setActivePresetId(preset.id);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '8px 16px',
+                  background: activePresetId === preset.id ? '#3B82F620' : '#111',
+                  border: `1px solid ${activePresetId === preset.id ? '#3B82F6' : '#262626'}`,
+                  borderRadius: 20,
+                  color: activePresetId === preset.id ? '#3B82F6' : '#9CA3AF',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                <span>{preset.icon || '🔖'}</span>
+                <span>{preset.name}</span>
+              </button>
+            ))}
           </div>
 
           {/* Filter Controls */}
