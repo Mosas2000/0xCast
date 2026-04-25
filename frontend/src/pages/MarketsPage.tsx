@@ -6,6 +6,7 @@ import { useFilterPresets } from '../hooks/useFilterPresets';
 import { useRealtimeSignal } from '../hooks/useRealtimeSignal';
 import { MarketCard } from '../components/MarketCard';
 import { MarketFilter } from '../components/MarketFilter';
+import { MarketRecommendations } from '../components/MarketRecommendations';
 import { getCategoryConfig, CATEGORIES, MarketCategory } from '../utils/marketCategories';
 
 export function MarketsPage() {
@@ -392,6 +393,11 @@ export function MarketsPage() {
               Try again
             </button>
           </div>
+        )}
+
+        {/* Recommendations - Only show when not searching/filtering */}
+        {!searchQuery && category === MarketCategory.ALL && statusFilter === 'all' && (
+          <MarketRecommendations markets={markets} />
         )}
 
         {/* Grid */}
