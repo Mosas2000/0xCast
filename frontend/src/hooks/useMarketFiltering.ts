@@ -35,6 +35,7 @@ interface UseMarketFilteringReturn {
   timeRange: TimeRange;
   volumeRange: VolumeRange;
   onlyWatchlist: boolean;
+  recentSearches: string[];
   
   // Setters
   setCategory: (category: MarketCategory) => void;
@@ -44,6 +45,7 @@ interface UseMarketFilteringReturn {
   setTimeRange: (range: TimeRange) => void;
   setVolumeRange: (range: VolumeRange) => void;
   setOnlyWatchlist: (only: boolean) => void;
+  clearRecentSearches: () => void;
   
   // Counts
   counts: {
@@ -118,6 +120,10 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
   const [timeRange, setTimeRangeState] = useState<TimeRange>(initialTimeRange);
   const [volumeRange, setVolumeRangeState] = useState<VolumeRange>(initialVolumeRange);
   const [onlyWatchlist, setOnlyWatchlistState] = useState(initialOnlyWatchlist);
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
+    const saved = localStorage.getItem('0xcast_recent_searches');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   // Sync state changes to URL
   const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
@@ -161,7 +167,16 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
     const handler = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
       updateUrlParams({ q: searchQuery });
-    }, 300);
+      
+      // Add to recent searches if not empty and not already present
+      if (searchQuery.trim() && searchQuery.length > 2) {
+        setRecentSearches(prev => {
+          const updated = [searchQuery, ...prev.filter(s => s !== searchQuery)].slice(0, 5);
+          localStorage.setItem('0xcast_recent_searches', JSON.stringify(updated));
+          return updated;
+        });
+      }
+    }, 500);
 
     return () => clearTimeout(handler);
   }, [searchQuery, updateUrlParams]);
@@ -180,6 +195,11 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
     setOnlyWatchlistState(value);
     updateUrlParams({ watchlist: value ? 'true' : null });
   }, [updateUrlParams]);
+
+  const clearRecentSearches = useCallback(() => {
+    setRecentSearches([]);
+    localStorage.removeItem('0xcast_recent_searches');
+  }, []);
 
   // Categorize all markets
   const categorizedMarkets = useMemo(() => {
@@ -343,6 +363,7 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
     timeRange,
     volumeRange,
     onlyWatchlist,
+    recentSearches,
     setCategory,
     setSortOption,
     setStatusFilter,
@@ -350,6 +371,7 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
     setTimeRange,
     setVolumeRange,
     setOnlyWatchlist,
+    clearRecentSearches,
     counts,
     resetFilters,
   };
