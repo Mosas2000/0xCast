@@ -163,35 +163,73 @@ export function MarketsPage() {
           {/* Presets */}
           <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4 }}>
             {presets.map(preset => (
-              <button
+              <div
                 key={preset.id}
-                onClick={() => {
-                  if (preset.filters.category) setCategory(preset.filters.category);
-                  if (preset.filters.sortOption) setSortOption(preset.filters.sortOption);
-                  if (preset.filters.status) setStatusFilter(preset.filters.status);
-                  if (preset.filters.timeRange) setTimeRange(preset.filters.timeRange);
-                  if (preset.filters.volumeRange) setVolumeRange(preset.filters.volumeRange);
-                  setActivePresetId(preset.id);
-                }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 6,
-                  padding: '8px 16px',
+                  gap: 4,
+                  padding: '4px',
                   background: activePresetId === preset.id ? '#3B82F620' : '#111',
                   border: `1px solid ${activePresetId === preset.id ? '#3B82F6' : '#262626'}`,
                   borderRadius: 20,
-                  color: activePresetId === preset.id ? '#3B82F6' : '#9CA3AF',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  cursor: 'pointer',
                   transition: 'all 0.2s',
                   whiteSpace: 'nowrap'
                 }}
               >
-                <span>{preset.icon || '🔖'}</span>
-                <span>{preset.name}</span>
-              </button>
+                <button
+                  onClick={() => {
+                    if (preset.filters.category) setCategory(preset.filters.category);
+                    if (preset.filters.sortOption) setSortOption(preset.filters.sortOption);
+                    if (preset.filters.status) setStatusFilter(preset.filters.status);
+                    if (preset.filters.timeRange) setTimeRange(preset.filters.timeRange);
+                    if (preset.filters.volumeRange) setVolumeRange(preset.filters.volumeRange);
+                    setActivePresetId(preset.id);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '4px 12px',
+                    background: 'none',
+                    border: 'none',
+                    color: activePresetId === preset.id ? '#3B82F6' : '#9CA3AF',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span>{preset.icon || '🔖'}</span>
+                  <span>{preset.name}</span>
+                </button>
+                
+                {/* Delete button only for custom presets (not default ones) */}
+                {!['trending', 'new', 'ending'].includes(preset.id) && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deletePreset(preset.id);
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 20,
+                      height: 20,
+                      borderRadius: '50%',
+                      background: 'none',
+                      border: 'none',
+                      color: '#6B7280',
+                      cursor: 'pointer',
+                      marginRight: 4
+                    }}
+                  >
+                    <svg style={{ width: 12, height: 12 }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             ))}
           </div>
 
