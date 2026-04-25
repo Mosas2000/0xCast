@@ -20,12 +20,14 @@ export function MarketsPage() {
     searchQuery,
     timeRange,
     volumeRange,
+    onlyWatchlist,
     setCategory,
     setSortOption,
     setStatusFilter,
     setSearchQuery,
     setTimeRange,
     setVolumeRange,
+    setOnlyWatchlist,
     counts,
     resetFilters,
   } = useMarketFiltering({ markets, syncWithUrl: true });
@@ -285,6 +287,8 @@ export function MarketsPage() {
               onTimeRangeChange={setTimeRange}
               onVolumeRangeChange={setVolumeRange}
               onSavePreset={handleSavePreset}
+              selectedOnlyWatchlist={onlyWatchlist}
+              onOnlyWatchlistChange={setOnlyWatchlist}
               marketCounts={{
                 all: counts.all,
                 active: counts.active,
@@ -444,6 +448,21 @@ export function MarketsPage() {
                 color: '#F59E0B',
               }}>
                 Volume: {volumeRange}
+              </span>
+            )}
+            {onlyWatchlist && (
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 12px',
+                backgroundColor: '#EC489920',
+                border: '1px solid #EC489940',
+                borderRadius: 20,
+                fontSize: 13,
+                color: '#EC4899',
+              }}>
+                Watchlist
               </span>
             )}
             <button
