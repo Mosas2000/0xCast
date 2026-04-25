@@ -21,6 +21,7 @@ export function MarketsPage() {
     timeRange,
     volumeRange,
     onlyWatchlist,
+    recentSearches,
     setCategory,
     setSortOption,
     setStatusFilter,
@@ -28,6 +29,7 @@ export function MarketsPage() {
     setTimeRange,
     setVolumeRange,
     setOnlyWatchlist,
+    clearRecentSearches,
     counts,
     resetFilters,
   } = useMarketFiltering({ markets, syncWithUrl: true });
@@ -325,6 +327,44 @@ export function MarketsPage() {
             </button>
           </div>
         </div>
+
+        {/* Recent Searches */}
+        {recentSearches.length > 0 && !searchQuery && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, overflowX: 'auto', paddingBottom: 4 }}>
+            <span style={{ fontSize: 13, color: '#737373', whiteSpace: 'nowrap' }}>Recent Searches:</span>
+            {recentSearches.map((s, i) => (
+              <button
+                key={i}
+                onClick={() => setSearchQuery(s)}
+                style={{
+                  padding: '4px 12px',
+                  background: '#111',
+                  border: '1px solid #262626',
+                  borderRadius: 16,
+                  color: '#A3A3A3',
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {s}
+              </button>
+            ))}
+            <button
+              onClick={clearRecentSearches}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#EF4444',
+                fontSize: 11,
+                cursor: 'pointer',
+                marginLeft: 'auto'
+              }}
+            >
+              Clear
+            </button>
+          </div>
+        )}
 
         {/* Category Quick Filter Chips */}
         <div style={{ 
