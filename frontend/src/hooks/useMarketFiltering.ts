@@ -280,6 +280,18 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
     }
   }, [syncWithUrl, setSearchParams]);
 
+  // Persist filters to localStorage
+  useEffect(() => {
+    const filters = {
+      category,
+      sortOption,
+      statusFilter,
+      timeRange,
+      volumeRange,
+    };
+    localStorage.setItem('0xcast_last_filters', JSON.stringify(filters));
+  }, [category, sortOption, statusFilter, timeRange, volumeRange]);
+
   return {
     filteredMarkets,
     category,
