@@ -526,7 +526,7 @@ export function MarketsPage() {
 
         {/* Recommendations - Only show when not searching/filtering */}
         {!searchQuery && category === MarketCategory.ALL && statusFilter === 'all' && (
-          <MarketRecommendations markets={markets} />
+          <MarketRecommendations markets={markets} isLoading={isLoading && markets.length === 0} />
         )}
 
         {/* Grid */}
