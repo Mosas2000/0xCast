@@ -32,6 +32,23 @@ export function MarketsPage() {
 
   const { presets, activePresetId, setActivePresetId, savePreset, deletePreset } = useFilterPresets();
 
+  const handleSavePreset = () => {
+    const name = prompt('Enter a name for this filter preset:');
+    if (!name) return;
+    
+    savePreset({
+      name,
+      filters: {
+        category,
+        sortOption,
+        status: statusFilter,
+        timeRange,
+        volumeRange,
+      },
+      icon: '🔖',
+    });
+  };
+
   const activeCategory = getCategoryConfig(category);
   const [lastUpdatedAt, refreshLastUpdatedAt] = useReducer(() => new Date(), new Date());
 
@@ -191,6 +208,7 @@ export function MarketsPage() {
               onStatusChange={setStatusFilter}
               onTimeRangeChange={setTimeRange}
               onVolumeRangeChange={setVolumeRange}
+              onSavePreset={handleSavePreset}
               marketCounts={{
                 all: counts.all,
                 active: counts.active,
