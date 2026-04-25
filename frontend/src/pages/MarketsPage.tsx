@@ -16,10 +16,14 @@ export function MarketsPage() {
     sortOption,
     statusFilter,
     searchQuery,
+    timeRange,
+    volumeRange,
     setCategory,
     setSortOption,
     setStatusFilter,
     setSearchQuery,
+    setTimeRange,
+    setVolumeRange,
     counts,
     resetFilters,
   } = useMarketFiltering({ markets, syncWithUrl: true });
@@ -141,9 +145,13 @@ export function MarketsPage() {
               selectedCategory={category}
               selectedSort={sortOption}
               selectedStatus={statusFilter}
+              selectedTimeRange={timeRange}
+              selectedVolumeRange={volumeRange}
               onCategoryChange={setCategory}
               onSortChange={setSortOption}
               onStatusChange={setStatusFilter}
+              onTimeRangeChange={setTimeRange}
+              onVolumeRangeChange={setVolumeRange}
               marketCounts={{
                 all: counts.all,
                 active: counts.active,
@@ -273,6 +281,36 @@ export function MarketsPage() {
                 color: '#3B82F6',
               }}>
                 Search: "{searchQuery}"
+              </span>
+            )}
+            {timeRange !== 'all' && (
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 12px',
+                backgroundColor: '#10B98120',
+                border: '1px solid #10B98140',
+                borderRadius: 20,
+                fontSize: 13,
+                color: '#10B981',
+              }}>
+                Time: {timeRange}
+              </span>
+            )}
+            {volumeRange !== 'all' && (
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 12px',
+                backgroundColor: '#F59E0B20',
+                border: '1px solid #F59E0B40',
+                borderRadius: 20,
+                fontSize: 13,
+                color: '#F59E0B',
+              }}>
+                Volume: {volumeRange}
               </span>
             )}
             <button
