@@ -219,11 +219,19 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
     
     // Filter by search query
     if (debouncedSearchQuery.trim()) {
-      const query = debouncedSearchQuery.toLowerCase();
-      result = result.filter(m => 
-        m.question.toLowerCase().includes(query) ||
-        m.creator?.toLowerCase().includes(query)
-      );
+      const queryTerms = debouncedSearchQuery.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+      result = result.filter(m => {
+        const question = m.question.toLowerCase();
+        const creator = m.creator?.toLowerCase() || '';
+        const categoryLabel = getCategoryConfig(m.category).label.toLowerCase();
+        
+        // Match if all terms are found in either question, creator, or category
+        return queryTerms.every(term => 
+          question.includes(term) || 
+          creator.includes(term) || 
+          categoryLabel.includes(term)
+        );
+      });
     }
 
     // Filter by time range
