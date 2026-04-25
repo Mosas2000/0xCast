@@ -24,6 +24,8 @@ interface MarketFilterProps {
   onTimeRangeChange: (range: TimeRange) => void;
   onVolumeRangeChange: (range: VolumeRange) => void;
   onSavePreset?: () => void;
+  selectedOnlyWatchlist: boolean;
+  onOnlyWatchlistChange: (only: boolean) => void;
   marketCounts?: {
     all: number;
     active: number;
@@ -43,6 +45,8 @@ export function MarketFilter({
   onTimeRangeChange,
   onVolumeRangeChange,
   onSavePreset,
+  selectedOnlyWatchlist,
+  onOnlyWatchlistChange,
   marketCounts,
 }: MarketFilterProps) {
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
@@ -283,6 +287,23 @@ export function MarketFilter({
           <span>Save Preset</span>
         </button>
       )}
+
+      {/* Watchlist Toggle */}
+      <button
+        style={{
+          ...dropdownButtonStyle,
+          minWidth: 'auto',
+          backgroundColor: selectedOnlyWatchlist ? '#3B82F620' : '#111111',
+          borderColor: selectedOnlyWatchlist ? '#3B82F6' : '#262626',
+          color: selectedOnlyWatchlist ? '#3B82F6' : '#FFFFFF',
+        }}
+        onClick={() => onOnlyWatchlistChange(!selectedOnlyWatchlist)}
+      >
+        <svg style={{ width: '16px', height: '16px' }} fill={selectedOnlyWatchlist ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+        </svg>
+        <span>Watchlist</span>
+      </button>
 
       {/* Advanced Filters Panel */}
       {showAdvanced && (
