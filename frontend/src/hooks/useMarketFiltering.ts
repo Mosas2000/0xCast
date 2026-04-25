@@ -18,6 +18,7 @@ import {
   SortOption,
   categorizeMarket,
 } from '../utils/marketCategories';
+import { loadWatchlistIds } from '../utils/watchlist';
 
 interface UseMarketFilteringOptions {
   markets: Market[];
@@ -33,6 +34,7 @@ interface UseMarketFilteringReturn {
   searchQuery: string;
   timeRange: TimeRange;
   volumeRange: VolumeRange;
+  onlyWatchlist: boolean;
   
   // Setters
   setCategory: (category: MarketCategory) => void;
@@ -41,6 +43,7 @@ interface UseMarketFilteringReturn {
   setSearchQuery: (query: string) => void;
   setTimeRange: (range: TimeRange) => void;
   setVolumeRange: (range: VolumeRange) => void;
+  setOnlyWatchlist: (only: boolean) => void;
   
   // Counts
   counts: {
@@ -102,10 +105,19 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
   const [category, setCategoryState] = useState<MarketCategory>(initialCategory);
   const [sortOption, setSortOptionState] = useState<SortOption>(initialSort);
   const [statusFilter, setStatusFilterState] = useState<'all' | 'active' | 'resolved'>(initialStatus);
+  const initialSearch = syncWithUrl ? (searchParams.get('q') || '') : '';
+  const initialTimeRange = syncWithUrl ? parseTimeRangeParam(searchParams.get('time')) : 'all';
+  const initialVolumeRange = syncWithUrl ? parseVolumeRangeParam(searchParams.get('volume')) : 'all';
+  const initialOnlyWatchlist = syncWithUrl ? searchParams.get('watchlist') === 'true' : false;
+  
+  const [category, setCategoryState] = useState<MarketCategory>(initialCategory);
+  const [sortOption, setSortOptionState] = useState<SortOption>(initialSort);
+  const [statusFilter, setStatusFilterState] = useState<'all' | 'active' | 'resolved'>(initialStatus);
   const [searchQuery, setSearchQueryState] = useState(initialSearch);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(initialSearch);
   const [timeRange, setTimeRangeState] = useState<TimeRange>(initialTimeRange);
   const [volumeRange, setVolumeRangeState] = useState<VolumeRange>(initialVolumeRange);
+  const [onlyWatchlist, setOnlyWatchlistState] = useState(initialOnlyWatchlist);
 
   // Sync state changes to URL
   const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
@@ -164,6 +176,11 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
     updateUrlParams({ volume: value });
   }, [updateUrlParams]);
 
+  const setOnlyWatchlist = useCallback((value: boolean) => {
+    setOnlyWatchlistState(value);
+    updateUrlParams({ watchlist: value ? 'true' : null });
+  }, [updateUrlParams]);
+
   // Categorize all markets
   const categorizedMarkets = useMemo(() => {
     return markets.map(market => ({
@@ -204,6 +221,12 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
   // Filter markets
   const filteredMarkets = useMemo(() => {
     let result = [...categorizedMarkets];
+    const watchlistIds = loadWatchlistIds();
+    
+    // Filter by watchlist
+    if (onlyWatchlist) {
+      result = result.filter(m => watchlistIds.includes(m.id));
+    }
     
     // Filter by status
     if (statusFilter === 'active') {
@@ -293,6 +316,7 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
     setSearchQueryState('');
     setTimeRangeState('all');
     setVolumeRangeState('all');
+    setOnlyWatchlistState(false);
     if (syncWithUrl) {
       setSearchParams({}, { replace: true });
     }
@@ -318,12 +342,14 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
     searchQuery,
     timeRange,
     volumeRange,
+    onlyWatchlist,
     setCategory,
     setSortOption,
     setStatusFilter,
     setSearchQuery,
     setTimeRange,
     setVolumeRange,
+    setOnlyWatchlist,
     counts,
     resetFilters,
   };
