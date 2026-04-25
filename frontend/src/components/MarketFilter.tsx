@@ -317,6 +317,19 @@ export function MarketFilter({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
         </svg>
         <span>Advanced</span>
+        {(selectedTimeRange !== 'all' || selectedVolumeRange !== 'all') && (
+          <span style={{
+            padding: '2px 6px',
+            borderRadius: '4px',
+            backgroundColor: '#3B82F6',
+            color: '#fff',
+            fontSize: '10px',
+            fontWeight: '700',
+            marginLeft: '4px'
+          }}>
+            {(selectedTimeRange !== 'all' ? 1 : 0) + (selectedVolumeRange !== 'all' ? 1 : 0)}
+          </span>
+        )}
       </button>
 
       {/* Save Preset Button */}
