@@ -409,6 +409,22 @@ export function MarketsPage() {
               </span>
             )}
             <button
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                alert('Filter URL copied to clipboard!');
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#3B82F6',
+                fontSize: 13,
+                cursor: 'pointer',
+                textDecoration: 'underline',
+              }}
+            >
+              Share filters
+            </button>
+            <button
               onClick={resetFilters}
               style={{
                 background: 'none',
