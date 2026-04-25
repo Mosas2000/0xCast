@@ -160,6 +160,38 @@ describe('Market Filtering Logic', () => {
     expect(filtered[0].id).toBe(1);
   });
 
+  it('should filter by volume range correctly', () => {
+    // High volume (> 50k) - none in our sample (max is 18k)
+    // Medium volume (1k - 50k)
+    const mediumVolume = testMarkets.filter(m => {
+      const volume = m.totalYesStake + m.totalNoStake;
+      return volume >= 1000 && volume < 50000;
+    });
+    expect(mediumVolume.length).toBe(4);
+
+    const lowVolume = testMarkets.filter(m => {
+      const volume = m.totalYesStake + m.totalNoStake;
+      return volume < 1000;
+    });
+    expect(lowVolume.length).toBe(0);
+  });
+
+  it('should filter by time range correctly', () => {
+    const now = Date.now();
+    const dayMs = 24 * 60 * 60 * 1000;
+    
+    // Create a market from yesterday
+    const recentMarket = createTestMarket({ createdAt: now - 12 * 60 * 60 * 1000 });
+    // Create a market from last week
+    const oldMarket = createTestMarket({ createdAt: now - 5 * dayMs });
+    
+    const markets = [recentMarket, oldMarket];
+    
+    const last24h = markets.filter(m => m.createdAt >= now - dayMs);
+    expect(last24h.length).toBe(1);
+    expect(last24h[0]).toBe(recentMarket);
+  });
+
   it('should sort by newest correctly', () => {
     const sorted = [...testMarkets].sort((a, b) => b.createdAt - a.createdAt);
     

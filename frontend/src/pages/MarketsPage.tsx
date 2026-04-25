@@ -2,9 +2,11 @@ import { useEffect, useReducer } from 'react';
 import { Link } from 'react-router-dom';
 import { useMarkets } from '../hooks/useMarkets';
 import { useMarketFiltering } from '../hooks/useMarketFiltering';
+import { useFilterPresets } from '../hooks/useFilterPresets';
 import { useRealtimeSignal } from '../hooks/useRealtimeSignal';
 import { MarketCard } from '../components/MarketCard';
 import { MarketFilter } from '../components/MarketFilter';
+import { MarketRecommendations } from '../components/MarketRecommendations';
 import { getCategoryConfig, CATEGORIES, MarketCategory } from '../utils/marketCategories';
 
 export function MarketsPage() {
@@ -16,13 +18,40 @@ export function MarketsPage() {
     sortOption,
     statusFilter,
     searchQuery,
+    timeRange,
+    volumeRange,
+    onlyWatchlist,
+    recentSearches,
     setCategory,
     setSortOption,
     setStatusFilter,
     setSearchQuery,
+    setTimeRange,
+    setVolumeRange,
+    setOnlyWatchlist,
+    clearRecentSearches,
     counts,
     resetFilters,
   } = useMarketFiltering({ markets, syncWithUrl: true });
+
+  const { presets, activePresetId, setActivePresetId, savePreset, deletePreset } = useFilterPresets();
+
+  const handleSavePreset = () => {
+    const name = prompt('Enter a name for this filter preset:');
+    if (!name) return;
+    
+    savePreset({
+      name,
+      filters: {
+        category,
+        sortOption,
+        status: statusFilter,
+        timeRange,
+        volumeRange,
+      },
+      icon: '🔖',
+    });
+  };
 
   const activeCategory = getCategoryConfig(category);
   const [lastUpdatedAt, refreshLastUpdatedAt] = useReducer(() => new Date(), new Date());
@@ -92,6 +121,44 @@ export function MarketsPage() {
           </p>
         </div>
 
+        {/* Market Stats Summary */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: 24,
+          marginBottom: 48
+        }}>
+          <div style={{
+            padding: '24px',
+            background: '#111',
+            border: '1px solid #262626',
+            borderRadius: 16,
+          }}>
+            <div style={{ fontSize: 14, color: '#737373', marginBottom: 8, fontWeight: 500 }}>ACTIVE MARKETS</div>
+            <div style={{ fontSize: 32, fontWeight: 700, color: '#fff' }}>{counts.active}</div>
+          </div>
+          <div style={{
+            padding: '24px',
+            background: '#111',
+            border: '1px solid #262626',
+            borderRadius: 16,
+          }}>
+            <div style={{ fontSize: 14, color: '#737373', marginBottom: 8, fontWeight: 500 }}>RESOLVED MARKETS</div>
+            <div style={{ fontSize: 32, fontWeight: 700, color: '#fff' }}>{counts.resolved}</div>
+          </div>
+          <div style={{
+            padding: '24px',
+            background: '#111',
+            border: '1px solid #262626',
+            borderRadius: 16,
+          }}>
+            <div style={{ fontSize: 14, color: '#737373', marginBottom: 8, fontWeight: 500 }}>TOTAL VOLUME</div>
+            <div style={{ fontSize: 32, fontWeight: 700, color: '#3B82F6' }}>
+              {Math.round(markets.reduce((acc, m) => acc + m.totalYesStake + m.totalNoStake, 0)).toLocaleString()} STX
+            </div>
+          </div>
+        </div>
+
         {/* Filters */}
         <div style={{ 
           display: 'flex', 
@@ -135,15 +202,96 @@ export function MarketsPage() {
             />
           </div>
 
+          {/* Presets */}
+          <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4 }}>
+            {presets.map(preset => (
+              <div
+                key={preset.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  padding: '4px',
+                  background: activePresetId === preset.id ? '#3B82F620' : '#111',
+                  border: `1px solid ${activePresetId === preset.id ? '#3B82F6' : '#262626'}`,
+                  borderRadius: 20,
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                <button
+                  onClick={() => {
+                    if (preset.filters.category) setCategory(preset.filters.category);
+                    if (preset.filters.sortOption) setSortOption(preset.filters.sortOption);
+                    if (preset.filters.status) setStatusFilter(preset.filters.status);
+                    if (preset.filters.timeRange) setTimeRange(preset.filters.timeRange);
+                    if (preset.filters.volumeRange) setVolumeRange(preset.filters.volumeRange);
+                    setActivePresetId(preset.id);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '4px 12px',
+                    background: 'none',
+                    border: 'none',
+                    color: activePresetId === preset.id ? '#3B82F6' : '#9CA3AF',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span>{preset.icon || '🔖'}</span>
+                  <span>{preset.name}</span>
+                </button>
+                
+                {/* Delete button only for custom presets (not default ones) */}
+                {!['trending', 'new', 'ending'].includes(preset.id) && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deletePreset(preset.id);
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 20,
+                      height: 20,
+                      borderRadius: '50%',
+                      background: 'none',
+                      border: 'none',
+                      color: '#6B7280',
+                      cursor: 'pointer',
+                      marginRight: 4
+                    }}
+                  >
+                    <svg style={{ width: 12, height: 12 }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
           {/* Filter Controls */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center' }}>
             <MarketFilter
               selectedCategory={category}
               selectedSort={sortOption}
               selectedStatus={statusFilter}
+              selectedTimeRange={timeRange}
+              selectedVolumeRange={volumeRange}
               onCategoryChange={setCategory}
               onSortChange={setSortOption}
               onStatusChange={setStatusFilter}
+              onTimeRangeChange={setTimeRange}
+              onVolumeRangeChange={setVolumeRange}
+              onSavePreset={handleSavePreset}
+              selectedOnlyWatchlist={onlyWatchlist}
+              onOnlyWatchlistChange={setOnlyWatchlist}
+              isSearching={isSearching}
               marketCounts={{
                 all: counts.all,
                 active: counts.active,
@@ -180,6 +328,44 @@ export function MarketsPage() {
             </button>
           </div>
         </div>
+
+        {/* Recent Searches */}
+        {recentSearches.length > 0 && !searchQuery && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, overflowX: 'auto', paddingBottom: 4 }}>
+            <span style={{ fontSize: 13, color: '#737373', whiteSpace: 'nowrap' }}>Recent Searches:</span>
+            {recentSearches.map((s, i) => (
+              <button
+                key={i}
+                onClick={() => setSearchQuery(s)}
+                style={{
+                  padding: '4px 12px',
+                  background: '#111',
+                  border: '1px solid #262626',
+                  borderRadius: 16,
+                  color: '#A3A3A3',
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {s}
+              </button>
+            ))}
+            <button
+              onClick={clearRecentSearches}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#EF4444',
+                fontSize: 11,
+                cursor: 'pointer',
+                marginLeft: 'auto'
+              }}
+            >
+              Clear
+            </button>
+          </div>
+        )}
 
         {/* Category Quick Filter Chips */}
         <div style={{ 
@@ -275,6 +461,67 @@ export function MarketsPage() {
                 Search: "{searchQuery}"
               </span>
             )}
+            {timeRange !== 'all' && (
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 12px',
+                backgroundColor: '#10B98120',
+                border: '1px solid #10B98140',
+                borderRadius: 20,
+                fontSize: 13,
+                color: '#10B981',
+              }}>
+                Time: {timeRange}
+              </span>
+            )}
+            {volumeRange !== 'all' && (
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 12px',
+                backgroundColor: '#F59E0B20',
+                border: '1px solid #F59E0B40',
+                borderRadius: 20,
+                fontSize: 13,
+                color: '#F59E0B',
+              }}>
+                Volume: {volumeRange}
+              </span>
+            )}
+            {onlyWatchlist && (
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 12px',
+                backgroundColor: '#EC489920',
+                border: '1px solid #EC489940',
+                borderRadius: 20,
+                fontSize: 13,
+                color: '#EC4899',
+              }}>
+                Watchlist
+              </span>
+            )}
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                alert('Filter URL copied to clipboard!');
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#3B82F6',
+                fontSize: 13,
+                cursor: 'pointer',
+                textDecoration: 'underline',
+              }}
+            >
+              Share filters
+            </button>
             <button
               onClick={resetFilters}
               style={{
@@ -316,6 +563,11 @@ export function MarketsPage() {
               Try again
             </button>
           </div>
+        )}
+
+        {/* Recommendations - Only show when not searching/filtering */}
+        {!searchQuery && category === MarketCategory.ALL && statusFilter === 'all' && (
+          <MarketRecommendations markets={markets} isLoading={isLoading && markets.length === 0} />
         )}
 
         {/* Grid */}
