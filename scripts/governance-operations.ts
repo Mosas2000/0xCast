@@ -21,6 +21,7 @@ import {
     logTransaction,
     displayProgress,
     TransactionTracker,
+    getCurrentBlockHeight,
 } from './utils/transaction-helpers.js';
 
 // Load environment variables
@@ -42,19 +43,7 @@ const PROPOSAL_TYPES = {
     EMERGENCY_ACTION: 'emergency-action',
 };
 
-/**
- * Get current block height
- */
-async function getCurrentBlockHeight(): Promise<number> {
-    try {
-        const response = await fetch('https://api.mainnet.hiro.so/v2/info');
-        const data = await response.json();
-        return data.stacks_tip_height;
-    } catch (error) {
-        console.warn('Could not fetch current block height');
-        return 6040000; // Fallback
-    }
-}
+
 
 /**
  * Create a governance proposal
