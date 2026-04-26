@@ -9,6 +9,7 @@ import fs from 'fs';
 import toml from 'toml';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { fetchCurrentBlockHeight } from './block-height.js';
 
 // ES module equivalents for __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -63,39 +64,7 @@ export async function getPrivateKey(): Promise<string> {
  * Get current Stacks block height from the network
  */
 export async function getCurrentBlockHeight(network: 'mainnet' | 'testnet' | 'devnet' = 'mainnet'): Promise<number> {
-    const apiUrl = network === 'mainnet'
-        ? 'https://api.mainnet.hiro.so/v2/info'
-        : network === 'testnet'
-            ? 'https://api.testnet.hiro.so/v2/info'
-            : 'http://localhost:3999/v2/info';
-
-    // Try multiple times with delays to avoid rate limiting
-    for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-            const response = await fetch(apiUrl);
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            const data = await response.json();
-            return data.stacks_tip_height;
-        } catch (error) {
-            if (attempt < 3) {
-                console.warn(`Attempt ${attempt} failed, retrying in 2s...`);
-                await sleep(2000);
-            } else {
-                console.warn('⚠️  Could not fetch current block height after 3 attempts');
-                console.warn('   Using estimated fallback value');
-                // Updated fallback - approximate current mainnet height as of Jan 2026
-                // Stacks mainnet is at ~6,188,000 blocks
-                return 6188000;
-            }
-        }
-    }
-
-    // This should never be reached, but TypeScript needs it
-    return 6188000;
+    return fetchCurrentBlockHeight(network);
 }
 
 /**
