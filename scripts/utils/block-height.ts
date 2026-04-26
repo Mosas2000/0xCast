@@ -5,7 +5,8 @@ import prompts from 'prompts';
  */
 export async function fetchCurrentBlockHeight(
     network: 'mainnet' | 'testnet' | 'devnet' = 'mainnet',
-    maxRetries: number = 3
+    maxRetries: number = 3,
+    retryDelayMs: number = 2000
 ): Promise<number> {
     const apiUrl = network === 'mainnet'
         ? 'https://api.mainnet.hiro.so/v2/info'
@@ -29,8 +30,8 @@ export async function fetchCurrentBlockHeight(
         } catch (error) {
             if (attempt < maxRetries) {
                 console.warn(`⚠️  Block height fetch attempt ${attempt} failed: ${error instanceof Error ? error.message : String(error)}`);
-                console.warn(`   Retrying in 2s...`);
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                console.warn(`   Retrying in ${retryDelayMs / 1000}s...`);
+                await new Promise(resolve => setTimeout(resolve, retryDelayMs));
             } else {
                 console.error(`\n❌ Failed to fetch current block height after ${maxRetries} attempts.`);
                 
