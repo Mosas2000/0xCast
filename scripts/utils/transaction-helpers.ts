@@ -237,9 +237,19 @@ export interface TransactionSummary {
     details?: any;
 }
 
+/**
+ * Utility class to track and summarize contract transactions executed during a script run
+ */
 export class TransactionTracker {
+    /** Internal storage for transaction summaries */
     private transactions: TransactionSummary[] = [];
 
+    /**
+     * Add a new transaction to the tracker
+     * @param type The operation type (e.g., 'Market Creation')
+     * @param txid The transaction ID returned by the network
+     * @param details Optional additional data to log
+     */
     add(type: string, txid: string, details?: any): void {
         this.transactions.push({
             type,
