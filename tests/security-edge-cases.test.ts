@@ -199,4 +199,33 @@ describe("Security and Edge Case Scenarios", () => {
             expect(result).toBeOk(Cl.bool(true));
         });
     });
+
+    describe("Oracle Gated Functions", () => {
+        it("should prevent non-oracle from calling oracle-resolve", () => {
+            const currentBlock = simnet.blockHeight;
+            simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [Cl.stringAscii("Oracle test"), Cl.uint(currentBlock + 10), Cl.uint(currentBlock + 20), Cl.uint(1)],
+                deployer
+            );
+            const { result } = simnet.callPublicFn(
+                contractName,
+                "oracle-resolve",
+                [Cl.uint(0), Cl.uint(1)],
+                wallet1
+            );
+            expect(result).toBeErr(Cl.uint(100)); // ERR-NOT-AUTHORIZED
+        });
+
+        it("should prevent non-oracle from setting dispute period", () => {
+            const { result } = simnet.callPublicFn(
+                contractName,
+                "set-dispute-period",
+                [Cl.uint(200)],
+                wallet1
+            );
+            expect(result).toBeErr(Cl.uint(100)); // ERR-NOT-AUTHORIZED
+        });
+    });
 });
