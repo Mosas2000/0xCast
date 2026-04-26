@@ -13,6 +13,7 @@ import { generateWallet } from '@stacks/wallet-sdk';
 import prompts from 'prompts';
 import * as dotenv from 'dotenv';
 import { categoryFromQuestion } from './utils/market-categories.js';
+import { fetchCurrentBlockHeight } from './utils/block-height.js';
 import fs from 'fs';
 import toml from 'toml';
 import path from 'path';
@@ -32,19 +33,6 @@ const CONTRACT_NAME = 'market-core';
 // Network configuration
 const network = STACKS_MAINNET;
 
-/**
- * Get current Stacks block height from the network
- */
-async function getCurrentBlockHeight(): Promise<number> {
-    try {
-        const response = await fetch('https://api.mainnet.hiro.so/v2/info');
-        const data = await response.json();
-        return data.stacks_tip_height;
-    } catch (error) {
-        console.warn('Could not fetch current block height, using fallback');
-        return 6037876; // Fallback to approximate current height
-    }
-}
 
 // Stake amounts in microSTX (1 STX = 1,000,000 microSTX)
 const YES_STAKE_AMOUNT = 500000; // 0.5 STX
@@ -53,11 +41,10 @@ const NO_STAKE_AMOUNT = 300000;  // 0.3 STX
 // Market parameters
 const MARKET_QUESTION = "Will STX reach $5 by March 1st, 2026?";
 // Stacks produces ~144 blocks per day (10 min per block)
-// Current block ~6,037,876 (Jan 22, 2026)
 // Adding 5,000 blocks (~35 days) for end date
 // Adding 5,500 blocks (~38 days) for resolution date
-const END_BLOCK_HEIGHT = 6043000;      // ~35 days from now
-const RESOLUTION_BLOCK_HEIGHT = 6043500; // ~3 days after market closes
+const END_BLOCK_OFFSET = 5000;
+const RESOLUTION_BLOCK_OFFSET = 5500;
 
 /**
  * Get private key from Mainnet.toml by deriving from mnemonic
@@ -107,11 +94,11 @@ async function getPrivateKey(): Promise<string> {
 /**
  * Create a new prediction market
  */
-async function createMarket(privateKey: string, category: number): Promise<string> {
+async function createMarket(privateKey: string, category: number, endBlockHeight: number, resolutionBlockHeight: number): Promise<string> {
     console.log('\n📊 Creating market...');
     console.log(`Question: "${MARKET_QUESTION}"`);
-    console.log(`End block: ${END_BLOCK_HEIGHT}`);
-    console.log(`Resolution block: ${RESOLUTION_BLOCK_HEIGHT}`);
+    console.log(`End block: ${endBlockHeight}`);
+    console.log(`Resolution block: ${resolutionBlockHeight}`);
 
     const txOptions = {
         contractAddress: CONTRACT_ADDRESS,
@@ -119,8 +106,8 @@ async function createMarket(privateKey: string, category: number): Promise<strin
         functionName: 'create-market',
         functionArgs: [
             stringAsciiCV(MARKET_QUESTION),
-            uintCV(END_BLOCK_HEIGHT),
-            uintCV(RESOLUTION_BLOCK_HEIGHT),
+            uintCV(endBlockHeight),
+            uintCV(resolutionBlockHeight),
             uintCV(category),
         ],
         senderKey: privateKey,
@@ -247,16 +234,20 @@ async function main() {
     try {
         // Get current block height
         console.log('⏱️  Fetching current block height...');
-        const currentBlock = await getCurrentBlockHeight();
+        const currentBlock = await fetchCurrentBlockHeight('mainnet');
         console.log(`Current Stacks block: ${currentBlock.toLocaleString()}`);
-        console.log(`End block: ${END_BLOCK_HEIGHT.toLocaleString()} (${(END_BLOCK_HEIGHT - currentBlock).toLocaleString()} blocks away)`);
-        console.log(`Resolution block: ${RESOLUTION_BLOCK_HEIGHT.toLocaleString()}\n`);
+        
+        const endBlockHeight = currentBlock + END_BLOCK_OFFSET;
+        const resolutionBlockHeight = currentBlock + RESOLUTION_BLOCK_OFFSET;
+        
+        console.log(`End block: ${endBlockHeight.toLocaleString()} (${END_BLOCK_OFFSET.toLocaleString()} blocks away)`);
+        console.log(`Resolution block: ${resolutionBlockHeight.toLocaleString()}\n`);
 
         // Validate block heights are in the future
-        if (END_BLOCK_HEIGHT <= currentBlock) {
-            throw new Error(`❌ END_BLOCK_HEIGHT (${END_BLOCK_HEIGHT}) is in the past! Current block is ${currentBlock}. Please update the script with future block heights.`);
+        if (endBlockHeight <= currentBlock) {
+            throw new Error(`❌ END_BLOCK_HEIGHT (${endBlockHeight}) is in the past! Current block is ${currentBlock}.`);
         }
-        if (RESOLUTION_BLOCK_HEIGHT <= END_BLOCK_HEIGHT) {
+        if (resolutionBlockHeight <= endBlockHeight) {
             throw new Error(`❌ RESOLUTION_BLOCK_HEIGHT must be greater than END_BLOCK_HEIGHT`);
         }
 
@@ -269,7 +260,12 @@ async function main() {
         }
 
         // Step 1: Create market
-        const createMarketTxId = await createMarket(privateKey, categoryFromQuestion(MARKET_QUESTION));
+        const createMarketTxId = await createMarket(
+            privateKey, 
+            categoryFromQuestion(MARKET_QUESTION), 
+            endBlockHeight, 
+            resolutionBlockHeight
+        );
 
         // Wait for user to confirm market creation before proceeding
         console.log('\n⏳ Please wait for the market creation transaction to confirm...');
