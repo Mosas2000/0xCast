@@ -228,4 +228,62 @@ describe("Security and Edge Case Scenarios", () => {
             expect(result).toBeErr(Cl.uint(100)); // ERR-NOT-AUTHORIZED
         });
     });
+
+    describe("Staking Boundary Conditions", () => {
+        it("should allow staking exactly one block before end-date", () => {
+            const startBlock = simnet.blockHeight;
+            const endDate = startBlock + 10;
+            const createResult = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [Cl.stringAscii("Boundary test"), Cl.uint(endDate), Cl.uint(endDate + 10), Cl.uint(1)],
+                deployer
+            );
+            const marketId = (createResult.result as any).value;
+
+            // Target block height (endDate - 1) for the transaction to be mined into
+            // If simnet.blockHeight is currently H, and we callPublicFn, it will be in block H+1.
+            // So we want simnet.blockHeight to be endDate - 2.
+            const blocksToMine = (endDate - 2) - simnet.blockHeight;
+            if (blocksToMine > 0) {
+                simnet.mineEmptyBlocks(blocksToMine);
+            }
+            
+            const { result } = simnet.callPublicFn(
+                contractName,
+                "place-yes-stake",
+                [marketId, Cl.uint(1000)],
+                wallet1
+            );
+            expect(result).toBeOk(Cl.bool(true));
+        });
+
+        it("should reject staking exactly at end-date", () => {
+            const startBlock = simnet.blockHeight;
+            const endDate = startBlock + 10;
+            const createResult = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [Cl.stringAscii("Boundary test 2"), Cl.uint(endDate), Cl.uint(endDate + 10), Cl.uint(1)],
+                deployer
+            );
+            const marketId = (createResult.result as any).value;
+
+            // Target block height (endDate) for the transaction to be mined into
+            // If simnet.blockHeight is currently H, and we callPublicFn, it will be in block H+1.
+            // So we want simnet.blockHeight to be endDate - 1.
+            const blocksToMine = (endDate - 1) - simnet.blockHeight;
+            if (blocksToMine > 0) {
+                simnet.mineEmptyBlocks(blocksToMine);
+            }
+            
+            const { result } = simnet.callPublicFn(
+                contractName,
+                "place-yes-stake",
+                [marketId, Cl.uint(1000)],
+                wallet1
+            );
+            expect(result).toBeErr(Cl.uint(107)); // ERR-MARKET-ENDED
+        });
+    });
 });
