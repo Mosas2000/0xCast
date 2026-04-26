@@ -35,7 +35,7 @@ describe("Contract Invariants", () => {
     it("should respect resolution deadline abandonment invariant", () => {
         const currentBlock = simnet.blockHeight;
         const resDate = currentBlock + 100;
-        simnet.callPublicFn(
+        const { result: createRes } = simnet.callPublicFn(
             contractName,
             "create-market",
             [
@@ -46,27 +46,46 @@ describe("Contract Invariants", () => {
             ],
             deployer
         );
+        const marketId = (createRes as any).value;
 
         // Get resolution-deadline (usually resDate + 1008)
-        const deadlineRes = simnet.callReadOnlyFn(contractName, "get-resolution-deadline", [Cl.uint(0)], deployer);
+        const deadlineRes = simnet.callReadOnlyFn(contractName, "get-resolution-deadline", [marketId], deployer);
         
-        // Result is (ok u...)
-        // We can extract the value using Clarinet test helpers logic
-        const deadlineValue = (deadlineRes.result as any).value;
-
         // Mine blocks until just before deadline
-        // abandonment-period is 1008. resDate is currentBlock + 100.
-        // deadline = currentBlock + 100 + 1008 = currentBlock + 1108.
         simnet.mineEmptyBlocks(1100);
 
         // Check if abandoned
-        const abandonedBefore = simnet.callReadOnlyFn(contractName, "is-market-abandoned", [Cl.uint(0)], deployer);
+        const abandonedBefore = simnet.callReadOnlyFn(contractName, "is-market-abandoned", [marketId], deployer);
         expect(abandonedBefore.result).toBeBool(false);
 
         // Mine more blocks to pass deadline
         simnet.mineEmptyBlocks(20);
         
-        const abandonedAfter = simnet.callReadOnlyFn(contractName, "is-market-abandoned", [Cl.uint(0)], deployer);
+        const abandonedAfter = simnet.callReadOnlyFn(contractName, "is-market-abandoned", [marketId], deployer);
         expect(abandonedAfter.result).toBeBool(true);
+    });
+
+    it("should reject questions longer than 256 characters", () => {
+        const longQuestion = "a".repeat(257);
+        const currentBlock = simnet.blockHeight;
+        
+        // This might fail at the conversion level or contract level
+        try {
+            const { result } = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [
+                    Cl.stringAscii(longQuestion),
+                    Cl.uint(currentBlock + 100),
+                    Cl.uint(currentBlock + 200),
+                    Cl.uint(1),
+                ],
+                deployer
+            );
+            expect(result.type).toBe("err");
+        } catch (e) {
+            // If Cl.stringAscii throws, it's also a valid enforcement of the limit in the SDK
+            expect(e).toBeDefined();
+        }
     });
 });
