@@ -272,7 +272,7 @@ export class TransactionTracker {
         this.transactions.forEach((tx, index) => {
             console.log(`${index + 1}. ${tx.type}`);
             console.log(`   TX ID: ${tx.txid}`);
-            console.log(`   Time: ${tx.timestamp.toLocaleString()}`);
+            console.log(`   Time: ${tx.timestamp.toLocaleString()} (${tx.timestamp.toISOString()})`);
             console.log(`   Explorer: ${getExplorerTxUrl(tx.txid, network)}`);
             if (tx.details) {
                 console.log(`   Details: ${JSON.stringify(tx.details)}`);
