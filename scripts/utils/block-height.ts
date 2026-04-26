@@ -6,7 +6,8 @@ import prompts from 'prompts';
 export async function fetchCurrentBlockHeight(
     network: 'mainnet' | 'testnet' | 'devnet' = 'mainnet',
     maxRetries: number = 3,
-    retryDelayMs: number = 2000
+    retryDelayMs: number = 2000,
+    timeoutMs: number = 5000
 ): Promise<number> {
     const apiUrl = network === 'mainnet'
         ? 'https://api.mainnet.hiro.so/v2/info'
@@ -16,7 +17,7 @@ export async function fetchCurrentBlockHeight(
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-            const response = await fetch(apiUrl, { signal: AbortSignal.timeout(5000) });
+            const response = await fetch(apiUrl, { signal: AbortSignal.timeout(timeoutMs) });
 
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
