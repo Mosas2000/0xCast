@@ -69,4 +69,34 @@ describe("Market Creation Fuzzing", () => {
             { numRuns: 20 }
         );
     });
+
+    it("should only allow categories between 1 and 5", () => {
+        fc.assert(
+            fc.property(
+                fc.integer({ min: 0, max: 100 }), // category
+                (category) => {
+                    const currentBlock = simnet.blockHeight;
+                    
+                    const { result } = simnet.callPublicFn(
+                        contractName,
+                        "create-market",
+                        [
+                            Cl.stringAscii("Category Fuzz"),
+                            Cl.uint(currentBlock + 100),
+                            Cl.uint(currentBlock + 200),
+                            Cl.uint(category),
+                        ],
+                        deployer
+                    );
+
+                    if (category >= 1 && category <= 5) {
+                        expect(result.type).toBe("ok");
+                    } else {
+                        expect(result).toBeErr(Cl.uint(111)); // ERR-INVALID-CATEGORY
+                    }
+                }
+            ),
+            { numRuns: 20 }
+        );
+    });
 });
