@@ -1,0 +1,86 @@
+{
+  "app": {
+    "name": "0xCast",
+    "description": "Dezentralisierte Vorhersagemärkte auf Bitcoin"
+  },
+  "nav": {
+    "home": "Startseite",
+    "markets": "Märkte",
+    "create": "Erstellen",
+    "portfolio": "Portfolio",
+    "watchlist": "Beobachtungsliste",
+    "recent": "Kürzlich",
+    "multiMarkets": "Multi-Märkte",
+    "liquidity": "Liquidität",
+    "analytics": "Analytik",
+    "activity": "Aktivität",
+    "token": "OXC Token"
+  },
+  "actions": {
+    "submit": "Absenden",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "close": "Schließen",
+    "confirm": "Bestätigen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "search": "Suchen",
+    "filter": "Filtern",
+    "sort": "Sortieren",
+    "export": "Exportieren",
+    "import": "Importieren",
+    "refresh": "Aktualisieren",
+    "clear": "Löschen",
+    "apply": "Anwenden",
+    "reset": "Zurücksetzen"
+  },
+  "wallet": {
+    "connect": "Wallet Verbinden",
+    "disconnect": "Trennen",
+    "connected": "Verbunden",
+    "disconnected": "Getrennt",
+    "balance": "Guthaben",
+    "address": "Adresse"
+  },
+  "status": {
+    "active": "Aktiv",
+    "resolved": "Gelöst",
+    "disputed": "Umstritten",
+    "refunded": "Erstattet",
+    "pending": "Ausstehend",
+    "loading": "Lädt",
+    "success": "Erfolg",
+    "error": "Fehler"
+  },
+  "outcome": {
+    "yes": "Ja",
+    "no": "Nein",
+    "none": "Ausstehend",
+    "unknown": "Unbekannt"
+  },
+  "time": {
+    "now": "jetzt",
+    "justNow": "gerade eben",
+    "minuteAgo": "vor {{count}} Minute",
+    "minuteAgo_other": "vor {{count}} Minuten",
+    "hourAgo": "vor {{count}} Stunde",
+    "hourAgo_other": "vor {{count}} Stunden",
+    "dayAgo": "vor {{count}} Tag",
+    "dayAgo_other": "vor {{count}} Tagen",
+    "weekAgo": "vor {{count}} Woche",
+    "weekAgo_other": "vor {{count}} Wochen",
+    "monthAgo": "vor {{count}} Monat",
+    "monthAgo_other": "vor {{count}} Monaten",
+    "yearAgo": "vor {{count}} Jahr",
+    "yearAgo_other": "vor {{count}} Jahren"
+  },
+  "empty": {
+    "noData": "Keine Daten verfügbar",
+    "noResults": "Keine Ergebnisse gefunden",
+    "noMarkets": "Keine Märkte gefunden",
+    "noTransactions": "Noch keine Transaktionen",
+    "noNotifications": "Keine Benachrichtigungen"
+  }
+}

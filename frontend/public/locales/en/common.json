@@ -1,0 +1,86 @@
+{
+  "app": {
+    "name": "0xCast",
+    "description": "Decentralized Prediction Markets on Bitcoin"
+  },
+  "nav": {
+    "home": "Home",
+    "markets": "Markets",
+    "create": "Create",
+    "portfolio": "Portfolio",
+    "watchlist": "Watchlist",
+    "recent": "Recent",
+    "multiMarkets": "Multi Markets",
+    "liquidity": "Liquidity",
+    "analytics": "Analytics",
+    "activity": "Activity",
+    "token": "OXC Token"
+  },
+  "actions": {
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "export": "Export",
+    "import": "Import",
+    "refresh": "Refresh",
+    "clear": "Clear",
+    "apply": "Apply",
+    "reset": "Reset"
+  },
+  "wallet": {
+    "connect": "Connect Wallet",
+    "disconnect": "Disconnect",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "balance": "Balance",
+    "address": "Address"
+  },
+  "status": {
+    "active": "Active",
+    "resolved": "Resolved",
+    "disputed": "Disputed",
+    "refunded": "Refunded",
+    "pending": "Pending",
+    "loading": "Loading",
+    "success": "Success",
+    "error": "Error"
+  },
+  "outcome": {
+    "yes": "Yes",
+    "no": "No",
+    "none": "Pending",
+    "unknown": "Unknown"
+  },
+  "time": {
+    "now": "now",
+    "justNow": "just now",
+    "minuteAgo": "{{count}} minute ago",
+    "minuteAgo_other": "{{count}} minutes ago",
+    "hourAgo": "{{count}} hour ago",
+    "hourAgo_other": "{{count}} hours ago",
+    "dayAgo": "{{count}} day ago",
+    "dayAgo_other": "{{count}} days ago",
+    "weekAgo": "{{count}} week ago",
+    "weekAgo_other": "{{count}} weeks ago",
+    "monthAgo": "{{count}} month ago",
+    "monthAgo_other": "{{count}} months ago",
+    "yearAgo": "{{count}} year ago",
+    "yearAgo_other": "{{count}} years ago"
+  },
+  "empty": {
+    "noData": "No data available",
+    "noResults": "No results found",
+    "noMarkets": "No markets found",
+    "noTransactions": "No transactions yet",
+    "noNotifications": "No notifications"
+  }
+}

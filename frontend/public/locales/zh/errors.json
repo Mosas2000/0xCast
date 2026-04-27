@@ -1,0 +1,41 @@
+{
+  "validation": {
+    "required": "此字段为必填项",
+    "invalidNumber": "请输入有效数字",
+    "nonPositiveAmount": "金额必须大于零",
+    "minStakeRequired": "最小金额为{{min}} STX",
+    "maxStakeExceeded": "最大金额为{{max}} STX",
+    "tooManyDecimals": "最多允许{{count}}位小数",
+    "invalidEmail": "请输入有效的电子邮件地址",
+    "invalidDate": "请输入有效日期",
+    "datePast": "日期必须是未来的",
+    "invalidUrl": "请输入有效的URL"
+  },
+  "wallet": {
+    "notConnected": "钱包未连接",
+    "connectionFailed": "连接钱包失败",
+    "insufficientBalance": "余额不足",
+    "transactionFailed": "交易失败",
+    "transactionRejected": "用户拒绝交易",
+    "networkError": "网络错误"
+  },
+  "market": {
+    "notFound": "未找到市场",
+    "loadFailed": "加载市场失败",
+    "createFailed": "创建市场失败",
+    "stakeFailed": "下注失败",
+    "resolveFailed": "解决市场失败",
+    "alreadyResolved": "市场已解决",
+    "notActive": "市场未激活",
+    "expired": "市场已过期"
+  },
+  "general": {
+    "unknownError": "发生未知错误",
+    "serverError": "服务器错误",
+    "networkError": "网络错误",
+    "timeout": "请求超时",
+    "unauthorized": "未授权",
+    "forbidden": "禁止",
+    "notFound": "未找到"
+  }
+}

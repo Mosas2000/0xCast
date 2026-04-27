@@ -1,0 +1,86 @@
+{
+  "app": {
+    "name": "0xCast",
+    "description": "比特币上的去中心化预测市场"
+  },
+  "nav": {
+    "home": "首页",
+    "markets": "市场",
+    "create": "创建",
+    "portfolio": "投资组合",
+    "watchlist": "关注列表",
+    "recent": "最近",
+    "multiMarkets": "多市场",
+    "liquidity": "流动性",
+    "analytics": "分析",
+    "activity": "活动",
+    "token": "OXC代币"
+  },
+  "actions": {
+    "submit": "提交",
+    "cancel": "取消",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "close": "关闭",
+    "confirm": "确认",
+    "back": "返回",
+    "next": "下一步",
+    "search": "搜索",
+    "filter": "筛选",
+    "sort": "排序",
+    "export": "导出",
+    "import": "导入",
+    "refresh": "刷新",
+    "clear": "清除",
+    "apply": "应用",
+    "reset": "重置"
+  },
+  "wallet": {
+    "connect": "连接钱包",
+    "disconnect": "断开连接",
+    "connected": "已连接",
+    "disconnected": "已断开",
+    "balance": "余额",
+    "address": "地址"
+  },
+  "status": {
+    "active": "活跃",
+    "resolved": "已解决",
+    "disputed": "有争议",
+    "refunded": "已退款",
+    "pending": "待处理",
+    "loading": "加载中",
+    "success": "成功",
+    "error": "错误"
+  },
+  "outcome": {
+    "yes": "是",
+    "no": "否",
+    "none": "待处理",
+    "unknown": "未知"
+  },
+  "time": {
+    "now": "现在",
+    "justNow": "刚刚",
+    "minuteAgo": "{{count}}分钟前",
+    "minuteAgo_other": "{{count}}分钟前",
+    "hourAgo": "{{count}}小时前",
+    "hourAgo_other": "{{count}}小时前",
+    "dayAgo": "{{count}}天前",
+    "dayAgo_other": "{{count}}天前",
+    "weekAgo": "{{count}}周前",
+    "weekAgo_other": "{{count}}周前",
+    "monthAgo": "{{count}}个月前",
+    "monthAgo_other": "{{count}}个月前",
+    "yearAgo": "{{count}}年前",
+    "yearAgo_other": "{{count}}年前"
+  },
+  "empty": {
+    "noData": "无可用数据",
+    "noResults": "未找到结果",
+    "noMarkets": "未找到市场",
+    "noTransactions": "暂无交易",
+    "noNotifications": "无通知"
+  }
+}

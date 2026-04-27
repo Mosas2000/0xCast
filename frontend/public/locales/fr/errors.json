@@ -1,0 +1,41 @@
+{
+  "validation": {
+    "required": "Ce champ est obligatoire",
+    "invalidNumber": "Veuillez entrer un nombre valide",
+    "nonPositiveAmount": "Le montant doit être supérieur à zéro",
+    "minStakeRequired": "Le montant minimum est {{min}} STX",
+    "maxStakeExceeded": "Le montant maximum est {{max}} STX",
+    "tooManyDecimals": "Maximum {{count}} décimales autorisées",
+    "invalidEmail": "Veuillez entrer une adresse email valide",
+    "invalidDate": "Veuillez entrer une date valide",
+    "datePast": "La date doit être dans le futur",
+    "invalidUrl": "Veuillez entrer une URL valide"
+  },
+  "wallet": {
+    "notConnected": "Portefeuille non connecté",
+    "connectionFailed": "Échec de la connexion du portefeuille",
+    "insufficientBalance": "Solde insuffisant",
+    "transactionFailed": "Transaction échouée",
+    "transactionRejected": "Transaction rejetée par l'utilisateur",
+    "networkError": "Erreur réseau"
+  },
+  "market": {
+    "notFound": "Marché non trouvé",
+    "loadFailed": "Échec du chargement du marché",
+    "createFailed": "Échec de la création du marché",
+    "stakeFailed": "Échec de la mise",
+    "resolveFailed": "Échec de la résolution du marché",
+    "alreadyResolved": "Marché déjà résolu",
+    "notActive": "Le marché n'est pas actif",
+    "expired": "Le marché a expiré"
+  },
+  "general": {
+    "unknownError": "Une erreur inconnue s'est produite",
+    "serverError": "Erreur du serveur",
+    "networkError": "Erreur réseau",
+    "timeout": "Délai d'attente dépassé",
+    "unauthorized": "Non autorisé",
+    "forbidden": "Interdit",
+    "notFound": "Non trouvé"
+  }
+}

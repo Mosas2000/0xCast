@@ -1,0 +1,41 @@
+{
+  "validation": {
+    "required": "Este campo es obligatorio",
+    "invalidNumber": "Por favor ingrese un número válido",
+    "nonPositiveAmount": "La cantidad debe ser mayor que cero",
+    "minStakeRequired": "La cantidad mínima es {{min}} STX",
+    "maxStakeExceeded": "La cantidad máxima es {{max}} STX",
+    "tooManyDecimals": "Máximo {{count}} decimales permitidos",
+    "invalidEmail": "Por favor ingrese un correo electrónico válido",
+    "invalidDate": "Por favor ingrese una fecha válida",
+    "datePast": "La fecha debe ser futura",
+    "invalidUrl": "Por favor ingrese una URL válida"
+  },
+  "wallet": {
+    "notConnected": "Billetera no conectada",
+    "connectionFailed": "Error al conectar billetera",
+    "insufficientBalance": "Saldo insuficiente",
+    "transactionFailed": "Transacción fallida",
+    "transactionRejected": "Transacción rechazada por el usuario",
+    "networkError": "Error de red"
+  },
+  "market": {
+    "notFound": "Mercado no encontrado",
+    "loadFailed": "Error al cargar mercado",
+    "createFailed": "Error al crear mercado",
+    "stakeFailed": "Error al realizar apuesta",
+    "resolveFailed": "Error al resolver mercado",
+    "alreadyResolved": "Mercado ya resuelto",
+    "notActive": "El mercado no está activo",
+    "expired": "El mercado ha expirado"
+  },
+  "general": {
+    "unknownError": "Ocurrió un error desconocido",
+    "serverError": "Error del servidor",
+    "networkError": "Error de red",
+    "timeout": "Tiempo de espera agotado",
+    "unauthorized": "No autorizado",
+    "forbidden": "Prohibido",
+    "notFound": "No encontrado"
+  }
+}

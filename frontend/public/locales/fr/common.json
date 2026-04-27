@@ -1,0 +1,86 @@
+{
+  "app": {
+    "name": "0xCast",
+    "description": "Marchés de Prédiction Décentralisés sur Bitcoin"
+  },
+  "nav": {
+    "home": "Accueil",
+    "markets": "Marchés",
+    "create": "Créer",
+    "portfolio": "Portefeuille",
+    "watchlist": "Liste de Surveillance",
+    "recent": "Récent",
+    "multiMarkets": "Multi Marchés",
+    "liquidity": "Liquidité",
+    "analytics": "Analytique",
+    "activity": "Activité",
+    "token": "Token OXC"
+  },
+  "actions": {
+    "submit": "Soumettre",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "next": "Suivant",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "export": "Exporter",
+    "import": "Importer",
+    "refresh": "Actualiser",
+    "clear": "Effacer",
+    "apply": "Appliquer",
+    "reset": "Réinitialiser"
+  },
+  "wallet": {
+    "connect": "Connecter le Portefeuille",
+    "disconnect": "Déconnecter",
+    "connected": "Connecté",
+    "disconnected": "Déconnecté",
+    "balance": "Solde",
+    "address": "Adresse"
+  },
+  "status": {
+    "active": "Actif",
+    "resolved": "Résolu",
+    "disputed": "Contesté",
+    "refunded": "Remboursé",
+    "pending": "En Attente",
+    "loading": "Chargement",
+    "success": "Succès",
+    "error": "Erreur"
+  },
+  "outcome": {
+    "yes": "Oui",
+    "no": "Non",
+    "none": "En Attente",
+    "unknown": "Inconnu"
+  },
+  "time": {
+    "now": "maintenant",
+    "justNow": "à l'instant",
+    "minuteAgo": "il y a {{count}} minute",
+    "minuteAgo_other": "il y a {{count}} minutes",
+    "hourAgo": "il y a {{count}} heure",
+    "hourAgo_other": "il y a {{count}} heures",
+    "dayAgo": "il y a {{count}} jour",
+    "dayAgo_other": "il y a {{count}} jours",
+    "weekAgo": "il y a {{count}} semaine",
+    "weekAgo_other": "il y a {{count}} semaines",
+    "monthAgo": "il y a {{count}} mois",
+    "monthAgo_other": "il y a {{count}} mois",
+    "yearAgo": "il y a {{count}} an",
+    "yearAgo_other": "il y a {{count}} ans"
+  },
+  "empty": {
+    "noData": "Aucune donnée disponible",
+    "noResults": "Aucun résultat trouvé",
+    "noMarkets": "Aucun marché trouvé",
+    "noTransactions": "Aucune transaction pour le moment",
+    "noNotifications": "Aucune notification"
+  }
+}

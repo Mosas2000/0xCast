@@ -1,0 +1,62 @@
+{
+  "categories": {
+    "all": "All Categories",
+    "crypto": "Crypto",
+    "defi": "DeFi",
+    "sports": "Sports",
+    "politics": "Politics",
+    "entertainment": "Entertainment",
+    "technology": "Technology",
+    "science": "Science",
+    "other": "Other"
+  },
+  "labels": {
+    "question": "Question",
+    "description": "Description",
+    "category": "Category",
+    "endDate": "End Date",
+    "totalPool": "Total Pool",
+    "yesStake": "Yes Stake",
+    "noStake": "No Stake",
+    "odds": "Odds",
+    "volume": "Volume",
+    "participants": "Participants",
+    "creator": "Creator",
+    "resolver": "Resolver"
+  },
+  "actions": {
+    "createMarket": "Create Market",
+    "placeStake": "Place Stake",
+    "addToWatchlist": "Add to watchlist",
+    "removeFromWatchlist": "Remove from watchlist",
+    "viewDetails": "View Details",
+    "trade": "Trade",
+    "resolve": "Resolve",
+    "dispute": "Dispute"
+  },
+  "filters": {
+    "all": "All Markets",
+    "active": "Active",
+    "resolved": "Resolved",
+    "myMarkets": "My Markets",
+    "trending": "Trending",
+    "new": "New"
+  },
+  "sort": {
+    "newest": "Newest First",
+    "oldest": "Oldest First",
+    "highestVolume": "Highest Volume",
+    "lowestVolume": "Lowest Volume",
+    "endingSoon": "Ending Soon",
+    "mostPopular": "Most Popular"
+  },
+  "stake": {
+    "amount": "Stake Amount",
+    "position": "Position",
+    "potential": "Potential Return",
+    "fee": "Fee",
+    "total": "Total Cost",
+    "min": "Minimum",
+    "max": "Maximum"
+  }
+}

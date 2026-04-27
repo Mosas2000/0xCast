@@ -1,0 +1,21 @@
+{
+  "menu": {
+    "home": "Home",
+    "markets": "Markets",
+    "create": "Create",
+    "portfolio": "Portfolio",
+    "watchlist": "Watchlist",
+    "recent": "Recent",
+    "multiMarkets": "Multi Markets",
+    "liquidity": "Liquidity",
+    "analytics": "Analytics",
+    "activity": "Activity",
+    "oxcToken": "OXC Token"
+  },
+  "header": {
+    "connectWallet": "Connect Wallet",
+    "disconnect": "Disconnect",
+    "settings": "Settings",
+    "language": "Language"
+  }
+}

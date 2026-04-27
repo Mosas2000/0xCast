@@ -1,0 +1,36 @@
+{
+  "title": "Notificaciones",
+  "types": {
+    "priceMovement": "Movimiento de Precio",
+    "marketExpiry": "Vencimiento de Mercado",
+    "resolution": "Resolución",
+    "liquidityReward": "Recompensa de Liquidez",
+    "portfolioUpdate": "Actualización de Portafolio",
+    "systemAlert": "Alerta del Sistema",
+    "promotion": "Promoción"
+  },
+  "channels": {
+    "inApp": "En la Aplicación",
+    "email": "Correo Electrónico",
+    "push": "Push"
+  },
+  "frequencies": {
+    "immediate": "Inmediato",
+    "hourly": "Cada Hora",
+    "daily": "Diario",
+    "weekly": "Semanal"
+  },
+  "settings": {
+    "title": "Configuración de Notificaciones",
+    "preferences": "Preferencias",
+    "enabled": "Habilitado",
+    "disabled": "Deshabilitado",
+    "frequency": "Frecuencia",
+    "channel": "Canal"
+  },
+  "messages": {
+    "markAllRead": "Marcar todo como leído",
+    "clearAll": "Limpiar todo",
+    "noNotifications": "No hay notificaciones"
+  }
+}
