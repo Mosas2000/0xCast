@@ -27,6 +27,7 @@ import { useState, useCallback } from 'react';
 import { useContract } from './useContract';
 import type { CreateMarketFormData } from '../types/market';
 import { useContractPause } from './useContractPause';
+import { useRateLimit } from './useRateLimit';
 
 interface MarketCreationState {
   isCreating: boolean;
@@ -52,6 +53,7 @@ const initialState: MarketCreationState = {
 export function useMarketCreation(): UseMarketCreationReturn {
   const { createMarket: createMarketContract } = useContract();
   const { isPaused: isContractPaused } = useContractPause();
+  const { checkRateLimit } = useRateLimit();
   const [state, setState] = useState<MarketCreationState>(initialState);
 
   const createMarket = useCallback(
@@ -61,10 +63,17 @@ export function useMarketCreation(): UseMarketCreationReturn {
         setState(prev => ({ ...prev, isCreating: false, error: pauseError, success: false }));
         throw new Error(pauseError);
       }
+
+      const rateLimitResult = await checkRateLimit('create-market');
+      if (!rateLimitResult.allowed) {
+        const rateLimitError = rateLimitResult.reason || 'Rate limit exceeded';
+        setState(prev => ({ ...prev, isCreating: false, error: rateLimitError, success: false }));
+        throw new Error(rateLimitError);
+      }
+
       setState(prev => ({ ...prev, isCreating: true, error: null }));
 
       try {
-        // Call contract method
         await createMarketContract(data.question, data.durationBlocks);
 
         setState(prev => ({
@@ -98,7 +107,7 @@ export function useMarketCreation(): UseMarketCreationReturn {
         throw error;
       }
     },
-    [createMarketContract, isContractPaused]
+    [createMarketContract, isContractPaused, checkRateLimit]
   );
 
   const resetState = useCallback(() => {
