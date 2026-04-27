@@ -8,6 +8,8 @@ import { validateAmount, validateMarketId } from '../utils/validation';
 import { addStakeHistoryEntry, type StakeOutcome } from '../utils/stakeHistory';
 import { useContractPause } from './useContractPause';
 import { useRateLimit } from './useRateLimit';
+import { handleContractCall, parseContractError, getUserFriendlyContractError } from '../utils/contractErrorHandler';
+import { errorLoggingService } from '../services/ErrorLoggingService';
 
 interface UseStakeReturn {
   placeYesStake: (marketId: number, amount: number, onSuccess?: () => void) => Promise<void>;
@@ -101,12 +103,26 @@ export function useStake(): UseStakeReturn {
             onSuccess?.();
           },
           onCancel: () => {
-            setError('Transaction cancelled');
+            const cancelError = parseContractError(
+              new Error('User cancelled transaction'),
+              MARKET_CONTRACT.name,
+              functionName
+            );
+            setError(getUserFriendlyContractError(cancelError));
             setIsLoading(false);
           },
         });
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to place stake');
+        const contractError = parseContractError(err, MARKET_CONTRACT.name, functionName);
+        const friendlyMessage = getUserFriendlyContractError(contractError);
+        
+        errorLoggingService.logError(contractError, {
+          component: 'useStake',
+          action: functionName,
+          additionalData: { marketId, amount, outcome },
+        });
+        
+        setError(friendlyMessage);
         setIsLoading(false);
       }
     },
