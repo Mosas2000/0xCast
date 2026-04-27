@@ -286,4 +286,69 @@ describe("Security and Edge Case Scenarios", () => {
             expect(result).toBeErr(Cl.uint(107)); // ERR-MARKET-ENDED
         });
     });
+
+    describe("Dispute Scenarios", () => {
+        it("should allow oracle to mark a market as disputed", () => {
+            const currentBlock = simnet.blockHeight;
+            const { result: createRes } = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [Cl.stringAscii("Dispute test"), Cl.uint(currentBlock + 10), Cl.uint(currentBlock + 20), Cl.uint(1)],
+                deployer
+            );
+            const marketId = (createRes as any).value;
+
+            simnet.mineEmptyBlocks(20);
+            simnet.callPublicFn(contractName, "oracle-resolve", [marketId, Cl.uint(1)], deployer);
+
+            const { result } = simnet.callPublicFn(
+                contractName,
+                "mark-disputed",
+                [marketId],
+                deployer
+            );
+            expect(result).toBeOk(Cl.bool(true));
+        });
+
+        it("should prevent non-oracle from marking a market as disputed", () => {
+            const currentBlock = simnet.blockHeight;
+            const { result: createRes } = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [Cl.stringAscii("Dispute auth test"), Cl.uint(currentBlock + 10), Cl.uint(currentBlock + 20), Cl.uint(1)],
+                deployer
+            );
+            const marketId = (createRes as any).value;
+
+            const { result } = simnet.callPublicFn(
+                contractName,
+                "mark-disputed",
+                [marketId],
+                wallet1
+            );
+            expect(result).toBeErr(Cl.uint(100)); // ERR-NOT-AUTHORIZED
+        });
+        it("should allow oracle to resolve a disputed market", () => {
+            const currentBlock = simnet.blockHeight;
+            const { result: createRes } = simnet.callPublicFn(
+                contractName,
+                "create-market",
+                [Cl.stringAscii("Resolve disputed test"), Cl.uint(currentBlock + 10), Cl.uint(currentBlock + 20), Cl.uint(1)],
+                deployer
+            );
+            const marketId = (createRes as any).value;
+
+            simnet.mineEmptyBlocks(25);
+            simnet.callPublicFn(contractName, "oracle-resolve", [marketId, Cl.uint(1)], deployer);
+            simnet.callPublicFn(contractName, "mark-disputed", [marketId], deployer);
+
+            const { result } = simnet.callPublicFn(
+                contractName,
+                "oracle-resolve",
+                [marketId, Cl.uint(2)],
+                deployer
+            );
+            expect(result).toBeOk(Cl.bool(true));
+        });
+    });
 });
