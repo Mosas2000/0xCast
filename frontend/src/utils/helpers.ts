@@ -1,6 +1,8 @@
 import type { Market, Position } from '../types/market';
 import { MarketStatus, MarketOutcome } from '../types/market';
 import { microStxToStx } from '../constants';
+import i18n from '../i18n/config';
+import { formatNumber } from './i18n/formatters';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -65,7 +67,8 @@ export function calculateOdds(yesStake: number, noStake: number): { yes: number;
 
 export function formatStx(microStx: number | bigint, decimals: number = 2): string {
   const num = typeof microStx === 'bigint' ? Number(microStx) : microStx;
-  return `${microStxToStx(num).toFixed(decimals)} STX`;
+  const stxAmount = microStxToStx(num);
+  return `${formatNumber(stxAmount, i18n.language, decimals)} STX`;
 }
 
 export function formatAddress(address: string): string {
@@ -74,20 +77,28 @@ export function formatAddress(address: string): string {
 }
 
 export function getStatusLabel(status: MarketStatus): string {
-  const labels: Record<MarketStatus, string> = {
-    [MarketStatus.ACTIVE]: 'Active',
-    [MarketStatus.RESOLVED]: 'Resolved',
-    [MarketStatus.DISPUTED]: 'Disputed',
-    [MarketStatus.REFUNDED]: 'Refunded',
+  return i18n.t(`common:status.${getStatusKey(status)}`);
+}
+
+function getStatusKey(status: MarketStatus): string {
+  const keys: Record<MarketStatus, string> = {
+    [MarketStatus.ACTIVE]: 'active',
+    [MarketStatus.RESOLVED]: 'resolved',
+    [MarketStatus.DISPUTED]: 'disputed',
+    [MarketStatus.REFUNDED]: 'refunded',
   };
-  return labels[status] || 'Unknown';
+  return keys[status] || 'unknown';
 }
 
 export function getOutcomeLabel(outcome: MarketOutcome): string {
-  const labels: Record<MarketOutcome, string> = {
-    [MarketOutcome.NONE]: 'Pending',
-    [MarketOutcome.YES]: 'Yes',
-    [MarketOutcome.NO]: 'No',
+  return i18n.t(`common:outcome.${getOutcomeKey(outcome)}`);
+}
+
+function getOutcomeKey(outcome: MarketOutcome): string {
+  const keys: Record<MarketOutcome, string> = {
+    [MarketOutcome.NONE]: 'none',
+    [MarketOutcome.YES]: 'yes',
+    [MarketOutcome.NO]: 'no',
   };
-  return labels[outcome] || 'Unknown';
+  return keys[outcome] || 'unknown';
 }
