@@ -6,7 +6,13 @@
 ;; CONSTANTS
 ;; ============================================
 
-(define-constant contract-owner tx-sender)
+;; Contract owner (configurable, initialized to deploying principal)
+(define-data-var contract-owner principal tx-sender)
+
+;; Owner transfer configuration
+(define-data-var owner-transfer-cooldown uint u1008)
+(define-data-var pending-owner (optional principal) none)
+(define-data-var owner-transfer-initiated-at uint u0)
 
 ;; Market Status
 (define-constant STATUS-ACTIVE u0)
@@ -28,6 +34,8 @@
 (define-constant ERR-INVALID-AMOUNT (err u106))
 (define-constant ERR-NO-POSITION (err u107))
 (define-constant ERR-ALREADY-CLAIMED (err u108))
+(define-constant ERR-INVALID-NEW-OWNER (err u114))
+(define-constant ERR-OWNER-TRANSFER-COOLDOWN (err u115))
 (define-constant ERR-NOT-TOKEN-OWNER (err u109))
 (define-constant ERR-INSUFFICIENT-BALANCE (err u110))
 (define-constant ERR-STAKING-LOCKED (err u111))
@@ -82,7 +90,7 @@
 
 (define-public (mint (amount uint) (recipient principal))
   (begin
-    (asserts! (is-eq tx-sender contract-owner) ERR-OWNER-ONLY)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-OWNER-ONLY)
     (ft-mint? oxc-token amount recipient)))
 
 (define-public (burn (amount uint))
@@ -323,7 +331,7 @@
   (let (
     (market (unwrap! (get-market market-id) ERR-NOT-FOUND))
   )
-    (asserts! (is-eq tx-sender contract-owner) ERR-OWNER-ONLY)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-OWNER-ONLY)
     (asserts! (is-eq (get status market) STATUS-ACTIVE) ERR-ALREADY-RESOLVED)
     (asserts! (>= stacks-block-height (get end-block market)) ERR-MARKET-ACTIVE)
     (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
@@ -370,7 +378,7 @@
   (let (
     (market (unwrap! (get-market market-id) ERR-NOT-FOUND))
   )
-    (asserts! (is-eq tx-sender contract-owner) ERR-OWNER-ONLY)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-OWNER-ONLY)
     (asserts! (is-eq (get status market) STATUS-ACTIVE) ERR-ALREADY-RESOLVED)
     
     (map-set markets market-id (merge market { status: STATUS-CANCELLED }))
@@ -402,11 +410,11 @@
   (let (
     (fees (var-get fee-pool))
   )
-    (asserts! (is-eq tx-sender contract-owner) ERR-OWNER-ONLY)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-OWNER-ONLY)
     (asserts! (> fees u0) ERR-INVALID-AMOUNT)
     
     (var-set fee-pool u0)
-    (try! (as-contract (stx-transfer? fees tx-sender contract-owner)))
+    (try! (as-contract (stx-transfer? fees tx-sender (var-get contract-owner))))
     
     (print { event: "fees-withdrawn", amount: fees })
     (ok fees)))
@@ -417,5 +425,78 @@
 
 (begin
   ;; Mint initial OXC supply to owner
-  (try! (ft-mint? oxc-token u100000000000000 contract-owner))
-  (print { event: "contract-deployed", owner: contract-owner, token-supply: u100000000000000 }))
+  (try! (ft-mint? oxc-token u100000000000000 (var-get contract-owner)))
+  (print { event: "contract-deployed", owner: (var-get contract-owner), token-supply: u100000000000000 }))
+
+;; ============================================
+;; OWNER TRANSFER FUNCTIONS
+;; ============================================
+
+;; Get the current contract owner
+(define-read-only (get-contract-owner)
+  (var-get contract-owner)
+)
+
+;; Get pending owner transfer details
+(define-read-only (get-pending-owner-transfer)
+  {
+    pending-owner: (var-get pending-owner),
+    initiated-at: (var-get owner-transfer-initiated-at),
+    cooldown: (var-get owner-transfer-cooldown)
+  }
+)
+
+;; Initiate owner transfer with time-locked security period
+(define-public (initiate-owner-transfer (new-owner principal))
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-OWNER-ONLY)
+    (asserts! (not (is-eq new-owner (var-get contract-owner))) ERR-INVALID-NEW-OWNER)
+    
+    (var-set pending-owner (some new-owner))
+    (var-set owner-transfer-initiated-at stacks-block-height)
+    
+    (ok true)
+  )
+)
+
+;; Cancel a pending owner transfer
+(define-public (cancel-owner-transfer)
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-OWNER-ONLY)
+    (asserts! (is-some (var-get pending-owner)) ERR-INVALID-NEW-OWNER)
+    
+    (var-set pending-owner none)
+    (var-set owner-transfer-initiated-at u0)
+    
+    (ok true)
+  )
+)
+
+;; Claim ownership after cooldown period
+(define-public (claim-ownership)
+  (let (
+    (pending (var-get pending-owner))
+    (initiated-at (var-get owner-transfer-initiated-at))
+    (cooldown (var-get owner-transfer-cooldown))
+    (current-block stacks-block-height)
+  )
+    (asserts! (is-some pending) ERR-INVALID-NEW-OWNER)
+    (asserts! (is-eq tx-sender (unwrap! pending ERR-INVALID-NEW-OWNER)) ERR-OWNER-ONLY)
+    (asserts! (>= current-block (+ initiated-at cooldown)) ERR-OWNER-TRANSFER-COOLDOWN)
+    
+    (var-set contract-owner tx-sender)
+    (var-set pending-owner none)
+    (var-set owner-transfer-initiated-at u0)
+    
+    (ok true)
+  )
+)
+
+;; Update owner transfer cooldown
+(define-public (set-owner-transfer-cooldown (new-cooldown uint))
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-OWNER-ONLY)
+    (asserts! (> new-cooldown u0) ERR-INVALID-AMOUNT)
+    (ok (var-set owner-transfer-cooldown new-cooldown))
+  )
+)
