@@ -15,6 +15,7 @@ import { useWallet } from '../components/WalletProvider';
 import { GOVERNANCE_CONFIG } from '../config/governance';
 import { getNetwork } from '../config';
 import type { VoteType } from '../types/governance';
+import { useRateLimit } from './useRateLimit';
 
 interface ActionState {
   isLoading: boolean;
@@ -50,6 +51,7 @@ const initialState: ActionState = {
 
 export function useGovernanceActions(): UseGovernanceActionsReturn {
   const { isConnected, address } = useWallet();
+  const { checkRateLimit } = useRateLimit();
   
   const [voteState, setVoteState] = useState<ActionState>(initialState);
   const [proposalState, setProposalState] = useState<ActionState>(initialState);
@@ -62,6 +64,12 @@ export function useGovernanceActions(): UseGovernanceActionsReturn {
   const castVote = useCallback(async (proposalId: number, voteType: VoteType) => {
     if (!isConnected || !address) {
       setVoteState({ isLoading: false, error: 'Wallet not connected', txId: null });
+      return;
+    }
+
+    const rateLimitResult = await checkRateLimit('vote');
+    if (!rateLimitResult.allowed) {
+      setVoteState({ isLoading: false, error: rateLimitResult.reason || 'Rate limit exceeded', txId: null });
       return;
     }
 
@@ -93,7 +101,7 @@ export function useGovernanceActions(): UseGovernanceActionsReturn {
       const message = error instanceof Error ? error.message : 'Failed to cast vote';
       setVoteState({ isLoading: false, error: message, txId: null });
     }
-  }, [isConnected, address]);
+  }, [isConnected, address, checkRateLimit]);
 
   /**
    * Create a new proposal
@@ -262,6 +270,12 @@ export function useGovernanceActions(): UseGovernanceActionsReturn {
       return;
     }
 
+    const rateLimitResult = await checkRateLimit('resolve-market');
+    if (!rateLimitResult.allowed) {
+      setExecutionState({ isLoading: false, error: rateLimitResult.reason || 'Rate limit exceeded', txId: null });
+      return;
+    }
+
     setExecutionState({ isLoading: true, error: null, txId: null });
 
     try {
@@ -286,7 +300,7 @@ export function useGovernanceActions(): UseGovernanceActionsReturn {
       const message = error instanceof Error ? error.message : 'Failed to execute proposal';
       setExecutionState({ isLoading: false, error: message, txId: null });
     }
-  }, [isConnected, address]);
+  }, [isConnected, address, checkRateLimit]);
 
   /**
    * Cancel a proposal (proposer or admin only)
