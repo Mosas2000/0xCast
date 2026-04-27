@@ -1,4 +1,6 @@
 import { ExportFormat } from '../types/export';
+import i18n from '../i18n/config';
+import { formatDate as formatDateI18n, formatDateTime as formatDateTimeI18n } from './i18n/formatters';
 
 export function downloadFile(content: string, fileName: string, mimeType: string): void {
   const blob = new Blob([content], { type: mimeType });
@@ -32,17 +34,18 @@ export function convertToJSON(data: any, pretty: boolean = true): string {
 }
 
 export function formatCurrency(amount: number, decimals: number = 2): string {
-  return amount.toFixed(decimals);
+  return new Intl.NumberFormat(i18n.language, {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  }).format(amount);
 }
 
 export function formatDate(date: Date | string): string {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return dateObj.toISOString().split('T')[0];
+  return formatDateI18n(date, i18n.language, { year: 'numeric', month: '2-digit', day: '2-digit' });
 }
 
 export function formatDateTime(date: Date | string): string {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return dateObj.toISOString();
+  return formatDateTimeI18n(date, i18n.language);
 }
 
 export function getFileNameWithTimestamp(baseName: string, format: ExportFormat): string {
@@ -73,8 +76,8 @@ export function validateDateRange(startDate?: Date, endDate?: Date): boolean {
 }
 
 export function getDateRangeString(startDate?: Date, endDate?: Date): string {
-  if (!startDate || !endDate) return 'All Time';
-  return `${formatDate(startDate)} to ${formatDate(endDate)}`;
+  if (!startDate || !endDate) return i18n.t('common:time.allTime', 'All Time');
+  return `${formatDate(startDate)} ${i18n.t('common:time.to', 'to')} ${formatDate(endDate)}`;
 }
 
 export function filterByDateRange(data: any[], dateField: string, startDate?: Date, endDate?: Date): any[] {

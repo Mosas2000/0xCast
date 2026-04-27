@@ -1,0 +1,48 @@
+{
+  "title": "ポートフォリオ",
+  "overview": {
+    "totalValue": "総価値",
+    "totalStaked": "総ステーク",
+    "activePositions": "アクティブポジション",
+    "totalReturn": "総リターン",
+    "winRate": "勝率",
+    "profitLoss": "損益"
+  },
+  "positions": {
+    "title": "ポジション",
+    "market": "マーケット",
+    "position": "ポジション",
+    "stake": "ステーク",
+    "currentValue": "現在価値",
+    "return": "リターン",
+    "status": "ステータス"
+  },
+  "recommendations": {
+    "title": "推奨事項",
+    "rebalancing": "リバランス",
+    "diversification": "分散化",
+    "riskManagement": "リスク削減",
+    "opportunity": "機会",
+    "confidence": "信頼度",
+    "priority": {
+      "high": "高優先度",
+      "medium": "中優先度",
+      "low": "低優先度"
+    },
+    "actions": "推奨アクション"
+  },
+  "history": {
+    "title": "取引履歴",
+    "date": "日付",
+    "type": "タイプ",
+    "market": "マーケット",
+    "amount": "金額",
+    "status": "ステータス"
+  },
+  "export": {
+    "title": "ポートフォリオをエクスポート",
+    "csv": "CSVとしてエクスポート",
+    "json": "JSONとしてエクスポート",
+    "pdf": "PDFとしてエクスポート"
+  }
+}

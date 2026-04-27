@@ -1,0 +1,41 @@
+{
+  "validation": {
+    "required": "This field is required",
+    "invalidNumber": "Please enter a valid number",
+    "nonPositiveAmount": "Amount must be greater than zero",
+    "minStakeRequired": "Minimum amount is {{min}} STX",
+    "maxStakeExceeded": "Maximum amount is {{max}} STX",
+    "tooManyDecimals": "Maximum {{count}} decimal places allowed",
+    "invalidEmail": "Please enter a valid email address",
+    "invalidDate": "Please enter a valid date",
+    "datePast": "Date must be in the future",
+    "invalidUrl": "Please enter a valid URL"
+  },
+  "wallet": {
+    "notConnected": "Wallet not connected",
+    "connectionFailed": "Failed to connect wallet",
+    "insufficientBalance": "Insufficient balance",
+    "transactionFailed": "Transaction failed",
+    "transactionRejected": "Transaction rejected by user",
+    "networkError": "Network error"
+  },
+  "market": {
+    "notFound": "Market not found",
+    "loadFailed": "Failed to load market",
+    "createFailed": "Failed to create market",
+    "stakeFailed": "Failed to place stake",
+    "resolveFailed": "Failed to resolve market",
+    "alreadyResolved": "Market already resolved",
+    "notActive": "Market is not active",
+    "expired": "Market has expired"
+  },
+  "general": {
+    "unknownError": "An unknown error occurred",
+    "serverError": "Server error",
+    "networkError": "Network error",
+    "timeout": "Request timeout",
+    "unauthorized": "Unauthorized",
+    "forbidden": "Forbidden",
+    "notFound": "Not found"
+  }
+}

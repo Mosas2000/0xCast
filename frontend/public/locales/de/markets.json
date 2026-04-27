@@ -1,0 +1,62 @@
+{
+  "categories": {
+    "all": "Alle Kategorien",
+    "crypto": "Krypto",
+    "defi": "DeFi",
+    "sports": "Sport",
+    "politics": "Politik",
+    "entertainment": "Unterhaltung",
+    "technology": "Technologie",
+    "science": "Wissenschaft",
+    "other": "Andere"
+  },
+  "labels": {
+    "question": "Frage",
+    "description": "Beschreibung",
+    "category": "Kategorie",
+    "endDate": "Enddatum",
+    "totalPool": "Gesamtpool",
+    "yesStake": "Ja-Einsatz",
+    "noStake": "Nein-Einsatz",
+    "odds": "Quoten",
+    "volume": "Volumen",
+    "participants": "Teilnehmer",
+    "creator": "Ersteller",
+    "resolver": "Auflöser"
+  },
+  "actions": {
+    "createMarket": "Markt Erstellen",
+    "placeStake": "Einsatz Platzieren",
+    "addToWatchlist": "Zur Beobachtungsliste hinzufügen",
+    "removeFromWatchlist": "Von Beobachtungsliste entfernen",
+    "viewDetails": "Details Anzeigen",
+    "trade": "Handeln",
+    "resolve": "Auflösen",
+    "dispute": "Anfechten"
+  },
+  "filters": {
+    "all": "Alle Märkte",
+    "active": "Aktiv",
+    "resolved": "Gelöst",
+    "myMarkets": "Meine Märkte",
+    "trending": "Im Trend",
+    "new": "Neu"
+  },
+  "sort": {
+    "newest": "Neueste Zuerst",
+    "oldest": "Älteste Zuerst",
+    "highestVolume": "Höchstes Volumen",
+    "lowestVolume": "Niedrigstes Volumen",
+    "endingSoon": "Endet Bald",
+    "mostPopular": "Am Beliebtesten"
+  },
+  "stake": {
+    "amount": "Einsatzbetrag",
+    "position": "Position",
+    "potential": "Potenzielle Rendite",
+    "fee": "Gebühr",
+    "total": "Gesamtkosten",
+    "min": "Minimum",
+    "max": "Maximum"
+  }
+}

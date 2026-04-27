@@ -1,0 +1,36 @@
+{
+  "title": "通知",
+  "types": {
+    "priceMovement": "価格変動",
+    "marketExpiry": "マーケット期限",
+    "resolution": "解決",
+    "liquidityReward": "流動性報酬",
+    "portfolioUpdate": "ポートフォリオ更新",
+    "systemAlert": "システムアラート",
+    "promotion": "プロモーション"
+  },
+  "channels": {
+    "inApp": "アプリ内",
+    "email": "メール",
+    "push": "プッシュ"
+  },
+  "frequencies": {
+    "immediate": "即時",
+    "hourly": "毎時",
+    "daily": "毎日",
+    "weekly": "毎週"
+  },
+  "settings": {
+    "title": "通知設定",
+    "preferences": "設定",
+    "enabled": "有効",
+    "disabled": "無効",
+    "frequency": "頻度",
+    "channel": "チャンネル"
+  },
+  "messages": {
+    "markAllRead": "すべて既読にする",
+    "clearAll": "すべてクリア",
+    "noNotifications": "通知はありません"
+  }
+}

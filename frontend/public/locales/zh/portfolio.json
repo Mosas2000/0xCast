@@ -1,0 +1,48 @@
+{
+  "title": "投资组合",
+  "overview": {
+    "totalValue": "总价值",
+    "totalStaked": "总赌注",
+    "activePositions": "活跃仓位",
+    "totalReturn": "总回报",
+    "winRate": "胜率",
+    "profitLoss": "盈亏"
+  },
+  "positions": {
+    "title": "仓位",
+    "market": "市场",
+    "position": "仓位",
+    "stake": "赌注",
+    "currentValue": "当前价值",
+    "return": "回报",
+    "status": "状态"
+  },
+  "recommendations": {
+    "title": "建议",
+    "rebalancing": "重新平衡",
+    "diversification": "多样化",
+    "riskManagement": "降低风险",
+    "opportunity": "机会",
+    "confidence": "信心",
+    "priority": {
+      "high": "高优先级",
+      "medium": "中优先级",
+      "low": "低优先级"
+    },
+    "actions": "建议的操作"
+  },
+  "history": {
+    "title": "交易历史",
+    "date": "日期",
+    "type": "类型",
+    "market": "市场",
+    "amount": "金额",
+    "status": "状态"
+  },
+  "export": {
+    "title": "导出投资组合",
+    "csv": "导出为CSV",
+    "json": "导出为JSON",
+    "pdf": "导出为PDF"
+  }
+}

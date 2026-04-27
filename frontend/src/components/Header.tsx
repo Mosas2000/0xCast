@@ -1,30 +1,33 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Logo } from './Logo';
 import { useWallet } from './WalletProvider';
 import { formatAddress } from '../utils/helpers';
 import { NetworkSelector } from './NetworkSelector';
 import { ThemeSwitcher } from './ThemeSwitcher';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import { useNetwork } from '../contexts/NetworkContext';
 
 export function Header() {
   const location = useLocation();
+  const { t } = useTranslation('common');
   const { isConnected, address, connect, disconnect } = useWallet();
   const { isTestnet, networkConfig } = useNetwork();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { path: '/', label: 'Home' },
-    { path: '/markets', label: 'Markets' },
-    { path: '/create-market', label: 'Create', highlight: true },
-    { path: '/portfolio', label: 'Portfolio' },
-    { path: '/watchlist', label: 'Watchlist' },
-    { path: '/recently-viewed', label: 'Recent' },
-    { path: '/multi-markets', label: 'Multi Markets' },
-    { path: '/liquidity', label: 'Liquidity' },
-    { path: '/analytics', label: 'Analytics' },
-    { path: '/transactions', label: 'Activity' },
-    { path: '/token', label: 'OXC Token' },
+    { path: '/', label: t('nav.home') },
+    { path: '/markets', label: t('nav.markets') },
+    { path: '/create-market', label: t('nav.create'), highlight: true },
+    { path: '/portfolio', label: t('nav.portfolio') },
+    { path: '/watchlist', label: t('nav.watchlist') },
+    { path: '/recently-viewed', label: t('nav.recent') },
+    { path: '/multi-markets', label: t('nav.multiMarkets') },
+    { path: '/liquidity', label: t('nav.liquidity') },
+    { path: '/analytics', label: t('nav.analytics') },
+    { path: '/transactions', label: t('nav.activity') },
+    { path: '/token', label: t('nav.token') },
   ];
 
   return (
@@ -57,6 +60,9 @@ export function Header() {
 
           {/* Right Side */}
           <div className="flex items-center gap-4">
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+            
             {/* Network Selector */}
             <div className="hidden sm:block">
               <NetworkSelector variant="dropdown" showLabel={true} />
@@ -85,12 +91,12 @@ export function Header() {
                   )}
                 </div>
                 <button onClick={disconnect} className="btn btn-secondary btn-sm">
-                  Disconnect
+                  {t('wallet.disconnect')}
                 </button>
               </div>
             ) : (
               <button type="button" onClick={() => connect()} className="btn btn-primary btn-sm">
-                Connect Wallet
+                {t('wallet.connect')}
               </button>
             )}
 

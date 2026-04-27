@@ -1,0 +1,41 @@
+{
+  "validation": {
+    "required": "Dieses Feld ist erforderlich",
+    "invalidNumber": "Bitte geben Sie eine gültige Zahl ein",
+    "nonPositiveAmount": "Der Betrag muss größer als Null sein",
+    "minStakeRequired": "Der Mindestbetrag beträgt {{min}} STX",
+    "maxStakeExceeded": "Der Höchstbetrag beträgt {{max}} STX",
+    "tooManyDecimals": "Maximal {{count}} Dezimalstellen erlaubt",
+    "invalidEmail": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+    "invalidDate": "Bitte geben Sie ein gültiges Datum ein",
+    "datePast": "Das Datum muss in der Zukunft liegen",
+    "invalidUrl": "Bitte geben Sie eine gültige URL ein"
+  },
+  "wallet": {
+    "notConnected": "Wallet nicht verbunden",
+    "connectionFailed": "Wallet-Verbindung fehlgeschlagen",
+    "insufficientBalance": "Unzureichendes Guthaben",
+    "transactionFailed": "Transaktion fehlgeschlagen",
+    "transactionRejected": "Transaktion vom Benutzer abgelehnt",
+    "networkError": "Netzwerkfehler"
+  },
+  "market": {
+    "notFound": "Markt nicht gefunden",
+    "loadFailed": "Markt konnte nicht geladen werden",
+    "createFailed": "Markt konnte nicht erstellt werden",
+    "stakeFailed": "Einsatz konnte nicht platziert werden",
+    "resolveFailed": "Markt konnte nicht aufgelöst werden",
+    "alreadyResolved": "Markt bereits aufgelöst",
+    "notActive": "Markt ist nicht aktiv",
+    "expired": "Markt ist abgelaufen"
+  },
+  "general": {
+    "unknownError": "Ein unbekannter Fehler ist aufgetreten",
+    "serverError": "Serverfehler",
+    "networkError": "Netzwerkfehler",
+    "timeout": "Zeitüberschreitung",
+    "unauthorized": "Nicht autorisiert",
+    "forbidden": "Verboten",
+    "notFound": "Nicht gefunden"
+  }
+}

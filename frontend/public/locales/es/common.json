@@ -1,0 +1,86 @@
+{
+  "app": {
+    "name": "0xCast",
+    "description": "Mercados de Predicción Descentralizados en Bitcoin"
+  },
+  "nav": {
+    "home": "Inicio",
+    "markets": "Mercados",
+    "create": "Crear",
+    "portfolio": "Portafolio",
+    "watchlist": "Lista de Seguimiento",
+    "recent": "Reciente",
+    "multiMarkets": "Multi Mercados",
+    "liquidity": "Liquidez",
+    "analytics": "Análisis",
+    "activity": "Actividad",
+    "token": "Token OXC"
+  },
+  "actions": {
+    "submit": "Enviar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "export": "Exportar",
+    "import": "Importar",
+    "refresh": "Actualizar",
+    "clear": "Limpiar",
+    "apply": "Aplicar",
+    "reset": "Restablecer"
+  },
+  "wallet": {
+    "connect": "Conectar Billetera",
+    "disconnect": "Desconectar",
+    "connected": "Conectado",
+    "disconnected": "Desconectado",
+    "balance": "Saldo",
+    "address": "Dirección"
+  },
+  "status": {
+    "active": "Activo",
+    "resolved": "Resuelto",
+    "disputed": "Disputado",
+    "refunded": "Reembolsado",
+    "pending": "Pendiente",
+    "loading": "Cargando",
+    "success": "Éxito",
+    "error": "Error"
+  },
+  "outcome": {
+    "yes": "Sí",
+    "no": "No",
+    "none": "Pendiente",
+    "unknown": "Desconocido"
+  },
+  "time": {
+    "now": "ahora",
+    "justNow": "justo ahora",
+    "minuteAgo": "hace {{count}} minuto",
+    "minuteAgo_other": "hace {{count}} minutos",
+    "hourAgo": "hace {{count}} hora",
+    "hourAgo_other": "hace {{count}} horas",
+    "dayAgo": "hace {{count}} día",
+    "dayAgo_other": "hace {{count}} días",
+    "weekAgo": "hace {{count}} semana",
+    "weekAgo_other": "hace {{count}} semanas",
+    "monthAgo": "hace {{count}} mes",
+    "monthAgo_other": "hace {{count}} meses",
+    "yearAgo": "hace {{count}} año",
+    "yearAgo_other": "hace {{count}} años"
+  },
+  "empty": {
+    "noData": "No hay datos disponibles",
+    "noResults": "No se encontraron resultados",
+    "noMarkets": "No se encontraron mercados",
+    "noTransactions": "Aún no hay transacciones",
+    "noNotifications": "No hay notificaciones"
+  }
+}
