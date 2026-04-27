@@ -1,10 +1,40 @@
 import { KYCStatus, AMLCheck } from '@/types/reputation';
 
+interface KYCDocument {
+  documentId: string;
+  userId: string;
+  type: 'passport' | 'license' | 'national_id';
+  frontImage: string;
+  backImage?: string;
+  selfieImage: string;
+  uploadedAt: number;
+  verified: boolean;
+}
+
+interface AddressProof {
+  proofId: string;
+  userId: string;
+  documentType: 'utility_bill' | 'bank_statement' | 'tax_document';
+  image: string;
+  address: string;
+  uploadedAt: number;
+  verified: boolean;
+}
+
 export class KYCAMLService {
   private kycDatabase: Map<string, KYCStatus> = new Map();
   private amlChecks: Map<string, AMLCheck> = new Map();
+  private documents: Map<string, KYCDocument> = new Map();
+  private addressProofs: Map<string, AddressProof> = new Map();
+  private verificationAttempts: Map<string, number> = new Map();
 
   submitKYC(userId: string, documentType: 'passport' | 'license' | 'national_id', data: any): KYCStatus {
+    const attempts = this.verificationAttempts.get(userId) || 0;
+    
+    if (attempts >= 3) {
+      throw new Error('Maximum verification attempts exceeded');
+    }
+
     const kycStatus: KYCStatus = {
       status: 'pending',
       submittedAt: Date.now(),
@@ -15,7 +45,55 @@ export class KYCAMLService {
     };
 
     this.kycDatabase.set(userId, kycStatus);
+    this.verificationAttempts.set(userId, attempts + 1);
+    
     return kycStatus;
+  }
+
+  uploadDocument(
+    userId: string,
+    type: 'passport' | 'license' | 'national_id',
+    frontImage: string,
+    backImage: string | undefined,
+    selfieImage: string
+  ): KYCDocument {
+    const documentId = `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    const document: KYCDocument = {
+      documentId,
+      userId,
+      type,
+      frontImage,
+      backImage,
+      selfieImage,
+      uploadedAt: Date.now(),
+      verified: false,
+    };
+
+    this.documents.set(documentId, document);
+    return document;
+  }
+
+  uploadAddressProof(
+    userId: string,
+    documentType: 'utility_bill' | 'bank_statement' | 'tax_document',
+    image: string,
+    address: string
+  ): AddressProof {
+    const proofId = `proof_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    const proof: AddressProof = {
+      proofId,
+      userId,
+      documentType,
+      image,
+      address,
+      uploadedAt: Date.now(),
+      verified: false,
+    };
+
+    this.addressProofs.set(proofId, proof);
+    return proof;
   }
 
   verifyDocument(userId: string): boolean {
@@ -170,4 +248,74 @@ export class KYCAMLService {
 
     return latestCheck.status === 'clear' && !latestCheck.pep && !latestCheck.sanctions;
   }
+
+  getVerificationAttempts(userId: string): number {
+    return this.verificationAttempts.get(userId) || 0;
+  }
+
+  resetVerificationAttempts(userId: string): void {
+    this.verificationAttempts.delete(userId);
+  }
+
+  getUserDocuments(userId: string): KYCDocument[] {
+    return Array.from(this.documents.values())
+      .filter(doc => doc.userId === userId)
+      .sort((a, b) => b.uploadedAt - a.uploadedAt);
+  }
+
+  getUserAddressProofs(userId: string): AddressProof[] {
+    return Array.from(this.addressProofs.values())
+      .filter(proof => proof.userId === userId)
+      .sort((a, b) => b.uploadedAt - a.uploadedAt);
+  }
+
+  verifyDocumentById(documentId: string): boolean {
+    const document = this.documents.get(documentId);
+    if (!document) return false;
+
+    document.verified = true;
+    this.documents.set(documentId, document);
+
+    return this.verifyDocument(document.userId);
+  }
+
+  verifyAddressProofById(proofId: string): boolean {
+    const proof = this.addressProofs.get(proofId);
+    if (!proof) return false;
+
+    proof.verified = true;
+    this.addressProofs.set(proofId, proof);
+
+    return this.verifyAddress(proof.userId);
+  }
+
+  getKYCCompletionPercentage(userId: string): number {
+    const kyc = this.kycDatabase.get(userId);
+    if (!kyc) return 0;
+
+    let completed = 0;
+    const total = 3;
+
+    if (kyc.documentVerified) completed++;
+    if (kyc.addressVerified) completed++;
+    if (kyc.faceVerified) completed++;
+
+    return Math.round((completed / total) * 100);
+  }
+
+  requiresReverification(userId: string): boolean {
+    const kyc = this.kycDatabase.get(userId);
+    if (!kyc || kyc.status !== 'approved') return false;
+
+    if (kyc.expiresAt && kyc.expiresAt < Date.now()) {
+      return true;
+    }
+
+    const daysSinceVerification = kyc.verifiedAt
+      ? (Date.now() - kyc.verifiedAt) / (1000 * 60 * 60 * 24)
+      : 0;
+
+    return daysSinceVerification > 365;
+  }
 }
+

@@ -1,9 +1,31 @@
 import { LinkedAccount, AccountLinkRequest } from '@/types/reputation';
 
+interface DeviceFingerprint {
+  userId: string;
+  fingerprint: string;
+  userAgent: string;
+  screenResolution: string;
+  timezone: string;
+  language: string;
+  platform: string;
+  firstSeen: number;
+  lastSeen: number;
+}
+
+interface IPAddress {
+  userId: string;
+  ipAddress: string;
+  firstSeen: number;
+  lastSeen: number;
+  requestCount: number;
+}
+
 export class AccountLinkingService {
   private linkedAccounts: Map<string, LinkedAccount[]> = new Map();
   private linkRequests: Map<string, AccountLinkRequest> = new Map();
   private accountMap: Map<string, string> = new Map();
+  private deviceFingerprints: Map<string, DeviceFingerprint[]> = new Map();
+  private ipAddresses: Map<string, IPAddress[]> = new Map();
 
   createLinkRequest(userId: string, accountIdentifier: string, linkType: 'wallet' | 'email' | 'phone' | 'social'): AccountLinkRequest {
     const requestId = `link_req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -171,4 +193,158 @@ export class AccountLinkingService {
       accountsPerUser: Math.round(accountsPerUser * 100) / 100,
     };
   }
+
+  recordDeviceFingerprint(
+    userId: string,
+    fingerprint: string,
+    userAgent: string,
+    screenResolution: string,
+    timezone: string,
+    language: string,
+    platform: string
+  ): void {
+    const userFingerprints = this.deviceFingerprints.get(userId) || [];
+    
+    const existing = userFingerprints.find(fp => fp.fingerprint === fingerprint);
+    
+    if (existing) {
+      existing.lastSeen = Date.now();
+    } else {
+      userFingerprints.push({
+        userId,
+        fingerprint,
+        userAgent,
+        screenResolution,
+        timezone,
+        language,
+        platform,
+        firstSeen: Date.now(),
+        lastSeen: Date.now(),
+      });
+    }
+    
+    this.deviceFingerprints.set(userId, userFingerprints);
+  }
+
+  recordIPAddress(userId: string, ipAddress: string): void {
+    const userIPs = this.ipAddresses.get(userId) || [];
+    
+    const existing = userIPs.find(ip => ip.ipAddress === ipAddress);
+    
+    if (existing) {
+      existing.lastSeen = Date.now();
+      existing.requestCount++;
+    } else {
+      userIPs.push({
+        userId,
+        ipAddress,
+        firstSeen: Date.now(),
+        lastSeen: Date.now(),
+        requestCount: 1,
+      });
+    }
+    
+    this.ipAddresses.set(userId, userIPs);
+  }
+
+  findAccountsByDeviceFingerprint(fingerprint: string): string[] {
+    const matchingUsers: string[] = [];
+    
+    for (const [userId, fingerprints] of this.deviceFingerprints.entries()) {
+      if (fingerprints.some(fp => fp.fingerprint === fingerprint)) {
+        matchingUsers.push(userId);
+      }
+    }
+    
+    return matchingUsers;
+  }
+
+  findAccountsByIPAddress(ipAddress: string): string[] {
+    const matchingUsers: string[] = [];
+    
+    for (const [userId, ips] of this.ipAddresses.entries()) {
+      if (ips.some(ip => ip.ipAddress === ipAddress)) {
+        matchingUsers.push(userId);
+      }
+    }
+    
+    return matchingUsers;
+  }
+
+  detectSybilAccounts(userId: string): {
+    suspiciousAccounts: string[];
+    confidence: number;
+    reasons: string[];
+  } {
+    const suspiciousAccounts = new Set<string>();
+    const reasons: string[] = [];
+    
+    const userFingerprints = this.deviceFingerprints.get(userId) || [];
+    const userIPs = this.ipAddresses.get(userId) || [];
+    
+    for (const fp of userFingerprints) {
+      const matchingAccounts = this.findAccountsByDeviceFingerprint(fp.fingerprint);
+      matchingAccounts.forEach(acc => {
+        if (acc !== userId) {
+          suspiciousAccounts.add(acc);
+          reasons.push(`Shared device fingerprint: ${fp.fingerprint.substring(0, 8)}...`);
+        }
+      });
+    }
+    
+    for (const ip of userIPs) {
+      const matchingAccounts = this.findAccountsByIPAddress(ip.ipAddress);
+      matchingAccounts.forEach(acc => {
+        if (acc !== userId) {
+          suspiciousAccounts.add(acc);
+          reasons.push(`Shared IP address: ${ip.ipAddress}`);
+        }
+      });
+    }
+    
+    const confidence = Math.min(100, suspiciousAccounts.size * 20 + reasons.length * 10);
+    
+    return {
+      suspiciousAccounts: Array.from(suspiciousAccounts),
+      confidence,
+      reasons: Array.from(new Set(reasons)),
+    };
+  }
+
+  getUserDeviceFingerprints(userId: string): DeviceFingerprint[] {
+    return this.deviceFingerprints.get(userId) || [];
+  }
+
+  getUserIPAddresses(userId: string): IPAddress[] {
+    return this.ipAddresses.get(userId) || [];
+  }
+
+  getSharedDeviceCount(userId: string): number {
+    const userFingerprints = this.deviceFingerprints.get(userId) || [];
+    let sharedCount = 0;
+    
+    for (const fp of userFingerprints) {
+      const matchingAccounts = this.findAccountsByDeviceFingerprint(fp.fingerprint);
+      if (matchingAccounts.length > 1) {
+        sharedCount++;
+      }
+    }
+    
+    return sharedCount;
+  }
+
+  getSharedIPCount(userId: string): number {
+    const userIPs = this.ipAddresses.get(userId) || [];
+    let sharedCount = 0;
+    
+    for (const ip of userIPs) {
+      const matchingAccounts = this.findAccountsByIPAddress(ip.ipAddress);
+      if (matchingAccounts.length > 1) {
+        sharedCount++;
+      }
+    }
+    
+    return sharedCount;
+  }
 }
+
