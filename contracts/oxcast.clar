@@ -266,7 +266,8 @@
       (merge position { claimed: true }))
     
     ;; Transfer winnings
-    (try! (as-contract (stx-transfer? payout tx-sender tx-sender)))
+    (let ((recipient tx-sender))
+      (try! (as-contract (stx-transfer? payout tx-sender recipient))))
     
     (print { event: "claim", market-id: market-id, user: tx-sender, payout: payout })
     (ok payout)))
@@ -297,7 +298,8 @@
     (map-set positions { market-id: market-id, user: tx-sender }
       (merge position { claimed: true }))
     
-    (try! (as-contract (stx-transfer? refund tx-sender tx-sender)))
+    (let ((recipient tx-sender))
+      (try! (as-contract (stx-transfer? refund tx-sender recipient))))
     
     (print { event: "refund", market-id: market-id, user: tx-sender, amount: refund })
     (ok refund)))
