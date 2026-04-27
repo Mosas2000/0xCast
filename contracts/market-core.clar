@@ -127,8 +127,19 @@
   }
 )
 
-;; Contract owner (set to the deploying principal)
-(define-constant CONTRACT-OWNER tx-sender)
+;; Contract owner (configurable, initialized to deploying principal)
+(define-data-var contract-owner principal tx-sender)
+
+;; Error for owner transfer operations
+(define-constant ERR-INVALID-NEW-OWNER (err u124))
+(define-constant ERR-OWNER-TRANSFER-COOLDOWN (err u125))
+
+;; Owner transfer cooldown period (~7 days in blocks)
+(define-data-var owner-transfer-cooldown uint u1008)
+
+;; Pending owner transfer
+(define-data-var pending-owner (optional principal) none)
+(define-data-var owner-transfer-initiated-at uint u0)
 
 ;; ============================================
 ;; Data Variables
@@ -207,6 +218,20 @@
 ;; ============================================
 ;; Read-Only Functions
 ;; ============================================
+
+;; Get the current contract owner
+(define-read-only (get-contract-owner)
+  (var-get contract-owner)
+)
+
+;; Get pending owner transfer details
+(define-read-only (get-pending-owner-transfer)
+  {
+    pending-owner: (var-get pending-owner),
+    initiated-at: (var-get owner-transfer-initiated-at),
+    cooldown: (var-get owner-transfer-cooldown)
+  }
+)
 
 ;; Get the current market counter
 (define-read-only (get-market-counter)
@@ -526,7 +551,7 @@
 
 (define-public (set-emergency-approver (approver principal) (enabled bool))
   (begin
-    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-AUTHORIZED)
     (map-set emergency-approvers
       { signer: approver }
       {
@@ -541,7 +566,7 @@
 
 (define-public (set-emergency-approval-threshold (threshold uint))
   (begin
-    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-AUTHORIZED)
     (asserts! (> threshold u0) ERR-INVALID-PAUSE-STATE)
     (ok (var-set pause-approval-threshold threshold))
   )
@@ -1005,7 +1030,7 @@
 ;; Owner-only emergency pause controls
 (define-public (set-contract-paused (paused bool))
   (begin
-    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-AUTHORIZED)
     (if paused
       (process-emergency-pause-approval DEFAULT-PAUSE-REASON)
       (process-emergency-resume-approval DEFAULT-RESUME-REASON)
@@ -1057,3 +1082,68 @@
       (is-eq (get status market) MARKET-STATUS-ACTIVE)
       (> stacks-block-height (get resolution-deadline market)))
     false))
+
+;; ============================================
+;; Owner Transfer Functions
+;; ============================================
+
+;; Initiate owner transfer with time-locked security period
+;; The new owner must claim ownership after the cooldown period
+(define-public (initiate-owner-transfer (new-owner principal))
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-AUTHORIZED)
+    (asserts! (not (is-eq new-owner (var-get contract-owner))) ERR-INVALID-NEW-OWNER)
+    
+    ;; Set pending owner and record initiation time
+    (var-set pending-owner (some new-owner))
+    (var-set owner-transfer-initiated-at stacks-block-height)
+    
+    (ok true)
+  )
+)
+
+;; Cancel a pending owner transfer (only current owner)
+(define-public (cancel-owner-transfer)
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-AUTHORIZED)
+    (asserts! (is-some (var-get pending-owner)) ERR-INVALID-NEW-OWNER)
+    
+    ;; Clear pending owner
+    (var-set pending-owner none)
+    (var-set owner-transfer-initiated-at u0)
+    
+    (ok true)
+  )
+)
+
+;; Claim ownership after cooldown period (only pending owner)
+(define-public (claim-ownership)
+  (let (
+    (pending (var-get pending-owner))
+    (initiated-at (var-get owner-transfer-initiated-at))
+    (cooldown (var-get owner-transfer-cooldown))
+    (current-block stacks-block-height)
+  )
+    (asserts! (is-some pending) ERR-INVALID-NEW-OWNER)
+    (asserts! (is-eq tx-sender (unwrap! pending ERR-INVALID-NEW-OWNER)) ERR-NOT-AUTHORIZED)
+    
+    ;; Ensure cooldown period has passed
+    (asserts! (>= current-block (+ initiated-at cooldown)) ERR-OWNER-TRANSFER-COOLDOWN)
+    
+    ;; Transfer ownership
+    (var-set contract-owner tx-sender)
+    (var-set pending-owner none)
+    (var-set owner-transfer-initiated-at u0)
+    
+    (ok true)
+  )
+)
+
+;; Update owner transfer cooldown (only owner)
+(define-public (set-owner-transfer-cooldown (new-cooldown uint))
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-AUTHORIZED)
+    (asserts! (> new-cooldown u0) ERR-INVALID-PAUSE-STATE)
+    (ok (var-set owner-transfer-cooldown new-cooldown))
+  )
+)
