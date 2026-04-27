@@ -48,6 +48,7 @@ import { uintCV, PostConditionMode, Pc } from '@stacks/transactions';
 import { getContractPrincipal, CONTRACT_NAMES } from '../config/contracts';
 import { useWallet } from '../components/WalletProvider';
 import { safeBigIntToNumber } from './useContract';
+import { useRateLimit } from './useRateLimit';
 
 function getLiquidityPoolContract() {
   return getContractPrincipal(CONTRACT_NAMES.LIQUIDITY_POOL);
@@ -77,6 +78,7 @@ export interface UseLiquidityActionsReturn {
 
 export function useLiquidityActions(): UseLiquidityActionsReturn {
   const { address, isConnected } = useWallet();
+  const { checkRateLimit } = useRateLimit();
   const [state, setState] = useState<TransactionState>(initialState);
 
   const resetState = useCallback(() => {
@@ -159,6 +161,11 @@ export function useLiquidityActions(): UseLiquidityActionsReturn {
     async (marketId: number, stxAmount: bigint) => {
       if (!address) throw new Error('Wallet not connected');
 
+      const rateLimitResult = await checkRateLimit('add-liquidity');
+      if (!rateLimitResult.allowed) {
+        throw new Error(rateLimitResult.reason || 'Rate limit exceeded');
+      }
+
       const postConditions = [
         Pc.principal(address).willSendEq(stxAmount).ustx(),
       ];
@@ -169,11 +176,16 @@ export function useLiquidityActions(): UseLiquidityActionsReturn {
         postConditions
       );
     },
-    [executeCall, address]
+    [executeCall, address, checkRateLimit]
   );
 
   const removeLiquidity = useCallback(
     async (marketId: number, shares: bigint) => {
+      const rateLimitResult = await checkRateLimit('remove-liquidity');
+      if (!rateLimitResult.allowed) {
+        throw new Error(rateLimitResult.reason || 'Rate limit exceeded');
+      }
+
       await executeCall(
         'remove-liquidity',
         [uintCV(marketId), uintCV(safeBigIntToNumber(shares, 'shares'))],
@@ -181,7 +193,7 @@ export function useLiquidityActions(): UseLiquidityActionsReturn {
         PostConditionMode.Allow
       );
     },
-    [executeCall]
+    [executeCall, checkRateLimit]
   );
 
   return {

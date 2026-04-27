@@ -32,11 +32,18 @@
 (define-constant ERR-INSUFFICIENT-BALANCE (err u110))
 (define-constant ERR-STAKING-LOCKED (err u111))
 (define-constant ERR-MIN-STAKE (err u112))
+(define-constant ERR-RATE-LIMIT-EXCEEDED (err u113))
 
 ;; Configuration
 (define-constant PLATFORM-FEE u200) ;; 2% in basis points
 (define-constant MIN-STAKE u1000000) ;; 1 OXC minimum stake
 (define-constant LOCK-PERIOD u1008) ;; ~7 days in blocks
+
+;; Rate Limiting Configuration
+(define-constant RATE-LIMIT-WINDOW u144) ;; ~24 hours in blocks
+(define-constant MAX-PREDICTIONS-PER-WINDOW u20)
+(define-constant MAX-MARKETS-PER-WINDOW u5)
+(define-constant MAX-STAKES-PER-WINDOW u10)
 
 ;; ============================================
 ;; TOKEN (SIP-010 Compliant)
@@ -93,11 +100,94 @@
 
 (define-data-var total-staked uint u0)
 
+;; Rate limiting maps
+(define-map rate-limit-predictions
+  principal
+  { count: uint, window-start: uint })
+
+(define-map rate-limit-markets
+  principal
+  { count: uint, window-start: uint })
+
+(define-map rate-limit-stakes
+  principal
+  { count: uint, window-start: uint })
+
 (define-read-only (get-stake (staker principal))
   (default-to { amount: u0, locked-until: u0 } (map-get? stakes staker)))
 
 (define-read-only (get-total-staked)
   (ok (var-get total-staked)))
+
+(define-read-only (get-rate-limit-status (user principal) (action (string-ascii 20)))
+  (if (is-eq action "predict")
+    (ok (default-to { count: u0, window-start: u0 } (map-get? rate-limit-predictions user)))
+    (if (is-eq action "market")
+      (ok (default-to { count: u0, window-start: u0 } (map-get? rate-limit-markets user)))
+      (if (is-eq action "stake")
+        (ok (default-to { count: u0, window-start: u0 } (map-get? rate-limit-stakes user)))
+        (err u999)
+      )
+    )
+  )
+)
+
+(define-private (check-rate-limit (user principal) (action (string-ascii 20)) (max-count uint))
+  (let (
+    (current-block stacks-block-height)
+    (limit-data (if (is-eq action "predict")
+      (default-to { count: u0, window-start: u0 } (map-get? rate-limit-predictions user))
+      (if (is-eq action "market")
+        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-markets user))
+        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-stakes user))
+      )
+    ))
+    (window-start (get window-start limit-data))
+    (count (get count limit-data))
+  )
+    (if (>= (- current-block window-start) RATE-LIMIT-WINDOW)
+      (ok true)
+      (if (< count max-count)
+        (ok true)
+        ERR-RATE-LIMIT-EXCEEDED
+      )
+    )
+  )
+)
+
+(define-private (record-rate-limit (user principal) (action (string-ascii 20)))
+  (let (
+    (current-block stacks-block-height)
+    (limit-data (if (is-eq action "predict")
+      (default-to { count: u0, window-start: u0 } (map-get? rate-limit-predictions user))
+      (if (is-eq action "market")
+        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-markets user))
+        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-stakes user))
+      )
+    ))
+    (window-start (get window-start limit-data))
+    (count (get count limit-data))
+    (new-window (>= (- current-block window-start) RATE-LIMIT-WINDOW))
+  )
+    (if (is-eq action "predict")
+      (map-set rate-limit-predictions user {
+        count: (if new-window u1 (+ count u1)),
+        window-start: (if new-window current-block window-start)
+      })
+      (if (is-eq action "market")
+        (map-set rate-limit-markets user {
+          count: (if new-window u1 (+ count u1)),
+          window-start: (if new-window current-block window-start)
+        })
+        (map-set rate-limit-stakes user {
+          count: (if new-window u1 (+ count u1)),
+          window-start: (if new-window current-block window-start)
+        })
+      )
+    )
+    (ok true)
+  )
+)
 
 (define-public (stake (amount uint))
   (let (
@@ -105,12 +195,14 @@
     (new-amount (+ (get amount current-stake) amount))
   )
     (asserts! (>= amount MIN-STAKE) ERR-MIN-STAKE)
+    (try! (check-rate-limit tx-sender "stake" MAX-STAKES-PER-WINDOW))
     (try! (ft-transfer? oxc-token amount tx-sender (as-contract tx-sender)))
     (map-set stakes tx-sender {
       amount: new-amount,
       locked-until: (+ stacks-block-height LOCK-PERIOD)
     })
     (var-set total-staked (+ (var-get total-staked) amount))
+    (try! (record-rate-limit tx-sender "stake"))
     (print { event: "stake", staker: tx-sender, amount: amount })
     (ok true)))
 
@@ -177,6 +269,7 @@
     (market-id (var-get market-counter))
     (end-block (+ stacks-block-height duration-blocks))
   )
+    (try! (check-rate-limit tx-sender "market" MAX-MARKETS-PER-WINDOW))
     (map-set markets market-id {
       question: question,
       creator: tx-sender,
@@ -189,6 +282,7 @@
       resolved-at: u0
     })
     (var-set market-counter (+ market-id u1))
+    (try! (record-rate-limit tx-sender "market"))
     (print { event: "market-created", id: market-id, question: question, creator: tx-sender })
     (ok market-id)))
 
@@ -204,14 +298,12 @@
     (asserts! (< stacks-block-height (get end-block market)) ERR-MARKET-ENDED)
     (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
     (asserts! (> amount u0) ERR-INVALID-AMOUNT)
+    (try! (check-rate-limit tx-sender "predict" MAX-PREDICTIONS-PER-WINDOW))
     
-    ;; Transfer STX
     (try! (stx-transfer? amount tx-sender (as-contract tx-sender)))
     
-    ;; Update fee pool
     (var-set fee-pool (+ (var-get fee-pool) fee))
     
-    ;; Update market pools
     (if (is-eq outcome OUTCOME-YES)
       (begin
         (map-set markets market-id (merge market { yes-pool: (+ (get yes-pool market) net-amount) }))
@@ -222,6 +314,7 @@
         (map-set positions { market-id: market-id, user: tx-sender }
           (merge current-position { no-amount: (+ (get no-amount current-position) net-amount) }))))
     
+    (try! (record-rate-limit tx-sender "predict"))
     (print { event: "prediction", market-id: market-id, user: tx-sender, outcome: outcome, amount: net-amount })
     (ok true)))
 

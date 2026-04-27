@@ -7,6 +7,7 @@ import { useWallet } from '../components/WalletProvider';
 import { validateAmount, validateMarketId } from '../utils/validation';
 import { addStakeHistoryEntry, type StakeOutcome } from '../utils/stakeHistory';
 import { useContractPause } from './useContractPause';
+import { useRateLimit } from './useRateLimit';
 
 interface UseStakeReturn {
   placeYesStake: (marketId: number, amount: number, onSuccess?: () => void) => Promise<void>;
@@ -24,6 +25,7 @@ export function useStake(): UseStakeReturn {
   const [error, setError] = useState<string | null>(null);
   const [txId, setTxId] = useState<string | null>(null);
   const { isPaused: isContractPaused, refetch: refetchPauseState } = useContractPause();
+  const { checkRateLimit } = useRateLimit();
 
   const reset = useCallback(() => {
     setIsLoading(false);
@@ -48,7 +50,12 @@ export function useStake(): UseStakeReturn {
         return;
       }
 
-      // Validate inputs before proceeding
+      const rateLimitResult = await checkRateLimit('stake');
+      if (!rateLimitResult.allowed) {
+        setError(rateLimitResult.reason || 'Rate limit exceeded');
+        return;
+      }
+
       const marketIdValidation = validateMarketId(marketId);
       if (!marketIdValidation.isValid) {
         setError(marketIdValidation.error || 'Invalid market ID');
@@ -68,7 +75,6 @@ export function useStake(): UseStakeReturn {
       try {
         const stakeMicroStx = stxToMicroStx(amount);
 
-        // Post condition: user sends exact STX amount
         const postConditions = [
           Pc.principal(address).willSendEq(stakeMicroStx).ustx(),
         ];
@@ -104,7 +110,7 @@ export function useStake(): UseStakeReturn {
         setIsLoading(false);
       }
     },
-    [address, isContractPaused, refetchPauseState]
+    [address, isContractPaused, refetchPauseState, checkRateLimit]
   );
 
   const placeYesStake = useCallback(
