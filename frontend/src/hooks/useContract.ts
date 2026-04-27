@@ -38,6 +38,8 @@ import {
 import { getNodeUrl } from '../config/network';
 import { useWallet } from '../components/WalletProvider';
 import { useNetwork } from '../contexts/NetworkContext';
+import { parseContractError, getUserFriendlyContractError } from './contractErrorHandler';
+import { errorLoggingService } from '../services/ErrorLoggingService';
 
 // Type for optional Clarity values (someCV or noneCV)
 export type OptionalClarityValue = ReturnType<typeof someCV> | ReturnType<typeof noneCV>;
@@ -176,26 +178,49 @@ export function useContract() {
   // Create a new prediction market
   const createMarket = useCallback(
     async (question: string, durationBlocks: number) => {
-      if (!isConnected || !address) throw new Error('Wallet not connected');
+      if (!isConnected || !address) {
+        const error = new Error('Wallet not connected');
+        errorLoggingService.logError(error, {
+          component: 'useContract',
+          action: 'createMarket',
+        });
+        throw error;
+      }
       
-      await openContractCall({
-        network: stacksNetwork,
-        contractAddress: tokenContract.address,
-        contractName: tokenContract.name,
-        functionName: 'create-market',
-        functionArgs: [
-          stringAsciiCV(question),
-          uintCV(durationBlocks),
-        ],
-        postConditionMode: PostConditionMode.Deny,
-        postConditions: [],
-        onFinish: (data) => {
-          console.log('Market created:', data);
-        },
-        onCancel: () => {
-          console.log('Transaction cancelled');
-        },
-      });
+      try {
+        await openContractCall({
+          network: stacksNetwork,
+          contractAddress: tokenContract.address,
+          contractName: tokenContract.name,
+          functionName: 'create-market',
+          functionArgs: [
+            stringAsciiCV(question),
+            uintCV(durationBlocks),
+          ],
+          postConditionMode: PostConditionMode.Deny,
+          postConditions: [],
+          onFinish: (data) => {
+            console.log('Market created:', data);
+          },
+          onCancel: () => {
+            const cancelError = new Error('Transaction cancelled by user');
+            errorLoggingService.logError(cancelError, {
+              component: 'useContract',
+              action: 'createMarket',
+              additionalData: { question, durationBlocks },
+            });
+            throw cancelError;
+          },
+        });
+      } catch (error) {
+        const contractError = parseContractError(error, tokenContract.name, 'create-market');
+        errorLoggingService.logError(contractError, {
+          component: 'useContract',
+          action: 'createMarket',
+          additionalData: { question, durationBlocks },
+        });
+        throw contractError;
+      }
     },
     [isConnected, address, stacksNetwork, tokenContract]
   );
@@ -203,7 +228,14 @@ export function useContract() {
   // Place a prediction (YES or NO)
   const predict = useCallback(
     async (marketId: number, outcome: 'yes' | 'no', amountMicroStx: bigint) => {
-      if (!isConnected || !address) throw new Error('Wallet not connected');
+      if (!isConnected || !address) {
+        const error = new Error('Wallet not connected');
+        errorLoggingService.logError(error, {
+          component: 'useContract',
+          action: 'predict',
+        });
+        throw error;
+      }
 
       const outcomeValue = outcome === 'yes' ? 1 : 2;
 
@@ -212,25 +244,41 @@ export function useContract() {
         Pc.principal(address).willSendEq(amountMicroStx).ustx(),
       ];
 
-      await openContractCall({
-        network: stacksNetwork,
-        contractAddress: tokenContract.address,
-        contractName: tokenContract.name,
-        functionName: 'predict',
-        functionArgs: [
-          uintCV(marketId),
-          uintCV(outcomeValue),
-          uintCV(safeBigIntToNumber(amountMicroStx, 'amountMicroStx')),
-        ],
-        postConditionMode: PostConditionMode.Deny,
-        postConditions,
-        onFinish: (data) => {
-          console.log('Prediction placed:', data);
-        },
-        onCancel: () => {
-          console.log('Transaction cancelled');
-        },
-      });
+      try {
+        await openContractCall({
+          network: stacksNetwork,
+          contractAddress: tokenContract.address,
+          contractName: tokenContract.name,
+          functionName: 'predict',
+          functionArgs: [
+            uintCV(marketId),
+            uintCV(outcomeValue),
+            uintCV(safeBigIntToNumber(amountMicroStx, 'amountMicroStx')),
+          ],
+          postConditionMode: PostConditionMode.Deny,
+          postConditions,
+          onFinish: (data) => {
+            console.log('Prediction placed:', data);
+          },
+          onCancel: () => {
+            const cancelError = new Error('Transaction cancelled by user');
+            errorLoggingService.logError(cancelError, {
+              component: 'useContract',
+              action: 'predict',
+              additionalData: { marketId, outcome, amountMicroStx: amountMicroStx.toString() },
+            });
+            throw cancelError;
+          },
+        });
+      } catch (error) {
+        const contractError = parseContractError(error, tokenContract.name, 'predict');
+        errorLoggingService.logError(contractError, {
+          component: 'useContract',
+          action: 'predict',
+          additionalData: { marketId, outcome, amountMicroStx: amountMicroStx.toString() },
+        });
+        throw contractError;
+      }
     },
     [isConnected, address, stacksNetwork, tokenContract]
   );
@@ -238,23 +286,46 @@ export function useContract() {
   // Claim winnings from a resolved market
   const claimWinnings = useCallback(
     async (marketId: number) => {
-      if (!isConnected || !address) throw new Error('Wallet not connected');
+      if (!isConnected || !address) {
+        const error = new Error('Wallet not connected');
+        errorLoggingService.logError(error, {
+          component: 'useContract',
+          action: 'claimWinnings',
+        });
+        throw error;
+      }
 
-      await openContractCall({
-        network: stacksNetwork,
-        contractAddress: tokenContract.address,
-        contractName: tokenContract.name,
-        functionName: 'claim-winnings',
-        functionArgs: [uintCV(marketId)],
-        postConditionMode: PostConditionMode.Allow,
-        postConditions: [],
-        onFinish: (data) => {
-          console.log('Winnings claimed:', data);
-        },
-        onCancel: () => {
-          console.log('Transaction cancelled');
-        },
-      });
+      try {
+        await openContractCall({
+          network: stacksNetwork,
+          contractAddress: tokenContract.address,
+          contractName: tokenContract.name,
+          functionName: 'claim-winnings',
+          functionArgs: [uintCV(marketId)],
+          postConditionMode: PostConditionMode.Allow,
+          postConditions: [],
+          onFinish: (data) => {
+            console.log('Winnings claimed:', data);
+          },
+          onCancel: () => {
+            const cancelError = new Error('Transaction cancelled by user');
+            errorLoggingService.logError(cancelError, {
+              component: 'useContract',
+              action: 'claimWinnings',
+              additionalData: { marketId },
+            });
+            throw cancelError;
+          },
+        });
+      } catch (error) {
+        const contractError = parseContractError(error, tokenContract.name, 'claim-winnings');
+        errorLoggingService.logError(contractError, {
+          component: 'useContract',
+          action: 'claimWinnings',
+          additionalData: { marketId },
+        });
+        throw contractError;
+      }
     },
     [isConnected, address, stacksNetwork, tokenContract]
   );
@@ -262,27 +333,50 @@ export function useContract() {
   // Stake OXC tokens
   const stakeTokens = useCallback(
     async (amountMicroOxc: bigint) => {
-      if (!isConnected || !address) throw new Error('Wallet not connected');
+      if (!isConnected || !address) {
+        const error = new Error('Wallet not connected');
+        errorLoggingService.logError(error, {
+          component: 'useContract',
+          action: 'stakeTokens',
+        });
+        throw error;
+      }
 
       const postConditions = [
         Pc.principal(address).willSendEq(amountMicroOxc).ft(tokenContract.identifier as `${string}.${string}`, 'oxc-token'),
       ];
 
-      await openContractCall({
-        network: stacksNetwork,
-        contractAddress: tokenContract.address,
-        contractName: tokenContract.name,
-        functionName: 'stake',
-        functionArgs: [uintCV(safeBigIntToNumber(amountMicroOxc, 'amountMicroOxc'))],
-        postConditionMode: PostConditionMode.Deny,
-        postConditions,
-        onFinish: (data) => {
-          console.log('Tokens staked:', data);
-        },
-        onCancel: () => {
-          console.log('Transaction cancelled');
-        },
-      });
+      try {
+        await openContractCall({
+          network: stacksNetwork,
+          contractAddress: tokenContract.address,
+          contractName: tokenContract.name,
+          functionName: 'stake',
+          functionArgs: [uintCV(safeBigIntToNumber(amountMicroOxc, 'amountMicroOxc'))],
+          postConditionMode: PostConditionMode.Deny,
+          postConditions,
+          onFinish: (data) => {
+            console.log('Tokens staked:', data);
+          },
+          onCancel: () => {
+            const cancelError = new Error('Transaction cancelled by user');
+            errorLoggingService.logError(cancelError, {
+              component: 'useContract',
+              action: 'stakeTokens',
+              additionalData: { amountMicroOxc: amountMicroOxc.toString() },
+            });
+            throw cancelError;
+          },
+        });
+      } catch (error) {
+        const contractError = parseContractError(error, tokenContract.name, 'stake');
+        errorLoggingService.logError(contractError, {
+          component: 'useContract',
+          action: 'stakeTokens',
+          additionalData: { amountMicroOxc: amountMicroOxc.toString() },
+        });
+        throw contractError;
+      }
     },
     [isConnected, address, stacksNetwork, tokenContract]
   );
@@ -290,23 +384,46 @@ export function useContract() {
   // Unstake OXC tokens
   const unstakeTokens = useCallback(
     async (amountMicroOxc: bigint) => {
-      if (!isConnected || !address) throw new Error('Wallet not connected');
+      if (!isConnected || !address) {
+        const error = new Error('Wallet not connected');
+        errorLoggingService.logError(error, {
+          component: 'useContract',
+          action: 'unstakeTokens',
+        });
+        throw error;
+      }
 
-      await openContractCall({
-        network: stacksNetwork,
-        contractAddress: tokenContract.address,
-        contractName: tokenContract.name,
-        functionName: 'unstake',
-        functionArgs: [uintCV(safeBigIntToNumber(amountMicroOxc, 'amountMicroOxc'))],
-        postConditionMode: PostConditionMode.Allow,
-        postConditions: [],
-        onFinish: (data) => {
-          console.log('Tokens unstaked:', data);
-        },
-        onCancel: () => {
-          console.log('Transaction cancelled');
-        },
-      });
+      try {
+        await openContractCall({
+          network: stacksNetwork,
+          contractAddress: tokenContract.address,
+          contractName: tokenContract.name,
+          functionName: 'unstake',
+          functionArgs: [uintCV(safeBigIntToNumber(amountMicroOxc, 'amountMicroOxc'))],
+          postConditionMode: PostConditionMode.Allow,
+          postConditions: [],
+          onFinish: (data) => {
+            console.log('Tokens unstaked:', data);
+          },
+          onCancel: () => {
+            const cancelError = new Error('Transaction cancelled by user');
+            errorLoggingService.logError(cancelError, {
+              component: 'useContract',
+              action: 'unstakeTokens',
+              additionalData: { amountMicroOxc: amountMicroOxc.toString() },
+            });
+            throw cancelError;
+          },
+        });
+      } catch (error) {
+        const contractError = parseContractError(error, tokenContract.name, 'unstake');
+        errorLoggingService.logError(contractError, {
+          component: 'useContract',
+          action: 'unstakeTokens',
+          additionalData: { amountMicroOxc: amountMicroOxc.toString() },
+        });
+        throw contractError;
+      }
     },
     [isConnected, address, stacksNetwork, tokenContract]
   );
@@ -316,9 +433,30 @@ export function useContract() {
   // Memo is limited to 34 bytes per SIP-010 standard
   const transferTokens = useCallback(
     async (recipient: string, amountMicroOxc: bigint, memo?: string) => {
-      if (!isConnected || !address) throw new Error('Wallet not connected');
-      if (!recipient) throw new Error('Recipient address is required');
-      if (amountMicroOxc <= 0n) throw new Error('Amount must be greater than zero');
+      if (!isConnected || !address) {
+        const error = new Error('Wallet not connected');
+        errorLoggingService.logError(error, {
+          component: 'useContract',
+          action: 'transferTokens',
+        });
+        throw error;
+      }
+      if (!recipient) {
+        const error = new Error('Recipient address is required');
+        errorLoggingService.logError(error, {
+          component: 'useContract',
+          action: 'transferTokens',
+        });
+        throw error;
+      }
+      if (amountMicroOxc <= 0n) {
+        const error = new Error('Amount must be greater than zero');
+        errorLoggingService.logError(error, {
+          component: 'useContract',
+          action: 'transferTokens',
+        });
+        throw error;
+      }
 
       const postConditions = [
         Pc.principal(address).willSendEq(amountMicroOxc).ft(tokenContract.identifier as `${string}.${string}`, 'oxc-token'),
@@ -332,21 +470,37 @@ export function useContract() {
         buildMemoCV(memo),
       ];
 
-      await openContractCall({
-        network: stacksNetwork,
-        contractAddress: tokenContract.address,
-        contractName: tokenContract.name,
-        functionName: 'transfer',
-        functionArgs: functionArgs,
-        postConditionMode: PostConditionMode.Deny,
-        postConditions,
-        onFinish: (data) => {
-          console.log('Tokens transferred:', data);
-        },
-        onCancel: () => {
-          console.log('Transaction cancelled');
-        },
-      });
+      try {
+        await openContractCall({
+          network: stacksNetwork,
+          contractAddress: tokenContract.address,
+          contractName: tokenContract.name,
+          functionName: 'transfer',
+          functionArgs: functionArgs,
+          postConditionMode: PostConditionMode.Deny,
+          postConditions,
+          onFinish: (data) => {
+            console.log('Tokens transferred:', data);
+          },
+          onCancel: () => {
+            const cancelError = new Error('Transaction cancelled by user');
+            errorLoggingService.logError(cancelError, {
+              component: 'useContract',
+              action: 'transferTokens',
+              additionalData: { recipient, amountMicroOxc: amountMicroOxc.toString(), memo },
+            });
+            throw cancelError;
+          },
+        });
+      } catch (error) {
+        const contractError = parseContractError(error, tokenContract.name, 'transfer');
+        errorLoggingService.logError(contractError, {
+          component: 'useContract',
+          action: 'transferTokens',
+          additionalData: { recipient, amountMicroOxc: amountMicroOxc.toString(), memo },
+        });
+        throw contractError;
+      }
     },
     [isConnected, address, stacksNetwork, tokenContract]
   );
