@@ -25,6 +25,7 @@ export function TransactionToast({
   onDismiss,
   autoDismissMs = 8000 
 }: TransactionToastProps) {
+  // Get current network to ensure explorer links point to correct chain
   const { network } = useNetwork();
   const [isVisible, setIsVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
