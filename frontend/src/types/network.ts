@@ -27,7 +27,7 @@ export const NETWORK_CONFIGS: Record<NetworkType, NetworkConfig> = {
     label: 'Mainnet',
     chainId: 1,
     apiUrl: 'https://api.mainnet.hiro.so',
-    explorerUrl: 'https://explorer.hiro.so',
+    explorerUrl: 'https://explorer.hiro.so?chain=mainnet',
     color: '#10B981', // green
     icon: '🟢',
   },
@@ -36,7 +36,7 @@ export const NETWORK_CONFIGS: Record<NetworkType, NetworkConfig> = {
     label: 'Testnet',
     chainId: 2147483648,
     apiUrl: 'https://api.testnet.hiro.so',
-    explorerUrl: 'https://explorer.hiro.so/?chain=testnet',
+    explorerUrl: 'https://explorer.hiro.so?chain=testnet',
     color: '#F59E0B', // amber
     icon: '🟡',
   },
