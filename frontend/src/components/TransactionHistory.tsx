@@ -25,6 +25,7 @@ export function TransactionHistory({
   onClear,
   maxItems = 10 
 }: TransactionHistoryProps) {
+  // Get current network to ensure explorer links point to correct chain
   const { network } = useNetwork();
   const [showAll, setShowAll] = useState(false);
   
