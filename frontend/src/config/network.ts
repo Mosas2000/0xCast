@@ -15,7 +15,11 @@ export const API_URLS = {
   },
 } as const;
 
-// Explorer URLs per network
+export function getExplorerChain(network?: NetworkType): string {
+  const activeNetwork = network ?? getActiveNetwork();
+  return activeNetwork === 'mainnet' ? 'mainnet' : 'testnet';
+}
+
 export const EXPLORER_URLS = {
   mainnet: {
     base: 'https://explorer.hiro.so',
