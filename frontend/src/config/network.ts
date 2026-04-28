@@ -29,14 +29,20 @@ export function getExplorerChain(network?: NetworkType): string {
 export const EXPLORER_URLS = {
   mainnet: {
     base: 'https://explorer.hiro.so',
+    // Transaction explorer URL builder for mainnet
     tx: (txId: string) => `https://explorer.hiro.so/txid/${txId}?chain=mainnet`,
+    // Address explorer URL builder for mainnet
     address: (addr: string) => `https://explorer.hiro.so/address/${addr}?chain=mainnet`,
+    // Contract explorer URL builder for mainnet
     contract: (identifier: string) => `https://explorer.hiro.so/txid/${identifier}?chain=mainnet`,
   },
   testnet: {
     base: 'https://explorer.hiro.so',
+    // Transaction explorer URL builder for testnet
     tx: (txId: string) => `https://explorer.hiro.so/txid/${txId}?chain=testnet`,
+    // Address explorer URL builder for testnet
     address: (addr: string) => `https://explorer.hiro.so/address/${addr}?chain=testnet`,
+    // Contract explorer URL builder for testnet
     contract: (identifier: string) => `https://explorer.hiro.so/txid/${identifier}?chain=testnet`,
   },
 } as const;
