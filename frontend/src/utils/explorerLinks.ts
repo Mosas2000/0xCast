@@ -23,6 +23,22 @@ export function isValidNetworkType(value: string): value is NetworkType {
 }
 
 /**
+ * Validate if a URL is a valid Hiro explorer URL
+ * 
+ * @param url - URL to validate
+ * @returns True if URL is a valid Hiro explorer URL
+ */
+export function isValidExplorerUrl(url: string): boolean {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname === 'explorer.hiro.so' && 
+           urlObj.searchParams.has('chain');
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Get transaction explorer URL for the specified network
  * 
  * @param txId - Transaction ID to view
