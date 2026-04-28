@@ -5,6 +5,7 @@
  */
 
 import { getExplorerUrls } from '../config/network';
+import { getTransactionExplorerUrl, getAddressExplorerUrl } from './explorerLinks';
 import type { NetworkType } from '../types/network';
 
 export const TransactionStatus = {
@@ -161,14 +162,22 @@ export function getStatusLabel(status: TransactionStatus): string {
 
 /**
  * Build explorer URL for transaction
+ * 
+ * @param txId - Transaction ID to view
+ * @param network - Network type (mainnet or testnet). If not provided, uses active network
+ * @returns Full URL to view the transaction on Hiro explorer
  */
 export function getExplorerUrl(txId: string, network?: NetworkType): string {
-  return getExplorerUrls(network).tx(txId);
+  return getTransactionExplorerUrl(txId, network);
 }
 
 /**
  * Build explorer URL for an address
+ * 
+ * @param address - Stacks address to view
+ * @param network - Network type (mainnet or testnet). If not provided, uses active network
+ * @returns Full URL to view the address on Hiro explorer
  */
 export function getExplorerAddressUrl(address: string, network?: NetworkType): string {
-  return getExplorerUrls(network).address(address);
+  return getAddressExplorerUrl(address, network);
 }

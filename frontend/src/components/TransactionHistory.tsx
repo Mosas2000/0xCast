@@ -4,6 +4,7 @@
  * Displays a list of user's transaction history with status indicators.
  */
 import { useState } from 'react';
+import { useNetwork } from '../contexts/NetworkContext';
 import {
   type Transaction,
   TransactionStatus,
@@ -24,6 +25,8 @@ export function TransactionHistory({
   onClear,
   maxItems = 10 
 }: TransactionHistoryProps) {
+  // Get current network to ensure explorer links point to correct chain
+  const { network } = useNetwork();
   const [showAll, setShowAll] = useState(false);
   
   const displayedTransactions = showAll 
@@ -190,7 +193,7 @@ export function TransactionHistory({
                     <div style={descStyle}>
                       {tx.amount && `${tx.amount} • `}
                       <a 
-                        href={getExplorerUrl(tx.txId)} 
+                        href={getExplorerUrl(tx.txId, network)} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         style={linkStyle}
