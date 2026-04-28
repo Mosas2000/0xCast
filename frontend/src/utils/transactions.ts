@@ -162,6 +162,10 @@ export function getStatusLabel(status: TransactionStatus): string {
 
 /**
  * Build explorer URL for transaction
+ * 
+ * @param txId - Transaction ID to view
+ * @param network - Network type (mainnet or testnet). If not provided, uses active network
+ * @returns Full URL to view the transaction on Hiro explorer
  */
 export function getExplorerUrl(txId: string, network?: NetworkType): string {
   return getTransactionExplorerUrl(txId, network);
@@ -169,6 +173,10 @@ export function getExplorerUrl(txId: string, network?: NetworkType): string {
 
 /**
  * Build explorer URL for an address
+ * 
+ * @param address - Stacks address to view
+ * @param network - Network type (mainnet or testnet). If not provided, uses active network
+ * @returns Full URL to view the address on Hiro explorer
  */
 export function getExplorerAddressUrl(address: string, network?: NetworkType): string {
   return getAddressExplorerUrl(address, network);
