@@ -5,6 +5,7 @@
  */
 
 import { getExplorerUrls } from '../config/network';
+import { getTransactionExplorerUrl, getAddressExplorerUrl } from './explorerLinks';
 import type { NetworkType } from '../types/network';
 
 export const TransactionStatus = {
@@ -163,12 +164,12 @@ export function getStatusLabel(status: TransactionStatus): string {
  * Build explorer URL for transaction
  */
 export function getExplorerUrl(txId: string, network?: NetworkType): string {
-  return getExplorerUrls(network).tx(txId);
+  return getTransactionExplorerUrl(txId, network);
 }
 
 /**
  * Build explorer URL for an address
  */
 export function getExplorerAddressUrl(address: string, network?: NetworkType): string {
-  return getExplorerUrls(network).address(address);
+  return getAddressExplorerUrl(address, network);
 }
