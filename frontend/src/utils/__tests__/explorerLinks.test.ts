@@ -1,4 +1,4 @@
-import { getTransactionExplorerUrl, getAddressExplorerUrl, getContractExplorerUrl, isValidNetworkType } from '../explorerLinks';
+import { getTransactionExplorerUrl, getAddressExplorerUrl, getContractExplorerUrl, isValidNetworkType, isValidExplorerUrl } from '../explorerLinks';
 
 describe('explorerLinks', () => {
   describe('isValidNetworkType', () => {
@@ -15,6 +15,32 @@ describe('explorerLinks', () => {
       expect(isValidNetworkType('production')).toBe(false);
       expect(isValidNetworkType('')).toBe(false);
       expect(isValidNetworkType('MAINNET')).toBe(false);
+    });
+  });
+
+  describe('isValidExplorerUrl', () => {
+    it('returns true for valid mainnet explorer URLs', () => {
+      expect(isValidExplorerUrl('https://explorer.hiro.so/txid/0x123?chain=mainnet')).toBe(true);
+      expect(isValidExplorerUrl('https://explorer.hiro.so/address/SP123?chain=mainnet')).toBe(true);
+    });
+
+    it('returns true for valid testnet explorer URLs', () => {
+      expect(isValidExplorerUrl('https://explorer.hiro.so/txid/0x123?chain=testnet')).toBe(true);
+      expect(isValidExplorerUrl('https://explorer.hiro.so/address/ST123?chain=testnet')).toBe(true);
+    });
+
+    it('returns false for URLs without chain parameter', () => {
+      expect(isValidExplorerUrl('https://explorer.hiro.so/txid/0x123')).toBe(false);
+    });
+
+    it('returns false for non-explorer URLs', () => {
+      expect(isValidExplorerUrl('https://example.com?chain=mainnet')).toBe(false);
+      expect(isValidExplorerUrl('https://google.com')).toBe(false);
+    });
+
+    it('returns false for invalid URLs', () => {
+      expect(isValidExplorerUrl('not-a-url')).toBe(false);
+      expect(isValidExplorerUrl('')).toBe(false);
     });
   });
 
