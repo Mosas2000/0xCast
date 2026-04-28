@@ -62,5 +62,27 @@ describe('explorerLinks', () => {
       expect(url).toContain('https://explorer.hiro.so/txid/SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7.my-contract');
       expect(url).toMatch(/chain=(mainnet|testnet)/);
     });
+
+    it('handles contract identifiers with hyphens', () => {
+      const identifier = 'SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7.my-complex-contract-name';
+      const url = getContractExplorerUrl(identifier, 'mainnet');
+      expect(url).toContain('my-complex-contract-name');
+    });
+  });
+
+  describe('edge cases', () => {
+    it('handles transaction IDs with special characters', () => {
+      const txId = '0xabcdef1234567890';
+      const url = getTransactionExplorerUrl(txId, 'mainnet');
+      expect(url).toContain(txId);
+    });
+
+    it('handles addresses with different prefixes', () => {
+      const spAddress = 'SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7';
+      const stAddress = 'ST2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKPVKG2CE';
+      
+      expect(getAddressExplorerUrl(spAddress, 'mainnet')).toContain(spAddress);
+      expect(getAddressExplorerUrl(stAddress, 'testnet')).toContain(stAddress);
+    });
   });
 });
