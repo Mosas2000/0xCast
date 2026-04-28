@@ -15,6 +15,12 @@ export const API_URLS = {
   },
 } as const;
 
+/**
+ * Get the chain parameter for explorer URLs
+ * 
+ * @param network - Network type (mainnet or testnet). If not provided, uses active network
+ * @returns Chain parameter string ('mainnet' or 'testnet')
+ */
 export function getExplorerChain(network?: NetworkType): string {
   const activeNetwork = network ?? getActiveNetwork();
   return activeNetwork === 'mainnet' ? 'mainnet' : 'testnet';
@@ -47,7 +53,12 @@ export function getNodeUrl(network?: NetworkType): string {
   return API_URLS[activeNetwork].node;
 }
 
-// Get explorer URLs for current or specified network
+/**
+ * Get explorer URLs for the specified network
+ * 
+ * @param network - Network type (mainnet or testnet). If not provided, uses active network
+ * @returns Object containing explorer URL builder functions for transactions, addresses, and contracts
+ */
 export function getExplorerUrls(network?: NetworkType) {
   const activeNetwork = network ?? getActiveNetwork();
   return EXPLORER_URLS[activeNetwork];
