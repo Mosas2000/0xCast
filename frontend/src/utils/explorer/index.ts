@@ -8,5 +8,7 @@ export {
   getTransactionExplorerUrl,
   getAddressExplorerUrl,
   getContractExplorerUrl,
+  isValidNetworkType,
+  isValidExplorerUrl,
   type NetworkType,
 } from '../explorerLinks';
