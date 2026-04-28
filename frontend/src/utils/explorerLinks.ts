@@ -1,3 +1,12 @@
+/**
+ * Explorer Links Utility
+ * 
+ * Provides network-aware functions for generating Hiro explorer URLs.
+ * All functions accept an optional network parameter and default to the active network.
+ * 
+ * @module explorerLinks
+ */
+
 import { getExplorerUrls, type NetworkType } from '../config/network';
 
 /**
