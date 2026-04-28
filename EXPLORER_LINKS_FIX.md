@@ -89,6 +89,30 @@ function MyComponent() {
 }
 ```
 
+## Migration Guide
+If you have existing code that builds explorer URLs manually, update it to use the new utilities:
+
+### Before
+```typescript
+const url = `https://explorer.hiro.so/txid/${txId}?chain=mainnet`;
+```
+
+### After
+```typescript
+import { getTransactionExplorerUrl } from '../utils/explorerLinks';
+import { useNetwork } from '../contexts/NetworkContext';
+
+const { network } = useNetwork();
+const url = getTransactionExplorerUrl(txId, network);
+```
+
+### Common Patterns
+1. **Transaction Links**: Use `getTransactionExplorerUrl(txId, network)`
+2. **Address Links**: Use `getAddressExplorerUrl(address, network)`
+3. **Contract Links**: Use `getContractExplorerUrl(identifier, network)`
+4. **In Components**: Always get `network` from `useNetwork()` hook
+5. **In Utilities**: Accept `network` as optional parameter
+
 ## Impact
 - Users on testnet can now properly view their transactions and contracts
 - No more 404 errors when clicking explorer links on testnet
