@@ -1,0 +1,176 @@
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}
+
+@media (max-width: 640px) {
+  .liquidity-calculator-input {
+    font-size: 16px;
+  }
+
+  .liquidity-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .liquidity-rewards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .apy-comparison-card {
+    padding: 1rem;
+  }
+
+  .reward-history-chart {
+    height: 200px;
+  }
+
+  .liquidity-mining-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .liquidity-mining-tabs button {
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .liquidity-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .liquidity-rewards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1025px) {
+  .liquidity-stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .liquidity-rewards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.reward-notification-enter {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.reward-notification-enter-active {
+  transform: translateX(0);
+  opacity: 1;
+  transition: all 0.3s ease-out;
+}
+
+.reward-notification-exit {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.reward-notification-exit-active {
+  transform: translateX(100%);
+  opacity: 0;
+  transition: all 0.3s ease-in;
+}
+
+.chart-bar {
+  transition: all 0.3s ease;
+}
+
+.chart-bar:hover {
+  opacity: 0.8;
+  transform: scaleY(1.05);
+}
+
+.calculator-card {
+  transition: box-shadow 0.3s ease;
+}
+
+.calculator-card:hover {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.apy-bar {
+  transition: width 0.5s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-slide-in,
+  .reward-notification-enter-active,
+  .reward-notification-exit-active,
+  .chart-bar,
+  .apy-bar {
+    animation: none;
+    transition: none;
+  }
+}
+
+.loading-skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: loading 1.5s ease-in-out infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.tooltip {
+  position: relative;
+}
+
+.tooltip::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+  font-size: 0.875rem;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.tooltip:hover::before {
+  opacity: 1;
+}
+
+@media print {
+  .reward-notification,
+  .liquidity-mining-tabs {
+    display: none;
+  }
+
+  .calculator-card,
+  .apy-comparison-card {
+    break-inside: avoid;
+  }
+}
