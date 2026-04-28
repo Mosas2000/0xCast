@@ -53,6 +53,19 @@ All explorer links now respect the selected network:
 - Contract links point to correct chain
 - Chain parameter matches the selected network
 - Links work correctly on both mainnet and testnet
+- No hardcoded mainnet references remain in production code
+
+### Testing
+Run the test suite to verify all functionality:
+```bash
+npm test explorerLinks.test.ts
+```
+
+All tests should pass, including:
+- Network-specific URL generation
+- Fallback to active network
+- Edge cases with special characters
+- Different address prefixes (SP/ST)
 
 ## Usage Example
 ```typescript
