@@ -1,6 +1,23 @@
-import { getTransactionExplorerUrl, getAddressExplorerUrl, getContractExplorerUrl } from '../explorerLinks';
+import { getTransactionExplorerUrl, getAddressExplorerUrl, getContractExplorerUrl, isValidNetworkType } from '../explorerLinks';
 
 describe('explorerLinks', () => {
+  describe('isValidNetworkType', () => {
+    it('returns true for mainnet', () => {
+      expect(isValidNetworkType('mainnet')).toBe(true);
+    });
+
+    it('returns true for testnet', () => {
+      expect(isValidNetworkType('testnet')).toBe(true);
+    });
+
+    it('returns false for invalid values', () => {
+      expect(isValidNetworkType('devnet')).toBe(false);
+      expect(isValidNetworkType('production')).toBe(false);
+      expect(isValidNetworkType('')).toBe(false);
+      expect(isValidNetworkType('MAINNET')).toBe(false);
+    });
+  });
+
   describe('getTransactionExplorerUrl', () => {
     it('returns mainnet URL when network is mainnet', () => {
       const txId = '0x1234567890abcdef';
