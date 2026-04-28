@@ -13,6 +13,16 @@ import { getExplorerUrls, type NetworkType } from '../config/network';
 export type { NetworkType };
 
 /**
+ * Type guard to check if a string is a valid NetworkType
+ * 
+ * @param value - Value to check
+ * @returns True if value is a valid NetworkType
+ */
+export function isValidNetworkType(value: string): value is NetworkType {
+  return value === 'mainnet' || value === 'testnet';
+}
+
+/**
  * Get transaction explorer URL for the specified network
  * 
  * @param txId - Transaction ID to view
