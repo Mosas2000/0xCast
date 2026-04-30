@@ -120,7 +120,16 @@ export class ReputationFraudIntegrationService {
     const sybilDetection = this.accountLinkingService.detectSybilAccounts(userId);
     if (sybilDetection.confidence > 70) {
       this.fraudDetectionService.detectSybilAttack(userId, [
-        { id: userId, ipAddress: '0.0.0.0', createdAt: Date.now(), tradingPatterns: {} },
+        { 
+          id: userId, 
+          ipAddress: '0.0.0.0', 
+          createdAt: Date.now(), 
+          tradingPatterns: {
+            averageVolume: 0,
+            tradingFrequency: 0,
+            preferredMarkets: []
+          }
+        },
       ]);
       activities.push(...this.fraudDetectionService.getSuspiciousActivities(userId));
     }
