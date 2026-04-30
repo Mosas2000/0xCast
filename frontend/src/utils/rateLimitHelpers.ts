@@ -1,0 +1,108 @@
+import { RateLimitStatus, RateLimitAction } from '@/types/rateLimit';
+
+export function formatTimeRemaining(timestamp: number): string {
+  const seconds = Math.ceil((timestamp - Date.now()) / 1000);
+  
+  if (seconds < 0) return '0s';
+  if (seconds < 60) return `${seconds}s`;
+  
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  
+  if (minutes < 60) {
+    return remainingSeconds > 0 
+      ? `${minutes}m ${remainingSeconds}s` 
+      : `${minutes}m`;
+  }
+  
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  
+  return remainingMinutes > 0 
+    ? `${hours}h ${remainingMinutes}m` 
+    : `${hours}h`;
+}
+
+export function getRateLimitSeverity(status: RateLimitStatus): 'safe' | 'warning' | 'blocked' {
+  if (status.blocked) return 'blocked';
+  if (status.remaining <= 2) return 'warning';
+  return 'safe';
+}
+
+export function getRateLimitColor(status: RateLimitStatus): string {
+  const severity = getRateLimitSeverity(status);
+  
+  switch (severity) {
+    case 'blocked':
+      return 'red';
+    case 'warning':
+      return 'yellow';
+    case 'safe':
+      return 'green';
+  }
+}
+
+export function getRateLimitIcon(status: RateLimitStatus): string {
+  const severity = getRateLimitSeverity(status);
+  
+  switch (severity) {
+    case 'blocked':
+      return '🚫';
+    case 'warning':
+      return '⚠️';
+    case 'safe':
+      return '✓';
+  }
+}
+
+export function getRateLimitMessage(status: RateLimitStatus): string {
+  if (status.blocked) {
+    const cooldownTime = status.cooldownUntil 
+      ? formatTimeRemaining(status.cooldownUntil)
+      : 'a moment';
+    return `Rate limit exceeded. Please wait ${cooldownTime}.`;
+  }
+  
+  if (status.remaining <= 2) {
+    return `Only ${status.remaining} ${status.action} request${status.remaining !== 1 ? 's' : ''} remaining.`;
+  }
+  
+  return `${status.remaining} requests remaining.`;
+}
+
+export function getActionDisplayName(action: RateLimitAction): string {
+  const displayNames: Record<RateLimitAction, string> = {
+    'stake': 'Staking',
+    'create-market': 'Market Creation',
+    'resolve-market': 'Market Resolution',
+    'add-liquidity': 'Add Liquidity',
+    'remove-liquidity': 'Remove Liquidity',
+    'vote': 'Voting',
+    'claim-rewards': 'Claim Rewards',
+    'dispute': 'Dispute',
+    'trade': 'Trading',
+  };
+  
+  return displayNames[action] || action;
+}
+
+export function shouldShowRateLimitWarning(status: RateLimitStatus): boolean {
+  return status.blocked || status.remaining <= 2;
+}
+
+export function calculateRateLimitPercentage(status: RateLimitStatus, maxRequests: number): number {
+  if (status.blocked) return 0;
+  return Math.round((status.remaining / maxRequests) * 100);
+}
+
+export function isRateLimitCritical(status: RateLimitStatus): boolean {
+  return status.blocked || status.remaining === 0;
+}
+
+export function getRateLimitResetTime(status: RateLimitStatus): Date {
+  return new Date(status.resetAt);
+}
+
+export function getRateLimitCooldownTime(status: RateLimitStatus): Date | null {
+  return status.cooldownUntil ? new Date(status.cooldownUntil) : null;
+}
