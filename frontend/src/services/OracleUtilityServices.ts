@@ -1,17 +1,18 @@
 import { OraclePrice, AggregatedPrice } from '@/types/oracle';
+import type { CacheEntry, LogData } from '@/types/common';
 
 export class CacheService {
-  private static cache: Map<string, { data: any; timestamp: number }> = new Map();
+  private static cache: Map<string, CacheEntry<unknown>> = new Map();
   private static readonly DEFAULT_TTL = 60000;
 
-  static set(key: string, data: any, ttl: number = this.DEFAULT_TTL): void {
+  static set<T>(key: string, data: T, ttl: number = this.DEFAULT_TTL): void {
     this.cache.set(key, {
       data,
       timestamp: Date.now() + ttl,
     });
   }
 
-  static get(key: string): any | null {
+  static get<T>(key: string): T | null {
     const cached = this.cache.get(key);
     if (!cached) return null;
 
@@ -20,7 +21,7 @@ export class CacheService {
       return null;
     }
 
-    return cached.data;
+    return cached.data as T;
   }
 
   static has(key: string): boolean {
