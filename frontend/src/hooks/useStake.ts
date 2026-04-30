@@ -7,6 +7,7 @@ import { useWallet } from '../components/WalletProvider';
 import { validateAmount, validateMarketId } from '../utils/validation';
 import { addStakeHistoryEntry, type StakeOutcome } from '../utils/stakeHistory';
 import { useContractPause } from './useContractPause';
+import { createRateLimitMiddleware } from '../middleware/rateLimitMiddleware';
 
 interface UseStakeReturn {
   placeYesStake: (marketId: number, amount: number, onSuccess?: () => void) => Promise<void>;
@@ -66,6 +67,21 @@ export function useStake(): UseStakeReturn {
       setTxId(null);
 
       try {
+        const rateLimitMiddleware = createRateLimitMiddleware(address);
+        
+        await rateLimitMiddleware(
+          'stake',
+          async () => {},
+          {
+            onBlocked: (cooldownMs) => {
+              throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(cooldownMs / 1000)} seconds.`);
+            },
+            onWarning: (remaining) => {
+              console.warn(`Rate limit warning: ${remaining} requests remaining`);
+            },
+          }
+        );
+
         const stakeMicroStx = stxToMicroStx(amount);
 
         // Post condition: user sends exact STX amount
