@@ -45,6 +45,7 @@ export class GDPRComplianceService {
    */
   static getUserConsent(): UserConsent | null {
     try {
+      if (typeof localStorage === 'undefined') return null;
       const stored = localStorage.getItem(CONSENT_STORAGE_KEY);
       if (!stored) return null;
       return JSON.parse(stored);
@@ -57,12 +58,17 @@ export class GDPRComplianceService {
    * Save user consent preferences
    */
   static setUserConsent(consent: Omit<UserConsent, 'timestamp' | 'version'>): void {
-    const userConsent: UserConsent = {
-      ...consent,
-      timestamp: Date.now(),
-      version: CONSENT_VERSION,
-    };
-    localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(userConsent));
+    try {
+      if (typeof localStorage === 'undefined') return;
+      const userConsent: UserConsent = {
+        ...consent,
+        timestamp: Date.now(),
+        version: CONSENT_VERSION,
+      };
+      localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(userConsent));
+    } catch {
+      // Silently fail if localStorage is not available
+    }
   }
 
   /**
@@ -154,6 +160,7 @@ export class GDPRComplianceService {
    */
   static async deleteUserData(userId: string): Promise<boolean> {
     try {
+      if (typeof localStorage === 'undefined') return true;
       // This would typically call backend API
       // For now, just clear local storage
       localStorage.removeItem(CONSENT_STORAGE_KEY);
@@ -184,22 +191,37 @@ export class GDPRComplianceService {
    * Request consent update
    */
   static requestConsentUpdate(): void {
-    // Mark that consent needs to be updated
-    localStorage.setItem('consent_update_required', 'true');
+    try {
+      if (typeof localStorage === 'undefined') return;
+      // Mark that consent needs to be updated
+      localStorage.setItem('consent_update_required', 'true');
+    } catch {
+      // Silently fail
+    }
   }
 
   /**
    * Check if consent update is required
    */
   static isConsentUpdateRequired(): boolean {
-    return localStorage.getItem('consent_update_required') === 'true';
+    try {
+      if (typeof localStorage === 'undefined') return false;
+      return localStorage.getItem('consent_update_required') === 'true';
+    } catch {
+      return false;
+    }
   }
 
   /**
    * Clear consent update flag
    */
   static clearConsentUpdateFlag(): void {
-    localStorage.removeItem('consent_update_required');
+    try {
+      if (typeof localStorage === 'undefined') return;
+      localStorage.removeItem('consent_update_required');
+    } catch {
+      // Silently fail
+    }
   }
 
   /**
