@@ -79,3 +79,39 @@ export interface AccountData {
   createdAt: number;
   [key: string]: RecordValue;
 }
+
+export interface FraudTransaction {
+  id: string;
+  timestamp: number;
+  price: number;
+  volume: number;
+  marketId: string;
+  userId?: string;
+}
+
+export interface FraudAccount {
+  id: string;
+  ipAddress: string;
+  createdAt: number;
+  tradingPatterns: {
+    averageVolume: number;
+    tradingFrequency: number;
+    preferredMarkets: string[];
+  };
+}
+
+export interface FraudOrderBookEntry {
+  id: string;
+  volume: number;
+  price: number;
+  cancelled: boolean;
+  timestamp: number;
+}
+
+export interface FraudUserProfile {
+  userId: string;
+  createdAt: number;
+  totalTransactions: number;
+  averageTransactionSize: number;
+  accountAge: number;
+}
