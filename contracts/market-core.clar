@@ -371,23 +371,25 @@
     (count (get count limit-data))
     (new-window (>= (- current-block window-start) window))
   )
-    (if (is-eq action "stake")
-      (map-set rate-limit-stakes user {
-        count: (if new-window u1 (+ count u1)),
-        window-start: (if new-window current-block window-start)
-      })
-      (if (is-eq action "market")
-        (map-set rate-limit-markets user {
+    (begin
+      (if (is-eq action "stake")
+        (map-set rate-limit-stakes user {
           count: (if new-window u1 (+ count u1)),
           window-start: (if new-window current-block window-start)
         })
-        (map-set rate-limit-resolutions user {
-          count: (if new-window u1 (+ count u1)),
-          window-start: (if new-window current-block window-start)
-        })
+        (if (is-eq action "market")
+          (map-set rate-limit-markets user {
+            count: (if new-window u1 (+ count u1)),
+            window-start: (if new-window current-block window-start)
+          })
+          (map-set rate-limit-resolutions user {
+            count: (if new-window u1 (+ count u1)),
+            window-start: (if new-window current-block window-start)
+          })
+        )
       )
+      (ok true)
     )
-    (ok true)
   )
 )
 
