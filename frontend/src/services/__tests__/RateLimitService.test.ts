@@ -1,0 +1,183 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { RateLimitService } from '../RateLimitService';
+import { RateLimitAction } from '@/types/rateLimit';
+
+describe('RateLimitService', () => {
+  let service: RateLimitService;
+  const userId = 'test-user';
+  const action: RateLimitAction = 'stake';
+
+  beforeEach(() => {
+    service = new RateLimitService();
+  });
+
+  describe('checkLimit', () => {
+    it('should return correct initial status', () => {
+      const status = service.checkLimit(userId, action);
+
+      expect(status.action).toBe(action);
+      expect(status.remaining).toBe(10);
+      expect(status.blocked).toBe(false);
+    });
+
+    it('should throw error for unknown action', () => {
+      expect(() => {
+        service.checkLimit(userId, 'unknown' as RateLimitAction);
+      }).toThrow('No rate limit config found');
+    });
+  });
+
+  describe('recordRequest', () => {
+    it('should decrement remaining count', () => {
+      const status1 = service.recordRequest(userId, action);
+      expect(status1.remaining).toBe(9);
+      expect(status1.blocked).toBe(false);
+
+      const status2 = service.recordRequest(userId, action);
+      expect(status2.remaining).toBe(8);
+      expect(status2.blocked).toBe(false);
+    });
+
+    it('should block after exceeding limit', () => {
+      for (let i = 0; i < 10; i++) {
+        service.recordRequest(userId, action);
+      }
+
+      const status = service.recordRequest(userId, action);
+      expect(status.blocked).toBe(true);
+      expect(status.remaining).toBe(0);
+      expect(status.cooldownUntil).toBeDefined();
+    });
+
+    it('should track violations', () => {
+      for (let i = 0; i < 11; i++) {
+        service.recordRequest(userId, action);
+      }
+
+      const violations = service.getViolations(userId);
+      expect(violations.length).toBeGreaterThan(0);
+      expect(violations[0].userId).toBe(userId);
+      expect(violations[0].action).toBe(action);
+    });
+  });
+
+  describe('getStatus', () => {
+    it('should return current status without recording', () => {
+      service.recordRequest(userId, action);
+      service.recordRequest(userId, action);
+
+      const status = service.getStatus(userId, action);
+      expect(status.remaining).toBe(8);
+    });
+  });
+
+  describe('getAllStatus', () => {
+    it('should return status for all actions', () => {
+      const statuses = service.getAllStatus(userId);
+
+      expect(statuses.length).toBe(9);
+      expect(statuses.every(s => !s.blocked)).toBe(true);
+    });
+  });
+
+  describe('resetUserLimits', () => {
+    it('should reset specific action limit', () => {
+      service.recordRequest(userId, action);
+      service.recordRequest(userId, action);
+
+      service.resetUserLimits(userId, action);
+
+      const status = service.getStatus(userId, action);
+      expect(status.remaining).toBe(10);
+    });
+
+    it('should reset all action limits', () => {
+      service.recordRequest(userId, 'stake');
+      service.recordRequest(userId, 'trade');
+
+      service.resetUserLimits(userId);
+
+      const stakeStatus = service.getStatus(userId, 'stake');
+      const tradeStatus = service.getStatus(userId, 'trade');
+
+      expect(stakeStatus.remaining).toBe(10);
+      expect(tradeStatus.remaining).toBe(20);
+    });
+  });
+
+  describe('getMetrics', () => {
+    it('should return correct metrics', () => {
+      service.recordRequest(userId, 'stake');
+      service.recordRequest(userId, 'stake');
+      service.recordRequest('user2', 'trade');
+
+      for (let i = 0; i < 11; i++) {
+        service.recordRequest('user3', 'stake');
+      }
+
+      const metrics = service.getMetrics();
+
+      expect(metrics.totalRequests).toBeGreaterThan(0);
+      expect(metrics.blockedRequests).toBeGreaterThan(0);
+      expect(metrics.topViolators.length).toBeGreaterThan(0);
+      expect(metrics.topViolators[0].userId).toBe('user3');
+    });
+  });
+
+  describe('updateConfig', () => {
+    it('should update action config', () => {
+      service.updateConfig('stake', {
+        maxRequests: 5,
+        windowMs: 30000,
+        cooldownMs: 10000,
+      });
+
+      const config = service.getConfig('stake');
+      expect(config?.maxRequests).toBe(5);
+      expect(config?.windowMs).toBe(30000);
+    });
+  });
+
+  describe('cleanup', () => {
+    it('should remove old records', () => {
+      service.recordRequest(userId, action);
+
+      service.cleanup(0);
+
+      const status = service.getStatus(userId, action);
+      expect(status.remaining).toBe(10);
+    });
+  });
+
+  describe('cooldown period', () => {
+    it('should enforce cooldown after blocking', () => {
+      for (let i = 0; i < 11; i++) {
+        service.recordRequest(userId, action);
+      }
+
+      const status = service.checkLimit(userId, action);
+      expect(status.blocked).toBe(true);
+      expect(status.cooldownUntil).toBeDefined();
+    });
+  });
+
+  describe('window expiration', () => {
+    it('should reset count after window expires', async () => {
+      const customService = new RateLimitService({
+        stake: {
+          maxRequests: 2,
+          windowMs: 100,
+          cooldownMs: 50,
+        },
+      });
+
+      customService.recordRequest(userId, 'stake');
+      customService.recordRequest(userId, 'stake');
+
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      const status = customService.getStatus(userId, 'stake');
+      expect(status.remaining).toBe(2);
+    });
+  });
+});
