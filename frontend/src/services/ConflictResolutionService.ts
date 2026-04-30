@@ -1,5 +1,5 @@
 import { SyncConflict, ConflictResolution, SyncDiff } from '@/types/sync';
-import type { UnknownRecord } from '@/types/common';
+import type { UnknownRecord, RecordValue } from '@/types/common';
 
 export class ConflictResolutionService {
   private resolvedConflicts: Map<string, SyncConflict> = new Map();
