@@ -223,27 +223,29 @@ export class DataValidationService {
   }
 }
 
-export class LoggingService {
-  private static logs: Array<{
-    timestamp: number;
-    level: 'info' | 'warn' | 'error';
-    message: string;
-    data?: any;
-  }> = [];
+export interface LogEntry {
+  timestamp: number;
+  level: 'info' | 'warn' | 'error';
+  message: string;
+  data?: LogData;
+}
 
-  static info(message: string, data?: any): void {
+export class LoggingService {
+  private static logs: LogEntry[] = [];
+
+  static info(message: string, data?: LogData): void {
     this.log('info', message, data);
   }
 
-  static warn(message: string, data?: any): void {
+  static warn(message: string, data?: LogData): void {
     this.log('warn', message, data);
   }
 
-  static error(message: string, data?: any): void {
+  static error(message: string, data?: LogData): void {
     this.log('error', message, data);
   }
 
-  static getLogs(level?: string, limit: number = 100): any[] {
+  static getLogs(level?: string, limit: number = 100): LogEntry[] {
     let filtered = this.logs;
     if (level) {
       filtered = filtered.filter((l) => l.level === level);
@@ -255,7 +257,7 @@ export class LoggingService {
     this.logs = [];
   }
 
-  private static log(level: 'info' | 'warn' | 'error', message: string, data?: any): void {
+  private static log(level: 'info' | 'warn' | 'error', message: string, data?: LogData): void {
     const log = {
       timestamp: Date.now(),
       level,
