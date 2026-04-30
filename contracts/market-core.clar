@@ -642,7 +642,7 @@
       { count: (+ cat-count u1) }
     )
     
-    (record-rate-limit tx-sender "market")
+    (unwrap-panic (record-rate-limit tx-sender "market"))
     (ok new-market-id)
   )
 )
@@ -679,7 +679,7 @@
       (merge current-position { yes-stake: (+ (get yes-stake current-position) amount) })
     )
     
-    (record-rate-limit tx-sender "stake")
+    (unwrap-panic (record-rate-limit tx-sender "stake"))
     (ok true)
   )
 )
@@ -716,7 +716,7 @@
       (merge current-position { no-stake: (+ (get no-stake current-position) amount) })
     )
     
-    (record-rate-limit tx-sender "stake")
+    (unwrap-panic (record-rate-limit tx-sender "stake"))
     (ok true)
   )
 )
@@ -755,7 +755,7 @@
       })
     )
     
-    (record-rate-limit tx-sender "resolve")
+    (unwrap-panic (record-rate-limit tx-sender "resolve"))
     (ok true)
   )
 )
