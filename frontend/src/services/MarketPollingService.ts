@@ -16,7 +16,7 @@ export class MarketPollingService {
   private pollingTimer: NodeJS.Timeout | null = null;
   private isRunning: boolean = false;
   private lastSequence: Map<string, number> = new Map();
-  private callbacks: Map<string, (data: any) => void> = new Map();
+  private callbacks: Map<string, (data: unknown) => void> = new Map();
 
   constructor(config: PollingConfig) {
     this.config = {
@@ -68,7 +68,7 @@ export class MarketPollingService {
     }
   }
 
-  public onUpdate(key: string, callback: (data: any) => void): void {
+  public onUpdate(key: string, callback: (data: unknown) => void): void {
     this.callbacks.set(key, callback);
   }
 
