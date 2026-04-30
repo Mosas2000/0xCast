@@ -89,7 +89,7 @@ describe('ExportService', () => {
 
     it('should throw error for unsupported format', async () => {
       await expect(
-        ExportService.generateTransactionExport(mockTransactions, 'pdf' as any)
+        ExportService.generateTransactionExport(mockTransactions, 'pdf' as 'csv' | 'json')
       ).rejects.toThrow('Unsupported export format');
     });
   });
@@ -202,7 +202,7 @@ describe('ExportService', () => {
 
   describe('downloadExport', () => {
     it('should call downloadFile with correct parameters', () => {
-      const downloadFileSpy = vi.spyOn(ExportService as any, 'downloadFile');
+      const downloadFileSpy = vi.spyOn(ExportService as unknown as { downloadFile: (url: string, filename: string, mimeType: string) => void }, 'downloadFile');
 
       ExportService.downloadExport('test,data', 'test.csv', 'csv');
 

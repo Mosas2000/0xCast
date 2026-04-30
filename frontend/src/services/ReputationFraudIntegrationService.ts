@@ -3,6 +3,7 @@ import { FraudDetectionService } from './FraudDetectionService';
 import { KYCAMLService } from './KYCAMLService';
 import { AccountLinkingService } from './AccountLinkingService';
 import { UserReputation, SuspiciousActivity } from '../types/reputation';
+import type { FraudTransaction } from '@/types/common';
 
 export class ReputationFraudIntegrationService {
   private reputationService: ReputationService;
@@ -23,7 +24,7 @@ export class ReputationFraudIntegrationService {
     return reputation;
   }
 
-  processTransaction(userId: string, transaction: any): {
+  processTransaction(userId: string, transaction: FraudTransaction): {
     allowed: boolean;
     reason?: string;
     riskScore: number;
@@ -105,7 +106,7 @@ export class ReputationFraudIntegrationService {
     return level;
   }
 
-  detectFraudulentActivity(userId: string, transactions: any[]): SuspiciousActivity[] {
+  detectFraudulentActivity(userId: string, transactions: FraudTransaction[]): SuspiciousActivity[] {
     const activities: SuspiciousActivity[] = [];
 
     if (this.fraudDetectionService.detectWashTrading(userId, transactions)) {
@@ -119,7 +120,16 @@ export class ReputationFraudIntegrationService {
     const sybilDetection = this.accountLinkingService.detectSybilAccounts(userId);
     if (sybilDetection.confidence > 70) {
       this.fraudDetectionService.detectSybilAttack(userId, [
-        { id: userId, ipAddress: '0.0.0.0', createdAt: Date.now(), tradingPatterns: {} },
+        { 
+          id: userId, 
+          ipAddress: '0.0.0.0', 
+          createdAt: Date.now(), 
+          tradingPatterns: {
+            averageVolume: 0,
+            tradingFrequency: 0,
+            preferredMarkets: []
+          }
+        },
       ]);
       activities.push(...this.fraudDetectionService.getSuspiciousActivities(userId));
     }

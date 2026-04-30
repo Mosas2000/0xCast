@@ -212,7 +212,7 @@ export class NotificationService {
         p =>
           p.userId === userId &&
           p.type === type &&
-          p.channel === (channel as any)
+          p.channel === channel
       ) || null
     );
   }

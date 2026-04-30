@@ -1,11 +1,12 @@
 import { logger, type LogEntry } from '../utils/logger';
+import type { LogData } from '@/types/common';
 
 export interface PerformanceMetric {
   name: string;
   value: number;
   unit: 'ms' | 'bytes' | 'count';
   timestamp: number;
-  context?: Record<string, any>;
+  context?: LogData;
 }
 
 export interface ErrorMetric {
@@ -14,7 +15,7 @@ export interface ErrorMetric {
   count: number;
   firstSeen: number;
   lastSeen: number;
-  context?: Record<string, any>;
+  context?: LogData;
 }
 
 export interface MonitoringConfig {
@@ -35,11 +36,17 @@ const DEFAULT_CONFIG: MonitoringConfig = {
   maxMetrics: 10000,
 };
 
+export interface UserAction {
+  action: string;
+  timestamp: number;
+  context?: LogData;
+}
+
 class MonitoringService {
   private config: MonitoringConfig;
   private performanceMetrics: PerformanceMetric[] = [];
   private errorMetrics: Map<string, ErrorMetric> = new Map();
-  private userActions: Array<{ action: string; timestamp: number; context?: Record<string, any> }> = [];
+  private userActions: UserAction[] = [];
 
   constructor(config: MonitoringConfig = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -80,7 +87,7 @@ class MonitoringService {
     }
   }
 
-  private addUserAction(action: string, context?: Record<string, any>): void {
+  private addUserAction(action: string, context?: LogData): void {
     if (!this.config.trackUserActions) return;
 
     this.userActions.push({ action, timestamp: Date.now(), context });
@@ -94,7 +101,7 @@ class MonitoringService {
     name: string,
     value: number,
     unit: 'ms' | 'bytes' | 'count' = 'ms',
-    context?: Record<string, any>
+    context?: LogData
   ): void {
     if (!this.shouldTrack()) return;
 
@@ -112,7 +119,7 @@ class MonitoringService {
   trackError(
     type: string,
     message: string,
-    context?: Record<string, any>
+    context?: LogData
   ): void {
     if (!this.shouldTrack()) return;
 
@@ -134,7 +141,7 @@ class MonitoringService {
 
   trackUserAction(
     action: string,
-    context?: Record<string, any>
+    context?: LogData
   ): void {
     if (!this.shouldTrack()) return;
 
@@ -147,7 +154,7 @@ class MonitoringService {
     function: string,
     duration: number,
     success: boolean,
-    context?: Record<string, any>
+    context?: LogData
   ): void {
     if (!this.shouldTrack()) return;
 
@@ -169,7 +176,7 @@ class MonitoringService {
     }
   }
 
-  trackPageView(page: string, context?: Record<string, any>): void {
+  trackPageView(page: string, context?: LogData): void {
     if (!this.shouldTrack()) return;
 
     this.trackUserAction('page_view', { page, ...context });
@@ -177,7 +184,7 @@ class MonitoringService {
 
   trackButtonClick(
     button: string,
-    context?: Record<string, any>
+    context?: LogData
   ): void {
     if (!this.shouldTrack()) return;
 
@@ -188,7 +195,7 @@ class MonitoringService {
     type: string,
     status: string,
     duration: number,
-    context?: Record<string, any>
+    context?: LogData
   ): void {
     if (!this.shouldTrack()) return;
 
@@ -266,15 +273,15 @@ class MonitoringService {
     };
   }
 
-  getUserActions(): Array<{ action: string; timestamp: number; context?: Record<string, any> }> {
+  getUserActions(): UserAction[] {
     return [...this.userActions];
   }
 
-  getUserActionsByType(action: string): Array<{ action: string; timestamp: number; context?: Record<string, any> }> {
+  getUserActionsByType(action: string): UserAction[] {
     return this.userActions.filter((a) => a.action === action);
   }
 
-  getRecentUserActions(count: number = 10): Array<{ action: string; timestamp: number; context?: Record<string, any> }> {
+  getRecentUserActions(count: number = 10): UserAction[] {
     return this.userActions.slice(-count);
   }
 

@@ -1,4 +1,5 @@
 import { AuditLog } from '@/types/rbac';
+import type { RecordValue } from '@/types/common';
 
 export class AuditLogger {
   private logs: AuditLog[];
@@ -16,8 +17,8 @@ export class AuditLogger {
     resourceId: string,
     status: 'success' | 'failure' = 'success',
     options?: {
-      oldValue?: any;
-      newValue?: any;
+      oldValue?: RecordValue;
+      newValue?: RecordValue;
       ipAddress?: string;
       userAgent?: string;
     }
@@ -113,8 +114,8 @@ export class AuditLogger {
     userId: string,
     resource: string,
     resourceId: string,
-    oldValue: any,
-    newValue: any,
+    oldValue: RecordValue,
+    newValue: RecordValue,
     ipAddress?: string
   ): AuditLog {
     return this.logAction(userId, 'DATA_MODIFICATION', resource, resourceId, 'success', {
@@ -128,7 +129,7 @@ export class AuditLogger {
     userId: string,
     resource: string,
     resourceId: string,
-    deletedValue: any,
+    deletedValue: RecordValue,
     ipAddress?: string
   ): AuditLog {
     return this.logAction(userId, 'DATA_DELETION', resource, resourceId, 'success', {

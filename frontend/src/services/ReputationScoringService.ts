@@ -1,17 +1,11 @@
 import { ReputationScore, ReputationLevel, ReputationBadge, ReputationAdjustment } from '@/types/reputation';
+import type { UserMetrics } from '@/types/common';
 
 export class ReputationScoringService {
   private reputationScores: Map<string, ReputationScore> = new Map();
   private reputationHistory: ReputationAdjustment[] = [];
 
-  calculateReputationScore(userId: string, metrics: {
-    totalTransactions: number;
-    successfulTransactions: number;
-    failedTransactions: number;
-    averageResponseTime: number;
-    accountAge: number;
-    verificationLevel: number;
-  }): ReputationScore {
+  calculateReputationScore(userId: string, metrics: UserMetrics): ReputationScore {
     const completionRate = metrics.totalTransactions > 0
       ? metrics.successfulTransactions / metrics.totalTransactions
       : 0;
@@ -53,7 +47,7 @@ export class ReputationScoringService {
     return 'new';
   }
 
-  private determineBadges(metrics: any, completionRate: number): string[] {
+  private determineBadges(metrics: UserMetrics, completionRate: number): string[] {
     const badges: string[] = [];
 
     if (metrics.totalTransactions >= 100) badges.push('high_volume_trader');

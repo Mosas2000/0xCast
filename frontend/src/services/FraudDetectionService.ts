@@ -1,4 +1,5 @@
 import { FraudAlert, SuspiciousActivity, SuspiciousActivityType, WashTradingDetection, TransactionPair } from '@/types/reputation';
+import type { FraudTransaction, FraudAccount, FraudOrderBookEntry, FraudUserProfile } from '@/types/common';
 
 interface TradingBehavior {
   userId: string;
@@ -15,7 +16,7 @@ export class FraudDetectionService {
   private washTradingDetections: Map<string, WashTradingDetection> = new Map();
   private tradingBehaviors: Map<string, TradingBehavior> = new Map();
 
-  detectWashTrading(userId: string, transactions: any[]): boolean {
+  detectWashTrading(userId: string, transactions: FraudTransaction[]): boolean {
     if (transactions.length < 2) return false;
 
     const detectedPairs: TransactionPair[] = [];
@@ -63,7 +64,7 @@ export class FraudDetectionService {
     return false;
   }
 
-  detectSybilAttack(userId: string, accounts: { id: string; ipAddress: string; createdAt: number; tradingPatterns: any }[]): boolean {
+  detectSybilAttack(userId: string, accounts: FraudAccount[]): boolean {
     if (accounts.length < 2) return false;
 
     let similarAccounts = 0;
@@ -95,7 +96,7 @@ export class FraudDetectionService {
     return false;
   }
 
-  detectPumpDump(userId: string, transactions: any[]): boolean {
+  detectPumpDump(userId: string, transactions: FraudTransaction[]): boolean {
     if (transactions.length < 5) return false;
 
     const volume = transactions.reduce((sum, t) => sum + t.volume, 0);
@@ -117,7 +118,7 @@ export class FraudDetectionService {
     return false;
   }
 
-  detectPriceManipulation(userId: string, transactions: any[], marketPrice: number): boolean {
+  detectPriceManipulation(userId: string, transactions: FraudTransaction[], marketPrice: number): boolean {
     const avgTransactionPrice = transactions.reduce((sum, t) => sum + t.price, 0) / transactions.length;
     const priceDelta = Math.abs(avgTransactionPrice - marketPrice) / marketPrice;
 
@@ -130,7 +131,7 @@ export class FraudDetectionService {
     return false;
   }
 
-  detectVolumeSpoofing(userId: string, orderBook: any[]): boolean {
+  detectVolumeSpoofing(userId: string, orderBook: FraudOrderBookEntry[]): boolean {
     const largeOrders = orderBook.filter(order => order.volume > 10000);
 
     if (largeOrders.length > orderBook.length * 0.5) {
@@ -146,7 +147,7 @@ export class FraudDetectionService {
     return false;
   }
 
-  detectUnusualPattern(userId: string, userProfile: any): boolean {
+  detectUnusualPattern(userId: string, userProfile: FraudUserProfile): boolean {
     const accountAge = Date.now() - userProfile.createdAt;
     const transactionCount = userProfile.totalTransactions;
 
@@ -273,7 +274,7 @@ export class FraudDetectionService {
       .map(([userId]) => userId);
   }
 
-  analyzeTradingBehavior(userId: string, transactions: any[]): TradingBehavior {
+  analyzeTradingBehavior(userId: string, transactions: FraudTransaction[]): TradingBehavior {
     if (transactions.length === 0) {
       return {
         userId,
@@ -335,7 +336,7 @@ export class FraudDetectionService {
     return behavior;
   }
 
-  detectAnomalousBehavior(userId: string, currentTransaction: any): boolean {
+  detectAnomalousBehavior(userId: string, currentTransaction: FraudTransaction): boolean {
     const behavior = this.tradingBehaviors.get(userId);
     if (!behavior) return false;
 

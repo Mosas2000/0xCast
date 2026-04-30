@@ -91,9 +91,9 @@ export class RealtimeDataManager {
 
     if (this.pollingService) {
       if (event === 'market:update') {
-        this.pollingService.onUpdate('market:update', handler as any);
+        this.pollingService.onUpdate('market:update', handler as WebSocketEventHandler<MarketUpdate>);
       } else if (event === 'orderbook:update') {
-        this.pollingService.onUpdate('orderbook:update', handler as any);
+        this.pollingService.onUpdate('orderbook:update', handler as WebSocketEventHandler<OrderBookUpdate>);
       }
     }
   }
