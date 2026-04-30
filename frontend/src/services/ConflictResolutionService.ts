@@ -1,11 +1,12 @@
 import { SyncConflict, ConflictResolution, SyncDiff } from '@/types/sync';
+import type { UnknownRecord } from '@/types/common';
 
 export class ConflictResolutionService {
   private resolvedConflicts: Map<string, SyncConflict> = new Map();
 
   detectConflict(
-    localData: Record<string, any>,
-    remoteData: Record<string, any>,
+    localData: UnknownRecord,
+    remoteData: UnknownRecord,
     localVersion: number,
     remoteVersion: number
   ): boolean {
@@ -20,8 +21,8 @@ export class ConflictResolutionService {
   }
 
   calculateDiff(
-    localData: Record<string, any>,
-    remoteData: Record<string, any>
+    localData: UnknownRecord,
+    remoteData: UnknownRecord
   ): SyncDiff {
     const diff: SyncDiff = {
       fields: {},
@@ -53,7 +54,7 @@ export class ConflictResolutionService {
   resolveConflict(
     conflict: SyncConflict,
     strategy: ConflictResolution
-  ): Record<string, any> {
+  ): UnknownRecord {
     switch (strategy) {
       case 'local':
         return this.resolveWithLocal(conflict);
@@ -68,15 +69,15 @@ export class ConflictResolutionService {
     }
   }
 
-  private resolveWithLocal(conflict: SyncConflict): Record<string, any> {
+  private resolveWithLocal(conflict: SyncConflict): UnknownRecord {
     return conflict.localData;
   }
 
-  private resolveWithRemote(conflict: SyncConflict): Record<string, any> {
+  private resolveWithRemote(conflict: SyncConflict): UnknownRecord {
     return conflict.remoteData;
   }
 
-  private resolveMerge(conflict: SyncConflict): Record<string, any> {
+  private resolveMerge(conflict: SyncConflict): UnknownRecord {
     const diff = this.calculateDiff(conflict.localData, conflict.remoteData);
     const merged = { ...conflict.remoteData };
 
@@ -96,12 +97,12 @@ export class ConflictResolutionService {
     return merged;
   }
 
-  private mergeField(local: any, remote: any): any {
-    if (typeof local === 'object' && typeof remote === 'object') {
+  private mergeField(local: RecordValue, remote: RecordValue): RecordValue {
+    if (typeof local === 'object' && typeof remote === 'object' && local !== null && remote !== null) {
       if (Array.isArray(local) && Array.isArray(remote)) {
         return this.mergeArrays(local, remote);
       }
-      return this.mergeObjects(local, remote);
+      return this.mergeObjects(local as UnknownRecord, remote as UnknownRecord);
     }
 
     const localModified = this.getModificationTime(local);
@@ -110,12 +111,19 @@ export class ConflictResolutionService {
     return localModified > remoteModified ? local : remote;
   }
 
-  private mergeArrays(local: any[], remote: any[]): any[] {
+  private mergeArrays(local: RecordValue[], remote: RecordValue[]): RecordValue[] {
     const merged = [...remote];
-    const remoteIds = new Set(remote.map((item: any) => item.id || item));
+    const remoteIds = new Set(remote.map((item: RecordValue) => {
+      if (typeof item === 'object' && item !== null && !Array.isArray(item)) {
+        return (item as UnknownRecord).id || item;
+      }
+      return item;
+    }));
 
     local.forEach(item => {
-      const id = item.id || item;
+      const id = typeof item === 'object' && item !== null && !Array.isArray(item)
+        ? (item as UnknownRecord).id || item
+        : item;
       if (!remoteIds.has(id)) {
         merged.push(item);
       }
@@ -124,7 +132,7 @@ export class ConflictResolutionService {
     return merged;
   }
 
-  private mergeObjects(local: Record<string, any>, remote: Record<string, any>): Record<string, any> {
+  private mergeObjects(local: UnknownRecord, remote: UnknownRecord): UnknownRecord {
     const merged = { ...remote };
 
     Object.entries(local).forEach(([key, value]) => {
@@ -136,14 +144,17 @@ export class ConflictResolutionService {
     return merged;
   }
 
-  private getModificationTime(value: any): number {
-    if (typeof value === 'object' && value?.lastModified) {
-      return value.lastModified;
+  private getModificationTime(value: RecordValue): number {
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      const obj = value as UnknownRecord;
+      if (typeof obj.lastModified === 'number') {
+        return obj.lastModified;
+      }
     }
     return 0;
   }
 
-  hashData(data: Record<string, any>): string {
+  hashData(data: UnknownRecord): string {
     const json = JSON.stringify(data);
     let hash = 0;
 
@@ -158,7 +169,7 @@ export class ConflictResolutionService {
 
   validateResolution(
     conflict: SyncConflict,
-    resolvedData: Record<string, any>
+    resolvedData: UnknownRecord
   ): boolean {
     if (!resolvedData || typeof resolvedData !== 'object') {
       return false;
