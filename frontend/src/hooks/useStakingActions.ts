@@ -5,6 +5,8 @@ import { uintCV, PostConditionMode, Pc } from '@stacks/transactions';
 import { TOKEN_CONTRACT } from '../config/contracts';
 import { useWallet } from '../components/WalletProvider';
 import { safeBigIntToNumber, validateTransactionAmount } from './useContract';
+import { parseContractError, getUserFriendlyContractError } from '../utils/contractErrorHandler';
+import { errorLoggingService } from '../services/ErrorLoggingService';
 
 interface UseStakingActionsReturn {
   stake: (amount: bigint, onSuccess?: () => void) => Promise<void>;
@@ -69,12 +71,26 @@ export function useStakingActions(): UseStakingActionsReturn {
             onSuccess?.();
           },
           onCancel: () => {
-            setError('Transaction cancelled');
+            const cancelError = parseContractError(
+              new Error('User cancelled transaction'),
+              TOKEN_CONTRACT.name,
+              'stake'
+            );
+            setError(getUserFriendlyContractError(cancelError));
             setIsLoading(false);
           },
         });
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to stake');
+        const contractError = parseContractError(err, TOKEN_CONTRACT.name, 'stake');
+        const friendlyMessage = getUserFriendlyContractError(contractError);
+        
+        errorLoggingService.logError(contractError, {
+          component: 'useStakingActions',
+          action: 'stake',
+          additionalData: { amount: amount.toString() },
+        });
+        
+        setError(friendlyMessage);
         setIsLoading(false);
       }
     },
@@ -116,12 +132,26 @@ export function useStakingActions(): UseStakingActionsReturn {
             onSuccess?.();
           },
           onCancel: () => {
-            setError('Transaction cancelled');
+            const cancelError = parseContractError(
+              new Error('User cancelled transaction'),
+              TOKEN_CONTRACT.name,
+              'unstake'
+            );
+            setError(getUserFriendlyContractError(cancelError));
             setIsLoading(false);
           },
         });
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to unstake');
+        const contractError = parseContractError(err, TOKEN_CONTRACT.name, 'unstake');
+        const friendlyMessage = getUserFriendlyContractError(contractError);
+        
+        errorLoggingService.logError(contractError, {
+          component: 'useStakingActions',
+          action: 'unstake',
+          additionalData: { amount: amount.toString() },
+        });
+        
+        setError(friendlyMessage);
         setIsLoading(false);
       }
     },

@@ -16,7 +16,7 @@ export class MarketPollingService {
   private pollingTimer: NodeJS.Timeout | null = null;
   private isRunning: boolean = false;
   private lastSequence: Map<string, number> = new Map();
-  private callbacks: Map<string, (data: any) => void> = new Map();
+  private callbacks: Map<string, (data: unknown) => void> = new Map();
 
   constructor(config: PollingConfig) {
     this.config = {
@@ -68,7 +68,7 @@ export class MarketPollingService {
     }
   }
 
-  public onUpdate(key: string, callback: (data: any) => void): void {
+  public onUpdate(key: string, callback: (data: unknown) => void): void {
     this.callbacks.set(key, callback);
   }
 
@@ -111,35 +111,43 @@ export class MarketPollingService {
     return this.transformResponse(data);
   }
 
-  private transformResponse(data: any): PollResponse {
+  private transformResponse(data: unknown): PollResponse {
     const marketUpdates: MarketUpdate[] = [];
     const orderbookUpdates = new Map<string, OrderBookUpdate>();
 
-    if (Array.isArray(data.markets)) {
-      data.markets.forEach((market: any) => {
-        marketUpdates.push({
-          marketId: market.id,
-          price: market.price,
-          change: market.change,
-          changePercent: market.changePercent,
-          volume: market.volume,
-          timestamp: market.timestamp || Date.now(),
-          high24h: market.high24h,
-          low24h: market.low24h,
+    if (typeof data === 'object' && data !== null && 'markets' in data) {
+      const dataObj = data as { markets?: unknown[] };
+      if (Array.isArray(dataObj.markets)) {
+        dataObj.markets.forEach((market: unknown) => {
+          if (typeof market === 'object' && market !== null) {
+            const marketObj = market as Record<string, unknown>;
+            marketUpdates.push({
+              marketId: String(marketObj.id || ''),
+              price: Number(marketObj.price || 0),
+              change: Number(marketObj.change || 0),
+              changePercent: Number(marketObj.changePercent || 0),
+              volume: Number(marketObj.volume || 0),
+              timestamp: Number(marketObj.timestamp || Date.now()),
+              high24h: Number(marketObj.high24h || 0),
+              low24h: Number(marketObj.low24h || 0),
+            });
+
+            if (marketObj.orderBook && typeof marketObj.orderBook === 'object') {
+              const orderBook = marketObj.orderBook as Record<string, unknown>;
+              const marketId = String(marketObj.id || '');
+              orderbookUpdates.set(marketId, {
+                marketId,
+                bids: Array.isArray(orderBook.bids) ? orderBook.bids : [],
+                asks: Array.isArray(orderBook.asks) ? orderBook.asks : [],
+                timestamp: Number(orderBook.timestamp || Date.now()),
+                sequence: (this.lastSequence.get(marketId) || 0) + 1,
+              });
+
+              this.lastSequence.set(marketId, (this.lastSequence.get(marketId) || 0) + 1);
+            }
+          }
         });
-
-        if (market.orderBook) {
-          orderbookUpdates.set(market.id, {
-            marketId: market.id,
-            bids: market.orderBook.bids || [],
-            asks: market.orderBook.asks || [],
-            timestamp: market.orderBook.timestamp || Date.now(),
-            sequence: (this.lastSequence.get(market.id) || 0) + 1,
-          });
-
-          this.lastSequence.set(market.id, (this.lastSequence.get(market.id) || 0) + 1);
-        }
-      });
+      }
     }
 
     return { marketUpdates, orderbookUpdates };
@@ -157,7 +165,7 @@ export class MarketPollingService {
     });
   }
 
-  private executeCallback(key: string, data: any): void {
+  private executeCallback(key: string, data: unknown): void {
     const callback = this.callbacks.get(key);
     if (callback) {
       try {
