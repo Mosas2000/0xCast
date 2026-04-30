@@ -357,21 +357,21 @@
 )
 
 (define-private (record-rate-limit (user principal) (action (string-ascii 20)))
-  (let (
-    (current-block stacks-block-height)
-    (window (var-get rate-limit-window))
-    (limit-data (if (is-eq action "stake")
-      (default-to { count: u0, window-start: u0 } (map-get? rate-limit-stakes user))
-      (if (is-eq action "market")
-        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-markets user))
-        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-resolutions user))
-      )
-    ))
-    (window-start (get window-start limit-data))
-    (count (get count limit-data))
-    (new-window (>= (- current-block window-start) window))
-  )
-    (begin
+  (begin
+    (let (
+      (current-block stacks-block-height)
+      (window (var-get rate-limit-window))
+      (limit-data (if (is-eq action "stake")
+        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-stakes user))
+        (if (is-eq action "market")
+          (default-to { count: u0, window-start: u0 } (map-get? rate-limit-markets user))
+          (default-to { count: u0, window-start: u0 } (map-get? rate-limit-resolutions user))
+        )
+      ))
+      (window-start (get window-start limit-data))
+      (count (get count limit-data))
+      (new-window (>= (- current-block window-start) window))
+    )
       (if (is-eq action "stake")
         (map-set rate-limit-stakes user {
           count: (if new-window u1 (+ count u1)),
@@ -388,8 +388,8 @@
           })
         )
       )
-      (ok true)
     )
+    (ok true)
   )
 )
 
