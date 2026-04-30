@@ -27,6 +27,8 @@ import { useState, useCallback } from 'react';
 import { useContract } from './useContract';
 import type { CreateMarketFormData } from '../types/market';
 import { useContractPause } from './useContractPause';
+import { createRateLimitMiddleware } from '../middleware/rateLimitMiddleware';
+import { useWallet } from '../components/WalletProvider';
 
 interface MarketCreationState {
   isCreating: boolean;
@@ -52,6 +54,7 @@ const initialState: MarketCreationState = {
 export function useMarketCreation(): UseMarketCreationReturn {
   const { createMarket: createMarketContract } = useContract();
   const { isPaused: isContractPaused } = useContractPause();
+  const { address } = useWallet();
   const [state, setState] = useState<MarketCreationState>(initialState);
 
   const createMarket = useCallback(
@@ -61,11 +64,29 @@ export function useMarketCreation(): UseMarketCreationReturn {
         setState(prev => ({ ...prev, isCreating: false, error: pauseError, success: false }));
         throw new Error(pauseError);
       }
+      
+      if (!address) {
+        const walletError = 'Wallet not connected';
+        setState(prev => ({ ...prev, isCreating: false, error: walletError, success: false }));
+        throw new Error(walletError);
+      }
+      
       setState(prev => ({ ...prev, isCreating: true, error: null }));
 
       try {
-        // Call contract method
-        await createMarketContract(data.question, data.durationBlocks);
+        const rateLimitMiddleware = createRateLimitMiddleware(address);
+        
+        await rateLimitMiddleware(
+          'create-market',
+          async () => {
+            await createMarketContract(data.question, data.durationBlocks);
+          },
+          {
+            onBlocked: (cooldownMs) => {
+              throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(cooldownMs / 1000)} seconds.`);
+            },
+          }
+        );
 
         setState(prev => ({
           ...prev,
@@ -98,7 +119,7 @@ export function useMarketCreation(): UseMarketCreationReturn {
         throw error;
       }
     },
-    [createMarketContract, isContractPaused]
+    [createMarketContract, isContractPaused, address]
   );
 
   const resetState = useCallback(() => {
