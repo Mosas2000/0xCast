@@ -235,7 +235,7 @@ export class PollingDataService {
 
 export class DataStreamAggregator {
   private streams: Map<string, RealTimeDataService | PollingDataService> = new Map();
-  private aggregatedData: Map<string, any> = new Map();
+  private aggregatedData: Map<string, unknown> = new Map();
 
   addStream(
     key: string,
@@ -244,12 +244,12 @@ export class DataStreamAggregator {
     this.streams.set(key, service);
 
     if (service instanceof RealTimeDataService) {
-      service.subscribe('update', (data: any) => {
+      service.subscribe('update', (data: unknown) => {
         this.aggregatedData.set(key, data);
         this.broadcastAggregatedData();
       });
     } else if (service instanceof PollingDataService) {
-      service.subscribe('update', (data: any) => {
+      service.subscribe('update', (data: unknown) => {
         this.aggregatedData.set(key, data);
         this.broadcastAggregatedData();
       });
@@ -265,8 +265,8 @@ export class DataStreamAggregator {
     this.aggregatedData.delete(key);
   }
 
-  getAggregatedData(): Record<string, any> {
-    const result: Record<string, any> = {};
+  getAggregatedData(): Record<string, unknown> {
+    const result: Record<string, unknown> = {};
     this.aggregatedData.forEach((value, key) => {
       result[key] = value;
     });
