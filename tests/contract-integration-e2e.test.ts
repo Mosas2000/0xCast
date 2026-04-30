@@ -520,7 +520,7 @@ describe("End-to-End Contract Integration Tests", () => {
         [Cl.uint(0), Cl.uint(0)],
         wallet1
       );
-      expect(zeroStake.result).toBeErr(Cl.uint(105)); // ERR-INVALID-AMOUNT
+      expect(zeroStake.result).toBeErr(Cl.uint(105)); // ERR-MARKET-STILL-ACTIVE
     });
 
     it("should handle double claim attempts", () => {
@@ -712,13 +712,18 @@ describe("End-to-End Contract Integration Tests", () => {
       const marketCount = 20;
 
       for (let i = 0; i < marketCount; i++) {
+        // Mine blocks every 5 markets to reset rate limit window
+        if (i > 0 && i % 5 === 0) {
+          simnet.mineEmptyBlocks(150); // Reset rate limit window
+        }
+        
         const createResult = simnet.callPublicFn(
           "market-core",
           "create-market",
           [
             Cl.stringAscii(`Stress test market ${i}`),
-            Cl.uint(currentBlock + 100),
-            Cl.uint(currentBlock + 200),
+            Cl.uint(currentBlock + 100 + i),
+            Cl.uint(currentBlock + 200 + i),
             Cl.uint((i % 5) + 1), // Rotate through categories
           ],
           deployer

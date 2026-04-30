@@ -118,4 +118,9 @@ plan:
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
             path: contracts/oxcast.clar
             clarity-version: 3
+        - emulated-contract-publish:
+            contract-name: rate-limiter
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/rate-limiter.clar
+            clarity-version: 3
       epoch: "3.2"

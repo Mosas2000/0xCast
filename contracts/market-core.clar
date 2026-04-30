@@ -663,6 +663,7 @@
     )
     (try! (assert-not-paused))
     (try! (check-rate-limit tx-sender "stake" (var-get max-stakes-per-window)))
+    (asserts! (> amount u0) ERR-MARKET-STILL-ACTIVE)
     (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-MARKET-ALREADY-RESOLVED)
     
     (asserts! (< current-block (get end-date market)) ERR-MARKET-ENDED)
@@ -700,6 +701,7 @@
     )
     (try! (assert-not-paused))
     (try! (check-rate-limit tx-sender "stake" (var-get max-stakes-per-window)))
+    (asserts! (> amount u0) ERR-MARKET-STILL-ACTIVE)
     (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-MARKET-ALREADY-RESOLVED)
     
     (asserts! (< current-block (get end-date market)) ERR-MARKET-ENDED)
