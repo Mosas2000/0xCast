@@ -1,4 +1,4 @@
-import { Permission, AccessControl, PermissionCheck, RoleContext } from '@/types/rbac';
+import { Permission, AccessControl, PermissionCheck, RoleContext, Role } from '@/types/rbac';
 import { RoleHierarchyManager } from '@/services/RoleHierarchyManager';
 import { PermissionMatrixManager } from '@/services/PermissionMatrixManager';
 
@@ -185,7 +185,7 @@ export class AccessControlService {
 
     const allRoles = accessControl.roleIds
       .map(roleId => this.roleHierarchy.getRole(roleId))
-      .filter((role): role is any => role !== undefined);
+      .filter((role): role is Role => role !== undefined);
 
     const hierarchyLevel = this.roleHierarchy.getHierarchyLevel(primaryRoleId);
     const isElevated = hierarchyLevel < 3;
