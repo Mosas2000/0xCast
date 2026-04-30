@@ -1,4 +1,5 @@
 import { QueuedAction, SyncAction } from '@/types/sync';
+import type { UnknownRecord } from '@/types/common';
 
 export class ActionQueueService {
   private queue: Map<string, QueuedAction> = new Map();
@@ -9,7 +10,7 @@ export class ActionQueueService {
     entityId: string,
     entityType: string,
     action: SyncAction,
-    payload: Record<string, any>,
+    payload: UnknownRecord,
     maxRetries: number = 3
   ): QueuedAction {
     const id = this.generateId();
