@@ -393,7 +393,7 @@
 
 (define-private (is-emergency-signer (signer principal))
   (or
-    (is-eq signer CONTRACT-OWNER)
+    (is-eq signer (var-get contract-owner))
     (match (map-get? emergency-approvers { signer: signer })
       approval (get enabled approval)
       false
