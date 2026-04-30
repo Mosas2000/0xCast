@@ -1,0 +1,147 @@
+import { rateLimitService } from './RateLimitService';
+import { RateLimitViolation, RateLimitMetrics, RateLimitAction } from '@/types/rateLimit';
+
+export interface RateLimitAlert {
+  id: string;
+  userId: string;
+  action: RateLimitAction;
+  violationCount: number;
+  timestamp: number;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+}
+
+export class RateLimitMonitoringService {
+  private alerts: Map<string, RateLimitAlert> = new Map();
+  private alertThresholds = {
+    low: 3,
+    medium: 5,
+    high: 10,
+    critical: 20,
+  };
+
+  analyzeViolations(userId?: string): RateLimitAlert[] {
+    const violations = rateLimitService.getViolations(userId);
+    const userViolationCounts = new Map<string, Map<RateLimitAction, number>>();
+
+    violations.forEach((violation) => {
+      if (!userViolationCounts.has(violation.userId)) {
+        userViolationCounts.set(violation.userId, new Map());
+      }
+      const actionCounts = userViolationCounts.get(violation.userId)!;
+      actionCounts.set(
+        violation.action,
+        (actionCounts.get(violation.action) || 0) + 1
+      );
+    });
+
+    const alerts: RateLimitAlert[] = [];
+
+    userViolationCounts.forEach((actionCounts, userId) => {
+      actionCounts.forEach((count, action) => {
+        const severity = this.calculateSeverity(count);
+        const alertId = `${userId}:${action}`;
+
+        const alert: RateLimitAlert = {
+          id: alertId,
+          userId,
+          action,
+          violationCount: count,
+          timestamp: Date.now(),
+          severity,
+        };
+
+        alerts.push(alert);
+        this.alerts.set(alertId, alert);
+      });
+    });
+
+    return alerts;
+  }
+
+  private calculateSeverity(count: number): 'low' | 'medium' | 'high' | 'critical' {
+    if (count >= this.alertThresholds.critical) return 'critical';
+    if (count >= this.alertThresholds.high) return 'high';
+    if (count >= this.alertThresholds.medium) return 'medium';
+    return 'low';
+  }
+
+  getMetrics(): RateLimitMetrics {
+    return rateLimitService.getMetrics();
+  }
+
+  getTopViolators(limit: number = 10): Array<{ userId: string; violations: number }> {
+    const metrics = this.getMetrics();
+    return metrics.topViolators.slice(0, limit);
+  }
+
+  getViolationsByAction(): Record<RateLimitAction, number> {
+    const metrics = this.getMetrics();
+    return metrics.violationsByAction;
+  }
+
+  getActiveAlerts(severity?: 'low' | 'medium' | 'high' | 'critical'): RateLimitAlert[] {
+    const alerts = Array.from(this.alerts.values());
+    
+    if (severity) {
+      return alerts.filter((alert) => alert.severity === severity);
+    }
+    
+    return alerts;
+  }
+
+  dismissAlert(alertId: string): boolean {
+    return this.alerts.delete(alertId);
+  }
+
+  clearOldAlerts(olderThanMs: number = 3600000): void {
+    const now = Date.now();
+    const cutoff = now - olderThanMs;
+
+    this.alerts.forEach((alert, id) => {
+      if (alert.timestamp < cutoff) {
+        this.alerts.delete(id);
+      }
+    });
+  }
+
+  generateReport(): {
+    totalViolations: number;
+    uniqueUsers: number;
+    alertsBySeverity: Record<string, number>;
+    topActions: Array<{ action: RateLimitAction; count: number }>;
+    topUsers: Array<{ userId: string; violations: number }>;
+  } {
+    const metrics = this.getMetrics();
+    const alerts = this.getActiveAlerts();
+
+    const alertsBySeverity = {
+      low: alerts.filter((a) => a.severity === 'low').length,
+      medium: alerts.filter((a) => a.severity === 'medium').length,
+      high: alerts.filter((a) => a.severity === 'high').length,
+      critical: alerts.filter((a) => a.severity === 'critical').length,
+    };
+
+    const topActions = Object.entries(metrics.violationsByAction)
+      .map(([action, count]) => ({ action: action as RateLimitAction, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    const uniqueUsers = new Set(
+      rateLimitService.getViolations().map((v) => v.userId)
+    ).size;
+
+    return {
+      totalViolations: metrics.blockedRequests,
+      uniqueUsers,
+      alertsBySeverity,
+      topActions,
+      topUsers: metrics.topViolators.slice(0, 10),
+    };
+  }
+
+  setAlertThresholds(thresholds: Partial<typeof this.alertThresholds>): void {
+    this.alertThresholds = { ...this.alertThresholds, ...thresholds };
+  }
+}
+
+export const rateLimitMonitoringService = new RateLimitMonitoringService();
