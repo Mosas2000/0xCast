@@ -708,7 +708,6 @@ describe("End-to-End Contract Integration Tests", () => {
 
   describe("Performance and Stress Tests", () => {
     it("should handle many markets efficiently", () => {
-      const currentBlock = simnet.blockHeight;
       const marketCount = 20;
 
       for (let i = 0; i < marketCount; i++) {
@@ -717,13 +716,14 @@ describe("End-to-End Contract Integration Tests", () => {
           simnet.mineEmptyBlocks(150); // Reset rate limit window
         }
         
+        const currentBlock = simnet.blockHeight;
         const createResult = simnet.callPublicFn(
           "market-core",
           "create-market",
           [
             Cl.stringAscii(`Stress test market ${i}`),
-            Cl.uint(currentBlock + 100 + i),
-            Cl.uint(currentBlock + 200 + i),
+            Cl.uint(currentBlock + 100),
+            Cl.uint(currentBlock + 200),
             Cl.uint((i % 5) + 1), // Rotate through categories
           ],
           deployer
