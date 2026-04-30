@@ -1,4 +1,5 @@
 import { KYCStatus, AMLCheck } from '@/types/reputation';
+import type { KYCDocumentData } from '@/types/common';
 
 interface KYCDocument {
   documentId: string;
@@ -28,7 +29,7 @@ export class KYCAMLService {
   private addressProofs: Map<string, AddressProof> = new Map();
   private verificationAttempts: Map<string, number> = new Map();
 
-  submitKYC(userId: string, documentType: 'passport' | 'license' | 'national_id', data: any): KYCStatus {
+  submitKYC(userId: string, documentType: 'passport' | 'license' | 'national_id', data: KYCDocumentData): KYCStatus {
     const attempts = this.verificationAttempts.get(userId) || 0;
     
     if (attempts >= 3) {
