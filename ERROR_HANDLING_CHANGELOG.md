@@ -2,6 +2,44 @@
 
 All notable changes to the error handling system will be documented in this file.
 
+## [1.1.0] - 2026-04-30
+
+### Added
+- `ErrorRecoveryService` - Automatic error recovery with retry strategies
+  - Network error recovery with exponential backoff
+  - Timeout error recovery with extended timeouts
+  - Rate limit error recovery with retry-after support
+  - RPC error recovery for blockchain node issues
+  - Contract error recovery for specific error codes
+  - User guidance system for manual error resolution
+  - Context-aware recovery decisions
+  - Custom strategy registration
+  - `executeWithRecovery()` method for automatic retry
+  - Comprehensive test suite (23 tests)
+
+### Changed
+- Integrated error handling into `useGovernanceActions` hook
+  - All governance actions now use contract error handler
+  - User-friendly error messages for voting, proposals, and delegation
+  - Error logging for all governance operations
+- Integrated error handling into `useLiquidityActions` hook
+  - Enhanced error handling for liquidity operations
+  - Better error messages for pool creation and management
+- Integrated error handling into `useOracleActions` hook
+  - Comprehensive error handling for oracle operations
+  - Improved error messages for disputes and resolutions
+- Integrated error handling into `useStakingActions` hook
+  - Enhanced error handling for staking operations
+  - Better error messages for stake/unstake operations
+
+### Statistics
+- Added 4 new commits
+- Integrated error handling into 4 additional hooks
+- Added 743 lines of code for error recovery
+- Added 23 new tests for error recovery
+- Total test coverage: 600+ tests
+- Total files modified: 7 hooks
+
 ## [1.0.0] - 2026-04-27
 
 ### Added
