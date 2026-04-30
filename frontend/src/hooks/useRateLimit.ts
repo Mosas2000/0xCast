@@ -1,101 +1,93 @@
-import { useState, useCallback, useEffect } from 'react';
-import { rateLimitMiddleware } from '../middleware/RateLimitMiddleware';
-import { useWallet } from '../components/WalletProvider';
+import { useState, useEffect, useCallback } from 'react';
+import { rateLimitService } from '@/services/RateLimitService';
+import { RateLimitAction, RateLimitStatus } from '@/types/rateLimit';
 
-interface RateLimitStatus {
-  count: number;
-  limit: number;
-  remaining: number;
-  resetTime: number;
-  blocked: boolean;
-}
-
-interface UseRateLimitReturn {
-  checkRateLimit: (action: string) => Promise<{
-    allowed: boolean;
-    remaining: number;
-    resetTime: number;
-    retryAfter?: number;
-    reason?: string;
-  }>;
-  getRateLimitStatus: (action: string) => RateLimitStatus;
-  getAllRateLimits: () => Map<string, RateLimitStatus>;
-  isLoading: boolean;
-  error: string | null;
-}
-
-export function useRateLimit(): UseRateLimitReturn {
-  const { address } = useWallet();
-  const [isLoading, setIsLoading] = useState(false);
+export function useRateLimit(userId: string, action: RateLimitAction) {
+  const [status, setStatus] = useState<RateLimitStatus | null>(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const checkRateLimit = useCallback(
-    async (action: string) => {
-      if (!address) {
-        return {
-          allowed: false,
-          remaining: 0,
-          resetTime: 0,
-          reason: 'Wallet not connected',
-        };
-      }
-
-      setIsLoading(true);
+  const checkLimit = useCallback(() => {
+    try {
+      const currentStatus = rateLimitService.getStatus(userId, action);
+      setStatus(currentStatus);
       setError(null);
-
-      try {
-        const result = await rateLimitMiddleware.checkAndRecord({
-          userId: address,
-          action,
-        });
-
-        return result;
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Rate limit check failed';
-        setError(errorMessage);
-        return {
-          allowed: false,
-          remaining: 0,
-          resetTime: 0,
-          reason: errorMessage,
-        };
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [address]
-  );
-
-  const getRateLimitStatus = useCallback(
-    (action: string): RateLimitStatus => {
-      if (!address) {
-        return {
-          count: 0,
-          limit: 0,
-          remaining: 0,
-          resetTime: 0,
-          blocked: false,
-        };
-      }
-
-      return rateLimitMiddleware.getStatus(address, action);
-    },
-    [address]
-  );
-
-  const getAllRateLimits = useCallback((): Map<string, RateLimitStatus> => {
-    if (!address) {
-      return new Map();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to check rate limit');
     }
+  }, [userId, action]);
 
-    return rateLimitMiddleware.getAllStatus(address);
-  }, [address]);
+  const recordRequest = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const newStatus = rateLimitService.recordRequest(userId, action);
+      setStatus(newStatus);
+
+      if (newStatus.blocked) {
+        throw new Error(
+          `Rate limit exceeded for ${action}. Please wait ${
+            newStatus.cooldownUntil
+              ? Math.ceil((newStatus.cooldownUntil - Date.now()) / 1000)
+              : 'a moment'
+          } seconds.`
+        );
+      }
+
+      return newStatus;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Rate limit error';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, action]);
+
+  useEffect(() => {
+    checkLimit();
+    const interval = setInterval(checkLimit, 1000);
+    return () => clearInterval(interval);
+  }, [checkLimit]);
 
   return {
-    checkRateLimit,
-    getRateLimitStatus,
-    getAllRateLimits,
-    isLoading,
+    status,
+    loading,
     error,
+    checkLimit,
+    recordRequest,
+    isBlocked: status?.blocked || false,
+    remaining: status?.remaining || 0,
+    resetAt: status?.resetAt,
+    cooldownUntil: status?.cooldownUntil,
+  };
+}
+
+export function useAllRateLimits(userId: string) {
+  const [statuses, setStatuses] = useState<RateLimitStatus[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refreshStatuses = useCallback(() => {
+    try {
+      const allStatuses = rateLimitService.getAllStatus(userId);
+      setStatuses(allStatuses);
+    } catch (err) {
+      console.error('Failed to fetch rate limit statuses:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    refreshStatuses();
+    const interval = setInterval(refreshStatuses, 5000);
+    return () => clearInterval(interval);
+  }, [refreshStatuses]);
+
+  return {
+    statuses,
+    loading,
+    refreshStatuses,
   };
 }

@@ -1,288 +1,255 @@
-interface RateLimitConfig {
-  maxRequests: number;
-  windowMs: number;
-  cooldownMs?: number;
-}
-
-interface RateLimitEntry {
-  count: number;
-  resetTime: number;
-  lastRequestTime: number;
-  blocked: boolean;
-  blockUntil?: number;
-}
+import {
+  RateLimitAction,
+  RateLimitConfig,
+  RateLimitStatus,
+  RateLimitRecord,
+  RateLimitViolation,
+  RateLimitMetrics,
+  DEFAULT_RATE_LIMITS,
+} from '@/types/rateLimit';
 
 export class RateLimitService {
-  private limits: Map<string, RateLimitEntry> = new Map();
-  private configs: Map<string, RateLimitConfig> = new Map();
+  private records: Map<string, RateLimitRecord[]> = new Map();
+  private violations: RateLimitViolation[] = [];
+  private configs: Map<RateLimitAction, RateLimitConfig> = new Map();
 
-  constructor() {
-    this.initializeDefaultConfigs();
+  constructor(customConfigs?: Partial<Record<RateLimitAction, RateLimitConfig>>) {
+    Object.entries(DEFAULT_RATE_LIMITS).forEach(([action, config]) => {
+      this.configs.set(action as RateLimitAction, config);
+    });
+
+    if (customConfigs) {
+      Object.entries(customConfigs).forEach(([action, config]) => {
+        if (config) {
+          this.configs.set(action as RateLimitAction, config);
+        }
+      });
+    }
   }
 
-  private initializeDefaultConfigs(): void {
-    this.configs.set('stake', {
-      maxRequests: 10,
-      windowMs: 60000,
-      cooldownMs: 5000,
-    });
-
-    this.configs.set('create-market', {
-      maxRequests: 5,
-      windowMs: 300000,
-      cooldownMs: 10000,
-    });
-
-    this.configs.set('resolve-market', {
-      maxRequests: 3,
-      windowMs: 60000,
-      cooldownMs: 15000,
-    });
-
-    this.configs.set('add-liquidity', {
-      maxRequests: 10,
-      windowMs: 60000,
-      cooldownMs: 5000,
-    });
-
-    this.configs.set('remove-liquidity', {
-      maxRequests: 10,
-      windowMs: 60000,
-      cooldownMs: 5000,
-    });
-
-    this.configs.set('vote', {
-      maxRequests: 20,
-      windowMs: 300000,
-      cooldownMs: 3000,
-    });
-
-    this.configs.set('claim-rewards', {
-      maxRequests: 5,
-      windowMs: 60000,
-      cooldownMs: 10000,
-    });
+  private getRecordKey(userId: string, action: RateLimitAction): string {
+    return `${userId}:${action}`;
   }
 
-  setConfig(action: string, config: RateLimitConfig): void {
-    this.configs.set(action, config);
-  }
-
-  getConfig(action: string): RateLimitConfig | undefined {
-    return this.configs.get(action);
-  }
-
-  checkRateLimit(userId: string, action: string): {
-    allowed: boolean;
-    remaining: number;
-    resetTime: number;
-    retryAfter?: number;
-    reason?: string;
-  } {
-    const key = `${userId}:${action}`;
+  checkLimit(userId: string, action: RateLimitAction): RateLimitStatus {
     const config = this.configs.get(action);
-
     if (!config) {
-      return {
-        allowed: true,
-        remaining: Infinity,
-        resetTime: 0,
-      };
+      throw new Error(`No rate limit config found for action: ${action}`);
     }
 
+    const key = this.getRecordKey(userId, action);
     const now = Date.now();
-    let entry = this.limits.get(key);
+    const records = this.records.get(key) || [];
 
-    if (!entry) {
-      entry = {
-        count: 0,
-        resetTime: now + config.windowMs,
-        lastRequestTime: 0,
-        blocked: false,
-      };
-      this.limits.set(key, entry);
-    }
+    const recentRecords = records.filter(
+      (record) => now - record.timestamp < config.windowMs
+    );
 
-    if (entry.blocked && entry.blockUntil && now < entry.blockUntil) {
+    const blockedRecord = recentRecords.find(
+      (record) => record.blocked && record.cooldownUntil && record.cooldownUntil > now
+    );
+
+    if (blockedRecord) {
       return {
-        allowed: false,
+        action,
         remaining: 0,
-        resetTime: entry.resetTime,
-        retryAfter: Math.ceil((entry.blockUntil - now) / 1000),
-        reason: 'Rate limit exceeded. Please wait before trying again.',
+        resetAt: blockedRecord.timestamp + config.windowMs,
+        blocked: true,
+        cooldownUntil: blockedRecord.cooldownUntil,
       };
     }
 
-    if (now >= entry.resetTime) {
-      entry.count = 0;
-      entry.resetTime = now + config.windowMs;
-      entry.blocked = false;
-      entry.blockUntil = undefined;
-    }
-
-    if (config.cooldownMs && entry.lastRequestTime > 0) {
-      const timeSinceLastRequest = now - entry.lastRequestTime;
-      if (timeSinceLastRequest < config.cooldownMs) {
-        return {
-          allowed: false,
-          remaining: config.maxRequests - entry.count,
-          resetTime: entry.resetTime,
-          retryAfter: Math.ceil((config.cooldownMs - timeSinceLastRequest) / 1000),
-          reason: 'Cooldown period active. Please wait before trying again.',
-        };
-      }
-    }
-
-    if (entry.count >= config.maxRequests) {
-      entry.blocked = true;
-      entry.blockUntil = now + (config.cooldownMs || 5000);
-      
-      return {
-        allowed: false,
-        remaining: 0,
-        resetTime: entry.resetTime,
-        retryAfter: Math.ceil((entry.resetTime - now) / 1000),
-        reason: 'Rate limit exceeded. Please wait for the window to reset.',
-      };
-    }
+    const count = recentRecords.reduce((sum, record) => sum + record.count, 0);
+    const remaining = Math.max(0, config.maxRequests - count);
 
     return {
-      allowed: true,
-      remaining: config.maxRequests - entry.count - 1,
-      resetTime: entry.resetTime,
+      action,
+      remaining,
+      resetAt: recentRecords.length > 0 
+        ? recentRecords[0].timestamp + config.windowMs 
+        : now + config.windowMs,
+      blocked: false,
     };
   }
 
-  recordRequest(userId: string, action: string): void {
-    const key = `${userId}:${action}`;
-    const entry = this.limits.get(key);
+  recordRequest(userId: string, action: RateLimitAction): RateLimitStatus {
+    const status = this.checkLimit(userId, action);
 
-    if (entry) {
-      entry.count++;
-      entry.lastRequestTime = Date.now();
-      this.limits.set(key, entry);
-    }
-  }
-
-  getRateLimitStatus(userId: string, action: string): {
-    count: number;
-    limit: number;
-    remaining: number;
-    resetTime: number;
-    blocked: boolean;
-  } {
-    const key = `${userId}:${action}`;
-    const config = this.configs.get(action);
-    const entry = this.limits.get(key);
-
-    if (!config) {
-      return {
-        count: 0,
-        limit: Infinity,
-        remaining: Infinity,
-        resetTime: 0,
-        blocked: false,
-      };
+    if (status.blocked) {
+      return status;
     }
 
-    if (!entry) {
-      return {
-        count: 0,
-        limit: config.maxRequests,
-        remaining: config.maxRequests,
-        resetTime: Date.now() + config.windowMs,
-        blocked: false,
-      };
-    }
-
+    const config = this.configs.get(action)!;
+    const key = this.getRecordKey(userId, action);
     const now = Date.now();
-    if (now >= entry.resetTime) {
-      return {
-        count: 0,
+
+    const records = this.records.get(key) || [];
+    const recentRecords = records.filter(
+      (record) => now - record.timestamp < config.windowMs
+    );
+
+    const count = recentRecords.reduce((sum, record) => sum + record.count, 0);
+
+    if (count >= config.maxRequests) {
+      const cooldownUntil = config.cooldownMs ? now + config.cooldownMs : undefined;
+
+      const blockedRecord: RateLimitRecord = {
+        userId,
+        action,
+        timestamp: now,
+        count: 1,
+        blocked: true,
+        cooldownUntil,
+      };
+
+      recentRecords.push(blockedRecord);
+      this.records.set(key, recentRecords);
+
+      this.violations.push({
+        userId,
+        action,
+        timestamp: now,
+        attemptedCount: count + 1,
         limit: config.maxRequests,
-        remaining: config.maxRequests,
-        resetTime: now + config.windowMs,
-        blocked: false,
+      });
+
+      return {
+        action,
+        remaining: 0,
+        resetAt: recentRecords[0].timestamp + config.windowMs,
+        blocked: true,
+        cooldownUntil,
       };
     }
+
+    const newRecord: RateLimitRecord = {
+      userId,
+      action,
+      timestamp: now,
+      count: 1,
+      blocked: false,
+    };
+
+    recentRecords.push(newRecord);
+    this.records.set(key, recentRecords);
 
     return {
-      count: entry.count,
-      limit: config.maxRequests,
-      remaining: Math.max(0, config.maxRequests - entry.count),
-      resetTime: entry.resetTime,
-      blocked: entry.blocked,
+      action,
+      remaining: config.maxRequests - count - 1,
+      resetAt: recentRecords[0].timestamp + config.windowMs,
+      blocked: false,
     };
   }
 
-  resetUserLimits(userId: string, action?: string): void {
+  getStatus(userId: string, action: RateLimitAction): RateLimitStatus {
+    return this.checkLimit(userId, action);
+  }
+
+  getAllStatus(userId: string): RateLimitStatus[] {
+    const actions: RateLimitAction[] = [
+      'stake',
+      'create-market',
+      'resolve-market',
+      'add-liquidity',
+      'remove-liquidity',
+      'vote',
+      'claim-rewards',
+      'dispute',
+      'trade',
+    ];
+
+    return actions.map((action) => this.getStatus(userId, action));
+  }
+
+  resetUserLimits(userId: string, action?: RateLimitAction): void {
     if (action) {
-      const key = `${userId}:${action}`;
-      this.limits.delete(key);
+      const key = this.getRecordKey(userId, action);
+      this.records.delete(key);
     } else {
       const keysToDelete: string[] = [];
-      for (const key of this.limits.keys()) {
+      this.records.forEach((_, key) => {
         if (key.startsWith(`${userId}:`)) {
           keysToDelete.push(key);
         }
-      }
-      keysToDelete.forEach(key => this.limits.delete(key));
+      });
+      keysToDelete.forEach((key) => this.records.delete(key));
     }
   }
 
-  getAllUserLimits(userId: string): Map<string, {
-    count: number;
-    limit: number;
-    remaining: number;
-    resetTime: number;
-    blocked: boolean;
-  }> {
-    const result = new Map();
-    
-    for (const [action] of this.configs) {
-      const status = this.getRateLimitStatus(userId, action);
-      result.set(action, status);
+  getViolations(userId?: string): RateLimitViolation[] {
+    if (userId) {
+      return this.violations.filter((v) => v.userId === userId);
     }
-
-    return result;
+    return [...this.violations];
   }
 
-  cleanup(): void {
-    const now = Date.now();
-    const keysToDelete: string[] = [];
+  getMetrics(): RateLimitMetrics {
+    const totalRequests = Array.from(this.records.values()).reduce(
+      (sum, records) => sum + records.reduce((s, r) => s + r.count, 0),
+      0
+    );
 
-    for (const [key, entry] of this.limits.entries()) {
-      if (now >= entry.resetTime && entry.count === 0) {
-        keysToDelete.push(key);
-      }
-    }
+    const blockedRequests = Array.from(this.records.values()).reduce(
+      (sum, records) => sum + records.filter((r) => r.blocked).length,
+      0
+    );
 
-    keysToDelete.forEach(key => this.limits.delete(key));
-  }
+    const violationsByAction: Record<RateLimitAction, number> = {
+      'stake': 0,
+      'create-market': 0,
+      'resolve-market': 0,
+      'add-liquidity': 0,
+      'remove-liquidity': 0,
+      'vote': 0,
+      'claim-rewards': 0,
+      'dispute': 0,
+      'trade': 0,
+    };
 
-  getStats(): {
-    totalEntries: number;
-    blockedUsers: number;
-    activeWindows: number;
-  } {
-    const now = Date.now();
-    let blockedUsers = 0;
-    let activeWindows = 0;
+    this.violations.forEach((v) => {
+      violationsByAction[v.action]++;
+    });
 
-    for (const entry of this.limits.values()) {
-      if (entry.blocked) {
-        blockedUsers++;
-      }
-      if (now < entry.resetTime) {
-        activeWindows++;
-      }
-    }
+    const userViolationCounts = new Map<string, number>();
+    this.violations.forEach((v) => {
+      userViolationCounts.set(v.userId, (userViolationCounts.get(v.userId) || 0) + 1);
+    });
+
+    const topViolators = Array.from(userViolationCounts.entries())
+      .map(([userId, violations]) => ({ userId, violations }))
+      .sort((a, b) => b.violations - a.violations)
+      .slice(0, 10);
 
     return {
-      totalEntries: this.limits.size,
-      blockedUsers,
-      activeWindows,
+      totalRequests,
+      blockedRequests,
+      violationsByAction,
+      topViolators,
     };
+  }
+
+  updateConfig(action: RateLimitAction, config: RateLimitConfig): void {
+    this.configs.set(action, config);
+  }
+
+  getConfig(action: RateLimitAction): RateLimitConfig | undefined {
+    return this.configs.get(action);
+  }
+
+  cleanup(olderThanMs: number = 3600000): void {
+    const now = Date.now();
+    const cutoff = now - olderThanMs;
+
+    this.records.forEach((records, key) => {
+      const filtered = records.filter((record) => record.timestamp > cutoff);
+      if (filtered.length === 0) {
+        this.records.delete(key);
+      } else {
+        this.records.set(key, filtered);
+      }
+    });
+
+    this.violations = this.violations.filter((v) => v.timestamp > cutoff);
   }
 }
 

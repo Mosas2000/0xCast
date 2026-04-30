@@ -7,8 +7,8 @@ import { useWallet } from '../components/WalletProvider';
 import { validateAmount, validateMarketId } from '../utils/validation';
 import { addStakeHistoryEntry, type StakeOutcome } from '../utils/stakeHistory';
 import { useContractPause } from './useContractPause';
-import { useRateLimit } from './useRateLimit';
-import { handleContractCall, parseContractError, getUserFriendlyContractError } from '../utils/contractErrorHandler';
+import { createRateLimitMiddleware } from '../middleware/rateLimitMiddleware';
+import { parseContractError, getUserFriendlyContractError } from '../utils/contractErrorHandler';
 import { errorLoggingService } from '../services/ErrorLoggingService';
 
 interface UseStakeReturn {
@@ -27,7 +27,6 @@ export function useStake(): UseStakeReturn {
   const [error, setError] = useState<string | null>(null);
   const [txId, setTxId] = useState<string | null>(null);
   const { isPaused: isContractPaused, refetch: refetchPauseState } = useContractPause();
-  const { checkRateLimit } = useRateLimit();
 
   const reset = useCallback(() => {
     setIsLoading(false);
@@ -52,12 +51,6 @@ export function useStake(): UseStakeReturn {
         return;
       }
 
-      const rateLimitResult = await checkRateLimit('stake');
-      if (!rateLimitResult.allowed) {
-        setError(rateLimitResult.reason || 'Rate limit exceeded');
-        return;
-      }
-
       const marketIdValidation = validateMarketId(marketId);
       if (!marketIdValidation.isValid) {
         setError(marketIdValidation.error || 'Invalid market ID');
@@ -75,6 +68,21 @@ export function useStake(): UseStakeReturn {
       setTxId(null);
 
       try {
+        const rateLimitMiddleware = createRateLimitMiddleware(address);
+        
+        await rateLimitMiddleware(
+          'stake',
+          async () => {},
+          {
+            onBlocked: (cooldownMs) => {
+              throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(cooldownMs / 1000)} seconds.`);
+            },
+            onWarning: (remaining) => {
+              console.warn(`Rate limit warning: ${remaining} requests remaining`);
+            },
+          }
+        );
+
         const stakeMicroStx = stxToMicroStx(amount);
 
         const postConditions = [
@@ -103,30 +111,16 @@ export function useStake(): UseStakeReturn {
             onSuccess?.();
           },
           onCancel: () => {
-            const cancelError = parseContractError(
-              new Error('User cancelled transaction'),
-              MARKET_CONTRACT.name,
-              functionName
-            );
-            setError(getUserFriendlyContractError(cancelError));
+            setError('Transaction cancelled');
             setIsLoading(false);
           },
         });
       } catch (err) {
-        const contractError = parseContractError(err, MARKET_CONTRACT.name, functionName);
-        const friendlyMessage = getUserFriendlyContractError(contractError);
-        
-        errorLoggingService.logError(contractError, {
-          component: 'useStake',
-          action: functionName,
-          additionalData: { marketId, amount, outcome },
-        });
-        
-        setError(friendlyMessage);
+        setError(err instanceof Error ? err.message : 'Failed to place stake');
         setIsLoading(false);
       }
     },
-    [address, isContractPaused, refetchPauseState, checkRateLimit]
+    [address, isContractPaused, refetchPauseState]
   );
 
   const placeYesStake = useCallback(

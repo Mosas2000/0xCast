@@ -1,0 +1,260 @@
+import { describe, it, expect } from 'vitest';
+import {
+  formatTimeRemaining,
+  getRateLimitSeverity,
+  getRateLimitColor,
+  getRateLimitIcon,
+  getRateLimitMessage,
+  getActionDisplayName,
+  shouldShowRateLimitWarning,
+  calculateRateLimitPercentage,
+  isRateLimitCritical,
+} from '../rateLimitHelpers';
+import { RateLimitStatus } from '@/types/rateLimit';
+
+describe('rateLimitHelpers', () => {
+  describe('formatTimeRemaining', () => {
+    it('should format seconds', () => {
+      const future = Date.now() + 30000;
+      expect(formatTimeRemaining(future)).toBe('30s');
+    });
+
+    it('should format minutes and seconds', () => {
+      const future = Date.now() + 90000;
+      expect(formatTimeRemaining(future)).toBe('1m 30s');
+    });
+
+    it('should format hours and minutes', () => {
+      const future = Date.now() + 3660000;
+      expect(formatTimeRemaining(future)).toBe('1h 1m');
+    });
+
+    it('should handle past timestamps', () => {
+      const past = Date.now() - 1000;
+      expect(formatTimeRemaining(past)).toBe('0s');
+    });
+  });
+
+  describe('getRateLimitSeverity', () => {
+    it('should return blocked for blocked status', () => {
+      const status: RateLimitStatus = {
+        action: 'stake',
+        remaining: 0,
+        resetAt: Date.now() + 60000,
+        blocked: true,
+      };
+      expect(getRateLimitSeverity(status)).toBe('blocked');
+    });
+
+    it('should return warning for low remaining', () => {
+      const status: RateLimitStatus = {
+        action: 'stake',
+        remaining: 2,
+        resetAt: Date.now() + 60000,
+        blocked: false,
+      };
+      expect(getRateLimitSeverity(status)).toBe('warning');
+    });
+
+    it('should return safe for normal status', () => {
+      const status: RateLimitStatus = {
+        action: 'stake',
+        remaining: 10,
+        resetAt: Date.now() + 60000,
+        blocked: false,
+      };
+      expect(getRateLimitSeverity(status)).toBe('safe');
+    });
+  });
+
+  describe('getRateLimitColor', () => {
+    it('should return red for blocked', () => {
+      const status: RateLimitStatus = {
+        action: 'stake',
+        remaining: 0,
+        resetAt: Date.now() + 60000,
+        blocked: true,
+      };
+      expect(getRateLimitColor(status)).toBe('red');
+    });
+
+    it('should return yellow for warning', () => {
+      const status: RateLimitStatus = {
+        action: 'stake',
+        remaining: 1,
+        resetAt: Date.now() + 60000,
+        blocked: false,
+      };
+      expect(getRateLimitColor(status)).toBe('yellow');
+    });
+
+    it('should return green for safe', () => {
+      const status: RateLimitStatus = {
+        action: 'stake',
+        remaining: 10,
+        resetAt: Date.now() + 60000,
+        blocked: false,
+      };
+      expect(getRateLimitColor(status)).toBe('green');
+    });
+  });
+
+  describe('getRateLimitIcon', () => {
+    it('should return correct icons', () => {
+      const blocked: RateLimitStatus = {
+        action: 'stake',
+        remaining: 0,
+        resetAt: Date.now() + 60000,
+        blocked: true,
+      };
+      expect(getRateLimitIcon(blocked)).toBe('🚫');
+
+      const warning: RateLimitStatus = {
+        action: 'stake',
+        remaining: 2,
+        resetAt: Date.now() + 60000,
+        blocked: false,
+      };
+      expect(getRateLimitIcon(warning)).toBe('⚠️');
+
+      const safe: RateLimitStatus = {
+        action: 'stake',
+        remaining: 10,
+        resetAt: Date.now() + 60000,
+        blocked: false,
+      };
+      expect(getRateLimitIcon(safe)).toBe('✓');
+    });
+  });
+
+  describe('getRateLimitMessage', () => {
+    it('should return blocked message', () => {
+      const status: RateLimitStatus = {
+        action: 'stake',
+        remaining: 0,
+        resetAt: Date.now() + 60000,
+        blocked: true,
+        cooldownUntil: Date.now() + 5000,
+      };
+      const message = getRateLimitMessage(status);
+      expect(message).toContain('Rate limit exceeded');
+      expect(message).toContain('wait');
+    });
+
+    it('should return warning message', () => {
+      const status: RateLimitStatus = {
+        action: 'stake',
+        remaining: 2,
+        resetAt: Date.now() + 60000,
+        blocked: false,
+      };
+      const message = getRateLimitMessage(status);
+      expect(message).toContain('2 stake requests remaining');
+    });
+
+    it('should return normal message', () => {
+      const status: RateLimitStatus = {
+        action: 'stake',
+        remaining: 10,
+        resetAt: Date.now() + 60000,
+        blocked: false,
+      };
+      const message = getRateLimitMessage(status);
+      expect(message).toContain('10 requests remaining');
+    });
+  });
+
+  describe('getActionDisplayName', () => {
+    it('should return display names for all actions', () => {
+      expect(getActionDisplayName('stake')).toBe('Staking');
+      expect(getActionDisplayName('create-market')).toBe('Market Creation');
+      expect(getActionDisplayName('trade')).toBe('Trading');
+    });
+  });
+
+  describe('shouldShowRateLimitWarning', () => {
+    it('should return true for blocked status', () => {
+      const status: RateLimitStatus = {
+        action: 'stake',
+        remaining: 0,
+        resetAt: Date.now() + 60000,
+        blocked: true,
+      };
+      expect(shouldShowRateLimitWarning(status)).toBe(true);
+    });
+
+    it('should return true for low remaining', () => {
+      const status: RateLimitStatus = {
+        action: 'stake',
+        remaining: 2,
+        resetAt: Date.now() + 60000,
+        blocked: false,
+      };
+      expect(shouldShowRateLimitWarning(status)).toBe(true);
+    });
+
+    it('should return false for normal status', () => {
+      const status: RateLimitStatus = {
+        action: 'stake',
+        remaining: 10,
+        resetAt: Date.now() + 60000,
+        blocked: false,
+      };
+      expect(shouldShowRateLimitWarning(status)).toBe(false);
+    });
+  });
+
+  describe('calculateRateLimitPercentage', () => {
+    it('should calculate correct percentage', () => {
+      const status: RateLimitStatus = {
+        action: 'stake',
+        remaining: 5,
+        resetAt: Date.now() + 60000,
+        blocked: false,
+      };
+      expect(calculateRateLimitPercentage(status, 10)).toBe(50);
+    });
+
+    it('should return 0 for blocked status', () => {
+      const status: RateLimitStatus = {
+        action: 'stake',
+        remaining: 0,
+        resetAt: Date.now() + 60000,
+        blocked: true,
+      };
+      expect(calculateRateLimitPercentage(status, 10)).toBe(0);
+    });
+  });
+
+  describe('isRateLimitCritical', () => {
+    it('should return true for blocked', () => {
+      const status: RateLimitStatus = {
+        action: 'stake',
+        remaining: 0,
+        resetAt: Date.now() + 60000,
+        blocked: true,
+      };
+      expect(isRateLimitCritical(status)).toBe(true);
+    });
+
+    it('should return true for zero remaining', () => {
+      const status: RateLimitStatus = {
+        action: 'stake',
+        remaining: 0,
+        resetAt: Date.now() + 60000,
+        blocked: false,
+      };
+      expect(isRateLimitCritical(status)).toBe(true);
+    });
+
+    it('should return false for normal status', () => {
+      const status: RateLimitStatus = {
+        action: 'stake',
+        remaining: 5,
+        resetAt: Date.now() + 60000,
+        blocked: false,
+      };
+      expect(isRateLimitCritical(status)).toBe(false);
+    });
+  });
+});

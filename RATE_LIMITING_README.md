@@ -2,407 +2,260 @@
 
 ## Quick Start
 
-The 0xCast platform implements comprehensive rate limiting to prevent abuse and ensure fair usage.
-
 ### For Users
 
-Rate limits are automatically enforced. You'll see warnings when approaching limits and clear messages when limits are exceeded.
+The rate limiting system protects the platform from abuse while ensuring fair usage for all users.
 
-**What's Limited:**
-- Staking: 10 per minute
-- Market Creation: 5 per 5 minutes
-- Voting: 20 per 5 minutes
-- Liquidity Operations: 10 per minute
-
-**What to Do When Rate Limited:**
-- Wait for the cooldown period (shown in error message)
-- Check the Rate Limit Dashboard for detailed status
-- Contact support if you believe the limit is incorrect
-
-### For Developers
-
-#### Basic Usage
+#### Viewing Your Rate Limits
 
 ```typescript
-import { useRateLimit } from './hooks/useRateLimit';
+import { useAllRateLimits } from '@/hooks/useRateLimit';
 
 function MyComponent() {
-  const { checkRateLimit, getRateLimitStatus } = useRateLimit();
-
-  const handleAction = async () => {
-    // Check rate limit
-    const result = await checkRateLimit('stake');
-    
-    if (!result.allowed) {
-      alert(`Rate limited: ${result.reason}`);
-      return;
-    }
-
-    // Proceed with action
-    await performStake();
-  };
-
-  return <button onClick={handleAction}>Stake</button>;
-}
-```
-
-#### Display Status
-
-```typescript
-import { RateLimitStatus } from './components/RateLimitStatus';
-
-function MyComponent() {
+  const { statuses, loading } = useAllRateLimits(userAddress);
+  
   return (
     <div>
-      <RateLimitStatus action="stake" showDetails />
-      <button>Place Stake</button>
+      {statuses.map(status => (
+        <div key={status.action}>
+          {status.action}: {status.remaining} remaining
+        </div>
+      ))}
     </div>
   );
 }
 ```
 
-#### Monitor Dashboard
+#### Using Rate-Limited Actions
 
 ```typescript
-import { RateLimitDashboard } from './components/RateLimitDashboard';
+import { useRateLimit } from '@/hooks/useRateLimit';
 
-function AdminPanel() {
-  return <RateLimitDashboard />;
+function StakeButton() {
+  const { recordRequest, isBlocked, remaining } = useRateLimit(userAddress, 'stake');
+  
+  const handleStake = async () => {
+    try {
+      await recordRequest();
+      // Proceed with stake
+    } catch (error) {
+      // Handle rate limit error
+    }
+  };
+  
+  return (
+    <button disabled={isBlocked} onClick={handleStake}>
+      Stake ({remaining} remaining)
+    </button>
+  );
 }
 ```
 
-## Architecture
+### For Developers
 
-```
-┌─────────────────────────────────────────────────┐
-│                  User Action                     │
-└────────────────────┬────────────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────────────┐
-│            useRateLimit Hook                     │
-│  - Check rate limit                              │
-│  - Get status                                    │
-└────────────────────┬────────────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────────────┐
-│         RateLimitMiddleware                      │
-│  - Intercept transactions                        │
-│  - Record requests                               │
-└────────────────────┬────────────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────────────┐
-│          RateLimitService                        │
-│  - Core rate limiting logic                      │
-│  - Window management                             │
-│  - Status tracking                               │
-└────────────────────┬────────────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────────────┐
-│    RateLimitFraudIntegrationService             │
-│  - Fraud detection                               │
-│  - Anomaly detection                             │
-│  - Dynamic adjustment                            │
-└─────────────────────────────────────────────────┘
+#### Integrating Rate Limiting
+
+1. **Import the middleware**:
+```typescript
+import { createRateLimitMiddleware } from '@/middleware/rateLimitMiddleware';
 ```
 
-## Configuration
+2. **Wrap your transaction**:
+```typescript
+const rateLimitMiddleware = createRateLimitMiddleware(userAddress);
 
-### Adjust Rate Limits
+await rateLimitMiddleware(
+  'action-name',
+  async () => {
+    // Your transaction code
+  },
+  {
+    onBlocked: (cooldownMs) => {
+      console.error(`Blocked for ${cooldownMs}ms`);
+    },
+    onWarning: (remaining) => {
+      console.warn(`${remaining} requests remaining`);
+    },
+  }
+);
+```
+
+#### Adding New Rate-Limited Actions
+
+1. Add action to `RateLimitAction` type in `frontend/src/types/rateLimit.ts`
+2. Add default config to `DEFAULT_RATE_LIMITS`
+3. Add contract config in `contracts/rate-limiter.clar`
+4. Update display names in helpers
+
+### For Administrators
+
+#### Monitoring
+
+Access the monitoring dashboard:
+```typescript
+import { RateLimitMonitoringDashboard } from '@/components/RateLimitMonitoringDashboard';
+
+<RateLimitMonitoringDashboard />
+```
+
+#### Updating Configurations
 
 ```typescript
-import { rateLimitService } from './services/RateLimitService';
+import { rateLimitService } from '@/services/RateLimitService';
 
-// Set custom limit
-rateLimitService.setConfig('custom-action', {
-  maxRequests: 15,
-  windowMs: 120000, // 2 minutes
-  cooldownMs: 8000, // 8 seconds
+rateLimitService.updateConfig('stake', {
+  maxRequests: 20,
+  windowMs: 120000,
+  cooldownMs: 10000,
 });
 ```
 
-### Contract Configuration
+#### Resetting User Limits
 
-Rate limits in smart contracts are defined as data variables:
+```typescript
+// Reset specific action
+rateLimitService.resetUserLimits(userId, 'stake');
 
-```clarity
-(define-data-var rate-limit-window uint u144)
-(define-data-var max-stakes-per-window uint u10)
+// Reset all actions
+rateLimitService.resetUserLimits(userId);
+```
+
+## Rate Limit Configurations
+
+| Action | Max Requests | Window | Cooldown |
+|--------|-------------|--------|----------|
+| stake | 10 | 60s | 5s |
+| create-market | 5 | 5min | 60s |
+| resolve-market | 3 | 60s | 10s |
+| add-liquidity | 10 | 60s | 5s |
+| remove-liquidity | 10 | 60s | 5s |
+| vote | 20 | 60s | 3s |
+| claim-rewards | 5 | 5min | 30s |
+| dispute | 2 | 5min | 60s |
+| trade | 20 | 60s | 3s |
+
+## Components
+
+### RateLimitStatus
+Displays current rate limit status with visual indicators.
+
+```typescript
+<RateLimitStatus status={status} showDetails={true} />
+```
+
+### RateLimitDashboard
+Shows all rate limits for a user.
+
+```typescript
+<RateLimitDashboard userId={userAddress} />
+```
+
+### RateLimitBanner
+Warning/error banner for rate limit issues.
+
+```typescript
+<RateLimitBanner status={status} onDismiss={() => {}} />
+```
+
+### RateLimitProgressBar
+Visual progress bar for remaining requests.
+
+```typescript
+<RateLimitProgressBar status={status} maxRequests={10} />
+```
+
+### RateLimitMonitoringDashboard
+Admin dashboard for monitoring violations.
+
+```typescript
+<RateLimitMonitoringDashboard />
 ```
 
 ## API Reference
 
-### useRateLimit Hook
-
-```typescript
-const {
-  checkRateLimit,      // Check and record rate limit
-  getRateLimitStatus,  // Get current status
-  getAllRateLimits,    // Get all limits
-  isLoading,           // Loading state
-  error                // Error message
-} = useRateLimit();
-```
-
 ### RateLimitService
 
 ```typescript
-// Check rate limit
-const result = rateLimitService.checkRateLimit(userId, action);
-
-// Record request
-rateLimitService.recordRequest(userId, action);
-
-// Get status
-const status = rateLimitService.getRateLimitStatus(userId, action);
-
-// Reset limits
-rateLimitService.resetUserLimits(userId, action);
-```
-
-## Error Handling
-
-### Frontend Errors
-
-```typescript
-const result = await checkRateLimit('stake');
-
-if (!result.allowed) {
-  switch (result.reason) {
-    case 'Rate limit exceeded':
-      // Show retry timer
-      showRetryTimer(result.retryAfter);
-      break;
-    case 'Cooldown period active':
-      // Show cooldown message
-      showCooldownMessage(result.retryAfter);
-      break;
-    default:
-      // Generic error
-      showError(result.reason);
-  }
+class RateLimitService {
+  checkLimit(userId: string, action: RateLimitAction): RateLimitStatus
+  recordRequest(userId: string, action: RateLimitAction): RateLimitStatus
+  getStatus(userId: string, action: RateLimitAction): RateLimitStatus
+  getAllStatus(userId: string): RateLimitStatus[]
+  resetUserLimits(userId: string, action?: RateLimitAction): void
+  getViolations(userId?: string): RateLimitViolation[]
+  getMetrics(): RateLimitMetrics
+  updateConfig(action: RateLimitAction, config: RateLimitConfig): void
+  cleanup(olderThanMs?: number): void
 }
 ```
 
-### Contract Errors
-
-```clarity
-;; Contract returns error
-ERR-RATE-LIMIT-EXCEEDED (u123)
-```
-
-Handle in frontend:
+### RateLimitMonitoringService
 
 ```typescript
-try {
-  await contractCall();
-} catch (error) {
-  if (error.message.includes('u123')) {
-    alert('Rate limit exceeded on-chain');
-  }
+class RateLimitMonitoringService {
+  analyzeViolations(userId?: string): RateLimitAlert[]
+  getMetrics(): RateLimitMetrics
+  getTopViolators(limit?: number): Array<{ userId: string; violations: number }>
+  getViolationsByAction(): Record<RateLimitAction, number>
+  getActiveAlerts(severity?: string): RateLimitAlert[]
+  dismissAlert(alertId: string): boolean
+  generateReport(): Report
 }
 ```
 
 ## Testing
 
-### Run Tests
-
+Run rate limit tests:
 ```bash
-# All rate limiting tests
-npm test -- RateLimit
-
-# Specific test suites
 npm test -- RateLimitService
-npm test -- RateLimitMiddleware
 npm test -- useRateLimit
+npm test -- RateLimitComponents
+npm test -- rateLimitHelpers
 ```
 
-### Test Coverage
-
-- RateLimitService: 272 tests
-- RateLimitMiddleware: 110 tests
-- useRateLimit Hook: 151 tests
-- **Total: 533 tests**
-
-## Monitoring
-
-### View Dashboard
-
-Navigate to `/rate-limits` in the application to view:
-- Current usage across all actions
-- Blocked actions
-- Time until reset
-- Suspicious activity alerts
-
-### Check Status Programmatically
-
-```typescript
-import { rateLimitService } from './services/RateLimitService';
-
-// Get global stats
-const stats = rateLimitService.getStats();
-console.log(`Total entries: ${stats.totalEntries}`);
-console.log(`Blocked users: ${stats.blockedUsers}`);
-console.log(`Active windows: ${stats.activeWindows}`);
-```
-
-## Fraud Detection Integration
-
-### Monitor Violations
-
-```typescript
-import { rateLimitFraudIntegrationService } from './services/RateLimitFraudIntegrationService';
-
-// Monitor user activity
-rateLimitFraudIntegrationService.monitorRateLimitViolations(userId, action);
-
-// Detect anomalies
-const anomaly = rateLimitFraudIntegrationService.detectAnomalousPatterns(userId);
-if (anomaly.isAnomalous) {
-  console.log(`Risk score: ${anomaly.riskScore}`);
-  console.log(`Patterns: ${anomaly.patterns.join(', ')}`);
-}
-
-// Check if user should be blocked
-const blockCheck = rateLimitFraudIntegrationService.shouldBlockUser(userId);
-if (blockCheck.shouldBlock) {
-  console.log(`Reason: ${blockCheck.reason}`);
-  console.log(`Action: ${blockCheck.recommendedAction}`);
-}
-```
-
-## Best Practices
-
-### 1. Always Check Before Acting
-
-```typescript
-// ✅ Good
-const result = await checkRateLimit('stake');
-if (result.allowed) {
-  await performStake();
-}
-
-// ❌ Bad
-await performStake(); // No rate limit check
-```
-
-### 2. Provide User Feedback
-
-```typescript
-// ✅ Good
-if (!result.allowed) {
-  showNotification({
-    type: 'warning',
-    message: result.reason,
-    retryAfter: result.retryAfter
-  });
-}
-
-// ❌ Bad
-if (!result.allowed) {
-  // Silent failure
-}
-```
-
-### 3. Display Status
-
-```typescript
-// ✅ Good
-<div>
-  <RateLimitStatus action="stake" showDetails />
-  <button onClick={handleStake}>Stake</button>
-</div>
-
-// ❌ Bad
-<button onClick={handleStake}>Stake</button>
-// No status indication
-```
-
-### 4. Handle Errors Gracefully
-
-```typescript
-// ✅ Good
-try {
-  const result = await checkRateLimit('stake');
-  if (!result.allowed) {
-    handleRateLimitError(result);
-    return;
-  }
-  await performStake();
-} catch (error) {
-  handleError(error);
-}
-
-// ❌ Bad
-await checkRateLimit('stake');
-await performStake(); // No error handling
+Run contract tests:
+```bash
+npm test -- rate-limiter
 ```
 
 ## Troubleshooting
 
-### Issue: Rate limit triggered unexpectedly
+### Rate Limit Exceeded
+- Wait for the cooldown period to expire
+- Check your current status with `getStatus()`
+- Contact support if you believe it's an error
 
-**Solution**: Check current status
-```typescript
-const status = getRateLimitStatus('stake');
-console.log(`Count: ${status.count}/${status.limit}`);
-console.log(`Resets at: ${new Date(status.resetTime)}`);
-```
+### Incorrect Remaining Count
+- Refresh the status with `checkLimit()`
+- Clear browser cache
+- Check for multiple browser tabs
 
-### Issue: Contract rejects with ERR-RATE-LIMIT-EXCEEDED
+### Contract Rate Limit Mismatch
+- Frontend and contract limits may differ
+- Contract limits are authoritative
+- Sync configurations if needed
 
-**Solution**: Wait for window reset
-```typescript
-const status = getRateLimitStatus('stake');
-const waitTime = status.resetTime - Date.now();
-console.log(`Wait ${Math.ceil(waitTime / 1000)} seconds`);
-```
+## Best Practices
 
-### Issue: Rate limits not resetting
+1. **Always check status before operations**
+2. **Handle rate limit errors gracefully**
+3. **Show users their remaining requests**
+4. **Provide clear error messages**
+5. **Monitor for abuse patterns**
+6. **Adjust limits based on usage**
+7. **Test rate limiting in development**
 
-**Solution**: Verify configuration
-```typescript
-const config = rateLimitService.getConfig('stake');
-console.log(`Window: ${config.windowMs}ms`);
-console.log(`Max requests: ${config.maxRequests}`);
-```
+## Security Notes
 
-## Security Considerations
-
-1. **Client-Side Enforcement**: Advisory only, contracts enforce mandatory limits
-2. **Bypass Prevention**: All critical operations rate-limited at contract level
-3. **Fraud Detection**: Integrated monitoring of violations
-4. **Dynamic Adjustment**: Limits tighten for suspicious users
-5. **Audit Trail**: Comprehensive logging of all violations
-
-## Performance
-
-- **Memory**: O(users × actions) - minimal overhead
-- **Lookup**: O(1) - instant rate limit checks
-- **Contract Gas**: ~100 gas per check - negligible
-- **Frontend Latency**: <1ms - imperceptible
+- Frontend rate limiting is advisory
+- Contract enforcement is authoritative
+- Cannot be bypassed on-chain
+- Admin functions require owner privileges
+- Violations are tracked for analysis
 
 ## Support
 
-### Documentation
-- [Implementation Guide](./RATE_LIMITING_IMPLEMENTATION.md)
-- [API Reference](./RATE_LIMITING_API.md)
-- [Changelog](./RATE_LIMITING_CHANGELOG.md)
-
-### Contact
-- GitHub Issues: [Report a bug](https://github.com/0xcast/issues)
-- Discord: [Join our community](https://discord.gg/0xcast)
-- Email: support@0xcast.io
-
-## License
-
-MIT License - see LICENSE file for details
-
----
-
-**Version**: 1.0.0  
-**Last Updated**: 2026-04-27  
-**Status**: Production Ready ✅
+For issues or questions:
+- Check the implementation docs: `RATE_LIMITING_IMPLEMENTATION.md`
+- Review test files for examples
+- Contact the development team

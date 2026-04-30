@@ -48,7 +48,7 @@ import { uintCV, PostConditionMode, Pc } from '@stacks/transactions';
 import { getContractPrincipal, CONTRACT_NAMES } from '../config/contracts';
 import { useWallet } from '../components/WalletProvider';
 import { safeBigIntToNumber } from './useContract';
-import { useRateLimit } from './useRateLimit';
+import { createRateLimitMiddleware } from '../middleware/rateLimitMiddleware';
 import { parseContractError, getUserFriendlyContractError } from '../utils/contractErrorHandler';
 import { errorLoggingService } from '../services/ErrorLoggingService';
 
@@ -80,7 +80,6 @@ export interface UseLiquidityActionsReturn {
 
 export function useLiquidityActions(): UseLiquidityActionsReturn {
   const { address, isConnected } = useWallet();
-  const { checkRateLimit } = useRateLimit();
   const [state, setState] = useState<TransactionState>(initialState);
 
   const resetState = useCallback(() => {
@@ -122,15 +121,10 @@ export function useLiquidityActions(): UseLiquidityActionsReturn {
             });
           },
           onCancel: () => {
-            const cancelError = parseContractError(
-              new Error('User cancelled transaction'),
-              contract.name,
-              functionName
-            );
             setState(prev => ({
               ...prev,
               isSubmitting: false,
-              error: getUserFriendlyContractError(cancelError),
+              error: 'Transaction cancelled',
             }));
           },
         });
@@ -176,39 +170,55 @@ export function useLiquidityActions(): UseLiquidityActionsReturn {
     async (marketId: number, stxAmount: bigint) => {
       if (!address) throw new Error('Wallet not connected');
 
-      const rateLimitResult = await checkRateLimit('add-liquidity');
-      if (!rateLimitResult.allowed) {
-        throw new Error(rateLimitResult.reason || 'Rate limit exceeded');
-      }
-
-      const postConditions = [
-        Pc.principal(address).willSendEq(stxAmount).ustx(),
-      ];
-
-      await executeCall(
+      const rateLimitMiddleware = createRateLimitMiddleware(address);
+      
+      await rateLimitMiddleware(
         'add-liquidity',
-        [uintCV(marketId), uintCV(safeBigIntToNumber(stxAmount, 'stxAmount'))],
-        postConditions
+        async () => {
+          const postConditions = [
+            Pc.principal(address).willSendEq(stxAmount).ustx(),
+          ];
+
+          await executeCall(
+            'add-liquidity',
+            [uintCV(marketId), uintCV(safeBigIntToNumber(stxAmount, 'stxAmount'))],
+            postConditions
+          );
+        },
+        {
+          onBlocked: (cooldownMs) => {
+            throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(cooldownMs / 1000)} seconds.`);
+          },
+        }
       );
     },
-    [executeCall, address, checkRateLimit]
+    [executeCall, address]
   );
 
   const removeLiquidity = useCallback(
     async (marketId: number, shares: bigint) => {
-      const rateLimitResult = await checkRateLimit('remove-liquidity');
-      if (!rateLimitResult.allowed) {
-        throw new Error(rateLimitResult.reason || 'Rate limit exceeded');
-      }
+      if (!address) throw new Error('Wallet not connected');
 
-      await executeCall(
+      const rateLimitMiddleware = createRateLimitMiddleware(address);
+      
+      await rateLimitMiddleware(
         'remove-liquidity',
-        [uintCV(marketId), uintCV(safeBigIntToNumber(shares, 'shares'))],
-        [],
-        PostConditionMode.Allow
+        async () => {
+          await executeCall(
+            'remove-liquidity',
+            [uintCV(marketId), uintCV(safeBigIntToNumber(shares, 'shares'))],
+            [],
+            PostConditionMode.Allow
+          );
+        },
+        {
+          onBlocked: (cooldownMs) => {
+            throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(cooldownMs / 1000)} seconds.`);
+          },
+        }
       );
     },
-    [executeCall, checkRateLimit]
+    [executeCall, address]
   );
 
   return {

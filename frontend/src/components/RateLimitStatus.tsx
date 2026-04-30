@@ -1,73 +1,50 @@
 import React from 'react';
-import { useRateLimit } from '../hooks/useRateLimit';
+import { RateLimitStatus as RateLimitStatusType } from '@/types/rateLimit';
 
 interface RateLimitStatusProps {
-  action: string;
+  status: RateLimitStatusType;
   showDetails?: boolean;
 }
 
-export const RateLimitStatus: React.FC<RateLimitStatusProps> = ({ 
-  action, 
-  showDetails = false 
+export const RateLimitStatus: React.FC<RateLimitStatusProps> = ({
+  status,
+  showDetails = true,
 }) => {
-  const { getRateLimitStatus } = useRateLimit();
-  const status = getRateLimitStatus(action);
+  const getTimeRemaining = (timestamp: number): string => {
+    const seconds = Math.ceil((timestamp - Date.now()) / 1000);
+    if (seconds < 60) return `${seconds}s`;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}m ${remainingSeconds}s`;
+  };
 
-  if (!status || status.limit === 0) {
-    return null;
-  }
-
-  const percentage = (status.remaining / status.limit) * 100;
-  const resetDate = new Date(status.resetTime);
-  const now = Date.now();
-  const timeUntilReset = Math.max(0, status.resetTime - now);
-  const minutesUntilReset = Math.ceil(timeUntilReset / 60000);
-
-  const getStatusColor = () => {
+  const getStatusColor = (): string => {
     if (status.blocked) return 'text-red-600';
-    if (percentage < 20) return 'text-orange-600';
-    if (percentage < 50) return 'text-yellow-600';
+    if (status.remaining <= 2) return 'text-yellow-600';
     return 'text-green-600';
   };
 
-  const getProgressColor = () => {
-    if (status.blocked) return 'bg-red-500';
-    if (percentage < 20) return 'bg-orange-500';
-    if (percentage < 50) return 'bg-yellow-500';
-    return 'bg-green-500';
+  const getStatusIcon = (): string => {
+    if (status.blocked) return '🚫';
+    if (status.remaining <= 2) return '⚠️';
+    return '✓';
   };
 
   return (
-    <div className="rate-limit-status">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-sm font-medium text-gray-700">
-          {action.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+    <div className={`flex items-center gap-2 ${getStatusColor()}`}>
+      <span className="text-lg">{getStatusIcon()}</span>
+      <div className="flex flex-col">
+        <span className="font-medium">
+          {status.blocked ? 'Rate Limited' : `${status.remaining} remaining`}
         </span>
-        <span className={`text-sm font-semibold ${getStatusColor()}`}>
-          {status.remaining}/{status.limit}
-        </span>
+        {showDetails && (
+          <span className="text-xs opacity-75">
+            {status.blocked && status.cooldownUntil
+              ? `Cooldown: ${getTimeRemaining(status.cooldownUntil)}`
+              : `Resets in ${getTimeRemaining(status.resetAt)}`}
+          </span>
+        )}
       </div>
-      
-      <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
-        <div
-          className={`h-2 rounded-full transition-all duration-300 ${getProgressColor()}`}
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
-
-      {showDetails && (
-        <div className="text-xs text-gray-500">
-          {status.blocked ? (
-            <span className="text-red-600 font-medium">
-              Rate limit exceeded. Try again in {minutesUntilReset} minute{minutesUntilReset !== 1 ? 's' : ''}
-            </span>
-          ) : (
-            <span>
-              Resets in {minutesUntilReset} minute{minutesUntilReset !== 1 ? 's' : ''}
-            </span>
-          )}
-        </div>
-      )}
     </div>
   );
 };

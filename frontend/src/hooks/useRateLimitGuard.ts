@@ -1,0 +1,32 @@
+import { useCallback } from 'react';
+import { useRateLimit } from './useRateLimit';
+import { RateLimitAction } from '@/types/rateLimit';
+
+export function useRateLimitGuard(userId: string, action: RateLimitAction) {
+  const { status, recordRequest, isBlocked } = useRateLimit(userId, action);
+
+  const executeWithGuard = useCallback(
+    async <T>(fn: () => Promise<T>): Promise<T> => {
+      if (isBlocked) {
+        throw new Error(
+          `Rate limit exceeded for ${action}. Please wait before trying again.`
+        );
+      }
+
+      await recordRequest();
+      return fn();
+    },
+    [isBlocked, recordRequest, action]
+  );
+
+  const canExecute = useCallback((): boolean => {
+    return !isBlocked && (status?.remaining ?? 0) > 0;
+  }, [isBlocked, status]);
+
+  return {
+    executeWithGuard,
+    canExecute,
+    status,
+    isBlocked,
+  };
+}

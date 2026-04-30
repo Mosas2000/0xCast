@@ -27,7 +27,8 @@ import { useState, useCallback } from 'react';
 import { useContract } from './useContract';
 import type { CreateMarketFormData } from '../types/market';
 import { useContractPause } from './useContractPause';
-import { useRateLimit } from './useRateLimit';
+import { createRateLimitMiddleware } from '../middleware/rateLimitMiddleware';
+import { useWallet } from '../components/WalletProvider';
 import { parseContractError, getUserFriendlyContractError } from '../utils/contractErrorHandler';
 import { errorLoggingService } from '../services/ErrorLoggingService';
 import { MARKET_CONTRACT } from '../config/contracts';
@@ -56,7 +57,7 @@ const initialState: MarketCreationState = {
 export function useMarketCreation(): UseMarketCreationReturn {
   const { createMarket: createMarketContract } = useContract();
   const { isPaused: isContractPaused } = useContractPause();
-  const { checkRateLimit } = useRateLimit();
+  const { address } = useWallet();
   const [state, setState] = useState<MarketCreationState>(initialState);
 
   const createMarket = useCallback(
@@ -66,18 +67,29 @@ export function useMarketCreation(): UseMarketCreationReturn {
         setState(prev => ({ ...prev, isCreating: false, error: pauseError, success: false }));
         throw new Error(pauseError);
       }
-
-      const rateLimitResult = await checkRateLimit('create-market');
-      if (!rateLimitResult.allowed) {
-        const rateLimitError = rateLimitResult.reason || 'Rate limit exceeded';
-        setState(prev => ({ ...prev, isCreating: false, error: rateLimitError, success: false }));
-        throw new Error(rateLimitError);
+      
+      if (!address) {
+        const walletError = 'Wallet not connected';
+        setState(prev => ({ ...prev, isCreating: false, error: walletError, success: false }));
+        throw new Error(walletError);
       }
-
+      
       setState(prev => ({ ...prev, isCreating: true, error: null }));
 
       try {
-        await createMarketContract(data.question, data.durationBlocks);
+        const rateLimitMiddleware = createRateLimitMiddleware(address);
+        
+        await rateLimitMiddleware(
+          'create-market',
+          async () => {
+            await createMarketContract(data.question, data.durationBlocks);
+          },
+          {
+            onBlocked: (cooldownMs) => {
+              throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(cooldownMs / 1000)} seconds.`);
+            },
+          }
+        );
 
         setState(prev => ({
           ...prev,
@@ -108,7 +120,7 @@ export function useMarketCreation(): UseMarketCreationReturn {
         throw contractError;
       }
     },
-    [createMarketContract, isContractPaused, checkRateLimit]
+    [createMarketContract, isContractPaused, address]
   );
 
   const resetState = useCallback(() => {

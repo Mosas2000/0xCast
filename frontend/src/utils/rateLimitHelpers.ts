@@ -1,126 +1,108 @@
-export function formatTimeRemaining(milliseconds: number): string {
-  if (milliseconds <= 0) return 'now';
+import { RateLimitStatus, RateLimitAction } from '@/types/rateLimit';
 
-  const seconds = Math.ceil(milliseconds / 1000);
+export function formatTimeRemaining(timestamp: number): string {
+  const seconds = Math.ceil((timestamp - Date.now()) / 1000);
   
-  if (seconds < 60) {
-    return `${seconds} second${seconds !== 1 ? 's' : ''}`;
-  }
+  if (seconds < 0) return '0s';
+  if (seconds < 60) return `${seconds}s`;
   
-  const minutes = Math.ceil(seconds / 60);
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  
   if (minutes < 60) {
-    return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+    return remainingSeconds > 0 
+      ? `${minutes}m ${remainingSeconds}s` 
+      : `${minutes}m`;
   }
   
-  const hours = Math.ceil(minutes / 60);
-  return `${hours} hour${hours !== 1 ? 's' : ''}`;
-}
-
-export function formatResetTime(timestamp: number): string {
-  const date = new Date(timestamp);
-  const now = new Date();
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
   
-  const diffMs = timestamp - now.getTime();
+  return remainingMinutes > 0 
+    ? `${hours}h ${remainingMinutes}m` 
+    : `${hours}h`;
+}
+
+export function getRateLimitSeverity(status: RateLimitStatus): 'safe' | 'warning' | 'blocked' {
+  if (status.blocked) return 'blocked';
+  if (status.remaining <= 2) return 'warning';
+  return 'safe';
+}
+
+export function getRateLimitColor(status: RateLimitStatus): string {
+  const severity = getRateLimitSeverity(status);
   
-  if (diffMs <= 0) {
-    return 'Reset now';
-  }
-  
-  return `Resets in ${formatTimeRemaining(diffMs)}`;
-}
-
-export function calculateUtilizationPercentage(count: number, limit: number): number {
-  if (limit === 0) return 100;
-  return Math.round((count / limit) * 100);
-}
-
-export function getRateLimitSeverity(
-  utilizationPercentage: number
-): 'low' | 'medium' | 'high' | 'critical' {
-  if (utilizationPercentage >= 100) return 'critical';
-  if (utilizationPercentage >= 80) return 'high';
-  if (utilizationPercentage >= 50) return 'medium';
-  return 'low';
-}
-
-export function getRateLimitColor(severity: 'low' | 'medium' | 'high' | 'critical'): string {
   switch (severity) {
-    case 'critical':
+    case 'blocked':
       return 'red';
-    case 'high':
-      return 'orange';
-    case 'medium':
+    case 'warning':
       return 'yellow';
-    case 'low':
-    default:
+    case 'safe':
       return 'green';
   }
 }
 
-export function shouldShowWarning(utilizationPercentage: number): boolean {
-  return utilizationPercentage >= 80;
+export function getRateLimitIcon(status: RateLimitStatus): string {
+  const severity = getRateLimitSeverity(status);
+  
+  switch (severity) {
+    case 'blocked':
+      return '🚫';
+    case 'warning':
+      return '⚠️';
+    case 'safe':
+      return '✓';
+  }
 }
 
-export function getRateLimitMessage(
-  remaining: number,
-  limit: number,
-  resetTime: number
-): string {
-  const utilizationPercentage = calculateUtilizationPercentage(limit - remaining, limit);
-  
-  if (utilizationPercentage >= 100) {
-    return `Rate limit reached. ${formatResetTime(resetTime)}.`;
+export function getRateLimitMessage(status: RateLimitStatus): string {
+  if (status.blocked) {
+    const cooldownTime = status.cooldownUntil 
+      ? formatTimeRemaining(status.cooldownUntil)
+      : 'a moment';
+    return `Rate limit exceeded. Please wait ${cooldownTime}.`;
   }
   
-  if (utilizationPercentage >= 80) {
-    return `Approaching rate limit (${remaining}/${limit} remaining). ${formatResetTime(resetTime)}.`;
+  if (status.remaining <= 2) {
+    return `Only ${status.remaining} ${status.action} request${status.remaining !== 1 ? 's' : ''} remaining.`;
   }
   
-  return `${remaining}/${limit} requests remaining. ${formatResetTime(resetTime)}.`;
+  return `${status.remaining} requests remaining.`;
 }
 
-export function parseRateLimitHeaders(headers: Headers): {
-  limit: number;
-  remaining: number;
-  reset: number;
-  retryAfter?: number;
-} | null {
-  const limit = headers.get('X-RateLimit-Limit');
-  const remaining = headers.get('X-RateLimit-Remaining');
-  const reset = headers.get('X-RateLimit-Reset');
-  const retryAfter = headers.get('X-RateLimit-RetryAfter');
-
-  if (!limit || !remaining || !reset) {
-    return null;
-  }
-
-  return {
-    limit: parseInt(limit, 10),
-    remaining: parseInt(remaining, 10),
-    reset: parseInt(reset, 10),
-    retryAfter: retryAfter ? parseInt(retryAfter, 10) : undefined,
+export function getActionDisplayName(action: RateLimitAction): string {
+  const displayNames: Record<RateLimitAction, string> = {
+    'stake': 'Staking',
+    'create-market': 'Market Creation',
+    'resolve-market': 'Market Resolution',
+    'add-liquidity': 'Add Liquidity',
+    'remove-liquidity': 'Remove Liquidity',
+    'vote': 'Voting',
+    'claim-rewards': 'Claim Rewards',
+    'dispute': 'Dispute',
+    'trade': 'Trading',
   };
+  
+  return displayNames[action] || action;
 }
 
-export function createRateLimitError(
-  reason: string,
-  retryAfter?: number
-): Error {
-  const error = new Error(reason);
-  error.name = 'RateLimitError';
-  if (retryAfter) {
-    (error as any).retryAfter = retryAfter;
-  }
-  return error;
+export function shouldShowRateLimitWarning(status: RateLimitStatus): boolean {
+  return status.blocked || status.remaining <= 2;
 }
 
-export function isRateLimitError(error: unknown): boolean {
-  return error instanceof Error && error.name === 'RateLimitError';
+export function calculateRateLimitPercentage(status: RateLimitStatus, maxRequests: number): number {
+  if (status.blocked) return 0;
+  return Math.round((status.remaining / maxRequests) * 100);
 }
 
-export function getRetryAfterFromError(error: unknown): number | undefined {
-  if (isRateLimitError(error)) {
-    return (error as any).retryAfter;
-  }
-  return undefined;
+export function isRateLimitCritical(status: RateLimitStatus): boolean {
+  return status.blocked || status.remaining === 0;
+}
+
+export function getRateLimitResetTime(status: RateLimitStatus): Date {
+  return new Date(status.resetAt);
+}
+
+export function getRateLimitCooldownTime(status: RateLimitStatus): Date | null {
+  return status.cooldownUntil ? new Date(status.cooldownUntil) : null;
 }
