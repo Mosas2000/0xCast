@@ -259,7 +259,7 @@ export class RealtimeMarketClient {
     if (handlers) {
       handlers.forEach((handler) => {
         try {
-          (handler as any)(data);
+          handler(data);
         } catch (error) {
           console.error(`Error in event handler for ${event}:`, error);
         }

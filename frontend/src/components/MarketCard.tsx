@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import type { Market } from '../types/market';
 import { MarketStatus } from '../types/market';
 import { calculateOdds, formatStx, getStatusLabel } from '../utils/helpers';
@@ -12,6 +13,7 @@ interface MarketCardProps {
 }
 
 export function MarketCard({ market, showCategory = true }: MarketCardProps) {
+  const { t } = useTranslation(['common', 'markets']);
   const odds = calculateOdds(market.totalYesStake, market.totalNoStake);
   const totalPool = market.totalYesStake + market.totalNoStake;
   const isActive = market.status === MarketStatus.ACTIVE;
@@ -40,7 +42,7 @@ export function MarketCard({ market, showCategory = true }: MarketCardProps) {
           type="button"
           onClick={handleToggleWatchlist}
           aria-pressed={watched}
-          aria-label={watched ? 'Remove from watchlist' : 'Add to watchlist'}
+          aria-label={watched ? t('markets:actions.removeFromWatchlist') : t('markets:actions.addToWatchlist')}
           className={`pointer-events-auto absolute top-4 right-4 inline-flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${
             watched
               ? 'border-rose-500/40 bg-rose-500/15 text-rose-400 hover:bg-rose-500/25'
@@ -91,8 +93,8 @@ export function MarketCard({ market, showCategory = true }: MarketCardProps) {
         {/* Odds */}
         <div className="mb-5 sm:mb-6">
           <div className="flex justify-between mb-2 sm:mb-2.5">
-            <span className="text-xs sm:text-sm font-semibold text-green-400">Yes {odds.yes}%</span>
-            <span className="text-xs sm:text-sm font-semibold text-red-400">No {odds.no}%</span>
+            <span className="text-xs sm:text-sm font-semibold text-green-400">{t('common:outcome.yes')} {odds.yes}%</span>
+            <span className="text-xs sm:text-sm font-semibold text-red-400">{t('common:outcome.no')} {odds.no}%</span>
           </div>
           <div className="h-1.5 sm:h-2 rounded bg-neutral-300 dark:bg-neutral-800 flex overflow-hidden">
             <div 
@@ -109,7 +111,7 @@ export function MarketCard({ market, showCategory = true }: MarketCardProps) {
         {/* Footer */}
         <div className="flex justify-between items-center pt-4 sm:pt-5 border-t border-neutral-300 dark:border-neutral-800">
           <div>
-            <p className="text-[10px] sm:text-xs text-neutral-600 dark:text-neutral-600 mb-1">Total Pool</p>
+            <p className="text-[10px] sm:text-xs text-neutral-600 dark:text-neutral-600 mb-1">{t('markets:labels.totalPool')}</p>
             <p className="text-sm sm:text-base font-bold text-black dark:text-white">{formatStx(totalPool)}</p>
           </div>
           <span className="text-xs sm:text-sm font-semibold text-blue-500">

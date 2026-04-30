@@ -8,6 +8,8 @@ import { validateAmount, validateMarketId } from '../utils/validation';
 import { addStakeHistoryEntry, type StakeOutcome } from '../utils/stakeHistory';
 import { useContractPause } from './useContractPause';
 import { createRateLimitMiddleware } from '../middleware/rateLimitMiddleware';
+import { parseContractError, getUserFriendlyContractError } from '../utils/contractErrorHandler';
+import { errorLoggingService } from '../services/ErrorLoggingService';
 
 interface UseStakeReturn {
   placeYesStake: (marketId: number, amount: number, onSuccess?: () => void) => Promise<void>;
@@ -49,7 +51,6 @@ export function useStake(): UseStakeReturn {
         return;
       }
 
-      // Validate inputs before proceeding
       const marketIdValidation = validateMarketId(marketId);
       if (!marketIdValidation.isValid) {
         setError(marketIdValidation.error || 'Invalid market ID');
@@ -84,7 +85,6 @@ export function useStake(): UseStakeReturn {
 
         const stakeMicroStx = stxToMicroStx(amount);
 
-        // Post condition: user sends exact STX amount
         const postConditions = [
           Pc.principal(address).willSendEq(stakeMicroStx).ustx(),
         ];

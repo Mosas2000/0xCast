@@ -49,6 +49,8 @@ import {
 import { getContractPrincipal, CONTRACT_NAMES } from '../config/contracts';
 import { useWallet } from '../components/WalletProvider';
 import { safeBigIntToNumber } from './useContract';
+import { parseContractError, getUserFriendlyContractError } from '../utils/contractErrorHandler';
+import { errorLoggingService } from '../services/ErrorLoggingService';
 
 /**
  * Get oracle contract configuration
@@ -145,21 +147,34 @@ export function useOracleActions(): UseOracleActionsReturn {
             }));
           },
           onCancel: () => {
+            const cancelError = parseContractError(
+              new Error('User cancelled transaction'),
+              contract.name,
+              functionName
+            );
             setState(prev => ({
               ...prev,
               isSubmitting: false,
-              error: 'Transaction cancelled',
+              error: getUserFriendlyContractError(cancelError),
             }));
           },
         });
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Transaction failed';
+        const contractError = parseContractError(error, contract.name, functionName);
+        const friendlyMessage = getUserFriendlyContractError(contractError);
+        
+        errorLoggingService.logError(contractError, {
+          component: 'useOracleActions',
+          action: functionName,
+          additionalData: { functionArgs },
+        });
+        
         setState(prev => ({
           ...prev,
           isSubmitting: false,
-          error: errorMessage,
+          error: friendlyMessage,
         }));
-        throw error;
+        throw contractError;
       }
     },
     [isConnected, address]

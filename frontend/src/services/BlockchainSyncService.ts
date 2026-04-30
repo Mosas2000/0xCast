@@ -337,7 +337,7 @@ export class BlockchainSyncService {
     }
   }
 
-  private emit(event: string, data?: any): void {
+  private emit(event: string, data?: LogData): void {
     const callbacks = this.listeners.get(event);
     if (callbacks) {
       callbacks.forEach(callback => callback(data));

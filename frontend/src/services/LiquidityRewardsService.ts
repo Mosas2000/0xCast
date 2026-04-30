@@ -1,0 +1,164 @@
+import type {
+  LiquidityPosition,
+  HistoricalReward,
+  MarketVolume,
+} from '../utils/liquidityRewardsCalculator';
+
+const STORAGE_KEY_POSITIONS = 'liquidity_positions';
+const STORAGE_KEY_REWARDS = 'historical_rewards';
+const STORAGE_KEY_VOLUMES = 'market_volumes';
+
+export class LiquidityRewardsService {
+  private positions: Map<string, LiquidityPosition[]> = new Map();
+  private rewards: HistoricalReward[] = [];
+  private volumes: Map<number, MarketVolume> = new Map();
+
+  constructor() {
+    this.loadFromStorage();
+  }
+
+  private loadFromStorage(): void {
+    try {
+      const positionsData = localStorage.getItem(STORAGE_KEY_POSITIONS);
+      if (positionsData) {
+        const parsed = JSON.parse(positionsData);
+        this.positions = new Map(Object.entries(parsed));
+      }
+
+      const rewardsData = localStorage.getItem(STORAGE_KEY_REWARDS);
+      if (rewardsData) {
+        this.rewards = JSON.parse(rewardsData);
+      }
+
+      const volumesData = localStorage.getItem(STORAGE_KEY_VOLUMES);
+      if (volumesData) {
+        const parsed = JSON.parse(volumesData);
+        this.volumes = new Map(Object.entries(parsed).map(([k, v]) => [parseInt(k), v as MarketVolume]));
+      }
+    } catch (error) {
+      console.error('Failed to load liquidity data from storage:', error);
+    }
+  }
+
+  private saveToStorage(): void {
+    try {
+      const positionsObj = Object.fromEntries(this.positions);
+      localStorage.setItem(STORAGE_KEY_POSITIONS, JSON.stringify(positionsObj));
+
+      localStorage.setItem(STORAGE_KEY_REWARDS, JSON.stringify(this.rewards));
+
+      const volumesObj = Object.fromEntries(this.volumes);
+      localStorage.setItem(STORAGE_KEY_VOLUMES, JSON.stringify(volumesObj));
+    } catch (error) {
+      console.error('Failed to save liquidity data to storage:', error);
+    }
+  }
+
+  addPosition(position: LiquidityPosition): void {
+    const userPositions = this.positions.get(position.userAddress) || [];
+    userPositions.push(position);
+    this.positions.set(position.userAddress, userPositions);
+    this.saveToStorage();
+  }
+
+  getPositions(userAddress: string): LiquidityPosition[] {
+    return this.positions.get(userAddress) || [];
+  }
+
+  getPositionsByMarket(userAddress: string, marketId: number): LiquidityPosition[] {
+    const userPositions = this.getPositions(userAddress);
+    return userPositions.filter((pos) => pos.marketId === marketId);
+  }
+
+  getTotalLiquidity(userAddress: string): number {
+    const positions = this.getPositions(userAddress);
+    return positions.reduce((sum, pos) => sum + pos.amount, 0);
+  }
+
+  addReward(reward: HistoricalReward): void {
+    this.rewards.push(reward);
+    this.saveToStorage();
+  }
+
+  getRewards(userAddress: string): HistoricalReward[] {
+    return this.rewards.filter((reward) => reward.userAddress === userAddress);
+  }
+
+  getRewardsByMarket(userAddress: string, marketId: number): HistoricalReward[] {
+    return this.rewards.filter(
+      (reward) => reward.userAddress === userAddress && reward.marketId === marketId
+    );
+  }
+
+  getRewardsByTimeRange(
+    userAddress: string,
+    startTime: number,
+    endTime: number
+  ): HistoricalReward[] {
+    return this.rewards.filter(
+      (reward) =>
+        reward.userAddress === userAddress &&
+        reward.timestamp >= startTime &&
+        reward.timestamp <= endTime
+    );
+  }
+
+  getTotalRewards(userAddress: string): number {
+    const rewards = this.getRewards(userAddress);
+    return rewards.reduce((sum, reward) => sum + reward.amount, 0);
+  }
+
+  updateMarketVolume(marketId: number, volume: MarketVolume): void {
+    this.volumes.set(marketId, volume);
+    this.saveToStorage();
+  }
+
+  getMarketVolume(marketId: number): MarketVolume | undefined {
+    return this.volumes.get(marketId);
+  }
+
+  getAllMarketVolumes(): MarketVolume[] {
+    return Array.from(this.volumes.values());
+  }
+
+  getRewardHistory(
+    userAddress: string,
+    days: number
+  ): { date: string; amount: number }[] {
+    const now = Date.now();
+    const startTime = now - days * 86400 * 1000;
+
+    const rewards = this.getRewardsByTimeRange(userAddress, startTime, now);
+
+    const dailyRewards = new Map<string, number>();
+
+    rewards.forEach((reward) => {
+      const date = new Date(reward.timestamp).toISOString().split('T')[0];
+      const current = dailyRewards.get(date) || 0;
+      dailyRewards.set(date, current + reward.amount);
+    });
+
+    return Array.from(dailyRewards.entries())
+      .map(([date, amount]) => ({ date, amount }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  clearUserData(userAddress: string): void {
+    this.positions.delete(userAddress);
+    this.rewards = this.rewards.filter(
+      (reward) => reward.userAddress !== userAddress
+    );
+    this.saveToStorage();
+  }
+
+  clearAllData(): void {
+    this.positions.clear();
+    this.rewards = [];
+    this.volumes.clear();
+    localStorage.removeItem(STORAGE_KEY_POSITIONS);
+    localStorage.removeItem(STORAGE_KEY_REWARDS);
+    localStorage.removeItem(STORAGE_KEY_VOLUMES);
+  }
+}
+
+export const liquidityRewardsService = new LiquidityRewardsService();

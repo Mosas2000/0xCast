@@ -1,0 +1,48 @@
+{
+  "title": "Portefeuille",
+  "overview": {
+    "totalValue": "Valeur Totale",
+    "totalStaked": "Total Misé",
+    "activePositions": "Positions Actives",
+    "totalReturn": "Retour Total",
+    "winRate": "Taux de Réussite",
+    "profitLoss": "Profit/Perte"
+  },
+  "positions": {
+    "title": "Positions",
+    "market": "Marché",
+    "position": "Position",
+    "stake": "Mise",
+    "currentValue": "Valeur Actuelle",
+    "return": "Retour",
+    "status": "Statut"
+  },
+  "recommendations": {
+    "title": "Recommandations",
+    "rebalancing": "Rééquilibrer",
+    "diversification": "Diversifier",
+    "riskManagement": "Réduire le Risque",
+    "opportunity": "Opportunité",
+    "confidence": "Confiance",
+    "priority": {
+      "high": "Haute Priorité",
+      "medium": "Priorité Moyenne",
+      "low": "Basse Priorité"
+    },
+    "actions": "Actions suggérées"
+  },
+  "history": {
+    "title": "Historique des Transactions",
+    "date": "Date",
+    "type": "Type",
+    "market": "Marché",
+    "amount": "Montant",
+    "status": "Statut"
+  },
+  "export": {
+    "title": "Exporter le Portefeuille",
+    "csv": "Exporter en CSV",
+    "json": "Exporter en JSON",
+    "pdf": "Exporter en PDF"
+  }
+}

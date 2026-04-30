@@ -15,6 +15,9 @@ import { useWallet } from '../components/WalletProvider';
 import { GOVERNANCE_CONFIG } from '../config/governance';
 import { getNetwork } from '../config';
 import type { VoteType } from '../types/governance';
+import { useRateLimit } from './useRateLimit';
+import { parseContractError, getUserFriendlyContractError } from '../utils/contractErrorHandler';
+import { errorLoggingService } from '../services/ErrorLoggingService';
 
 interface ActionState {
   isLoading: boolean;
@@ -50,6 +53,7 @@ const initialState: ActionState = {
 
 export function useGovernanceActions(): UseGovernanceActionsReturn {
   const { isConnected, address } = useWallet();
+  const { checkRateLimit } = useRateLimit();
   
   const [voteState, setVoteState] = useState<ActionState>(initialState);
   const [proposalState, setProposalState] = useState<ActionState>(initialState);
@@ -62,6 +66,12 @@ export function useGovernanceActions(): UseGovernanceActionsReturn {
   const castVote = useCallback(async (proposalId: number, voteType: VoteType) => {
     if (!isConnected || !address) {
       setVoteState({ isLoading: false, error: 'Wallet not connected', txId: null });
+      return;
+    }
+
+    const rateLimitResult = await checkRateLimit('vote');
+    if (!rateLimitResult.allowed) {
+      setVoteState({ isLoading: false, error: rateLimitResult.reason || 'Rate limit exceeded', txId: null });
       return;
     }
 
@@ -86,14 +96,27 @@ export function useGovernanceActions(): UseGovernanceActionsReturn {
           setVoteState({ isLoading: false, error: null, txId: data.txId });
         },
         onCancel: () => {
-          setVoteState({ isLoading: false, error: 'Transaction cancelled', txId: null });
+          const cancelError = parseContractError(
+            new Error('User cancelled transaction'),
+            contractName,
+            'cast-vote'
+          );
+          setVoteState({ isLoading: false, error: getUserFriendlyContractError(cancelError), txId: null });
         },
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to cast vote';
-      setVoteState({ isLoading: false, error: message, txId: null });
+      const contractError = parseContractError(error, contractName, 'cast-vote');
+      const friendlyMessage = getUserFriendlyContractError(contractError);
+      
+      errorLoggingService.logError(contractError, {
+        component: 'useGovernanceActions',
+        action: 'cast-vote',
+        additionalData: { proposalId, voteType },
+      });
+      
+      setVoteState({ isLoading: false, error: friendlyMessage, txId: null });
     }
-  }, [isConnected, address]);
+  }, [isConnected, address, checkRateLimit]);
 
   /**
    * Create a new proposal
@@ -134,12 +157,25 @@ export function useGovernanceActions(): UseGovernanceActionsReturn {
           setProposalState({ isLoading: false, error: null, txId: data.txId });
         },
         onCancel: () => {
-          setProposalState({ isLoading: false, error: 'Transaction cancelled', txId: null });
+          const cancelError = parseContractError(
+            new Error('User cancelled transaction'),
+            contractName,
+            'create-proposal'
+          );
+          setProposalState({ isLoading: false, error: getUserFriendlyContractError(cancelError), txId: null });
         },
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to create proposal';
-      setProposalState({ isLoading: false, error: message, txId: null });
+      const contractError = parseContractError(error, contractName, 'create-proposal');
+      const friendlyMessage = getUserFriendlyContractError(contractError);
+      
+      errorLoggingService.logError(contractError, {
+        component: 'useGovernanceActions',
+        action: 'create-proposal',
+        additionalData: { title, description },
+      });
+      
+      setProposalState({ isLoading: false, error: friendlyMessage, txId: null });
     }
   }, [isConnected, address]);
 
@@ -174,12 +210,25 @@ export function useGovernanceActions(): UseGovernanceActionsReturn {
           setDelegationState({ isLoading: false, error: null, txId: data.txId });
         },
         onCancel: () => {
-          setDelegationState({ isLoading: false, error: 'Transaction cancelled', txId: null });
+          const cancelError = parseContractError(
+            new Error('User cancelled transaction'),
+            contractName,
+            'delegate-voting-power'
+          );
+          setDelegationState({ isLoading: false, error: getUserFriendlyContractError(cancelError), txId: null });
         },
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to delegate';
-      setDelegationState({ isLoading: false, error: message, txId: null });
+      const contractError = parseContractError(error, contractName, 'delegate-voting-power');
+      const friendlyMessage = getUserFriendlyContractError(contractError);
+      
+      errorLoggingService.logError(contractError, {
+        component: 'useGovernanceActions',
+        action: 'delegate-voting-power',
+        additionalData: { delegate },
+      });
+      
+      setDelegationState({ isLoading: false, error: friendlyMessage, txId: null });
     }
   }, [isConnected, address]);
 
@@ -209,12 +258,24 @@ export function useGovernanceActions(): UseGovernanceActionsReturn {
           setDelegationState({ isLoading: false, error: null, txId: data.txId });
         },
         onCancel: () => {
-          setDelegationState({ isLoading: false, error: 'Transaction cancelled', txId: null });
+          const cancelError = parseContractError(
+            new Error('User cancelled transaction'),
+            contractName,
+            'revoke-delegation'
+          );
+          setDelegationState({ isLoading: false, error: getUserFriendlyContractError(cancelError), txId: null });
         },
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to revoke delegation';
-      setDelegationState({ isLoading: false, error: message, txId: null });
+      const contractError = parseContractError(error, contractName, 'revoke-delegation');
+      const friendlyMessage = getUserFriendlyContractError(contractError);
+      
+      errorLoggingService.logError(contractError, {
+        component: 'useGovernanceActions',
+        action: 'revoke-delegation',
+      });
+      
+      setDelegationState({ isLoading: false, error: friendlyMessage, txId: null });
     }
   }, [isConnected, address]);
 
@@ -244,12 +305,25 @@ export function useGovernanceActions(): UseGovernanceActionsReturn {
           setExecutionState({ isLoading: false, error: null, txId: data.txId });
         },
         onCancel: () => {
-          setExecutionState({ isLoading: false, error: 'Transaction cancelled', txId: null });
+          const cancelError = parseContractError(
+            new Error('User cancelled transaction'),
+            contractName,
+            'queue-proposal'
+          );
+          setExecutionState({ isLoading: false, error: getUserFriendlyContractError(cancelError), txId: null });
         },
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to queue proposal';
-      setExecutionState({ isLoading: false, error: message, txId: null });
+      const contractError = parseContractError(error, contractName, 'queue-proposal');
+      const friendlyMessage = getUserFriendlyContractError(contractError);
+      
+      errorLoggingService.logError(contractError, {
+        component: 'useGovernanceActions',
+        action: 'queue-proposal',
+        additionalData: { proposalId },
+      });
+      
+      setExecutionState({ isLoading: false, error: friendlyMessage, txId: null });
     }
   }, [isConnected, address]);
 
@@ -259,6 +333,12 @@ export function useGovernanceActions(): UseGovernanceActionsReturn {
   const executeProposal = useCallback(async (proposalId: number) => {
     if (!isConnected || !address) {
       setExecutionState({ isLoading: false, error: 'Wallet not connected', txId: null });
+      return;
+    }
+
+    const rateLimitResult = await checkRateLimit('resolve-market');
+    if (!rateLimitResult.allowed) {
+      setExecutionState({ isLoading: false, error: rateLimitResult.reason || 'Rate limit exceeded', txId: null });
       return;
     }
 
@@ -279,14 +359,27 @@ export function useGovernanceActions(): UseGovernanceActionsReturn {
           setExecutionState({ isLoading: false, error: null, txId: data.txId });
         },
         onCancel: () => {
-          setExecutionState({ isLoading: false, error: 'Transaction cancelled', txId: null });
+          const cancelError = parseContractError(
+            new Error('User cancelled transaction'),
+            contractName,
+            'execute-proposal'
+          );
+          setExecutionState({ isLoading: false, error: getUserFriendlyContractError(cancelError), txId: null });
         },
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to execute proposal';
-      setExecutionState({ isLoading: false, error: message, txId: null });
+      const contractError = parseContractError(error, contractName, 'execute-proposal');
+      const friendlyMessage = getUserFriendlyContractError(contractError);
+      
+      errorLoggingService.logError(contractError, {
+        component: 'useGovernanceActions',
+        action: 'execute-proposal',
+        additionalData: { proposalId },
+      });
+      
+      setExecutionState({ isLoading: false, error: friendlyMessage, txId: null });
     }
-  }, [isConnected, address]);
+  }, [isConnected, address, checkRateLimit]);
 
   /**
    * Cancel a proposal (proposer or admin only)
@@ -314,12 +407,25 @@ export function useGovernanceActions(): UseGovernanceActionsReturn {
           setExecutionState({ isLoading: false, error: null, txId: data.txId });
         },
         onCancel: () => {
-          setExecutionState({ isLoading: false, error: 'Transaction cancelled', txId: null });
+          const cancelError = parseContractError(
+            new Error('User cancelled transaction'),
+            contractName,
+            'cancel-proposal'
+          );
+          setExecutionState({ isLoading: false, error: getUserFriendlyContractError(cancelError), txId: null });
         },
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to cancel proposal';
-      setExecutionState({ isLoading: false, error: message, txId: null });
+      const contractError = parseContractError(error, contractName, 'cancel-proposal');
+      const friendlyMessage = getUserFriendlyContractError(contractError);
+      
+      errorLoggingService.logError(contractError, {
+        component: 'useGovernanceActions',
+        action: 'cancel-proposal',
+        additionalData: { proposalId },
+      });
+      
+      setExecutionState({ isLoading: false, error: friendlyMessage, txId: null });
     }
   }, [isConnected, address]);
 

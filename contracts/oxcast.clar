@@ -6,7 +6,13 @@
 ;; CONSTANTS
 ;; ============================================
 
-(define-constant contract-owner tx-sender)
+;; Contract owner (configurable, initialized to deploying principal)
+(define-data-var contract-owner principal tx-sender)
+
+;; Owner transfer configuration
+(define-data-var owner-transfer-cooldown uint u1008)
+(define-data-var pending-owner (optional principal) none)
+(define-data-var owner-transfer-initiated-at uint u0)
 
 ;; Market Status
 (define-constant STATUS-ACTIVE u0)
@@ -28,15 +34,24 @@
 (define-constant ERR-INVALID-AMOUNT (err u106))
 (define-constant ERR-NO-POSITION (err u107))
 (define-constant ERR-ALREADY-CLAIMED (err u108))
+(define-constant ERR-INVALID-NEW-OWNER (err u114))
+(define-constant ERR-OWNER-TRANSFER-COOLDOWN (err u115))
 (define-constant ERR-NOT-TOKEN-OWNER (err u109))
 (define-constant ERR-INSUFFICIENT-BALANCE (err u110))
 (define-constant ERR-STAKING-LOCKED (err u111))
 (define-constant ERR-MIN-STAKE (err u112))
+(define-constant ERR-RATE-LIMIT-EXCEEDED (err u113))
 
 ;; Configuration
 (define-constant PLATFORM-FEE u200) ;; 2% in basis points
 (define-constant MIN-STAKE u1000000) ;; 1 OXC minimum stake
 (define-constant LOCK-PERIOD u1008) ;; ~7 days in blocks
+
+;; Rate Limiting Configuration
+(define-constant RATE-LIMIT-WINDOW u144) ;; ~24 hours in blocks
+(define-constant MAX-PREDICTIONS-PER-WINDOW u20)
+(define-constant MAX-MARKETS-PER-WINDOW u5)
+(define-constant MAX-STAKES-PER-WINDOW u10)
 
 ;; ============================================
 ;; TOKEN (SIP-010 Compliant)
@@ -75,7 +90,7 @@
 
 (define-public (mint (amount uint) (recipient principal))
   (begin
-    (asserts! (is-eq tx-sender contract-owner) ERR-OWNER-ONLY)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-OWNER-ONLY)
     (ft-mint? oxc-token amount recipient)))
 
 (define-public (burn (amount uint))
@@ -93,11 +108,94 @@
 
 (define-data-var total-staked uint u0)
 
+;; Rate limiting maps
+(define-map rate-limit-predictions
+  principal
+  { count: uint, window-start: uint })
+
+(define-map rate-limit-markets
+  principal
+  { count: uint, window-start: uint })
+
+(define-map rate-limit-stakes
+  principal
+  { count: uint, window-start: uint })
+
 (define-read-only (get-stake (staker principal))
   (default-to { amount: u0, locked-until: u0 } (map-get? stakes staker)))
 
 (define-read-only (get-total-staked)
   (ok (var-get total-staked)))
+
+(define-read-only (get-rate-limit-status (user principal) (action (string-ascii 20)))
+  (if (is-eq action "predict")
+    (ok (default-to { count: u0, window-start: u0 } (map-get? rate-limit-predictions user)))
+    (if (is-eq action "market")
+      (ok (default-to { count: u0, window-start: u0 } (map-get? rate-limit-markets user)))
+      (if (is-eq action "stake")
+        (ok (default-to { count: u0, window-start: u0 } (map-get? rate-limit-stakes user)))
+        (err u999)
+      )
+    )
+  )
+)
+
+(define-private (check-rate-limit (user principal) (action (string-ascii 20)) (max-count uint))
+  (let (
+    (current-block stacks-block-height)
+    (limit-data (if (is-eq action "predict")
+      (default-to { count: u0, window-start: u0 } (map-get? rate-limit-predictions user))
+      (if (is-eq action "market")
+        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-markets user))
+        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-stakes user))
+      )
+    ))
+    (window-start (get window-start limit-data))
+    (count (get count limit-data))
+  )
+    (if (>= (- current-block window-start) RATE-LIMIT-WINDOW)
+      (ok true)
+      (if (< count max-count)
+        (ok true)
+        ERR-RATE-LIMIT-EXCEEDED
+      )
+    )
+  )
+)
+
+(define-private (record-rate-limit (user principal) (action (string-ascii 20)))
+  (let (
+    (current-block stacks-block-height)
+    (limit-data (if (is-eq action "predict")
+      (default-to { count: u0, window-start: u0 } (map-get? rate-limit-predictions user))
+      (if (is-eq action "market")
+        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-markets user))
+        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-stakes user))
+      )
+    ))
+    (window-start (get window-start limit-data))
+    (count (get count limit-data))
+    (new-window (>= (- current-block window-start) RATE-LIMIT-WINDOW))
+  )
+    (if (is-eq action "predict")
+      (map-set rate-limit-predictions user {
+        count: (if new-window u1 (+ count u1)),
+        window-start: (if new-window current-block window-start)
+      })
+      (if (is-eq action "market")
+        (map-set rate-limit-markets user {
+          count: (if new-window u1 (+ count u1)),
+          window-start: (if new-window current-block window-start)
+        })
+        (map-set rate-limit-stakes user {
+          count: (if new-window u1 (+ count u1)),
+          window-start: (if new-window current-block window-start)
+        })
+      )
+    )
+    (ok true)
+  )
+)
 
 (define-public (stake (amount uint))
   (let (
@@ -105,12 +203,14 @@
     (new-amount (+ (get amount current-stake) amount))
   )
     (asserts! (>= amount MIN-STAKE) ERR-MIN-STAKE)
+    (try! (check-rate-limit tx-sender "stake" MAX-STAKES-PER-WINDOW))
     (try! (ft-transfer? oxc-token amount tx-sender (as-contract tx-sender)))
     (map-set stakes tx-sender {
       amount: new-amount,
       locked-until: (+ stacks-block-height LOCK-PERIOD)
     })
     (var-set total-staked (+ (var-get total-staked) amount))
+    (try! (record-rate-limit tx-sender "stake"))
     (print { event: "stake", staker: tx-sender, amount: amount })
     (ok true)))
 
@@ -177,6 +277,7 @@
     (market-id (var-get market-counter))
     (end-block (+ stacks-block-height duration-blocks))
   )
+    (try! (check-rate-limit tx-sender "market" MAX-MARKETS-PER-WINDOW))
     (map-set markets market-id {
       question: question,
       creator: tx-sender,
@@ -189,6 +290,7 @@
       resolved-at: u0
     })
     (var-set market-counter (+ market-id u1))
+    (try! (record-rate-limit tx-sender "market"))
     (print { event: "market-created", id: market-id, question: question, creator: tx-sender })
     (ok market-id)))
 
@@ -204,14 +306,12 @@
     (asserts! (< stacks-block-height (get end-block market)) ERR-MARKET-ENDED)
     (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
     (asserts! (> amount u0) ERR-INVALID-AMOUNT)
+    (try! (check-rate-limit tx-sender "predict" MAX-PREDICTIONS-PER-WINDOW))
     
-    ;; Transfer STX
     (try! (stx-transfer? amount tx-sender (as-contract tx-sender)))
     
-    ;; Update fee pool
     (var-set fee-pool (+ (var-get fee-pool) fee))
     
-    ;; Update market pools
     (if (is-eq outcome OUTCOME-YES)
       (begin
         (map-set markets market-id (merge market { yes-pool: (+ (get yes-pool market) net-amount) }))
@@ -222,6 +322,7 @@
         (map-set positions { market-id: market-id, user: tx-sender }
           (merge current-position { no-amount: (+ (get no-amount current-position) net-amount) }))))
     
+    (try! (record-rate-limit tx-sender "predict"))
     (print { event: "prediction", market-id: market-id, user: tx-sender, outcome: outcome, amount: net-amount })
     (ok true)))
 
@@ -230,7 +331,7 @@
   (let (
     (market (unwrap! (get-market market-id) ERR-NOT-FOUND))
   )
-    (asserts! (is-eq tx-sender contract-owner) ERR-OWNER-ONLY)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-OWNER-ONLY)
     (asserts! (is-eq (get status market) STATUS-ACTIVE) ERR-ALREADY-RESOLVED)
     (asserts! (>= stacks-block-height (get end-block market)) ERR-MARKET-ACTIVE)
     (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
@@ -266,7 +367,8 @@
       (merge position { claimed: true }))
     
     ;; Transfer winnings
-    (try! (as-contract (stx-transfer? payout tx-sender tx-sender)))
+    (let ((recipient tx-sender))
+      (try! (as-contract (stx-transfer? payout tx-sender recipient))))
     
     (print { event: "claim", market-id: market-id, user: tx-sender, payout: payout })
     (ok payout)))
@@ -276,7 +378,7 @@
   (let (
     (market (unwrap! (get-market market-id) ERR-NOT-FOUND))
   )
-    (asserts! (is-eq tx-sender contract-owner) ERR-OWNER-ONLY)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-OWNER-ONLY)
     (asserts! (is-eq (get status market) STATUS-ACTIVE) ERR-ALREADY-RESOLVED)
     
     (map-set markets market-id (merge market { status: STATUS-CANCELLED }))
@@ -297,7 +399,8 @@
     (map-set positions { market-id: market-id, user: tx-sender }
       (merge position { claimed: true }))
     
-    (try! (as-contract (stx-transfer? refund tx-sender tx-sender)))
+    (let ((recipient tx-sender))
+      (try! (as-contract (stx-transfer? refund tx-sender recipient))))
     
     (print { event: "refund", market-id: market-id, user: tx-sender, amount: refund })
     (ok refund)))
@@ -307,11 +410,11 @@
   (let (
     (fees (var-get fee-pool))
   )
-    (asserts! (is-eq tx-sender contract-owner) ERR-OWNER-ONLY)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-OWNER-ONLY)
     (asserts! (> fees u0) ERR-INVALID-AMOUNT)
     
     (var-set fee-pool u0)
-    (try! (as-contract (stx-transfer? fees tx-sender contract-owner)))
+    (try! (as-contract (stx-transfer? fees tx-sender (var-get contract-owner))))
     
     (print { event: "fees-withdrawn", amount: fees })
     (ok fees)))
@@ -322,5 +425,78 @@
 
 (begin
   ;; Mint initial OXC supply to owner
-  (try! (ft-mint? oxc-token u100000000000000 contract-owner))
-  (print { event: "contract-deployed", owner: contract-owner, token-supply: u100000000000000 }))
+  (try! (ft-mint? oxc-token u100000000000000 (var-get contract-owner)))
+  (print { event: "contract-deployed", owner: (var-get contract-owner), token-supply: u100000000000000 }))
+
+;; ============================================
+;; OWNER TRANSFER FUNCTIONS
+;; ============================================
+
+;; Get the current contract owner
+(define-read-only (get-contract-owner)
+  (var-get contract-owner)
+)
+
+;; Get pending owner transfer details
+(define-read-only (get-pending-owner-transfer)
+  {
+    pending-owner: (var-get pending-owner),
+    initiated-at: (var-get owner-transfer-initiated-at),
+    cooldown: (var-get owner-transfer-cooldown)
+  }
+)
+
+;; Initiate owner transfer with time-locked security period
+(define-public (initiate-owner-transfer (new-owner principal))
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-OWNER-ONLY)
+    (asserts! (not (is-eq new-owner (var-get contract-owner))) ERR-INVALID-NEW-OWNER)
+    
+    (var-set pending-owner (some new-owner))
+    (var-set owner-transfer-initiated-at stacks-block-height)
+    
+    (ok true)
+  )
+)
+
+;; Cancel a pending owner transfer
+(define-public (cancel-owner-transfer)
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-OWNER-ONLY)
+    (asserts! (is-some (var-get pending-owner)) ERR-INVALID-NEW-OWNER)
+    
+    (var-set pending-owner none)
+    (var-set owner-transfer-initiated-at u0)
+    
+    (ok true)
+  )
+)
+
+;; Claim ownership after cooldown period
+(define-public (claim-ownership)
+  (let (
+    (pending (var-get pending-owner))
+    (initiated-at (var-get owner-transfer-initiated-at))
+    (cooldown (var-get owner-transfer-cooldown))
+    (current-block stacks-block-height)
+  )
+    (asserts! (is-some pending) ERR-INVALID-NEW-OWNER)
+    (asserts! (is-eq tx-sender (unwrap! pending ERR-INVALID-NEW-OWNER)) ERR-OWNER-ONLY)
+    (asserts! (>= current-block (+ initiated-at cooldown)) ERR-OWNER-TRANSFER-COOLDOWN)
+    
+    (var-set contract-owner tx-sender)
+    (var-set pending-owner none)
+    (var-set owner-transfer-initiated-at u0)
+    
+    (ok true)
+  )
+)
+
+;; Update owner transfer cooldown
+(define-public (set-owner-transfer-cooldown (new-cooldown uint))
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-OWNER-ONLY)
+    (asserts! (> new-cooldown u0) ERR-INVALID-AMOUNT)
+    (ok (var-set owner-transfer-cooldown new-cooldown))
+  )
+)

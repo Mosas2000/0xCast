@@ -1,0 +1,62 @@
+{
+  "categories": {
+    "all": "Todas las Categorías",
+    "crypto": "Cripto",
+    "defi": "DeFi",
+    "sports": "Deportes",
+    "politics": "Política",
+    "entertainment": "Entretenimiento",
+    "technology": "Tecnología",
+    "science": "Ciencia",
+    "other": "Otro"
+  },
+  "labels": {
+    "question": "Pregunta",
+    "description": "Descripción",
+    "category": "Categoría",
+    "endDate": "Fecha de Finalización",
+    "totalPool": "Fondo Total",
+    "yesStake": "Apuesta Sí",
+    "noStake": "Apuesta No",
+    "odds": "Probabilidades",
+    "volume": "Volumen",
+    "participants": "Participantes",
+    "creator": "Creador",
+    "resolver": "Resolutor"
+  },
+  "actions": {
+    "createMarket": "Crear Mercado",
+    "placeStake": "Realizar Apuesta",
+    "addToWatchlist": "Agregar a lista de seguimiento",
+    "removeFromWatchlist": "Quitar de lista de seguimiento",
+    "viewDetails": "Ver Detalles",
+    "trade": "Comerciar",
+    "resolve": "Resolver",
+    "dispute": "Disputar"
+  },
+  "filters": {
+    "all": "Todos los Mercados",
+    "active": "Activos",
+    "resolved": "Resueltos",
+    "myMarkets": "Mis Mercados",
+    "trending": "Tendencia",
+    "new": "Nuevos"
+  },
+  "sort": {
+    "newest": "Más Recientes",
+    "oldest": "Más Antiguos",
+    "highestVolume": "Mayor Volumen",
+    "lowestVolume": "Menor Volumen",
+    "endingSoon": "Finalizando Pronto",
+    "mostPopular": "Más Populares"
+  },
+  "stake": {
+    "amount": "Cantidad de Apuesta",
+    "position": "Posición",
+    "potential": "Retorno Potencial",
+    "fee": "Tarifa",
+    "total": "Costo Total",
+    "min": "Mínimo",
+    "max": "Máximo"
+  }
+}

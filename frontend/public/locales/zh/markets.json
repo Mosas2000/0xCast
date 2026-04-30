@@ -1,0 +1,62 @@
+{
+  "categories": {
+    "all": "所有类别",
+    "crypto": "加密货币",
+    "defi": "去中心化金融",
+    "sports": "体育",
+    "politics": "政治",
+    "entertainment": "娱乐",
+    "technology": "技术",
+    "science": "科学",
+    "other": "其他"
+  },
+  "labels": {
+    "question": "问题",
+    "description": "描述",
+    "category": "类别",
+    "endDate": "结束日期",
+    "totalPool": "总池",
+    "yesStake": "是的赌注",
+    "noStake": "否的赌注",
+    "odds": "赔率",
+    "volume": "交易量",
+    "participants": "参与者",
+    "creator": "创建者",
+    "resolver": "解决者"
+  },
+  "actions": {
+    "createMarket": "创建市场",
+    "placeStake": "下注",
+    "addToWatchlist": "添加到关注列表",
+    "removeFromWatchlist": "从关注列表中移除",
+    "viewDetails": "查看详情",
+    "trade": "交易",
+    "resolve": "解决",
+    "dispute": "争议"
+  },
+  "filters": {
+    "all": "所有市场",
+    "active": "活跃",
+    "resolved": "已解决",
+    "myMarkets": "我的市场",
+    "trending": "热门",
+    "new": "新的"
+  },
+  "sort": {
+    "newest": "最新",
+    "oldest": "最旧",
+    "highestVolume": "最高交易量",
+    "lowestVolume": "最低交易量",
+    "endingSoon": "即将结束",
+    "mostPopular": "最受欢迎"
+  },
+  "stake": {
+    "amount": "赌注金额",
+    "position": "仓位",
+    "potential": "潜在回报",
+    "fee": "费用",
+    "total": "总成本",
+    "min": "最小",
+    "max": "最大"
+  }
+}

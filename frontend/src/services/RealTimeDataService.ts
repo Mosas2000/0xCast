@@ -95,7 +95,7 @@ export class RealTimeDataService {
     }
   }
 
-  private emit(event: string, ...args: any[]): void {
+  private emit(event: string, ...args: unknown[]): void {
     const callbacks = this.listeners.get(event);
     if (callbacks) {
       callbacks.forEach(callback => callback(...args));
@@ -217,7 +217,7 @@ export class PollingDataService {
     }
   }
 
-  private emit(event: string, ...args: any[]): void {
+  private emit(event: string, ...args: unknown[]): void {
     const callbacks = this.listeners.get(event);
     if (callbacks) {
       callbacks.forEach(callback => callback(...args));
@@ -235,7 +235,7 @@ export class PollingDataService {
 
 export class DataStreamAggregator {
   private streams: Map<string, RealTimeDataService | PollingDataService> = new Map();
-  private aggregatedData: Map<string, any> = new Map();
+  private aggregatedData: Map<string, unknown> = new Map();
 
   addStream(
     key: string,
@@ -244,12 +244,12 @@ export class DataStreamAggregator {
     this.streams.set(key, service);
 
     if (service instanceof RealTimeDataService) {
-      service.subscribe('update', (data: any) => {
+      service.subscribe('update', (data: unknown) => {
         this.aggregatedData.set(key, data);
         this.broadcastAggregatedData();
       });
     } else if (service instanceof PollingDataService) {
-      service.subscribe('update', (data: any) => {
+      service.subscribe('update', (data: unknown) => {
         this.aggregatedData.set(key, data);
         this.broadcastAggregatedData();
       });
@@ -265,8 +265,8 @@ export class DataStreamAggregator {
     this.aggregatedData.delete(key);
   }
 
-  getAggregatedData(): Record<string, any> {
-    const result: Record<string, any> = {};
+  getAggregatedData(): Record<string, unknown> {
+    const result: Record<string, unknown> = {};
     this.aggregatedData.forEach((value, key) => {
       result[key] = value;
     });
@@ -279,21 +279,21 @@ export class DataStreamAggregator {
 }
 
 export class CacheManager {
-  private cache: Map<string, { data: any; timestamp: number }> = new Map();
+  private cache: Map<string, CacheEntry<unknown>> = new Map();
   private ttl: number;
 
   constructor(ttlMs = 60000) {
     this.ttl = ttlMs;
   }
 
-  set(key: string, data: any): void {
+  set<T>(key: string, data: T): void {
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
     });
   }
 
-  get(key: string): any {
+  get<T>(key: string): T | null {
     const entry = this.cache.get(key);
     if (!entry) return null;
 

@@ -29,6 +29,9 @@ import type { CreateMarketFormData } from '../types/market';
 import { useContractPause } from './useContractPause';
 import { createRateLimitMiddleware } from '../middleware/rateLimitMiddleware';
 import { useWallet } from '../components/WalletProvider';
+import { parseContractError, getUserFriendlyContractError } from '../utils/contractErrorHandler';
+import { errorLoggingService } from '../services/ErrorLoggingService';
+import { MARKET_CONTRACT } from '../config/contracts';
 
 interface MarketCreationState {
   isCreating: boolean;
@@ -95,28 +98,26 @@ export function useMarketCreation(): UseMarketCreationReturn {
           error: null,
         }));
       } catch (error) {
-        console.error('Market creation failed:', error);
+        const contractError = parseContractError(error, MARKET_CONTRACT.name, 'create-market');
+        const friendlyMessage = getUserFriendlyContractError(contractError);
         
-        let errorMessage = 'Failed to create market. Please try again.';
-        
-        if (error instanceof Error) {
-          if (error.message.includes('User rejected')) {
-            errorMessage = 'Transaction was cancelled';
-          } else if (error.message.includes('insufficient funds')) {
-            errorMessage = 'Insufficient funds for transaction';
-          } else {
-            errorMessage = error.message;
-          }
-        }
+        errorLoggingService.logError(contractError, {
+          component: 'useMarketCreation',
+          action: 'create-market',
+          additionalData: {
+            question: data.question,
+            durationBlocks: data.durationBlocks,
+          },
+        });
 
         setState(prev => ({
           ...prev,
           isCreating: false,
-          error: errorMessage,
+          error: friendlyMessage,
           success: false,
         }));
         
-        throw error;
+        throw contractError;
       }
     },
     [createMarketContract, isContractPaused, address]

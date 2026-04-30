@@ -3,6 +3,7 @@ import { ReputationScoringService } from './ReputationScoringService';
 import { KYCAMLService } from './KYCAMLService';
 import { FraudDetectionService } from './FraudDetectionService';
 import { AccountLinkingService } from './AccountLinkingService';
+import type { UserMetrics, KYCDocumentData, TransactionData, AccountData } from '@/types/common';
 
 export class ReputationManager {
   private userReputations: Map<string, UserReputation> = new Map();
@@ -53,7 +54,7 @@ export class ReputationManager {
     return this.userReputations.get(userId);
   }
 
-  updateReputationScore(userId: string, metrics: any): ReputationScore {
+  updateReputationScore(userId: string, metrics: UserMetrics): ReputationScore {
     const score = this.scoringService.calculateReputationScore(userId, metrics);
     const reputation = this.userReputations.get(userId);
 
@@ -66,7 +67,7 @@ export class ReputationManager {
     return score;
   }
 
-  submitKYC(userId: string, documentType: 'passport' | 'license' | 'national_id', data: any) {
+  submitKYC(userId: string, documentType: 'passport' | 'license' | 'national_id', data: KYCDocumentData) {
     const kycStatus = this.kycAMLService.submitKYC(userId, documentType, data);
     const reputation = this.userReputations.get(userId);
 
@@ -94,7 +95,7 @@ export class ReputationManager {
     return kycStatus;
   }
 
-  performAMLCheck(userId: string): any {
+  performAMLCheck(userId: string) {
     const amlCheck = this.kycAMLService.performAMLCheck(userId, '');
     return amlCheck;
   }
@@ -107,19 +108,19 @@ export class ReputationManager {
     return this.kycAMLService.isAMLClear(userId);
   }
 
-  checkWashTrading(userId: string, transactions: any[]): boolean {
+  checkWashTrading(userId: string, transactions: TransactionData[]): boolean {
     return this.fraudDetectionService.detectWashTrading(userId, transactions);
   }
 
-  checkSybilAttack(userId: string, accounts: any[]): boolean {
+  checkSybilAttack(userId: string, accounts: AccountData[]): boolean {
     return this.fraudDetectionService.detectSybilAttack(userId, accounts);
   }
 
-  checkPumpDump(userId: string, transactions: any[]): boolean {
+  checkPumpDump(userId: string, transactions: TransactionData[]): boolean {
     return this.fraudDetectionService.detectPumpDump(userId, transactions);
   }
 
-  checkPriceManipulation(userId: string, transactions: any[], marketPrice: number): boolean {
+  checkPriceManipulation(userId: string, transactions: TransactionData[], marketPrice: number): boolean {
     return this.fraudDetectionService.detectPriceManipulation(userId, transactions, marketPrice);
   }
 

@@ -1,0 +1,62 @@
+{
+  "categories": {
+    "all": "すべてのカテゴリー",
+    "crypto": "暗号通貨",
+    "defi": "DeFi",
+    "sports": "スポーツ",
+    "politics": "政治",
+    "entertainment": "エンターテイメント",
+    "technology": "テクノロジー",
+    "science": "科学",
+    "other": "その他"
+  },
+  "labels": {
+    "question": "質問",
+    "description": "説明",
+    "category": "カテゴリー",
+    "endDate": "終了日",
+    "totalPool": "総プール",
+    "yesStake": "イエスステーク",
+    "noStake": "ノーステーク",
+    "odds": "オッズ",
+    "volume": "取引量",
+    "participants": "参加者",
+    "creator": "作成者",
+    "resolver": "解決者"
+  },
+  "actions": {
+    "createMarket": "マーケット作成",
+    "placeStake": "ステークを置く",
+    "addToWatchlist": "ウォッチリストに追加",
+    "removeFromWatchlist": "ウォッチリストから削除",
+    "viewDetails": "詳細を表示",
+    "trade": "取引",
+    "resolve": "解決",
+    "dispute": "異議申し立て"
+  },
+  "filters": {
+    "all": "すべてのマーケット",
+    "active": "アクティブ",
+    "resolved": "解決済み",
+    "myMarkets": "マイマーケット",
+    "trending": "トレンド",
+    "new": "新規"
+  },
+  "sort": {
+    "newest": "新しい順",
+    "oldest": "古い順",
+    "highestVolume": "取引量が多い順",
+    "lowestVolume": "取引量が少ない順",
+    "endingSoon": "終了間近",
+    "mostPopular": "人気順"
+  },
+  "stake": {
+    "amount": "ステーク額",
+    "position": "ポジション",
+    "potential": "潜在的リターン",
+    "fee": "手数料",
+    "total": "合計コスト",
+    "min": "最小",
+    "max": "最大"
+  }
+}

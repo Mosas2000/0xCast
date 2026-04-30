@@ -1,0 +1,48 @@
+{
+  "title": "Portfolio",
+  "overview": {
+    "totalValue": "Gesamtwert",
+    "totalStaked": "Gesamt Eingesetzt",
+    "activePositions": "Aktive Positionen",
+    "totalReturn": "Gesamtrendite",
+    "winRate": "Gewinnrate",
+    "profitLoss": "Gewinn/Verlust"
+  },
+  "positions": {
+    "title": "Positionen",
+    "market": "Markt",
+    "position": "Position",
+    "stake": "Einsatz",
+    "currentValue": "Aktueller Wert",
+    "return": "Rendite",
+    "status": "Status"
+  },
+  "recommendations": {
+    "title": "Empfehlungen",
+    "rebalancing": "Neuausrichtung",
+    "diversification": "Diversifizierung",
+    "riskManagement": "Risiko Reduzieren",
+    "opportunity": "Gelegenheit",
+    "confidence": "Vertrauen",
+    "priority": {
+      "high": "Hohe Priorität",
+      "medium": "Mittlere Priorität",
+      "low": "Niedrige Priorität"
+    },
+    "actions": "Vorgeschlagene Aktionen"
+  },
+  "history": {
+    "title": "Transaktionsverlauf",
+    "date": "Datum",
+    "type": "Typ",
+    "market": "Markt",
+    "amount": "Betrag",
+    "status": "Status"
+  },
+  "export": {
+    "title": "Portfolio Exportieren",
+    "csv": "Als CSV Exportieren",
+    "json": "Als JSON Exportieren",
+    "pdf": "Als PDF Exportieren"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "validation": {
+    "required": "このフィールドは必須です",
+    "invalidNumber": "有効な数値を入力してください",
+    "nonPositiveAmount": "金額はゼロより大きくなければなりません",
+    "minStakeRequired": "最小金額は{{min}} STXです",
+    "maxStakeExceeded": "最大金額は{{max}} STXです",
+    "tooManyDecimals": "最大{{count}}桁の小数点が許可されています",
+    "invalidEmail": "有効なメールアドレスを入力してください",
+    "invalidDate": "有効な日付を入力してください",
+    "datePast": "日付は未来でなければなりません",
+    "invalidUrl": "有効なURLを入力してください"
+  },
+  "wallet": {
+    "notConnected": "ウォレットが接続されていません",
+    "connectionFailed": "ウォレット接続に失敗しました",
+    "insufficientBalance": "残高不足",
+    "transactionFailed": "取引に失敗しました",
+    "transactionRejected": "ユーザーが取引を拒否しました",
+    "networkError": "ネットワークエラー"
+  },
+  "market": {
+    "notFound": "マーケットが見つかりません",
+    "loadFailed": "マーケットの読み込みに失敗しました",
+    "createFailed": "マーケットの作成に失敗しました",
+    "stakeFailed": "ステークの配置に失敗しました",
+    "resolveFailed": "マーケットの解決に失敗しました",
+    "alreadyResolved": "マーケットはすでに解決されています",
+    "notActive": "マーケットはアクティブではありません",
+    "expired": "マーケットは期限切れです"
+  },
+  "general": {
+    "unknownError": "不明なエラーが発生しました",
+    "serverError": "サーバーエラー",
+    "networkError": "ネットワークエラー",
+    "timeout": "リクエストタイムアウト",
+    "unauthorized": "未承認",
+    "forbidden": "禁止",
+    "notFound": "見つかりません"
+  }
+}

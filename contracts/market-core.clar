@@ -48,6 +48,7 @@
 (define-constant ERR-INVALID-PAUSE-STATE (err u120))
 (define-constant ERR-PAUSE-ALREADY-APPROVED (err u121))
 (define-constant ERR-PAUSE-NOT-AUTHORIZED (err u122))
+(define-constant ERR-RATE-LIMIT-EXCEEDED (err u123))
 
 ;; Only the oracle integration contract may invoke oracle/dispute entrypoints
 (define-constant ORACLE-INTEGRATION .oracle-integration)
@@ -61,6 +62,12 @@
 
 ;; Dispute window for any resolution (~24 hours in blocks)
 (define-data-var dispute-period uint u144)
+
+;; Rate limiting configuration
+(define-data-var rate-limit-window uint u144)
+(define-data-var max-stakes-per-window uint u10)
+(define-data-var max-markets-per-window uint u5)
+(define-data-var max-resolutions-per-window uint u3)
 
 ;; Emergency pause switch (owner-controlled)
 (define-data-var contract-paused bool false)
@@ -120,8 +127,19 @@
   }
 )
 
-;; Contract owner (set to the deploying principal)
-(define-constant CONTRACT-OWNER tx-sender)
+;; Contract owner (configurable, initialized to deploying principal)
+(define-data-var contract-owner principal tx-sender)
+
+;; Error for owner transfer operations
+(define-constant ERR-INVALID-NEW-OWNER (err u124))
+(define-constant ERR-OWNER-TRANSFER-COOLDOWN (err u125))
+
+;; Owner transfer cooldown period (~7 days in blocks)
+(define-data-var owner-transfer-cooldown uint u1008)
+
+;; Pending owner transfer
+(define-data-var pending-owner (optional principal) none)
+(define-data-var owner-transfer-initiated-at uint u0)
 
 ;; ============================================
 ;; Data Variables
@@ -181,9 +199,39 @@
   }
 )
 
+;; Rate limiting maps
+(define-map rate-limit-stakes
+  principal
+  { count: uint, window-start: uint }
+)
+
+(define-map rate-limit-markets
+  principal
+  { count: uint, window-start: uint }
+)
+
+(define-map rate-limit-resolutions
+  principal
+  { count: uint, window-start: uint }
+)
+
 ;; ============================================
 ;; Read-Only Functions
 ;; ============================================
+
+;; Get the current contract owner
+(define-read-only (get-contract-owner)
+  (var-get contract-owner)
+)
+
+;; Get pending owner transfer details
+(define-read-only (get-pending-owner-transfer)
+  {
+    pending-owner: (var-get pending-owner),
+    initiated-at: (var-get owner-transfer-initiated-at),
+    cooldown: (var-get owner-transfer-cooldown)
+  }
+)
 
 ;; Get the current market counter
 (define-read-only (get-market-counter)
@@ -234,6 +282,28 @@
   )
 )
 
+(define-read-only (get-rate-limit-config)
+  {
+    window: (var-get rate-limit-window),
+    max-stakes: (var-get max-stakes-per-window),
+    max-markets: (var-get max-markets-per-window),
+    max-resolutions: (var-get max-resolutions-per-window)
+  }
+)
+
+(define-read-only (get-user-rate-limit-status (user principal) (action (string-ascii 20)))
+  (if (is-eq action "stake")
+    (ok (default-to { count: u0, window-start: u0 } (map-get? rate-limit-stakes user)))
+    (if (is-eq action "market")
+      (ok (default-to { count: u0, window-start: u0 } (map-get? rate-limit-markets user)))
+      (if (is-eq action "resolve")
+        (ok (default-to { count: u0, window-start: u0 } (map-get? rate-limit-resolutions user)))
+        (err u999)
+      )
+    )
+  )
+)
+
 ;; ============================================
 ;; Private Functions
 ;; ============================================
@@ -258,6 +328,65 @@
 (define-private (assert-not-paused)
   (if (var-get contract-paused)
     ERR-CONTRACT-PAUSED
+    (ok true)
+  )
+)
+
+(define-private (check-rate-limit (user principal) (action (string-ascii 20)) (max-count uint))
+  (let (
+    (current-block stacks-block-height)
+    (window (var-get rate-limit-window))
+    (limit-data (if (is-eq action "stake")
+      (default-to { count: u0, window-start: u0 } (map-get? rate-limit-stakes user))
+      (if (is-eq action "market")
+        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-markets user))
+        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-resolutions user))
+      )
+    ))
+    (window-start (get window-start limit-data))
+    (count (get count limit-data))
+  )
+    (if (>= (- current-block window-start) window)
+      (ok true)
+      (if (< count max-count)
+        (ok true)
+        ERR-RATE-LIMIT-EXCEEDED
+      )
+    )
+  )
+)
+
+(define-private (record-rate-limit (user principal) (action (string-ascii 20)))
+  (let (
+    (current-block stacks-block-height)
+    (window (var-get rate-limit-window))
+    (limit-data (if (is-eq action "stake")
+      (default-to { count: u0, window-start: u0 } (map-get? rate-limit-stakes user))
+      (if (is-eq action "market")
+        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-markets user))
+        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-resolutions user))
+      )
+    ))
+    (window-start (get window-start limit-data))
+    (count (get count limit-data))
+    (new-window (>= (- current-block window-start) window))
+  )
+    (if (is-eq action "stake")
+      (map-set rate-limit-stakes user {
+        count: (if new-window u1 (+ count u1)),
+        window-start: (if new-window current-block window-start)
+      })
+      (if (is-eq action "market")
+        (map-set rate-limit-markets user {
+          count: (if new-window u1 (+ count u1)),
+          window-start: (if new-window current-block window-start)
+        })
+        (map-set rate-limit-resolutions user {
+          count: (if new-window u1 (+ count u1)),
+          window-start: (if new-window current-block window-start)
+        })
+      )
+    )
     (ok true)
   )
 )
@@ -422,7 +551,7 @@
 
 (define-public (set-emergency-approver (approver principal) (enabled bool))
   (begin
-    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-AUTHORIZED)
     (map-set emergency-approvers
       { signer: approver }
       {
@@ -437,7 +566,7 @@
 
 (define-public (set-emergency-approval-threshold (threshold uint))
   (begin
-    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-AUTHORIZED)
     (asserts! (> threshold u0) ERR-INVALID-PAUSE-STATE)
     (ok (var-set pause-approval-threshold threshold))
   )
@@ -472,17 +601,14 @@
       (cat-count (get-market-category-count category))
       (resolution-deadline (+ resolution-date (var-get abandonment-period)))
     )
-    ;; Validate that end-date is in the future
     (try! (assert-not-paused))
+    (try! (check-rate-limit tx-sender "market" (var-get max-markets-per-window)))
     (asserts! (> end-date current-block) ERR-INVALID-DATES)
     
-    ;; Validate that resolution-date is after end-date
     (asserts! (> resolution-date end-date) ERR-INVALID-DATES)
     
-    ;; Validate category is within allowed range (1-5)
     (asserts! (and (>= category u1) (<= category u5)) ERR-INVALID-CATEGORY)
     
-    ;; Create the new market
     (map-set markets
       { market-id: new-market-id }
       {
@@ -505,7 +631,6 @@
       }
     )
     
-    ;; Index market under its category
     (map-set market-categories
       { category: category, index: cat-count }
       { market-id: new-market-id }
@@ -515,7 +640,7 @@
       { count: (+ cat-count u1) }
     )
     
-    ;; Return the new market ID
+    (try! (record-rate-limit tx-sender "market"))
     (ok new-market-id)
   )
 )
@@ -535,27 +660,24 @@
       ))
     )
     (try! (assert-not-paused))
-    ;; Validate market is still active
+    (try! (check-rate-limit tx-sender "stake" (var-get max-stakes-per-window)))
     (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-MARKET-ALREADY-RESOLVED)
     
-    ;; Validate market hasn't ended
     (asserts! (< current-block (get end-date market)) ERR-MARKET-ENDED)
     
-    ;; Transfer STX from user to contract
     (try! (stx-transfer? amount tx-sender (as-contract tx-sender)))
     
-    ;; Update market's total YES stake
     (map-set markets
       { market-id: market-id }
       (merge market { total-yes-stake: (+ (get total-yes-stake market) amount) })
     )
     
-    ;; Update user's position
     (map-set user-positions
       { market-id: market-id, user: tx-sender }
       (merge current-position { yes-stake: (+ (get yes-stake current-position) amount) })
     )
     
+    (try! (record-rate-limit tx-sender "stake"))
     (ok true)
   )
 )
@@ -575,27 +697,24 @@
       ))
     )
     (try! (assert-not-paused))
-    ;; Validate market is still active
+    (try! (check-rate-limit tx-sender "stake" (var-get max-stakes-per-window)))
     (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-MARKET-ALREADY-RESOLVED)
     
-    ;; Validate market hasn't ended
     (asserts! (< current-block (get end-date market)) ERR-MARKET-ENDED)
     
-    ;; Transfer STX from user to contract
     (try! (stx-transfer? amount tx-sender (as-contract tx-sender)))
     
-    ;; Update market's total NO stake
     (map-set markets
       { market-id: market-id }
       (merge market { total-no-stake: (+ (get total-no-stake market) amount) })
     )
     
-    ;; Update user's position
     (map-set user-positions
       { market-id: market-id, user: tx-sender }
       (merge current-position { no-stake: (+ (get no-stake current-position) amount) })
     )
     
+    (try! (record-rate-limit tx-sender "stake"))
     (ok true)
   )
 )
@@ -610,22 +729,17 @@
       (market (unwrap! (map-get? markets { market-id: market-id }) ERR-MARKET-NOT-FOUND))
       (current-block stacks-block-height)
     )
-    ;; Validate only creator can resolve
     (asserts! (is-eq tx-sender (get creator market)) ERR-NOT-AUTHORIZED)
+    (try! (check-rate-limit tx-sender "resolve" (var-get max-resolutions-per-window)))
     
-    ;; Validate market is still active
     (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-MARKET-ALREADY-RESOLVED)
     
-    ;; Validate resolution date has passed
     (asserts! (>= current-block (get resolution-date market)) ERR-MARKET-NOT-ENDED)
 
-    ;; Prevent late resolutions after the deadline (market is considered abandoned)
     (try! (assert-within-resolution-deadline current-block (get resolution-deadline market)))
     
-    ;; Validate outcome is valid (YES or NO)
     (asserts! (or (is-eq outcome OUTCOME-YES) (is-eq outcome OUTCOME-NO)) ERR-INVALID-OUTCOME)
     
-    ;; Update market status and outcome
     (map-set markets
       { market-id: market-id }
       (merge market {
@@ -639,6 +753,7 @@
       })
     )
     
+    (try! (record-rate-limit tx-sender "resolve"))
     (ok true)
   )
 )
@@ -915,7 +1030,7 @@
 ;; Owner-only emergency pause controls
 (define-public (set-contract-paused (paused bool))
   (begin
-    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-AUTHORIZED)
     (if paused
       (process-emergency-pause-approval DEFAULT-PAUSE-REASON)
       (process-emergency-resume-approval DEFAULT-RESUME-REASON)
@@ -967,3 +1082,68 @@
       (is-eq (get status market) MARKET-STATUS-ACTIVE)
       (> stacks-block-height (get resolution-deadline market)))
     false))
+
+;; ============================================
+;; Owner Transfer Functions
+;; ============================================
+
+;; Initiate owner transfer with time-locked security period
+;; The new owner must claim ownership after the cooldown period
+(define-public (initiate-owner-transfer (new-owner principal))
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-AUTHORIZED)
+    (asserts! (not (is-eq new-owner (var-get contract-owner))) ERR-INVALID-NEW-OWNER)
+    
+    ;; Set pending owner and record initiation time
+    (var-set pending-owner (some new-owner))
+    (var-set owner-transfer-initiated-at stacks-block-height)
+    
+    (ok true)
+  )
+)
+
+;; Cancel a pending owner transfer (only current owner)
+(define-public (cancel-owner-transfer)
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-AUTHORIZED)
+    (asserts! (is-some (var-get pending-owner)) ERR-INVALID-NEW-OWNER)
+    
+    ;; Clear pending owner
+    (var-set pending-owner none)
+    (var-set owner-transfer-initiated-at u0)
+    
+    (ok true)
+  )
+)
+
+;; Claim ownership after cooldown period (only pending owner)
+(define-public (claim-ownership)
+  (let (
+    (pending (var-get pending-owner))
+    (initiated-at (var-get owner-transfer-initiated-at))
+    (cooldown (var-get owner-transfer-cooldown))
+    (current-block stacks-block-height)
+  )
+    (asserts! (is-some pending) ERR-INVALID-NEW-OWNER)
+    (asserts! (is-eq tx-sender (unwrap! pending ERR-INVALID-NEW-OWNER)) ERR-NOT-AUTHORIZED)
+    
+    ;; Ensure cooldown period has passed
+    (asserts! (>= current-block (+ initiated-at cooldown)) ERR-OWNER-TRANSFER-COOLDOWN)
+    
+    ;; Transfer ownership
+    (var-set contract-owner tx-sender)
+    (var-set pending-owner none)
+    (var-set owner-transfer-initiated-at u0)
+    
+    (ok true)
+  )
+)
+
+;; Update owner transfer cooldown (only owner)
+(define-public (set-owner-transfer-cooldown (new-cooldown uint))
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-AUTHORIZED)
+    (asserts! (> new-cooldown u0) ERR-INVALID-PAUSE-STATE)
+    (ok (var-set owner-transfer-cooldown new-cooldown))
+  )
+)

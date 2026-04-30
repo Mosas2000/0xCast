@@ -1,11 +1,25 @@
-import { FraudAlert, SuspiciousActivity, SuspiciousActivityType } from '@/types/reputation';
+import { FraudAlert, SuspiciousActivity, SuspiciousActivityType, WashTradingDetection, TransactionPair } from '@/types/reputation';
+import type { FraudTransaction, FraudAccount, FraudOrderBookEntry, FraudUserProfile } from '@/types/common';
+
+interface TradingBehavior {
+  userId: string;
+  averageTradeSize: number;
+  tradingFrequency: number;
+  preferredMarkets: string[];
+  tradingHours: number[];
+  riskProfile: 'conservative' | 'moderate' | 'aggressive';
+}
 
 export class FraudDetectionService {
   private alerts: Map<string, FraudAlert> = new Map();
   private suspiciousActivities: Map<string, SuspiciousActivity> = new Map();
+  private washTradingDetections: Map<string, WashTradingDetection> = new Map();
+  private tradingBehaviors: Map<string, TradingBehavior> = new Map();
 
-  detectWashTrading(userId: string, transactions: any[]): boolean {
+  detectWashTrading(userId: string, transactions: FraudTransaction[]): boolean {
     if (transactions.length < 2) return false;
+
+    const detectedPairs: TransactionPair[] = [];
 
     for (let i = 0; i < transactions.length - 1; i++) {
       const t1 = transactions[i];
@@ -16,16 +30,41 @@ export class FraudDetectionService {
       const volumeMatch = Math.min(t1.volume, t2.volume) / Math.max(t1.volume, t2.volume);
 
       if (timeDelta < 60000 && priceDelta < 0.02 && volumeMatch > 0.9) {
-        this.createAlert(userId, 'high_risk_transaction', 'critical', 'Potential wash trading detected');
-        this.recordSuspiciousActivity(userId, 'wash_trading', 'critical', 'Multiple transactions with same price and volume in short timeframe');
-        return true;
+        detectedPairs.push({
+          buyTransaction: t1.id,
+          sellTransaction: t2.id,
+          timeDelta,
+          priceDelta,
+          volumeMatching: volumeMatch,
+        });
       }
+    }
+
+    if (detectedPairs.length > 0) {
+      const detectionId = `wash_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      const detection: WashTradingDetection = {
+        detectionId,
+        userId,
+        buyerId: userId,
+        sellerId: userId,
+        marketId: transactions[0].marketId || 'unknown',
+        transactions: detectedPairs,
+        confidence: Math.min(100, detectedPairs.length * 25),
+        detectedAt: Date.now(),
+        status: 'potential',
+      };
+
+      this.washTradingDetections.set(detectionId, detection);
+      this.createAlert(userId, 'high_risk_transaction', 'critical', 'Potential wash trading detected');
+      this.recordSuspiciousActivity(userId, 'wash_trading', 'critical', 'Multiple transactions with same price and volume in short timeframe');
+      return true;
     }
 
     return false;
   }
 
-  detectSybilAttack(userId: string, accounts: { id: string; ipAddress: string; createdAt: number; tradingPatterns: any }[]): boolean {
+  detectSybilAttack(userId: string, accounts: FraudAccount[]): boolean {
     if (accounts.length < 2) return false;
 
     let similarAccounts = 0;
@@ -57,7 +96,7 @@ export class FraudDetectionService {
     return false;
   }
 
-  detectPumpDump(userId: string, transactions: any[]): boolean {
+  detectPumpDump(userId: string, transactions: FraudTransaction[]): boolean {
     if (transactions.length < 5) return false;
 
     const volume = transactions.reduce((sum, t) => sum + t.volume, 0);
@@ -79,7 +118,7 @@ export class FraudDetectionService {
     return false;
   }
 
-  detectPriceManipulation(userId: string, transactions: any[], marketPrice: number): boolean {
+  detectPriceManipulation(userId: string, transactions: FraudTransaction[], marketPrice: number): boolean {
     const avgTransactionPrice = transactions.reduce((sum, t) => sum + t.price, 0) / transactions.length;
     const priceDelta = Math.abs(avgTransactionPrice - marketPrice) / marketPrice;
 
@@ -92,7 +131,7 @@ export class FraudDetectionService {
     return false;
   }
 
-  detectVolumeSpoofing(userId: string, orderBook: any[]): boolean {
+  detectVolumeSpoofing(userId: string, orderBook: FraudOrderBookEntry[]): boolean {
     const largeOrders = orderBook.filter(order => order.volume > 10000);
 
     if (largeOrders.length > orderBook.length * 0.5) {
@@ -108,7 +147,7 @@ export class FraudDetectionService {
     return false;
   }
 
-  detectUnusualPattern(userId: string, userProfile: any): boolean {
+  detectUnusualPattern(userId: string, userProfile: FraudUserProfile): boolean {
     const accountAge = Date.now() - userProfile.createdAt;
     const transactionCount = userProfile.totalTransactions;
 
@@ -234,4 +273,165 @@ export class FraudDetectionService {
       .filter(([, score]) => score >= threshold)
       .map(([userId]) => userId);
   }
+
+  analyzeTradingBehavior(userId: string, transactions: FraudTransaction[]): TradingBehavior {
+    if (transactions.length === 0) {
+      return {
+        userId,
+        averageTradeSize: 0,
+        tradingFrequency: 0,
+        preferredMarkets: [],
+        tradingHours: [],
+        riskProfile: 'conservative',
+      };
+    }
+
+    const totalVolume = transactions.reduce((sum, t) => sum + t.volume, 0);
+    const averageTradeSize = totalVolume / transactions.length;
+
+    const timeSpan = transactions[transactions.length - 1].timestamp - transactions[0].timestamp;
+    const tradingFrequency = transactions.length / (timeSpan / (1000 * 60 * 60 * 24));
+
+    const marketCounts = new Map<string, number>();
+    transactions.forEach(t => {
+      const count = marketCounts.get(t.marketId) || 0;
+      marketCounts.set(t.marketId, count + 1);
+    });
+
+    const preferredMarkets = Array.from(marketCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([marketId]) => marketId);
+
+    const hourCounts = new Array(24).fill(0);
+    transactions.forEach(t => {
+      const hour = new Date(t.timestamp).getHours();
+      hourCounts[hour]++;
+    });
+
+    const tradingHours = hourCounts
+      .map((count, hour) => ({ hour, count }))
+      .filter(h => h.count > 0)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+      .map(h => h.hour);
+
+    let riskProfile: 'conservative' | 'moderate' | 'aggressive' = 'conservative';
+    if (averageTradeSize > 1000 || tradingFrequency > 10) {
+      riskProfile = 'aggressive';
+    } else if (averageTradeSize > 500 || tradingFrequency > 5) {
+      riskProfile = 'moderate';
+    }
+
+    const behavior: TradingBehavior = {
+      userId,
+      averageTradeSize,
+      tradingFrequency,
+      preferredMarkets,
+      tradingHours,
+      riskProfile,
+    };
+
+    this.tradingBehaviors.set(userId, behavior);
+    return behavior;
+  }
+
+  detectAnomalousBehavior(userId: string, currentTransaction: FraudTransaction): boolean {
+    const behavior = this.tradingBehaviors.get(userId);
+    if (!behavior) return false;
+
+    const volumeAnomaly = currentTransaction.volume > behavior.averageTradeSize * 5;
+    const marketAnomaly = !behavior.preferredMarkets.includes(currentTransaction.marketId);
+    const hourAnomaly = !behavior.tradingHours.includes(new Date(currentTransaction.timestamp).getHours());
+
+    const anomalyCount = [volumeAnomaly, marketAnomaly, hourAnomaly].filter(Boolean).length;
+
+    if (anomalyCount >= 2) {
+      this.createAlert(userId, 'suspicious_pattern', 'medium', 'Anomalous trading behavior detected');
+      this.recordSuspiciousActivity(
+        userId,
+        'unusual_pattern',
+        'medium',
+        `Transaction deviates from normal behavior: ${anomalyCount} anomalies detected`
+      );
+      return true;
+    }
+
+    return false;
+  }
+
+  getWashTradingDetections(userId: string): WashTradingDetection[] {
+    return Array.from(this.washTradingDetections.values())
+      .filter(detection => detection.userId === userId);
+  }
+
+  confirmWashTrading(detectionId: string): void {
+    const detection = this.washTradingDetections.get(detectionId);
+    if (detection) {
+      detection.status = 'confirmed';
+      this.washTradingDetections.set(detectionId, detection);
+    }
+  }
+
+  dismissWashTrading(detectionId: string): void {
+    const detection = this.washTradingDetections.get(detectionId);
+    if (detection) {
+      detection.status = 'dismissed';
+      this.washTradingDetections.set(detectionId, detection);
+    }
+  }
+
+  getTradingBehavior(userId: string): TradingBehavior | undefined {
+    return this.tradingBehaviors.get(userId);
+  }
+
+  getRiskScore(userId: string): number {
+    let score = 0;
+
+    const activities = this.getSuspiciousActivities(userId);
+    activities.forEach(activity => {
+      if (activity.status === 'confirmed') {
+        score += activity.severity === 'critical' ? 40 : activity.severity === 'high' ? 30 : activity.severity === 'medium' ? 20 : 10;
+      }
+    });
+
+    const alerts = this.getAlerts(userId);
+    score += alerts.filter(a => a.status === 'active').length * 5;
+
+    return Math.min(100, score);
+  }
+
+  generateFraudReport(userId: string): {
+    riskScore: number;
+    alerts: FraudAlert[];
+    suspiciousActivities: SuspiciousActivity[];
+    washTradingDetections: WashTradingDetection[];
+    tradingBehavior?: TradingBehavior;
+    recommendation: string;
+  } {
+    const riskScore = this.getRiskScore(userId);
+    const alerts = this.getAlerts(userId);
+    const suspiciousActivities = this.getSuspiciousActivities(userId);
+    const washTradingDetections = this.getWashTradingDetections(userId);
+    const tradingBehavior = this.getTradingBehavior(userId);
+
+    let recommendation = 'No action required';
+    if (riskScore >= 80) {
+      recommendation = 'Immediate account suspension recommended';
+    } else if (riskScore >= 60) {
+      recommendation = 'Enhanced monitoring required';
+    } else if (riskScore >= 40) {
+      recommendation = 'Review account activity';
+    }
+
+    return {
+      riskScore,
+      alerts,
+      suspiciousActivities,
+      washTradingDetections,
+      tradingBehavior,
+      recommendation,
+    };
+  }
 }
+

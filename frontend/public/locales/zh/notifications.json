@@ -1,0 +1,36 @@
+{
+  "title": "通知",
+  "types": {
+    "priceMovement": "价格变动",
+    "marketExpiry": "市场到期",
+    "resolution": "解决",
+    "liquidityReward": "流动性奖励",
+    "portfolioUpdate": "投资组合更新",
+    "systemAlert": "系统警报",
+    "promotion": "促销"
+  },
+  "channels": {
+    "inApp": "应用内",
+    "email": "电子邮件",
+    "push": "推送"
+  },
+  "frequencies": {
+    "immediate": "立即",
+    "hourly": "每小时",
+    "daily": "每天",
+    "weekly": "每周"
+  },
+  "settings": {
+    "title": "通知设置",
+    "preferences": "偏好",
+    "enabled": "已启用",
+    "disabled": "已禁用",
+    "frequency": "频率",
+    "channel": "渠道"
+  },
+  "messages": {
+    "markAllRead": "全部标记为已读",
+    "clearAll": "清除全部",
+    "noNotifications": "无通知"
+  }
+}

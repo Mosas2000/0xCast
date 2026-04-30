@@ -21,6 +21,7 @@ import {
     logTransaction,
     displayProgress,
     TransactionTracker,
+    getCurrentBlockHeight,
 } from './utils/transaction-helpers.js';
 
 // Load environment variables
@@ -33,19 +34,7 @@ const MULTI_MARKET_CONTRACT = 'market-multi';
 // Network configuration
 const network = STACKS_MAINNET;
 
-/**
- * Get current block height
- */
-async function getCurrentBlockHeight(): Promise<number> {
-    try {
-        const response = await fetch('https://api.mainnet.hiro.so/v2/info');
-        const data = await response.json();
-        return data.stacks_tip_height;
-    } catch (error) {
-        console.warn('Could not fetch current block height');
-        return 6040000; // Fallback
-    }
-}
+
 
 /**
  * Create a multi-outcome market

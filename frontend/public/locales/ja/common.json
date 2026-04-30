@@ -1,0 +1,86 @@
+{
+  "app": {
+    "name": "0xCast",
+    "description": "ビットコイン上の分散型予測市場"
+  },
+  "nav": {
+    "home": "ホーム",
+    "markets": "マーケット",
+    "create": "作成",
+    "portfolio": "ポートフォリオ",
+    "watchlist": "ウォッチリスト",
+    "recent": "最近",
+    "multiMarkets": "マルチマーケット",
+    "liquidity": "流動性",
+    "analytics": "分析",
+    "activity": "アクティビティ",
+    "token": "OXCトークン"
+  },
+  "actions": {
+    "submit": "送信",
+    "cancel": "キャンセル",
+    "save": "保存",
+    "delete": "削除",
+    "edit": "編集",
+    "close": "閉じる",
+    "confirm": "確認",
+    "back": "戻る",
+    "next": "次へ",
+    "search": "検索",
+    "filter": "フィルター",
+    "sort": "並び替え",
+    "export": "エクスポート",
+    "import": "インポート",
+    "refresh": "更新",
+    "clear": "クリア",
+    "apply": "適用",
+    "reset": "リセット"
+  },
+  "wallet": {
+    "connect": "ウォレット接続",
+    "disconnect": "切断",
+    "connected": "接続済み",
+    "disconnected": "切断済み",
+    "balance": "残高",
+    "address": "アドレス"
+  },
+  "status": {
+    "active": "アクティブ",
+    "resolved": "解決済み",
+    "disputed": "係争中",
+    "refunded": "返金済み",
+    "pending": "保留中",
+    "loading": "読み込み中",
+    "success": "成功",
+    "error": "エラー"
+  },
+  "outcome": {
+    "yes": "はい",
+    "no": "いいえ",
+    "none": "保留中",
+    "unknown": "不明"
+  },
+  "time": {
+    "now": "今",
+    "justNow": "たった今",
+    "minuteAgo": "{{count}}分前",
+    "minuteAgo_other": "{{count}}分前",
+    "hourAgo": "{{count}}時間前",
+    "hourAgo_other": "{{count}}時間前",
+    "dayAgo": "{{count}}日前",
+    "dayAgo_other": "{{count}}日前",
+    "weekAgo": "{{count}}週間前",
+    "weekAgo_other": "{{count}}週間前",
+    "monthAgo": "{{count}}ヶ月前",
+    "monthAgo_other": "{{count}}ヶ月前",
+    "yearAgo": "{{count}}年前",
+    "yearAgo_other": "{{count}}年前"
+  },
+  "empty": {
+    "noData": "データがありません",
+    "noResults": "結果が見つかりません",
+    "noMarkets": "マーケットが見つかりません",
+    "noTransactions": "取引はまだありません",
+    "noNotifications": "通知はありません"
+  }
+}

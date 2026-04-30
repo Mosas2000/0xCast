@@ -4,6 +4,7 @@
  * Shows a toast notification for transaction status updates.
  */
 import { useEffect, useState, useCallback } from 'react';
+import { useNetwork } from '../contexts/NetworkContext';
 import {
   type Transaction,
   TransactionStatus,
@@ -24,6 +25,8 @@ export function TransactionToast({
   onDismiss,
   autoDismissMs = 8000 
 }: TransactionToastProps) {
+  // Get current network to ensure explorer links point to correct chain
+  const { network } = useNetwork();
   const [isVisible, setIsVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
 
@@ -177,7 +180,7 @@ export function TransactionToast({
         )}
         
         <a 
-          href={getExplorerUrl(transaction.txId)} 
+          href={getExplorerUrl(transaction.txId, network)} 
           target="_blank" 
           rel="noopener noreferrer"
           style={linkStyle}

@@ -1,3 +1,5 @@
+import type { LogData, EventCallback } from '@/types/common';
+
 export interface RetryStrategy {
   maxAttempts: number;
   initialDelay: number;
@@ -23,7 +25,7 @@ export class RetryService {
     jitterFactor: 0.1,
   };
 
-  private listeners: Map<string, Function[]> = new Map();
+  private listeners: Map<string, EventCallback<LogData>[]> = new Map();
 
   async executeWithRetry<T>(
     fn: () => Promise<T>,
@@ -105,14 +107,14 @@ export class RetryService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  subscribe(event: string, callback: Function): void {
+  subscribe(event: string, callback: EventCallback<LogData>): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, []);
     }
     this.listeners.get(event)!.push(callback);
   }
 
-  unsubscribe(event: string, callback: Function): void {
+  unsubscribe(event: string, callback: EventCallback<LogData>): void {
     const callbacks = this.listeners.get(event);
     if (callbacks) {
       const index = callbacks.indexOf(callback);
@@ -122,7 +124,7 @@ export class RetryService {
     }
   }
 
-  private emit(event: string, data?: any): void {
+  private emit(event: string, data?: LogData): void {
     const callbacks = this.listeners.get(event);
     if (callbacks) {
       callbacks.forEach(callback => callback(data));

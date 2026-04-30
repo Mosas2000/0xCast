@@ -4,6 +4,8 @@
  * Defines categories and sorting options for market filtering.
  */
 
+import i18n from '../i18n/config';
+
 export const MarketCategory = {
   ALL: 'all',
   CRYPTO: 'crypto',
@@ -42,24 +44,24 @@ export interface SortConfig {
 }
 
 export const CATEGORIES: CategoryConfig[] = [
-  { value: MarketCategory.ALL, label: 'All Categories', icon: '🌐', color: '#3B82F6' },
-  { value: MarketCategory.CRYPTO, label: 'Crypto', icon: '₿', color: '#F7931A' },
-  { value: MarketCategory.DEFI, label: 'DeFi', icon: '🏦', color: '#627EEA' },
-  { value: MarketCategory.SPORTS, label: 'Sports', icon: '⚽', color: '#22C55E' },
-  { value: MarketCategory.POLITICS, label: 'Politics', icon: '🏛️', color: '#EF4444' },
-  { value: MarketCategory.ENTERTAINMENT, label: 'Entertainment', icon: '🎬', color: '#EC4899' },
-  { value: MarketCategory.SCIENCE, label: 'Science', icon: '🔬', color: '#8B5CF6' },
-  { value: MarketCategory.BUSINESS, label: 'Business', icon: '📈', color: '#14B8A6' },
-  { value: MarketCategory.OTHER, label: 'Other', icon: '📋', color: '#6B7280' },
+  { value: MarketCategory.ALL, label: i18n.t('markets:categories.all', 'All Categories'), icon: '🌐', color: '#3B82F6' },
+  { value: MarketCategory.CRYPTO, label: i18n.t('markets:categories.crypto', 'Crypto'), icon: '₿', color: '#F7931A' },
+  { value: MarketCategory.DEFI, label: i18n.t('markets:categories.defi', 'DeFi'), icon: '🏦', color: '#627EEA' },
+  { value: MarketCategory.SPORTS, label: i18n.t('markets:categories.sports', 'Sports'), icon: '⚽', color: '#22C55E' },
+  { value: MarketCategory.POLITICS, label: i18n.t('markets:categories.politics', 'Politics'), icon: '🏛️', color: '#EF4444' },
+  { value: MarketCategory.ENTERTAINMENT, label: i18n.t('markets:categories.entertainment', 'Entertainment'), icon: '🎬', color: '#EC4899' },
+  { value: MarketCategory.SCIENCE, label: i18n.t('markets:categories.science', 'Science'), icon: '🔬', color: '#8B5CF6' },
+  { value: MarketCategory.BUSINESS, label: i18n.t('markets:categories.technology', 'Business'), icon: '📈', color: '#14B8A6' },
+  { value: MarketCategory.OTHER, label: i18n.t('markets:categories.other', 'Other'), icon: '📋', color: '#6B7280' },
 ];
 
 export const SORT_OPTIONS: SortConfig[] = [
-  { value: SortOption.NEWEST, label: 'Newest First' },
-  { value: SortOption.OLDEST, label: 'Oldest First' },
-  { value: SortOption.VOLUME_HIGH, label: 'Highest Volume' },
-  { value: SortOption.VOLUME_LOW, label: 'Lowest Volume' },
-  { value: SortOption.ENDING_SOON, label: 'Ending Soon' },
-  { value: SortOption.MOST_PARTICIPANTS, label: 'Most Participants' },
+  { value: SortOption.NEWEST, label: i18n.t('markets:sort.newest', 'Newest First') },
+  { value: SortOption.OLDEST, label: i18n.t('markets:sort.oldest', 'Oldest First') },
+  { value: SortOption.VOLUME_HIGH, label: i18n.t('markets:sort.highestVolume', 'Highest Volume') },
+  { value: SortOption.VOLUME_LOW, label: i18n.t('markets:sort.lowestVolume', 'Lowest Volume') },
+  { value: SortOption.ENDING_SOON, label: i18n.t('markets:sort.endingSoon', 'Ending Soon') },
+  { value: SortOption.MOST_PARTICIPANTS, label: i18n.t('markets:sort.mostPopular', 'Most Participants') },
 ];
 
 /**

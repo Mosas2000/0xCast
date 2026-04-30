@@ -49,6 +49,8 @@ import { getContractPrincipal, CONTRACT_NAMES } from '../config/contracts';
 import { useWallet } from '../components/WalletProvider';
 import { safeBigIntToNumber } from './useContract';
 import { createRateLimitMiddleware } from '../middleware/rateLimitMiddleware';
+import { parseContractError, getUserFriendlyContractError } from '../utils/contractErrorHandler';
+import { errorLoggingService } from '../services/ErrorLoggingService';
 
 function getLiquidityPoolContract() {
   return getContractPrincipal(CONTRACT_NAMES.LIQUIDITY_POOL);
@@ -127,13 +129,21 @@ export function useLiquidityActions(): UseLiquidityActionsReturn {
           },
         });
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Transaction failed';
+        const contractError = parseContractError(error, contract.name, functionName);
+        const friendlyMessage = getUserFriendlyContractError(contractError);
+        
+        errorLoggingService.logError(contractError, {
+          component: 'useLiquidityActions',
+          action: functionName,
+          additionalData: { functionArgs },
+        });
+        
         setState(prev => ({
           ...prev,
           isSubmitting: false,
-          error: errorMessage,
+          error: friendlyMessage,
         }));
-        throw error;
+        throw contractError;
       }
     },
     [isConnected, address]
