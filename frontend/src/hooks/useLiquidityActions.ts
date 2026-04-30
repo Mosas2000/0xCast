@@ -160,14 +160,26 @@ export function useLiquidityActions(): UseLiquidityActionsReturn {
     async (marketId: number, stxAmount: bigint) => {
       if (!address) throw new Error('Wallet not connected');
 
-      const postConditions = [
-        Pc.principal(address).willSendEq(stxAmount).ustx(),
-      ];
-
-      await executeCall(
+      const rateLimitMiddleware = createRateLimitMiddleware(address);
+      
+      await rateLimitMiddleware(
         'add-liquidity',
-        [uintCV(marketId), uintCV(safeBigIntToNumber(stxAmount, 'stxAmount'))],
-        postConditions
+        async () => {
+          const postConditions = [
+            Pc.principal(address).willSendEq(stxAmount).ustx(),
+          ];
+
+          await executeCall(
+            'add-liquidity',
+            [uintCV(marketId), uintCV(safeBigIntToNumber(stxAmount, 'stxAmount'))],
+            postConditions
+          );
+        },
+        {
+          onBlocked: (cooldownMs) => {
+            throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(cooldownMs / 1000)} seconds.`);
+          },
+        }
       );
     },
     [executeCall, address]
@@ -175,14 +187,28 @@ export function useLiquidityActions(): UseLiquidityActionsReturn {
 
   const removeLiquidity = useCallback(
     async (marketId: number, shares: bigint) => {
-      await executeCall(
+      if (!address) throw new Error('Wallet not connected');
+
+      const rateLimitMiddleware = createRateLimitMiddleware(address);
+      
+      await rateLimitMiddleware(
         'remove-liquidity',
-        [uintCV(marketId), uintCV(safeBigIntToNumber(shares, 'shares'))],
-        [],
-        PostConditionMode.Allow
+        async () => {
+          await executeCall(
+            'remove-liquidity',
+            [uintCV(marketId), uintCV(safeBigIntToNumber(shares, 'shares'))],
+            [],
+            PostConditionMode.Allow
+          );
+        },
+        {
+          onBlocked: (cooldownMs) => {
+            throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(cooldownMs / 1000)} seconds.`);
+          },
+        }
       );
     },
-    [executeCall]
+    [executeCall, address]
   );
 
   return {
