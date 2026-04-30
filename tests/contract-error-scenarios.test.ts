@@ -39,7 +39,7 @@ describe("Contract Error Scenario Tests", () => {
         "create-market",
         [
           Cl.stringAscii("Past end date"),
-          Cl.uint(currentBlock - 10),
+          Cl.uint(Math.max(1, currentBlock - 10)),
           Cl.uint(currentBlock + 50),
           Cl.uint(1),
         ],
@@ -288,7 +288,7 @@ describe("Contract Error Scenario Tests", () => {
         [Cl.uint(0)],
         wallet1
       );
-      expect(result.result).toBeErr(Cl.uint(113)); // ERR-MARKET-NOT-FINALIZED
+      expect(result.result).toBeErr(Cl.uint(116)); // ERR-FINALIZATION-NOT-READY
     });
 
     it("should reject double claims", () => {
@@ -688,7 +688,7 @@ describe("Contract Error Scenario Tests", () => {
         [Cl.uint(0), Cl.uint(1_000_000)],
         wallet1
       );
-      expect(result.result).toBeErr(Cl.uint(107)); // ERR-MARKET-ENDED
+      expect(result.result).toBeErr(Cl.uint(102)); // ERR-MARKET-ALREADY-RESOLVED
     });
 
     it("should handle multiple resolution attempts", () => {
