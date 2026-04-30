@@ -48,6 +48,7 @@ import { uintCV, PostConditionMode, Pc } from '@stacks/transactions';
 import { getContractPrincipal, CONTRACT_NAMES } from '../config/contracts';
 import { useWallet } from '../components/WalletProvider';
 import { safeBigIntToNumber } from './useContract';
+import { createRateLimitMiddleware } from '../middleware/rateLimitMiddleware';
 
 function getLiquidityPoolContract() {
   return getContractPrincipal(CONTRACT_NAMES.LIQUIDITY_POOL);
