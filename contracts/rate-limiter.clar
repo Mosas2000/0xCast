@@ -29,7 +29,7 @@
 
 (define-read-only (get-rate-limit (user principal) (action (string-ascii 32)))
   (default-to 
-    { count: u0, window-start: block-height, blocked-until: u0 }
+    { count: u0, window-start: stacks-block-height, blocked-until: u0 }
     (map-get? rate-limits { user: user, action: action })
   )
 )
