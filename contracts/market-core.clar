@@ -90,6 +90,75 @@
 ;; ~7 days in blocks (7 * 144 = 1008)
 (define-data-var abandonment-period uint u1008)
 
+;; Dispute window for any resolution (~24 hours in blocks)
+(define-data-var dispute-period uint u144)
+
+;; Rate limiting configuration
+(define-data-var rate-limit-window uint u144)
+(define-data-var max-stakes-per-window uint u10)
+(define-data-var max-markets-per-window uint u5)
+(define-data-var max-resolutions-per-window uint u3)
+
+;; Emergency pause switch (owner-controlled)
+(define-data-var contract-paused bool false)
+
+;; Emergency pause approval threshold
+(define-data-var pause-approval-threshold uint u2)
+
+;; Current pause / resume request tracking
+(define-data-var pause-request-id uint u0)
+(define-data-var pause-request-open bool false)
+(define-data-var pause-request-reason (string-ascii 128) "")
+(define-data-var pause-approval-count uint u0)
+
+(define-data-var resume-request-id uint u0)
+(define-data-var resume-request-open bool false)
+(define-data-var resume-request-reason (string-ascii 128) "")
+(define-data-var resume-approval-count uint u0)
+
+;; Circuit breaker audit log
+(define-data-var circuit-breaker-log-id uint u0)
+
+;; Approved emergency signers
+(define-map emergency-approvers
+  { signer: principal }
+  {
+    enabled: bool,
+    updated-at: uint,
+    updated-by: principal
+  }
+)
+
+;; Approval records for pause and resume requests
+(define-map pause-request-approvals
+  { request-id: uint, signer: principal }
+  {
+    approved-at: uint
+  }
+)
+
+(define-map resume-request-approvals
+  { request-id: uint, signer: principal }
+  {
+    approved-at: uint
+  }
+)
+
+;; Circuit breaker audit log
+(define-map circuit-breaker-events
+  { log-id: uint }
+  {
+    action: (string-ascii 20),
+    actor: principal,
+    reason: (string-ascii 128),
+    request-id: uint,
+    approval-count: uint,
+    threshold: uint,
+    paused: bool,
+    created-at: uint
+  }
+)
+
 ;; Contract owner (configurable, initialized to deploying principal)
 (define-data-var contract-owner principal tx-sender)
 
