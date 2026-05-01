@@ -49,6 +49,15 @@
 (define-constant ERR-PAUSE-ALREADY-APPROVED (err u121))
 (define-constant ERR-PAUSE-NOT-AUTHORIZED (err u122))
 (define-constant ERR-RATE-LIMIT-EXCEEDED (err u123))
+(define-constant ERR-INVALID-NEW-OWNER (err u124))
+(define-constant ERR-OWNER-TRANSFER-COOLDOWN (err u125))
+(define-constant ERR-QUESTION-TOO-SHORT (err u126))
+(define-constant ERR-QUESTION-TOO-LONG (err u127))
+(define-constant ERR-MARKET-DURATION-TOO-SHORT (err u128))
+(define-constant ERR-MARKET-DURATION-TOO-LONG (err u129))
+(define-constant ERR-RESOLUTION-WINDOW-TOO-SHORT (err u130))
+(define-constant ERR-RESOLUTION-WINDOW-TOO-LONG (err u131))
+(define-constant ERR-TOTAL-DURATION-TOO-LONG (err u132))
 
 ;; Only the oracle integration contract may invoke oracle/dispute entrypoints
 (define-constant ORACLE-INTEGRATION .oracle-integration)
@@ -56,83 +65,30 @@
 (define-constant DEFAULT-PAUSE-REASON "emergency pause request")
 (define-constant DEFAULT-RESUME-REASON "resume request")
 
+;; Market Creation Validation Constants
+;; Question length constraints
+(define-constant MIN-QUESTION-LENGTH u10)
+(define-constant MAX-QUESTION-LENGTH u256)
+
+;; Market duration constraints (in blocks)
+;; Minimum: ~1 hour (6 blocks)
+;; Maximum: ~1 year (52,560 blocks = 365 * 144)
+(define-constant MIN-MARKET-DURATION u6)
+(define-constant MAX-MARKET-DURATION u52560)
+
+;; Resolution window constraints (in blocks)
+;; Minimum: ~1 hour (6 blocks)
+;; Maximum: ~30 days (4,320 blocks = 30 * 144)
+(define-constant MIN-RESOLUTION-WINDOW u6)
+(define-constant MAX-RESOLUTION-WINDOW u4320)
+
+;; Total market lifetime constraint (in blocks)
+;; Maximum: ~1.5 years (78,840 blocks = 547.5 * 144)
+(define-constant MAX-TOTAL-DURATION u78840)
+
 ;; Auto-resolve fallback: blocks after resolution-date before auto-resolve kicks in
 ;; ~7 days in blocks (7 * 144 = 1008)
 (define-data-var abandonment-period uint u1008)
-
-;; Dispute window for any resolution (~24 hours in blocks)
-(define-data-var dispute-period uint u144)
-
-;; Rate limiting configuration
-(define-data-var rate-limit-window uint u144)
-(define-data-var max-stakes-per-window uint u10)
-(define-data-var max-markets-per-window uint u5)
-(define-data-var max-resolutions-per-window uint u3)
-
-;; Emergency pause switch (owner-controlled)
-(define-data-var contract-paused bool false)
-
-;; Emergency pause approval threshold
-(define-data-var pause-approval-threshold uint u2)
-
-;; Current pause / resume request tracking
-(define-data-var pause-request-id uint u0)
-(define-data-var pause-request-open bool false)
-(define-data-var pause-request-reason (string-ascii 128) "")
-(define-data-var pause-approval-count uint u0)
-
-(define-data-var resume-request-id uint u0)
-(define-data-var resume-request-open bool false)
-(define-data-var resume-request-reason (string-ascii 128) "")
-(define-data-var resume-approval-count uint u0)
-
-;; Approved emergency signers
-(define-map emergency-approvers
-  { signer: principal }
-  {
-    enabled: bool,
-    updated-at: uint,
-    updated-by: principal
-  }
-)
-
-;; Approval records for pause and resume requests
-(define-map pause-request-approvals
-  { request-id: uint, signer: principal }
-  {
-    approved-at: uint
-  }
-)
-
-(define-map resume-request-approvals
-  { request-id: uint, signer: principal }
-  {
-    approved-at: uint
-  }
-)
-
-;; Circuit breaker audit log
-(define-data-var circuit-breaker-log-id uint u0)
-(define-map circuit-breaker-events
-  { log-id: uint }
-  {
-    action: (string-ascii 20),
-    actor: principal,
-    reason: (string-ascii 128),
-    request-id: uint,
-    approval-count: uint,
-    threshold: uint,
-    paused: bool,
-    created-at: uint
-  }
-)
-
-;; Contract owner (configurable, initialized to deploying principal)
-(define-data-var contract-owner principal tx-sender)
-
-;; Error for owner transfer operations
-(define-constant ERR-INVALID-NEW-OWNER (err u124))
-(define-constant ERR-OWNER-TRANSFER-COOLDOWN (err u125))
 
 ;; Owner transfer cooldown period (~7 days in blocks)
 (define-data-var owner-transfer-cooldown uint u1008)
@@ -328,6 +284,51 @@
 (define-private (assert-not-paused)
   (if (var-get contract-paused)
     ERR-CONTRACT-PAUSED
+    (ok true)
+  )
+)
+
+;; Validate market creation parameters
+;; @param question: Market question string
+;; @param end-date: Block height when trading closes
+;; @param resolution-date: Block height when market can be resolved
+;; @param category: Market category (1-5)
+;; @param current-block: Current block height
+;; @returns: (ok true) if valid, error code otherwise
+(define-private (validate-market-parameters 
+  (question (string-ascii 256))
+  (end-date uint)
+  (resolution-date uint)
+  (category uint)
+  (current-block uint))
+  (let (
+    (question-len (len question))
+    (market-duration (- end-date current-block))
+    (resolution-window (- resolution-date end-date))
+    (total-duration (- resolution-date current-block))
+  )
+    ;; Validate question length
+    (asserts! (>= question-len MIN-QUESTION-LENGTH) ERR-QUESTION-TOO-SHORT)
+    (asserts! (<= question-len MAX-QUESTION-LENGTH) ERR-QUESTION-TOO-LONG)
+    
+    ;; Validate category
+    (asserts! (and (>= category u1) (<= category u5)) ERR-INVALID-CATEGORY)
+    
+    ;; Validate dates are in future
+    (asserts! (> end-date current-block) ERR-INVALID-DATES)
+    (asserts! (> resolution-date end-date) ERR-INVALID-DATES)
+    
+    ;; Validate market duration (current to end-date)
+    (asserts! (>= market-duration MIN-MARKET-DURATION) ERR-MARKET-DURATION-TOO-SHORT)
+    (asserts! (<= market-duration MAX-MARKET-DURATION) ERR-MARKET-DURATION-TOO-LONG)
+    
+    ;; Validate resolution window (end-date to resolution-date)
+    (asserts! (>= resolution-window MIN-RESOLUTION-WINDOW) ERR-RESOLUTION-WINDOW-TOO-SHORT)
+    (asserts! (<= resolution-window MAX-RESOLUTION-WINDOW) ERR-RESOLUTION-WINDOW-TOO-LONG)
+    
+    ;; Validate total duration
+    (asserts! (<= total-duration MAX-TOTAL-DURATION) ERR-TOTAL-DURATION-TOO-LONG)
+    
     (ok true)
   )
 )
@@ -592,8 +593,11 @@
 
 ;; Create a new prediction market
 ;; @param question: The market question (max 256 characters)
+;; Create a new prediction market
+;; @param question: The market question (10-256 characters)
 ;; @param end-date: Block height when trading closes
 ;; @param resolution-date: Block height when market can be resolved
+;; @param category: Market category (1=Crypto, 2=Sports, 3=Politics, 4=Economics, 5=Other)
 ;; @returns: (ok market-id) on success, error code on failure
 (define-public (create-market (question (string-ascii 256)) (end-date uint) (resolution-date uint) (category uint))
   (let
@@ -605,11 +609,9 @@
     )
     (try! (assert-not-paused))
     (try! (check-rate-limit tx-sender "market" (var-get max-markets-per-window)))
-    (asserts! (> end-date current-block) ERR-INVALID-DATES)
     
-    (asserts! (> resolution-date end-date) ERR-INVALID-DATES)
-    
-    (asserts! (and (>= category u1) (<= category u5)) ERR-INVALID-CATEGORY)
+    ;; Comprehensive parameter validation
+    (try! (validate-market-parameters question end-date resolution-date category current-block))
     
     (map-set markets
       { market-id: new-market-id }
