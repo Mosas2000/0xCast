@@ -90,6 +90,9 @@
 ;; ~7 days in blocks (7 * 144 = 1008)
 (define-data-var abandonment-period uint u1008)
 
+;; Contract owner (configurable, initialized to deploying principal)
+(define-data-var contract-owner principal tx-sender)
+
 ;; Owner transfer cooldown period (~7 days in blocks)
 (define-data-var owner-transfer-cooldown uint u1008)
 
