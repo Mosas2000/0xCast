@@ -164,33 +164,35 @@
 )
 
 (define-private (record-rate-limit (user principal) (action (string-ascii 20)))
-  (let (
-    (current-block stacks-block-height)
-    (limit-data (if (is-eq action "predict")
-      (default-to { count: u0, window-start: u0 } (map-get? rate-limit-predictions user))
-      (if (is-eq action "market")
-        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-markets user))
-        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-stakes user))
-      )
-    ))
-    (window-start (get window-start limit-data))
-    (count (get count limit-data))
-    (new-window (>= (- current-block window-start) RATE-LIMIT-WINDOW))
-  )
-    (if (is-eq action "predict")
-      (map-set rate-limit-predictions user {
-        count: (if new-window u1 (+ count u1)),
-        window-start: (if new-window current-block window-start)
-      })
-      (if (is-eq action "market")
-        (map-set rate-limit-markets user {
+  (begin
+    (let (
+      (current-block stacks-block-height)
+      (limit-data (if (is-eq action "predict")
+        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-predictions user))
+        (if (is-eq action "market")
+          (default-to { count: u0, window-start: u0 } (map-get? rate-limit-markets user))
+          (default-to { count: u0, window-start: u0 } (map-get? rate-limit-stakes user))
+        )
+      ))
+      (window-start (get window-start limit-data))
+      (count (get count limit-data))
+      (new-window (>= (- current-block window-start) RATE-LIMIT-WINDOW))
+    )
+      (if (is-eq action "predict")
+        (map-set rate-limit-predictions user {
           count: (if new-window u1 (+ count u1)),
           window-start: (if new-window current-block window-start)
         })
-        (map-set rate-limit-stakes user {
-          count: (if new-window u1 (+ count u1)),
-          window-start: (if new-window current-block window-start)
-        })
+        (if (is-eq action "market")
+          (map-set rate-limit-markets user {
+            count: (if new-window u1 (+ count u1)),
+            window-start: (if new-window current-block window-start)
+          })
+          (map-set rate-limit-stakes user {
+            count: (if new-window u1 (+ count u1)),
+            window-start: (if new-window current-block window-start)
+          })
+        )
       )
     )
     (ok true)
@@ -210,7 +212,7 @@
       locked-until: (+ stacks-block-height LOCK-PERIOD)
     })
     (var-set total-staked (+ (var-get total-staked) amount))
-    (try! (record-rate-limit tx-sender "stake"))
+    (unwrap-panic (record-rate-limit tx-sender "stake"))
     (print { event: "stake", staker: tx-sender, amount: amount })
     (ok true)))
 
@@ -290,7 +292,7 @@
       resolved-at: u0
     })
     (var-set market-counter (+ market-id u1))
-    (try! (record-rate-limit tx-sender "market"))
+    (unwrap-panic (record-rate-limit tx-sender "market"))
     (print { event: "market-created", id: market-id, question: question, creator: tx-sender })
     (ok market-id)))
 
@@ -322,7 +324,7 @@
         (map-set positions { market-id: market-id, user: tx-sender }
           (merge current-position { no-amount: (+ (get no-amount current-position) net-amount) }))))
     
-    (try! (record-rate-limit tx-sender "predict"))
+    (unwrap-panic (record-rate-limit tx-sender "predict"))
     (print { event: "prediction", market-id: market-id, user: tx-sender, outcome: outcome, amount: net-amount })
     (ok true)))
 

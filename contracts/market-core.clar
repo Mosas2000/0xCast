@@ -357,34 +357,36 @@
 )
 
 (define-private (record-rate-limit (user principal) (action (string-ascii 20)))
-  (let (
-    (current-block stacks-block-height)
-    (window (var-get rate-limit-window))
-    (limit-data (if (is-eq action "stake")
-      (default-to { count: u0, window-start: u0 } (map-get? rate-limit-stakes user))
-      (if (is-eq action "market")
-        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-markets user))
-        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-resolutions user))
-      )
-    ))
-    (window-start (get window-start limit-data))
-    (count (get count limit-data))
-    (new-window (>= (- current-block window-start) window))
-  )
-    (if (is-eq action "stake")
-      (map-set rate-limit-stakes user {
-        count: (if new-window u1 (+ count u1)),
-        window-start: (if new-window current-block window-start)
-      })
-      (if (is-eq action "market")
-        (map-set rate-limit-markets user {
+  (begin
+    (let (
+      (current-block stacks-block-height)
+      (window (var-get rate-limit-window))
+      (limit-data (if (is-eq action "stake")
+        (default-to { count: u0, window-start: u0 } (map-get? rate-limit-stakes user))
+        (if (is-eq action "market")
+          (default-to { count: u0, window-start: u0 } (map-get? rate-limit-markets user))
+          (default-to { count: u0, window-start: u0 } (map-get? rate-limit-resolutions user))
+        )
+      ))
+      (window-start (get window-start limit-data))
+      (count (get count limit-data))
+      (new-window (>= (- current-block window-start) window))
+    )
+      (if (is-eq action "stake")
+        (map-set rate-limit-stakes user {
           count: (if new-window u1 (+ count u1)),
           window-start: (if new-window current-block window-start)
         })
-        (map-set rate-limit-resolutions user {
-          count: (if new-window u1 (+ count u1)),
-          window-start: (if new-window current-block window-start)
-        })
+        (if (is-eq action "market")
+          (map-set rate-limit-markets user {
+            count: (if new-window u1 (+ count u1)),
+            window-start: (if new-window current-block window-start)
+          })
+          (map-set rate-limit-resolutions user {
+            count: (if new-window u1 (+ count u1)),
+            window-start: (if new-window current-block window-start)
+          })
+        )
       )
     )
     (ok true)
@@ -393,7 +395,7 @@
 
 (define-private (is-emergency-signer (signer principal))
   (or
-    (is-eq signer CONTRACT-OWNER)
+    (is-eq signer (var-get contract-owner))
     (match (map-get? emergency-approvers { signer: signer })
       approval (get enabled approval)
       false
@@ -640,7 +642,7 @@
       { count: (+ cat-count u1) }
     )
     
-    (try! (record-rate-limit tx-sender "market"))
+    (unwrap-panic (record-rate-limit tx-sender "market"))
     (ok new-market-id)
   )
 )
@@ -661,6 +663,7 @@
     )
     (try! (assert-not-paused))
     (try! (check-rate-limit tx-sender "stake" (var-get max-stakes-per-window)))
+    (asserts! (> amount u0) ERR-MARKET-STILL-ACTIVE)
     (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-MARKET-ALREADY-RESOLVED)
     
     (asserts! (< current-block (get end-date market)) ERR-MARKET-ENDED)
@@ -677,7 +680,7 @@
       (merge current-position { yes-stake: (+ (get yes-stake current-position) amount) })
     )
     
-    (try! (record-rate-limit tx-sender "stake"))
+    (unwrap-panic (record-rate-limit tx-sender "stake"))
     (ok true)
   )
 )
@@ -698,6 +701,7 @@
     )
     (try! (assert-not-paused))
     (try! (check-rate-limit tx-sender "stake" (var-get max-stakes-per-window)))
+    (asserts! (> amount u0) ERR-MARKET-STILL-ACTIVE)
     (asserts! (is-eq (get status market) MARKET-STATUS-ACTIVE) ERR-MARKET-ALREADY-RESOLVED)
     
     (asserts! (< current-block (get end-date market)) ERR-MARKET-ENDED)
@@ -714,7 +718,7 @@
       (merge current-position { no-stake: (+ (get no-stake current-position) amount) })
     )
     
-    (try! (record-rate-limit tx-sender "stake"))
+    (unwrap-panic (record-rate-limit tx-sender "stake"))
     (ok true)
   )
 )
@@ -753,7 +757,7 @@
       })
     )
     
-    (try! (record-rate-limit tx-sender "resolve"))
+    (unwrap-panic (record-rate-limit tx-sender "resolve"))
     (ok true)
   )
 )

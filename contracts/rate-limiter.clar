@@ -29,7 +29,7 @@
 
 (define-read-only (get-rate-limit (user principal) (action (string-ascii 32)))
   (default-to 
-    { count: u0, window-start: block-height, blocked-until: u0 }
+    { count: u0, window-start: stacks-block-height, blocked-until: u0 }
     (map-get? rate-limits { user: user, action: action })
   )
 )
@@ -42,7 +42,7 @@
   (let (
     (limit-data (get-rate-limit user action))
   )
-    (> (get blocked-until limit-data) block-height)
+    (> (get blocked-until limit-data) stacks-block-height)
   )
 )
 
@@ -53,7 +53,7 @@
     (window-start (get window-start limit-data))
     (count (get count limit-data))
   )
-    (if (> (- block-height window-start) (get window-blocks config))
+    (if (> (- stacks-block-height window-start) (get window-blocks config))
       (ok (get max-requests config))
       (ok (if (>= count (get max-requests config))
         u0
@@ -73,15 +73,15 @@
     (blocked-until (get blocked-until limit-data))
   )
     (asserts! (not (var-get paused)) ERR_UNAUTHORIZED)
-    (asserts! (<= blocked-until block-height) ERR_RATE_LIMIT_EXCEEDED)
+    (asserts! (<= blocked-until stacks-block-height) ERR_RATE_LIMIT_EXCEEDED)
     
-    (if (> (- block-height window-start) (get window-blocks config))
+    (if (> (- stacks-block-height window-start) (get window-blocks config))
       (begin
         (map-set rate-limits
           { user: user, action: action }
           { 
             count: u1,
-            window-start: block-height,
+            window-start: stacks-block-height,
             blocked-until: u0
           }
         )
@@ -94,7 +94,7 @@
             { 
               count: count,
               window-start: window-start,
-              blocked-until: (+ block-height (get cooldown-blocks config))
+              blocked-until: (+ stacks-block-height (get cooldown-blocks config))
             }
           )
           ERR_RATE_LIMIT_EXCEEDED
