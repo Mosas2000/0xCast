@@ -1,0 +1,234 @@
+import { OracleProvider } from '@/types/oracle';
+
+export interface ProviderHealthMetrics {
+  providerId: string;
+  healthScore: number;
+  uptime: number;
+  averageLatency: number;
+  errorRate: number;
+  lastSuccessfulFetch: number;
+  consecutiveFailures: number;
+}
+
+export interface ProviderPerformanceStats {
+  providerId: string;
+  totalRequests: number;
+  successfulRequests: number;
+  failedRequests: number;
+  averageResponseTime: number;
+  uptimePercentage: number;
+  reliability: number;
+}
+
+export class OracleProviderManager {
+  private providers: Map<string, OracleProvider>;
+  private healthMetrics: Map<string, ProviderHealthMetrics>;
+  private performanceHistory: Map<string, number[]>;
+  private latencyHistory: Map<string, number[]>;
+  private readonly maxHistorySize = 100;
+
+  constructor() {
+    this.providers = new Map();
+    this.healthMetrics = new Map();
+    this.performanceHistory = new Map();
+    this.latencyHistory = new Map();
+  }
+
+  registerProvider(provider: OracleProvider): void {
+    this.providers.set(provider.id, provider);
+    this.healthMetrics.set(provider.id, {
+      providerId: provider.id,
+      healthScore: 100,
+      uptime: 100,
+      averageLatency: 0,
+      errorRate: 0,
+      lastSuccessfulFetch: Date.now(),
+      consecutiveFailures: 0,
+    });
+    this.performanceHistory.set(provider.id, []);
+    this.latencyHistory.set(provider.id, []);
+  }
+
+  unregisterProvider(providerId: string): boolean {
+    const deleted = this.providers.delete(providerId);
+    this.healthMetrics.delete(providerId);
+    this.performanceHistory.delete(providerId);
+    this.latencyHistory.delete(providerId);
+    return deleted;
+  }
+
+  getProvider(providerId: string): OracleProvider | undefined {
+    return this.providers.get(providerId);
+  }
+
+  getAllProviders(): OracleProvider[] {
+    return Array.from(this.providers.values());
+  }
+
+  getActiveProviders(): OracleProvider[] {
+    return Array.from(this.providers.values()).filter((p) => p.enabled);
+  }
+
+  getHealthyProviders(minHealthScore: number = 50): OracleProvider[] {
+    return Array.from(this.providers.values()).filter((p) => {
+      const metrics = this.healthMetrics.get(p.id);
+      return p.enabled && metrics && metrics.healthScore >= minHealthScore;
+    });
+  }
+
+  recordSuccess(providerId: string, latency: number): void {
+    const provider = this.providers.get(providerId);
+    const metrics = this.healthMetrics.get(providerId);
+    if (!provider || !metrics) return;
+
+    provider.successCount++;
+    metrics.consecutiveFailures = 0;
+    metrics.lastSuccessfulFetch = Date.now();
+    metrics.healthScore = Math.min(100, metrics.healthScore + 2);
+
+    const latencyHistory = this.latencyHistory.get(providerId) || [];
+    latencyHistory.push(latency);
+    if (latencyHistory.length > this.maxHistorySize) {
+      latencyHistory.shift();
+    }
+    this.latencyHistory.set(providerId, latencyHistory);
+
+    metrics.averageLatency = latencyHistory.reduce((a, b) => a + b, 0) / latencyHistory.length;
+
+    this.updatePerformanceMetrics(providerId);
+  }
+
+  recordFailure(providerId: string, error: string): void {
+    const provider = this.providers.get(providerId);
+    const metrics = this.healthMetrics.get(providerId);
+    if (!provider || !metrics) return;
+
+    provider.errorCount++;
+    provider.lastError = error;
+    metrics.consecutiveFailures++;
+    metrics.healthScore = Math.max(0, metrics.healthScore - 5);
+
+    if (metrics.consecutiveFailures >= 5) {
+      provider.enabled = false;
+      console.warn(`Provider ${providerId} disabled after 5 consecutive failures`);
+    }
+
+    this.updatePerformanceMetrics(providerId);
+  }
+
+  private updatePerformanceMetrics(providerId: string): void {
+    const provider = this.providers.get(providerId);
+    const metrics = this.healthMetrics.get(providerId);
+    if (!provider || !metrics) return;
+
+    const total = provider.successCount + provider.errorCount;
+    if (total > 0) {
+      metrics.errorRate = (provider.errorCount / total) * 100;
+      metrics.uptime = (provider.successCount / total) * 100;
+    }
+  }
+
+  getHealthMetrics(providerId: string): ProviderHealthMetrics | undefined {
+    return this.healthMetrics.get(providerId);
+  }
+
+  getPerformanceStats(providerId: string): ProviderPerformanceStats | null {
+    const provider = this.providers.get(providerId);
+    const metrics = this.healthMetrics.get(providerId);
+    if (!provider || !metrics) return null;
+
+    const total = provider.successCount + provider.errorCount;
+    const latencyHistory = this.latencyHistory.get(providerId) || [];
+    const avgLatency = latencyHistory.length > 0
+      ? latencyHistory.reduce((a, b) => a + b, 0) / latencyHistory.length
+      : 0;
+
+    return {
+      providerId,
+      totalRequests: total,
+      successfulRequests: provider.successCount,
+      failedRequests: provider.errorCount,
+      averageResponseTime: avgLatency,
+      uptimePercentage: metrics.uptime,
+      reliability: metrics.healthScore,
+    };
+  }
+
+  selectBestProviders(count: number): OracleProvider[] {
+    const healthy = this.getHealthyProviders();
+    return healthy
+      .sort((a, b) => {
+        const metricsA = this.healthMetrics.get(a.id);
+        const metricsB = this.healthMetrics.get(b.id);
+        if (!metricsA || !metricsB) return 0;
+
+        const scoreA = metricsA.healthScore * (1 + a.priority / 100);
+        const scoreB = metricsB.healthScore * (1 + b.priority / 100);
+        return scoreB - scoreA;
+      })
+      .slice(0, count);
+  }
+
+  enableProvider(providerId: string): boolean {
+    const provider = this.providers.get(providerId);
+    if (!provider) return false;
+    provider.enabled = true;
+    return true;
+  }
+
+  disableProvider(providerId: string): boolean {
+    const provider = this.providers.get(providerId);
+    if (!provider) return false;
+    provider.enabled = false;
+    return true;
+  }
+
+  resetProviderHealth(providerId: string): boolean {
+    const metrics = this.healthMetrics.get(providerId);
+    if (!metrics) return false;
+
+    metrics.healthScore = 100;
+    metrics.consecutiveFailures = 0;
+    metrics.errorRate = 0;
+    return true;
+  }
+
+  getProvidersByPriority(): OracleProvider[] {
+    return Array.from(this.providers.values()).sort((a, b) => b.priority - a.priority);
+  }
+
+  updateProviderPriority(providerId: string, priority: number): boolean {
+    const provider = this.providers.get(providerId);
+    if (!provider) return false;
+    provider.priority = priority;
+    return true;
+  }
+
+  getNetworkHealth(): {
+    totalProviders: number;
+    activeProviders: number;
+    healthyProviders: number;
+    averageHealth: number;
+    networkReliability: number;
+  } {
+    const all = this.getAllProviders();
+    const active = this.getActiveProviders();
+    const healthy = this.getHealthyProviders();
+
+    const totalHealth = Array.from(this.healthMetrics.values()).reduce(
+      (sum, m) => sum + m.healthScore,
+      0
+    );
+    const avgHealth = all.length > 0 ? totalHealth / all.length : 0;
+
+    const networkReliability = all.length > 0 ? (healthy.length / all.length) * 100 : 0;
+
+    return {
+      totalProviders: all.length,
+      activeProviders: active.length,
+      healthyProviders: healthy.length,
+      averageHealth: Math.round(avgHealth),
+      networkReliability: Math.round(networkReliability),
+    };
+  }
+}
