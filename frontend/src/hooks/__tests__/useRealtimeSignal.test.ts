@@ -28,8 +28,7 @@ describe('useRealtimeSignal', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     MockWebSocket.instances = [];
-    // @ts-expect-error test mock assignment
-    global.WebSocket = MockWebSocket;
+    (global as { WebSocket: typeof MockWebSocket }).WebSocket = MockWebSocket;
   });
 
   afterEach(() => {
