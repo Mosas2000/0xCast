@@ -59,7 +59,7 @@ export class EdgeCaseHandler {
     };
   }
 
-  detectArithmetic Issues(a: bigint, b: bigint, operation: 'add' | 'sub' | 'mul' | 'div'): {
+  detectArithmeticIssues(a: bigint, b: bigint, operation: 'add' | 'sub' | 'mul' | 'div'): {
     safe: boolean;
     issue?: string;
   } {
