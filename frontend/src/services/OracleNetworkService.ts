@@ -436,4 +436,111 @@ export class OracleNetworkService {
       method: 'fallback',
     };
   }
+
+  static async getFallbackPriceWithStrategy(
+    marketId: string,
+    strategy: 'last_known' | 'median_history' | 'weighted_history' | 'cross_provider'
+  ): Promise<AggregatedPrice | null> {
+    const now = Date.now();
+    const maxAge = this.config.fallbackStrategy.maxAge;
+    const minConfidence = this.config.fallbackStrategy.minimumConfidence;
+
+    const allHistory: PriceHistory[] = [];
+    for (const history of this.priceHistory.values()) {
+      const recent = history.filter((p) => now - p.timestamp <= maxAge);
+      allHistory.push(...recent);
+    }
+
+    if (allHistory.length === 0) return null;
+
+    switch (strategy) {
+      case 'last_known': {
+        const latest = allHistory.reduce((a, b) => (a.timestamp > b.timestamp ? a : b));
+        if (latest.confidence >= minConfidence) {
+          return {
+            value: latest.price,
+            timestamp: latest.timestamp,
+            sources: [],
+            confidence: latest.confidence,
+            consensusReached: false,
+            method: 'fallback_last_known',
+          };
+        }
+        return null;
+      }
+
+      case 'median_history': {
+        const prices = allHistory.map((p) => p.price);
+        const avgConfidence = allHistory.reduce((sum, p) => sum + p.confidence, 0) / allHistory.length;
+        if (avgConfidence >= minConfidence) {
+          return {
+            value: this.getMedian(prices),
+            timestamp: Math.max(...allHistory.map((p) => p.timestamp)),
+            sources: [],
+            confidence: avgConfidence,
+            consensusReached: false,
+            method: 'fallback_median',
+          };
+        }
+        return null;
+      }
+
+      case 'weighted_history': {
+        const totalConfidence = allHistory.reduce((sum, p) => sum + p.confidence, 0);
+        if (totalConfidence === 0) return null;
+        const weightedPrice = allHistory.reduce((sum, p) => sum + p.price * p.confidence, 0) / totalConfidence;
+        const avgConfidence = totalConfidence / allHistory.length;
+        if (avgConfidence >= minConfidence) {
+          return {
+            value: weightedPrice,
+            timestamp: Math.max(...allHistory.map((p) => p.timestamp)),
+            sources: [],
+            confidence: avgConfidence,
+            consensusReached: false,
+            method: 'fallback_weighted',
+          };
+        }
+        return null;
+      }
+
+      case 'cross_provider': {
+        const providerPrices = new Map<string, PriceHistory[]>();
+        for (const [providerId, history] of this.priceHistory.entries()) {
+          const recent = history.filter((p) => now - p.timestamp <= maxAge);
+          if (recent.length > 0) {
+            providerPrices.set(providerId, recent);
+          }
+        }
+
+        if (providerPrices.size < 2) return null;
+
+        const latestPerProvider: OraclePrice[] = [];
+        for (const [providerId, history] of providerPrices.entries()) {
+          const latest = history.reduce((a, b) => (a.timestamp > b.timestamp ? a : b));
+          latestPerProvider.push({
+            value: latest.price,
+            timestamp: latest.timestamp,
+            source: providerId,
+            confidence: latest.confidence,
+          });
+        }
+
+        const consensus = this.calculateConsensus(latestPerProvider);
+        if (consensus.consensusLevel !== 'none' && consensus.confidence >= minConfidence) {
+          return {
+            value: consensus.price,
+            timestamp: Math.max(...latestPerProvider.map((p) => p.timestamp)),
+            sources: latestPerProvider,
+            confidence: consensus.confidence,
+            consensusReached: true,
+            method: 'fallback_cross_provider',
+          };
+        }
+        return null;
+      }
+
+      default:
+        return null;
+    }
+  }
 }
