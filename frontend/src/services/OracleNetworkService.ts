@@ -224,6 +224,11 @@ export class OracleNetworkService {
 
   static updateProviderConfig(config: Partial<OracleConfig>): void {
     this.config = { ...this.config, ...config };
+    console.log('Oracle network configuration updated', {
+      consensusThreshold: this.config.consensusThreshold,
+      minimumActiveProviders: this.config.minimumActiveProviders,
+      aggregationMethod: this.config.aggregationMethod,
+    });
   }
 
   static addProvider(provider: OracleProvider): void {
