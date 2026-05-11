@@ -1,117 +1,29 @@
-export type JsonPrimitive = string | number | boolean | null;
+export type Nullable<T> = T | null;
+export type Optional<T> = T | undefined;
+export type Maybe<T> = T | null | undefined;
 
-export type JsonValue = JsonPrimitive | JsonObject | JsonArray;
+export type UnknownRecord = Record<string, unknown>;
+export type StringRecord = Record<string, string>;
+export type NumberRecord = Record<string, number>;
 
+export type DeepPartial<T> = {
+  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
+};
+
+export type DeepReadonly<T> = {
+  readonly [P in keyof T]: T[P] extends object ? DeepReadonly<T[P]> : T[P];
+};
+
+export type Awaitable<T> = T | Promise<T>;
+
+export type ValueOf<T> = T[keyof T];
+
+export type NonEmptyArray<T> = [T, ...T[]];
+
+export type Primitive = string | number | boolean | null | undefined;
+
+export type JsonValue = Primitive | JsonObject | JsonArray;
 export interface JsonObject {
   [key: string]: JsonValue;
 }
-
 export type JsonArray = JsonValue[];
-
-export type RecordValue = string | number | boolean | null | undefined | RecordValue[] | { [key: string]: RecordValue };
-
-export interface UnknownRecord {
-  [key: string]: RecordValue;
-}
-
-export interface EventCallback<T = void> {
-  (data: T): void;
-}
-
-export interface AsyncEventCallback<T = void> {
-  (data: T): Promise<void>;
-}
-
-export type LogLevel = 'info' | 'warn' | 'error' | 'debug';
-
-export interface LogData {
-  [key: string]: RecordValue;
-}
-
-export interface CacheEntry<T> {
-  data: T;
-  timestamp: number;
-}
-
-export interface RateLimitEntry {
-  count: number;
-  resetTime: number;
-}
-
-export interface CircuitBreakerState {
-  status: 'closed' | 'open' | 'half-open';
-  failures: number;
-  lastFailureTime: number;
-  nextRetry: number;
-}
-
-export interface UserMetrics {
-  totalTransactions: number;
-  successfulTransactions: number;
-  failedTransactions: number;
-  averageResponseTime: number;
-  accountAge: number;
-  verificationLevel: number;
-}
-
-export interface KYCDocumentData {
-  frontImage: string;
-  backImage?: string;
-  selfieImage: string;
-  documentNumber?: string;
-  expiryDate?: string;
-  issueDate?: string;
-}
-
-export interface TransactionData {
-  id: string;
-  timestamp: number;
-  amount: number;
-  type: string;
-  status: string;
-  [key: string]: RecordValue;
-}
-
-export interface AccountData {
-  id: string;
-  userId: string;
-  type: string;
-  createdAt: number;
-  [key: string]: RecordValue;
-}
-
-export interface FraudTransaction {
-  id: string;
-  timestamp: number;
-  price: number;
-  volume: number;
-  marketId: string;
-  userId?: string;
-}
-
-export interface FraudAccount {
-  id: string;
-  ipAddress: string;
-  createdAt: number;
-  tradingPatterns: {
-    averageVolume: number;
-    tradingFrequency: number;
-    preferredMarkets: string[];
-  };
-}
-
-export interface FraudOrderBookEntry {
-  id: string;
-  volume: number;
-  price: number;
-  cancelled: boolean;
-  timestamp: number;
-}
-
-export interface FraudUserProfile {
-  userId: string;
-  createdAt: number;
-  totalTransactions: number;
-  averageTransactionSize: number;
-  accountAge: number;
-}
