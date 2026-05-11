@@ -5,6 +5,15 @@ import { StableSwapAMM } from '@/services/StableSwapAMM';
 import { ConcentratedLiquidityAMM } from '@/services/ConcentratedLiquidityAMM';
 import { AMMRouter } from '@/services/AMMRouter';
 
+interface LiquidityPosition {
+  id: string;
+  userId: string;
+  lowerTick: number;
+  upperTick: number;
+  amount: bigint;
+  feesEarned: bigint;
+}
+
 export function useAMMPool(poolId: string) {
   const [pool, setPool] = useState<AMMPool | null>(null);
   const [loading, setLoading] = useState(false);
@@ -42,7 +51,7 @@ export function useSwapQuote(pool: AMMPool | null, amountIn: bigint, tokenAtoB: 
 
     setLoading(true);
     try {
-      let amm: any;
+      let amm: ConstantProductAMM | StableSwapAMM | ConcentratedLiquidityAMM | null = null;
 
       if (pool.model === 'CONSTANT_PRODUCT') {
         amm = new ConstantProductAMM(pool);
@@ -88,7 +97,7 @@ export function useAddLiquidity(pool: AMMPool | null) {
       setError(null);
 
       try {
-        let amm: any;
+        let amm: ConstantProductAMM | StableSwapAMM | null = null;
 
         if (pool.model === 'CONSTANT_PRODUCT') {
           amm = new ConstantProductAMM(pool);
@@ -129,7 +138,7 @@ export function useRemoveLiquidity(pool: AMMPool | null) {
       setError(null);
 
       try {
-        let amm: any;
+        let amm: ConstantProductAMM | StableSwapAMM | null = null;
 
         if (pool.model === 'CONSTANT_PRODUCT') {
           amm = new ConstantProductAMM(pool);
@@ -230,7 +239,7 @@ export function useFlashSwap(pool: AMMPool | null) {
 }
 
 export function useConcentratedLiquidity(pool: AMMPool | null) {
-  const [positions, setPositions] = useState<any[]>([]);
+  const [positions, setPositions] = useState<LiquidityPosition[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

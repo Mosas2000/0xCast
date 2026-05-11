@@ -151,7 +151,7 @@ class MonitoringService {
 
   trackContractCall(
     contract: string,
-    function: string,
+    functionName: string,
     duration: number,
     success: boolean,
     context?: LogData
@@ -161,17 +161,17 @@ class MonitoringService {
     if (!this.config.trackContractCalls) return;
 
     this.trackPerformance(
-      `contract_${contract}_${function}`,
+      `contract_${contract}_${functionName}`,
       duration,
       'ms',
-      { ...context, contract, function, success }
+      { ...context, contract, functionName, success }
     );
 
     if (!success) {
       this.trackError(
         'contract_call_failed',
-        `Contract call failed: ${contract}.${function}`,
-        { ...context, contract, function }
+        `Contract call failed: ${contract}.${functionName}`,
+        { ...context, contract, functionName }
       );
     }
   }

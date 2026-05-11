@@ -3,6 +3,17 @@ import { ConstantProductAMM } from '@/services/ConstantProductAMM';
 import { StableSwapAMM } from '@/services/StableSwapAMM';
 import { ConcentratedLiquidityAMM } from '@/services/ConcentratedLiquidityAMM';
 
+export interface PoolStatistics {
+  poolId: string;
+  reserveA: bigint;
+  reserveB: bigint;
+  fee: number;
+  totalLiquidity: bigint;
+  model: string;
+  stats?: unknown;
+  capitalEfficiency?: number;
+}
+
 export class AMMRouter {
   private pools: Map<string, AMMPool>;
   private constantProductAMMs: Map<string, ConstantProductAMM>;
@@ -192,33 +203,43 @@ export class AMMRouter {
     };
   }
 
-  getPoolStatistics(poolId: string): any {
+  getPoolStatistics(poolId: string): PoolStatistics | null {
     const pool = this.pools.get(poolId);
     if (!pool) return null;
 
-    const stats: any = {
+    const baseStats: PoolStatistics = {
       poolId,
       reserveA: pool.reserveA,
       reserveB: pool.reserveB,
       fee: pool.fee,
       totalLiquidity: pool.totalLiquidity,
+      model: 'unknown',
     };
 
     if (this.constantProductAMMs.has(poolId)) {
       const amm = this.constantProductAMMs.get(poolId);
-      stats.model = 'constant-product';
-      stats.stats = amm?.getStats();
+      return {
+        ...baseStats,
+        model: 'constant-product',
+        stats: amm?.getStats(),
+      };
     } else if (this.stableSwapAMMs.has(poolId)) {
       const amm = this.stableSwapAMMs.get(poolId);
-      stats.model = 'stable-swap';
-      stats.stats = amm?.getStats();
+      return {
+        ...baseStats,
+        model: 'stable-swap',
+        stats: amm?.getStats(),
+      };
     } else if (this.concentratedLiquidityAMMs.has(poolId)) {
       const amm = this.concentratedLiquidityAMMs.get(poolId);
-      stats.model = 'concentrated-liquidity';
-      stats.capitalEfficiency = amm?.getCapitalEfficiency();
+      return {
+        ...baseStats,
+        model: 'concentrated-liquidity',
+        capitalEfficiency: amm?.getCapitalEfficiency(),
+      };
     }
 
-    return stats;
+    return baseStats;
   }
 
   getAvailablePools(): Array<{ poolId: string; model: string }> {

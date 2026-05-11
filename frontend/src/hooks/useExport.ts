@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import type { ExportOptions, ExportProgress } from '../types/export';
+import type { TransactionData, Portfolio, Position, RewardData } from '../types/transactions';
 import { ExportService } from '../services/ExportService';
 import { getFileNameWithTimestamp } from '../utils/exportHelpers';
 
@@ -7,11 +8,11 @@ interface UseExportReturn {
   isExporting: boolean;
   progress: ExportProgress;
   error: string | null;
-  exportTransactions: (transactions: any[], options: ExportOptions) => Promise<void>;
-  exportPortfolio: (portfolio: any, options: ExportOptions) => Promise<void>;
-  exportPositions: (positions: any[], options: ExportOptions) => Promise<void>;
-  exportRewards: (rewards: any[], options: ExportOptions) => Promise<void>;
-  exportTaxReport: (transactions: any[], year: number, options: ExportOptions) => Promise<void>;
+  exportTransactions: (transactions: TransactionData[], options: ExportOptions) => Promise<void>;
+  exportPortfolio: (portfolio: Portfolio, options: ExportOptions) => Promise<void>;
+  exportPositions: (positions: Position[], options: ExportOptions) => Promise<void>;
+  exportRewards: (rewards: RewardData[], options: ExportOptions) => Promise<void>;
+  exportTaxReport: (transactions: TransactionData[], year: number, options: ExportOptions) => Promise<void>;
   reset: () => void;
 }
 
@@ -37,7 +38,7 @@ export function useExport(): UseExportReturn {
   }, []);
 
   const exportTransactions = useCallback(
-    async (transactions: any[], options: ExportOptions) => {
+    async (transactions: TransactionData[], options: ExportOptions) => {
       try {
         setIsExporting(true);
         setError(null);
@@ -77,7 +78,7 @@ export function useExport(): UseExportReturn {
   );
 
   const exportPortfolio = useCallback(
-    async (portfolio: any, options: ExportOptions) => {
+    async (portfolio: Portfolio, options: ExportOptions) => {
       try {
         setIsExporting(true);
         setError(null);
@@ -113,7 +114,7 @@ export function useExport(): UseExportReturn {
   );
 
   const exportPositions = useCallback(
-    async (positions: any[], options: ExportOptions) => {
+    async (positions: Position[], options: ExportOptions) => {
       try {
         setIsExporting(true);
         setError(null);
@@ -153,7 +154,7 @@ export function useExport(): UseExportReturn {
   );
 
   const exportRewards = useCallback(
-    async (rewards: any[], options: ExportOptions) => {
+    async (rewards: RewardData[], options: ExportOptions) => {
       try {
         setIsExporting(true);
         setError(null);
@@ -193,7 +194,7 @@ export function useExport(): UseExportReturn {
   );
 
   const exportTaxReport = useCallback(
-    async (transactions: any[], year: number, options: ExportOptions) => {
+    async (transactions: TransactionData[], year: number, options: ExportOptions) => {
       try {
         setIsExporting(true);
         setError(null);

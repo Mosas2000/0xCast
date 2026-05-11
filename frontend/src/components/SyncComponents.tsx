@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSyncContext } from '@/context/SyncContext';
-import { SyncState, SyncConflict } from '@/types/sync';
+import { SyncState, SyncConflict, SyncMetrics } from '@/types/sync';
 
 export function SyncStatusIndicator() {
   const { stateManager } = useSyncContext();
@@ -96,7 +96,7 @@ export function SyncMetricsDisplay() {
   const [metrics, setMetrics] = useState(stateManager.getMetrics());
 
   useEffect(() => {
-    const handleMetricsUpdate = (newMetrics: any) => {
+    const handleMetricsUpdate = (newMetrics: SyncMetrics) => {
       setMetrics(newMetrics);
     };
 
@@ -268,7 +268,7 @@ export function OfflineIndicator() {
   const [isOffline, setIsOffline] = useState(stateManager.getStatus().isOffline);
 
   useEffect(() => {
-    const handleStatusChange = (status: any) => {
+    const handleStatusChange = (status: SyncState) => {
       setIsOffline(status.isOffline);
     };
 

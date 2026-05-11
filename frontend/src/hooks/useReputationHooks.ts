@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { UserReputation, ReputationScore, FraudAlert, SuspiciousActivity } from '@/types/reputation';
+import { UserReputation, ReputationScore, FraudAlert, SuspiciousActivity, ReputationMetrics, KYCDocumentData, TransactionForAnalysis, AccountForAnalysis, LinkedAccount, ReputationBadge } from '@/types/reputation';
 import { ReputationManager } from '@/services/ReputationManager';
 
 const reputationManager = new ReputationManager();
@@ -18,7 +18,7 @@ export function useReputation(userId: string) {
     setLoading(false);
   }, [userId]);
 
-  const updateMetrics = useCallback((metrics: any) => {
+  const updateMetrics = useCallback((metrics: ReputationMetrics) => {
     const score = reputationManager.updateReputationScore(userId, metrics);
     const updated = reputationManager.getUserReputation(userId);
     setReputation(updated || null);
@@ -43,7 +43,7 @@ export function useKYC(userId: string) {
   const [kycStatus, setKycStatus] = useState(null);
   const [isVerified, setIsVerified] = useState(false);
 
-  const submitKYC = useCallback((documentType: 'passport' | 'license' | 'national_id', data: any) => {
+  const submitKYC = useCallback((documentType: 'passport' | 'license' | 'national_id', data: KYCDocumentData) => {
     const status = reputationManager.submitKYC(userId, documentType, data);
     setKycStatus(status);
     return status;
@@ -85,19 +85,19 @@ export function useFraudDetection(userId: string) {
   const [alerts, setAlerts] = useState<FraudAlert[]>([]);
   const [suspiciousActivities, setSuspiciousActivities] = useState<SuspiciousActivity[]>([]);
 
-  const checkWashTrading = useCallback((transactions: any[]) => {
+  const checkWashTrading = useCallback((transactions: TransactionForAnalysis[]) => {
     return reputationManager.checkWashTrading(userId, transactions);
   }, [userId]);
 
-  const checkSybilAttack = useCallback((accounts: any[]) => {
+  const checkSybilAttack = useCallback((accounts: AccountForAnalysis[]) => {
     return reputationManager.checkSybilAttack(userId, accounts);
   }, [userId]);
 
-  const checkPumpDump = useCallback((transactions: any[]) => {
+  const checkPumpDump = useCallback((transactions: TransactionForAnalysis[]) => {
     return reputationManager.checkPumpDump(userId, transactions);
   }, [userId]);
 
-  const checkPriceManipulation = useCallback((transactions: any[], marketPrice: number) => {
+  const checkPriceManipulation = useCallback((transactions: TransactionForAnalysis[], marketPrice: number) => {
     return reputationManager.checkPriceManipulation(userId, transactions, marketPrice);
   }, [userId]);
 
@@ -120,7 +120,7 @@ export function useFraudDetection(userId: string) {
 }
 
 export function useAccountLinking(userId: string) {
-  const [linkedAccounts, setLinkedAccounts] = useState<any[]>([]);
+  const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccount[]>([]);
 
   const linkAccount = useCallback((accountIdentifier: string, linkType: 'wallet' | 'email' | 'phone' | 'social') => {
     const linked = reputationManager.linkAccount(userId, accountIdentifier, linkType);
@@ -138,7 +138,7 @@ export function useAccountLinking(userId: string) {
 }
 
 export function useReputationBadges(userId: string) {
-  const [badges, setBadges] = useState<any[]>([]);
+  const [badges, setBadges] = useState<ReputationBadge[]>([]);
 
   useEffect(() => {
     const userBadges = reputationManager.getReputationBadges(userId);

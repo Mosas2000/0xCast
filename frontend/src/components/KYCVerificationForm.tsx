@@ -70,8 +70,9 @@ export function KYCVerificationForm({ userId, onComplete }: KYCVerificationFormP
       if (onComplete) {
         onComplete();
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to submit KYC');
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to submit KYC');
+      setError(error.message);
     } finally {
       setLoading(false);
     }

@@ -133,7 +133,7 @@ describe('ReputationValidator', () => {
   });
 
   it('should detect missing userId', () => {
-    const rep: any = {
+    const rep: Partial<UserReputation> = {
       score: { score: 75, level: 'verified', timestamp: Date.now() },
       level: 'verified',
       badges: [],
@@ -142,7 +142,7 @@ describe('ReputationValidator', () => {
       linkedAccounts: [],
     };
 
-    const result = ReputationValidator.validateReputation(rep);
+    const result = ReputationValidator.validateReputation(rep as UserReputation);
     expect(result.valid).toBe(false);
     expect(result.errors.some((e) => e.includes('userId'))).toBe(true);
   });
@@ -164,10 +164,10 @@ describe('ReputationValidator', () => {
   });
 
   it('should detect invalid fraud alert type', () => {
-    const alert: any = {
+    const alert: Partial<FraudAlert> = {
       id: 'alert1',
       userId: 'user1',
-      type: 'invalid_type',
+      type: 'invalid_type' as FraudAlert['type'],
       severity: 'high',
       description: 'Test',
       timestamp: Date.now(),
