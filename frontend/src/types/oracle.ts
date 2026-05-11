@@ -315,3 +315,30 @@ export type ConsensusLevel = 'strong' | 'moderate' | 'weak' | 'none';
  * Oracle aggregation method
  */
 export type AggregationMethod = 'median' | 'weighted_average' | 'trimmed_mean';
+
+/**
+ * Oracle metrics for monitoring
+ */
+export interface OracleMetrics {
+  providerId: string;
+  uptime: number;
+  averageLatency: number;
+  successRate: number;
+  errorRate: number;
+  responseCount: number;
+  failureCount: number;
+  lastUpdate: number;
+}
+
+/**
+ * Monitoring alert
+ */
+export interface MonitoringAlert {
+  id: string;
+  timestamp: number;
+  severity: 'info' | 'warning' | 'critical';
+  type: string;
+  providerId: string;
+  message: string;
+  resolved: boolean;
+}
