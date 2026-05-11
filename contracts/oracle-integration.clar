@@ -82,6 +82,25 @@
     confirmed: bool
   })
 
+;; Multiple price submissions for consensus
+(define-map price-submissions
+  { market-id: uint, oracle: principal }
+  {
+    price: uint,
+    timestamp: uint,
+    weight: uint
+  })
+
+;; Consensus tracking
+(define-map consensus-state
+  { market-id: uint }
+  {
+    submission-count: uint,
+    total-weight: uint,
+    consensus-reached: bool,
+    final-price: uint
+  })
+
 ;; Market resolution records
 (define-map market-resolutions
   uint
