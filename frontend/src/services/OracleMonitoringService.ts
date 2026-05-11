@@ -194,6 +194,65 @@ export class OracleMonitoringService {
     }
   }
 
+  static trackConsensusFailure(marketId: string, reason: string): void {
+    this.createAlert(
+      'network',
+      'consensus_failure',
+      `Market ${marketId}: ${reason}`,
+      'critical'
+    );
+  }
+
+  static trackFallbackActivation(marketId: string, strategy: string): void {
+    this.createAlert(
+      'network',
+      'fallback_activated',
+      `Market ${marketId}: Fallback strategy '${strategy}' activated`,
+      'warning'
+    );
+  }
+
+  static trackProviderFailover(fromProvider: string, toProvider: string): void {
+    this.createAlert(
+      fromProvider,
+      'provider_failover',
+      `Failover from ${fromProvider} to ${toProvider}`,
+      'info'
+    );
+  }
+
+  static getNetworkResilience(providers: OracleProvider[]): {
+    score: number;
+    redundancy: number;
+    diversification: number;
+    reliability: number;
+  } {
+    const total = providers.length;
+    if (total === 0) {
+      return { score: 0, redundancy: 0, diversification: 0, reliability: 0 };
+    }
+
+    const active = providers.filter((p) => p.enabled && p.healthScore > 50).length;
+    const redundancy = (active / total) * 100;
+
+    const uniqueUrls = new Set(providers.map((p) => new URL(p.url).hostname)).size;
+    const diversification = (uniqueUrls / total) * 100;
+
+    const metrics = this.getAllMetrics();
+    const avgReliability = metrics.length > 0
+      ? metrics.reduce((sum, m) => sum + m.successRate, 0) / metrics.length
+      : 0;
+
+    const score = (redundancy * 0.4 + diversification * 0.3 + avgReliability * 0.3);
+
+    return {
+      score: Math.round(score),
+      redundancy: Math.round(redundancy),
+      diversification: Math.round(diversification),
+      reliability: Math.round(avgReliability),
+    };
+  }
+
   private static updateUptime(providerId: string, metric: OracleMetrics): void {
     const total = metric.responseCount + metric.failureCount;
     if (total === 0) {
