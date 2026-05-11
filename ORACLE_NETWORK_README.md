@@ -1,312 +1,333 @@
-# Decentralized Oracle Network with Fallbacks
+# Oracle Network System
 
-Comprehensive decentralized oracle system for 0xCast prediction market platform with multi-provider support, consensus mechanisms, and automated fallback resolution.
+A decentralized oracle network with fallback mechanisms for the 0xCast prediction market platform.
 
 ## Overview
 
-The oracle network system provides:
-- Multiple oracle provider support
-- Consensus-based price aggregation
-- Fallback resolution strategies
-- Real-time health monitoring
-- Comprehensive alerting system
-- Resilience analysis
+The Oracle Network System provides a robust, resilient, and secure mechanism for obtaining price data from multiple oracle providers. It includes consensus validation, automatic failover, health monitoring, and multiple fallback strategies.
 
-## Features
+## Key Features
 
-### Multiple Oracle Providers
-- Support for unlimited oracle providers
-- Dynamic provider management (add/remove/enable/disable)
-- Per-provider health scoring
-- Provider diversity tracking
-- Load balancing across providers
+- **Multiple Oracle Providers**: Support for unlimited oracle providers with priority-based selection
+- **Consensus Mechanism**: Validates agreement among providers before accepting prices
+- **Fallback Strategies**: Four different fallback mechanisms for high availability
+- **Price Aggregation**: Ten different algorithms for combining prices
+- **Health Monitoring**: Real-time tracking of provider health and performance
+- **Automatic Failover**: Unhealthy providers are automatically disabled
+- **Price Manipulation Detection**: Statistical analysis to detect anomalies
+- **Network Resilience**: Metrics for redundancy, diversification, and reliability
 
-### Consensus Mechanism
-- Weighted median aggregation
-- Weighted average aggregation
-- Configurable consensus thresholds
-- Outlier detection and filtering
-- Multiple consensus levels (strong/moderate/weak/none)
-- Confidence score calculation
+## Quick Start
 
-### Fallback Resolution
-- Last-known price fallback
-- Median history fallback
-- Weighted history fallback
-- Emergency fallback mechanism
-- Price staleness checking
-- Configurable fallback strategies
+### Installation
 
-### Health Monitoring
-- Real-time provider health tracking
-- Success rate monitoring
-- Latency tracking
-- Uptime calculation
-- Error rate analysis
-- Alert generation
-- Historical metrics storage
+```bash
+npm install
+```
 
-### Network Resilience
-- Active provider count tracking
-- Network redundancy calculation
-- Provider failure impact analysis
-- Automatic failover support
-- Consensus strength assessment
-- Network health scoring
+### Basic Usage
+
+```typescript
+import { OracleNetworkCoordinator } from '@/services/OracleNetworkCoordinator';
+
+const coordinator = new OracleNetworkCoordinator({
+  enableAutoFailover: true,
+  enableHealthMonitoring: true,
+  consensusValidation: true,
+  fallbackEnabled: true,
+});
+
+const providers = [
+  {
+    id: 'chainlink-btc',
+    name: 'Chainlink BTC/USD',
+    url: 'https://api.chainlink.com/btc-usd',
+    enabled: true,
+    priority: 100,
+    healthScore: 100,
+    errorCount: 0,
+    successCount: 0,
+  },
+];
+
+const config = {
+  consensusThreshold: 0.66,
+  minimumActiveProviders: 2,
+  aggregationMethod: 'median',
+  updateInterval: 60000,
+  fallbackStrategy: {
+    enabled: true,
+    type: 'cross_provider',
+    maxAge: 3600000,
+    minimumConfidence: 0.5,
+  },
+  timeout: 5000,
+  maxRetries: 3,
+};
+
+await coordinator.initialize(providers, config);
+
+const price = await coordinator.fetchAggregatedPrice('market-123');
+console.log(`Price: $${price.value}`);
+```
 
 ## Architecture
 
 ### Services
 
-#### OracleNetworkService
-Core service managing the oracle network:
-```typescript
-- initializeProviders(providers)
-- fetchPrice(providerId, marketId)
-- aggregatePrices(marketId, prices)
-- calculateConsensus(prices)
-- getNetworkState()
-- addProvider(provider)
-- removeProvider(providerId)
-- enableProvider(providerId)
-- disableProvider(providerId)
-```
+- **OracleNetworkCoordinator**: Main coordinator for all operations
+- **OracleNetworkService**: Core oracle network functionality
+- **OracleProviderManager**: Provider registration and health tracking
+- **OracleConsensusValidator**: Consensus validation and anomaly detection
+- **OracleMonitoringService**: Health monitoring and alerting
+- **PriceAggregationAlgorithms**: Multiple aggregation methods
 
-#### ConsensusMechanismService
-Consensus and validation logic:
-```typescript
-- calculateConsensusPrice(prices)
-- evaluateConsensus(consensus)
-- validatePrice(price, referencePrices)
-- detectOutliers(prices)
-- calculateConsensusConfidence(consensus)
-- shouldAcceptConsensus(consensus)
-```
+### Smart Contracts
 
-#### FallbackResolutionService
-Fallback strategy implementation:
-```typescript
-- recordPrice(marketId, price, timestamp, source)
-- resolveFallback(marketId, strategy)
-- hasValidFallbackData(marketId, strategy)
-- getRecentHistory(marketId, maxAge, limit)
-- isStalePrice(timestamp, maxAge)
-- clearHistory(marketId)
-```
+- **oracle-integration.clar**: Enhanced with multi-provider support and consensus
 
-#### OracleMonitoringService
-Health monitoring and alerting:
-```typescript
-- recordUpdate(providerId, success, latency, error)
-- getMetrics(providerId)
-- checkHealthThresholds(provider)
-- getAlerts(resolved)
-- resolveAlert(alertId)
-- getNetworkHealth(providers)
-- generateReport(providers)
-```
+### UI Components
 
-#### PriceAggregationService
-Price calculation and validation:
-```typescript
-- calculateMedianPrice(prices)
-- calculateWeightedPrice(prices)
-- validatePriceMovement(current, previous)
-- detectPriceSpike(prices, threshold)
-```
+- **OracleNetworkDashboard**: Real-time network monitoring
+- **OracleProviderConfig**: Provider configuration interface
 
-### React Hooks
+## Consensus Mechanism
 
-#### useOracleNetwork
-Network initialization and management:
-```typescript
-const {
-  networkState,
-  loading,
-  error,
-  initializeNetwork,
-  addProvider,
-  removeProvider,
-  enableProvider,
-  disableProvider,
-} = useOracleNetwork(providers);
-```
+The system validates consensus through:
 
-#### useOraclePriceAggregation
-Price fetching and aggregation:
-```typescript
-const {
-  aggregatedPrice,
-  loading,
-  error,
-  aggregatePrices,
-  fetchAndAggregate,
-} = useOraclePriceAggregation(marketId, providers);
-```
+1. **Price Collection**: Fetch prices from all healthy providers
+2. **Outlier Detection**: Identify and flag statistical outliers
+3. **Agreement Calculation**: Determine percentage of agreeing providers
+4. **Threshold Validation**: Check if agreement meets threshold
+5. **Confidence Scoring**: Calculate overall confidence level
 
-#### useConsensus
-Consensus calculation:
-```typescript
-const {
-  consensus,
-  loading,
-  error,
-  calculateConsensus,
-  detectOutliers,
-} = useConsensus(prices);
-```
+Consensus levels:
+- **Strong**: ≥66% agreement (default threshold)
+- **Moderate**: ≥50% agreement
+- **Weak**: >0% agreement
+- **None**: No agreement
 
-#### useFallbackResolution
-Fallback handling:
-```typescript
-const {
-  fallbackPrice,
-  loading,
-  error,
-  recordPrice,
-  resolveFallback,
-  hasValidFallback,
-} = useFallbackResolution(marketId);
-```
+## Fallback Strategies
 
-#### useOracleMonitoring
-Health monitoring:
-```typescript
-const {
-  metrics,
-  alerts,
-  networkHealth,
-  loading,
-  error,
-  recordUpdate,
-  resolveAlert,
-  generateReport,
-} = useOracleMonitoring(providers);
-```
+When consensus fails, the system tries fallback strategies in order:
+
+1. **Cross Provider**: Consensus from historical data across providers
+2. **Weighted History**: Weighted average of recent historical prices
+3. **Median History**: Median of recent historical prices
+4. **Last Known**: Most recent reliable price
+
+Each strategy has configurable:
+- Maximum age of historical data
+- Minimum confidence threshold
+
+## Price Aggregation
+
+Ten algorithms are available:
+
+1. **Median**: Resistant to outliers, good for general use
+2. **Weighted Average**: Uses confidence scores, good when confidence varies
+3. **Trimmed Mean**: Removes extremes, good for noisy data
+4. **Volume Weighted**: Considers trading volume
+5. **Exponential Moving Average**: Time-decayed average
+6. **Outlier Resistant**: Filters statistical outliers
+7. **Time Weighted**: Recent prices weighted higher
+8. **Adaptive**: Automatically selects best method
+9. **Consensus**: Only uses agreeing providers
+10. **Auto Select**: Analyzes data and chooses optimal method
+
+## Health Monitoring
+
+Each provider is monitored for:
+
+- **Health Score**: 0-100 based on success rate and latency
+- **Success Rate**: Percentage of successful requests
+- **Error Rate**: Percentage of failed requests
+- **Average Latency**: Mean response time
+- **Uptime**: Overall availability percentage
+- **Consecutive Failures**: Count of sequential failures
+
+Providers are automatically disabled after 5 consecutive failures.
+
+## Network Resilience
+
+The system calculates resilience based on:
+
+- **Redundancy**: Percentage of active providers
+- **Diversification**: Number of unique provider endpoints
+- **Reliability**: Average provider success rate
+
+Overall resilience score combines these metrics.
 
 ## Configuration
 
-All configuration in `oracleConstants.ts`:
+### Coordinator Config
 
 ```typescript
-ORACLE_NETWORK_CONFIG = {
-  CONSENSUS_THRESHOLD: 0.66,
-  MINIMUM_ACTIVE_PROVIDERS: 2,
-  AGGREGATION_METHOD: 'median',
-  UPDATE_INTERVAL: 60000,
-  TIMEOUT: 5000,
-  MAX_RETRIES: 3,
-}
-
-FALLBACK_STRATEGY_CONFIG = {
-  ENABLED: true,
-  TYPE: 'median_history',
-  MAX_AGE: 3600000,
-  MINIMUM_CONFIDENCE: 0.5,
+{
+  enableAutoFailover: boolean;      // Auto-disable unhealthy providers
+  enableHealthMonitoring: boolean;  // Track provider health
+  healthCheckInterval: number;      // Health check frequency (ms)
+  providerRotationInterval: number; // Rotation frequency (ms)
+  consensusValidation: boolean;     // Validate consensus
+  fallbackEnabled: boolean;         // Enable fallback strategies
 }
 ```
 
-## Usage Example
+### Oracle Config
 
 ```typescript
-import {
-  useOracleNetwork,
-  useOraclePriceAggregation,
-  useOracleMonitoring,
-  DEFAULT_ORACLE_PROVIDERS,
-} from '@/oracle';
-
-function OracleMarketComponent({ marketId }) {
-  const providers = Object.values(DEFAULT_ORACLE_PROVIDERS);
-  
-  const { networkState } = useOracleNetwork(providers);
-  const { aggregatedPrice, fetchAndAggregate } = useOraclePriceAggregation(marketId, providers);
-  const { metrics, networkHealth } = useOracleMonitoring(providers);
-
-  useEffect(() => {
-    fetchAndAggregate();
-  }, [marketId]);
-
-  return (
-    <div>
-      <p>Network Health: {(networkHealth * 100).toFixed(1)}%</p>
-      <p>Price: ${aggregatedPrice?.value}</p>
-      <p>Active Providers: {networkState?.activeProviders}/{networkState?.totalProviders}</p>
-    </div>
-  );
+{
+  consensusThreshold: number;       // Agreement threshold (0-1)
+  minimumActiveProviders: number;   // Minimum healthy providers
+  aggregationMethod: string;        // Default aggregation method
+  updateInterval: number;           // Update frequency (ms)
+  fallbackStrategy: {
+    enabled: boolean;
+    type: string;                   // Fallback strategy type
+    maxAge: number;                 // Max age of historical data (ms)
+    minimumConfidence: number;      // Min confidence threshold (0-1)
+  };
+  timeout: number;                  // Request timeout (ms)
+  maxRetries: number;               // Max retry attempts
 }
 ```
 
 ## Testing
 
-All services include comprehensive unit tests:
+Run the test suite:
 
 ```bash
-npm run test -- oracle
+npm test OracleNetworkCoordinator
+npm test OracleConsensusValidator
+npm test PriceAggregationAlgorithms
 ```
 
-Test coverage includes:
-- Price aggregation
-- Consensus calculation
-- Fallback resolution
-- Health monitoring
-- Alert generation
-- Network state management
-- Provider management
-- Data validation
+## Documentation
+
+- [Implementation Guide](./ORACLE_NETWORK_IMPLEMENTATION.md)
+- [API Reference](./ORACLE_NETWORK_API.md)
+- [Changelog](./ORACLE_NETWORK_CHANGELOG.md)
+- [Usage Examples](./frontend/src/examples/oracleNetworkExample.ts)
+- [Contract Examples](./contracts/examples/oracle-network-usage.clar)
+
+## Security
+
+The system includes multiple security features:
+
+- **Price Manipulation Detection**: Statistical analysis of price deviations
+- **Outlier Filtering**: Automatic removal of suspicious prices
+- **Consensus Validation**: Requires agreement among providers
+- **Provider Diversity**: Encourages multiple independent sources
+- **Historical Validation**: Checks price movements against history
+- **Confidence Scoring**: Each price includes reliability metric
 
 ## Performance
 
-- Price aggregation: < 50ms
-- Consensus calculation: < 100ms
-- Fallback resolution: < 50ms
-- Health check: < 20ms
-- Alert generation: < 10ms
+- Parallel fetching from multiple providers
+- Configurable timeouts and retries
+- Efficient health score calculation
+- Automatic cleanup of stale data
+- Minimal memory footprint
 
-## Files Created
+## Monitoring
 
-### Services (6 files, 1,600+ lines)
-- OracleNetworkService.ts
-- ConsensusMechanismService.ts
-- FallbackResolutionService.ts
-- OracleMonitoringService.ts
-- PriceAggregationService.ts
+The system generates alerts for:
 
-### Hooks (1 file, 300+ lines)
-- useOracleNetwork.ts
+- Low provider health scores
+- High error rates
+- Consensus failures
+- Fallback activations
+- Provider failovers
+- Network resilience issues
 
-### Utilities (2 files, 400+ lines)
-- oracleHelpers.ts
-- oracleConstants.ts
+Access alerts:
 
-### Types (2 files, 100+ lines)
-- oracle.ts (extended)
-- oracleDatabase.ts
+```typescript
+import { OracleMonitoringService } from '@/services/OracleMonitoringService';
 
-### Tests (1 file, 370+ lines)
-- OracleNetworkService.test.ts
+const alerts = OracleMonitoringService.getActiveAlerts();
+```
 
-### Exports (1 file)
-- oracle/index.ts
+## UI Integration
 
-## Acceptance Criteria
+### Dashboard
 
-✓ Multiple oracles supported
-✓ Consensus working
-✓ Fallbacks tested
-✓ Aggregation algorithm proven
-✓ Oracle network monitoring
-✓ Tests verify resilience
+```typescript
+import { OracleNetworkDashboard } from '@/components/OracleNetworkDashboard';
 
-## Next Steps
+<OracleNetworkDashboard coordinator={coordinator} />
+```
 
-1. Integrate with market resolution system
-2. Connect to real oracle providers
-3. Implement data persistence
-4. Add UI components for monitoring
-5. Deploy to production
+### Provider Config
 
----
+```typescript
+import { OracleProviderConfig } from '@/components/OracleProviderConfig';
 
-**Version**: 1.0.0  
-**Status**: Production Ready
+<OracleProviderConfig
+  providers={providers}
+  onAddProvider={handleAdd}
+  onUpdateProvider={handleUpdate}
+  onRemoveProvider={handleRemove}
+/>
+```
+
+## Contract Integration
+
+### Register Providers
+
+```clarity
+(contract-call? .oracle-integration register-oracle-provider
+  oracle-principal
+  "Provider Name"
+  "https://api.example.com"
+  u100)
+```
+
+### Submit Prices
+
+```clarity
+(contract-call? .oracle-integration submit-price-for-consensus
+  market-id
+  price)
+```
+
+### Check Consensus
+
+```clarity
+(contract-call? .oracle-integration get-consensus-state market-id)
+```
+
+## Troubleshooting
+
+### No Providers Available
+
+Ensure at least 2 providers are registered and enabled.
+
+### Consensus Not Reached
+
+Check if providers are returning similar prices. Adjust consensus threshold if needed.
+
+### High Latency
+
+Increase timeout or disable slow providers.
+
+### Frequent Failovers
+
+Check provider health and network connectivity.
+
+## Contributing
+
+Contributions are welcome. Please ensure:
+
+- All tests pass
+- Code follows project style
+- Documentation is updated
+- Commits are descriptive
+
+## License
+
+See project LICENSE file.
+
+## Support
+
+For issues or questions, please open a GitHub issue.
