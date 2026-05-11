@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { TxStatus } from '@stacks/connect';
+import type { Market, Prediction } from '../types/market';
 
 interface ReferralReward {
   id: string;
@@ -10,7 +11,7 @@ interface ReferralReward {
 
 interface UseReferralIntegrationReturn {
   recordRewardOnAction: (actionAmount: number, actionType: string) => Promise<void>;
-  triggerRewardIfReferred: (market: any, prediction: any) => Promise<void>;
+  triggerRewardIfReferred: (market: Market, prediction: Prediction) => Promise<void>;
   isPending: boolean;
   lastError: string | null;
   rewards: ReferralReward[];
@@ -57,7 +58,7 @@ export function useReferralIntegration(userAddress: string | null): UseReferralI
   );
 
   const triggerRewardIfReferred = useCallback(
-    async (market: any, prediction: any) => {
+    async (market: Market, prediction: Prediction) => {
       if (!userAddress) {
         setLastError('User address required');
         return;
