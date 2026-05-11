@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TradingAnalytics } from '@/services/TradingAnalytics';
+import { TradingAnalytics, TradeMetrics } from '@/services/TradingAnalytics';
 import { PriceMonitor } from '@/services/PriceMonitor';
 import { AMMPool } from '@/types/amm';
 
@@ -97,7 +97,7 @@ function MetricCard({ title, value, format, color = 'default' }: MetricCardProps
 }
 
 interface PerformanceChartProps {
-  metrics: any;
+  metrics: TradeMetrics;
 }
 
 function PerformanceChart({ metrics }: PerformanceChartProps) {
@@ -139,7 +139,7 @@ function PerformanceChart({ metrics }: PerformanceChartProps) {
 }
 
 interface VolumeChartProps {
-  metrics: any;
+  metrics: TradeMetrics;
 }
 
 function VolumeChart({ metrics }: VolumeChartProps) {
