@@ -217,6 +217,36 @@ export class OracleNetworkService {
     };
   }
 
+  static getHealthyProviders(): OracleProvider[] {
+    return Array.from(this.providers.values()).filter(
+      (p) => p.enabled && p.healthScore > 50
+    );
+  }
+
+  static selectBestProvider(): OracleProvider | null {
+    const healthy = this.getHealthyProviders();
+    if (healthy.length === 0) return null;
+
+    return healthy.reduce((best, current) => {
+      const bestScore = best.healthScore * (1 + best.priority / 100);
+      const currentScore = current.healthScore * (1 + current.priority / 100);
+      return currentScore > bestScore ? current : best;
+    });
+  }
+
+  static rotateProviders(): void {
+    const providers = Array.from(this.providers.values());
+    providers.forEach((provider) => {
+      if (provider.healthScore < 30 && provider.enabled) {
+        provider.enabled = false;
+        console.warn(`Provider ${provider.id} disabled due to low health score`);
+      } else if (provider.healthScore > 70 && !provider.enabled) {
+        provider.enabled = true;
+        console.info(`Provider ${provider.id} re-enabled after health recovery`);
+      }
+    });
+  }
+
   static getPriceHistory(providerId: string, limit: number = 100): PriceHistory[] {
     const history = this.priceHistory.get(providerId) || [];
     return history.slice(-limit);
