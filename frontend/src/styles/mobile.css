@@ -1,0 +1,263 @@
+/* Mobile-specific styles and utilities */
+
+/* Touch-friendly button sizes */
+.btn-touch {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 12px 20px;
+}
+
+/* Mobile-optimized form inputs */
+.input-mobile {
+  font-size: 16px;
+  min-height: 44px;
+  padding: 12px 16px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Prevent zoom on input focus for iOS */
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+/* Mobile-friendly spacing */
+.mobile-container {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+@media (min-width: 640px) {
+  .mobile-container {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-container {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+/* Safe area insets for notched devices */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-area-right {
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Mobile-optimized card spacing */
+.card-mobile {
+  padding: 16px;
+  border-radius: 12px;
+}
+
+@media (min-width: 640px) {
+  .card-mobile {
+    padding: 20px;
+    border-radius: 16px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .card-mobile {
+    padding: 24px;
+    border-radius: 20px;
+  }
+}
+
+/* Scrollable horizontal containers */
+.scroll-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile grid layouts */
+.mobile-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .mobile-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+}
+
+/* Touch-friendly tap targets */
+.tap-target {
+  position: relative;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.tap-target::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Mobile-optimized modals */
+.modal-mobile {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+
+@media (min-width: 640px) {
+  .modal-mobile {
+    align-items: center;
+    padding: 16px;
+  }
+}
+
+.modal-content-mobile {
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 20px 20px 0 0;
+}
+
+@media (min-width: 640px) {
+  .modal-content-mobile {
+    max-width: 500px;
+    border-radius: 20px;
+  }
+}
+
+/* Swipeable elements */
+.swipeable {
+  touch-action: pan-y;
+  user-select: none;
+}
+
+/* Mobile-optimized tables */
+.table-mobile {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-mobile table {
+  min-width: 600px;
+}
+
+/* Sticky mobile header */
+.header-mobile {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  backdrop-filter: blur(12px);
+}
+
+/* Mobile bottom sheet */
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  transform: translateY(100%);
+  transition: transform 0.3s ease-out;
+}
+
+.bottom-sheet.open {
+  transform: translateY(0);
+}
+
+/* Pull-to-refresh indicator */
+.pull-refresh {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: top 0.2s ease-out;
+}
+
+.pull-refresh.active {
+  top: 10px;
+}
+
+/* Mobile-friendly tooltips */
+.tooltip-mobile {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100vw - 32px);
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 60;
+}
+
+/* Landscape mode adjustments */
+@media (max-height: 500px) and (orientation: landscape) {
+  .hide-landscape {
+    display: none;
+  }
+  
+  .compact-landscape {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
