@@ -39,6 +39,20 @@
 ;; Oracle Registry
 (define-map registered-oracles principal bool)
 
+;; Oracle provider registry with metadata
+(define-map oracle-providers
+  principal
+  {
+    name: (string-ascii 50),
+    endpoint: (string-ascii 200),
+    priority: uint,
+    enabled: bool,
+    registered-at: uint
+  })
+
+;; Oracle provider count
+(define-data-var oracle-provider-count uint u0)
+
 ;; Oracle stats
 (define-map oracle-stats
   principal
