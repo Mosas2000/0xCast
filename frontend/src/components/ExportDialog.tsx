@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { ExportFormat, ExportType, ExportOptions } from '../types/export';
+import type { TransactionData, Portfolio, Position, RewardData } from '../types/transactions';
 import { useExport } from '../hooks/useExport';
 import ExportOptions from './ExportOptions';
 import ExportProgress from './ExportProgress';
@@ -9,10 +10,10 @@ interface ExportDialogProps {
   isOpen: boolean;
   defaultType?: ExportType;
   data: {
-    transactions?: any[];
-    positions?: any[];
-    portfolio?: any;
-    rewards?: any[];
+    transactions?: TransactionData[];
+    positions?: Position[];
+    portfolio?: Portfolio;
+    rewards?: RewardData[];
   };
 }
 
