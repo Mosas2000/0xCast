@@ -119,6 +119,12 @@
 (define-read-only (is-registered-oracle (oracle principal))
   (default-to false (map-get? registered-oracles oracle)))
 
+(define-read-only (get-oracle-provider (oracle principal))
+  (map-get? oracle-providers oracle))
+
+(define-read-only (get-oracle-provider-count)
+  (var-get oracle-provider-count))
+
 (define-read-only (get-market-resolution (market-id uint))
   (map-get? market-resolutions market-id))
 
@@ -172,6 +178,45 @@
   (begin
     (asserts! (is-eq tx-sender contract-owner) err-owner-only)
     (ok (map-set registered-oracles oracle true))))
+
+(define-public (register-oracle-provider
+    (oracle principal)
+    (name (string-ascii 50))
+    (endpoint (string-ascii 200))
+    (priority uint))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (map-set registered-oracles oracle true)
+    (map-set oracle-providers oracle {
+      name: name,
+      endpoint: endpoint,
+      priority: priority,
+      enabled: true,
+      registered-at: stacks-block-height
+    })
+    (var-set oracle-provider-count (+ (var-get oracle-provider-count) u1))
+    (ok true)))
+
+(define-public (update-oracle-priority (oracle principal) (new-priority uint))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (let ((provider (unwrap! (map-get? oracle-providers oracle) err-unauthorized-oracle)))
+      (map-set oracle-providers oracle (merge provider { priority: new-priority }))
+      (ok true))))
+
+(define-public (enable-oracle-provider (oracle principal))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (let ((provider (unwrap! (map-get? oracle-providers oracle) err-unauthorized-oracle)))
+      (map-set oracle-providers oracle (merge provider { enabled: true }))
+      (ok true))))
+
+(define-public (disable-oracle-provider (oracle principal))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (let ((provider (unwrap! (map-get? oracle-providers oracle) err-unauthorized-oracle)))
+      (map-set oracle-providers oracle (merge provider { enabled: false }))
+      (ok true))))
 
 (define-public (remove-oracle (oracle principal))
   (begin
