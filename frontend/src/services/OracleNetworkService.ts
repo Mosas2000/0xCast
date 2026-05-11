@@ -152,6 +152,52 @@ export class OracleNetworkService {
     };
   }
 
+  static calculateWeightedConsensus(prices: OraclePrice[]): ConsensusResult {
+    if (prices.length === 0) {
+      return {
+        price: 0,
+        confidence: 0,
+        agreeingProviders: [],
+        dissagreeingProviders: [],
+        consensusLevel: 'none',
+      };
+    }
+
+    const weightedPrice = this.calculateWeightedPrice(prices);
+    const tolerance = weightedPrice * 0.05;
+
+    const agreeing = prices.filter((p) => Math.abs(p.value - weightedPrice) <= tolerance);
+    const disagreeing = prices.filter((p) => Math.abs(p.value - weightedPrice) > tolerance);
+
+    const totalWeight = prices.reduce((sum, p) => sum + p.confidence, 0);
+    const agreeingWeight = agreeing.reduce((sum, p) => sum + p.confidence, 0);
+    const consensusPercentage = totalWeight > 0 ? agreeingWeight / totalWeight : 0;
+
+    let consensusLevel: 'strong' | 'moderate' | 'weak' | 'none' = 'none';
+    if (consensusPercentage >= 0.75) {
+      consensusLevel = 'strong';
+    } else if (consensusPercentage >= 0.5) {
+      consensusLevel = 'moderate';
+    } else if (agreeing.length > 0) {
+      consensusLevel = 'weak';
+    }
+
+    return {
+      price: weightedPrice,
+      confidence: consensusPercentage,
+      agreeingProviders: agreeing.map((p) => p.source),
+      dissagreeingProviders: disagreeing.map((p) => p.source),
+      consensusLevel,
+    };
+  }
+
+  private static calculateWeightedPrice(prices: OraclePrice[]): number {
+    if (prices.length === 0) return 0;
+    const totalWeight = prices.reduce((sum, p) => sum + p.confidence, 0);
+    if (totalWeight === 0) return this.getMedian(prices.map((p) => p.value));
+    return prices.reduce((sum, p) => sum + p.value * p.confidence, 0) / totalWeight;
+  }
+
   static getNetworkState(): OracleNetworkState {
     const providers = Array.from(this.providers.values());
     const activeProviders = providers.filter((p) => p.enabled && p.healthScore > 50);
