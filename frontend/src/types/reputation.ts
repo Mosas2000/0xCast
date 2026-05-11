@@ -63,3 +63,20 @@ export interface AccountForAnalysis {
   ipAddress?: string;
   deviceFingerprint?: string;
 }
+
+export interface LinkedAccount {
+  id: string;
+  userId: string;
+  accountIdentifier: string;
+  linkType: 'wallet' | 'email' | 'phone' | 'social';
+  linkedAt: number;
+  verified: boolean;
+}
+
+export interface ReputationBadge {
+  id: string;
+  name: string;
+  description: string;
+  earnedAt: number;
+  level: 'bronze' | 'silver' | 'gold' | 'platinum';
+}
