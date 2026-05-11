@@ -1,158 +1,65 @@
-export interface ReputationScore {
-  userId: string;
-  score: number;
-  level: ReputationLevel;
-  totalTransactions: number;
-  successfulTransactions: number;
-  failedTransactions: number;
-  averageResponseTime: number;
-  completionRate: number;
-  lastUpdated: number;
-  badges: string[];
+export interface ReputationMetrics {
+  totalPredictions: number;
+  correctPredictions: number;
+  totalVolume: number;
+  totalStaked?: number;
+  winRate?: number;
 }
 
-export type ReputationLevel = 'new' | 'trusted' | 'verified' | 'elite';
-
-export interface UserReputation {
-  userId: string;
-  reputationScore: ReputationScore;
-  verificationStatus: VerificationStatus;
-  accountLinks: LinkedAccount[];
-  suspiciousActivities: SuspiciousActivity[];
-  kycStatus: KYCStatus;
-  createdAt: number;
-  updatedAt: number;
+export interface KYCDocument {
+  type: 'passport' | 'license' | 'national_id';
+  data: KYCDocumentData;
 }
 
-export type VerificationStatus = 'unverified' | 'pending' | 'verified' | 'rejected';
+export interface KYCDocumentData {
+  documentNumber: string;
+  fullName: string;
+  dateOfBirth: string;
+  expiryDate: string;
+  issuingCountry: string;
+  documentImage?: string;
+}
 
-export interface LinkedAccount {
-  accountId: string;
-  linkedUserId: string;
-  linkType: 'wallet' | 'email' | 'phone' | 'social';
-  linkedAt: number;
-  status: 'active' | 'inactive' | 'suspicious';
+export interface KYCStatus {
+  status: 'pending' | 'verified' | 'rejected';
+  submittedAt: number;
+  reviewedAt?: number;
+  reason?: string;
 }
 
 export interface SuspiciousActivity {
-  activityId: string;
+  id: string;
   userId: string;
-  type: SuspiciousActivityType;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  description: string;
-  detectedAt: number;
-  status: ActivityStatus;
-  evidence?: string[];
-}
-
-export type SuspiciousActivityType = 'wash_trading' | 'sybil_attack' | 'price_manipulation' | 'volume_spoofing' | 'pump_dump' | 'unusual_pattern';
-
-export type ActivityStatus = 'pending' | 'investigating' | 'confirmed' | 'resolved' | 'dismissed';
-
-export interface KYCStatus {
-  status: 'not_started' | 'pending' | 'approved' | 'rejected';
-  submittedAt?: number;
-  verifiedAt?: number;
-  documentType: 'passport' | 'license' | 'national_id';
-  documentVerified: boolean;
-  addressVerified: boolean;
-  faceVerified: boolean;
-  expiresAt?: number;
-}
-
-export interface TradingPattern {
-  userId: string;
-  patternId: string;
-  type: 'wash_trading' | 'pump_dump' | 'price_manipulation' | 'volume_spoofing';
-  confidence: number;
-  detectedAt: number;
-  transactions: string[];
-  riskScore: number;
+  type: 'wash_trading' | 'sybil_attack' | 'pump_dump' | 'price_manipulation';
+  severity: 'low' | 'medium' | 'high';
+  timestamp: number;
+  details: string;
 }
 
 export interface FraudAlert {
-  alertId: string;
+  id: string;
   userId: string;
-  type: 'high_risk_transaction' | 'suspicious_pattern' | 'account_compromise' | 'multiple_accounts';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  message: string;
-  createdAt: number;
-  status: 'active' | 'acknowledged' | 'resolved';
-  actionRequired: boolean;
-}
-
-export interface AMLCheck {
-  checkId: string;
-  userId: string;
+  type: 'wash_trading' | 'sybil_attack' | 'pump_dump' | 'price_manipulation';
+  severity: 'low' | 'medium' | 'high';
   timestamp: number;
-  pep: boolean;
-  sanctions: boolean;
-  adverseMedia: boolean;
-  riskScore: number;
-  status: 'clear' | 'under_review' | 'flagged';
+  details: string;
+  resolved: boolean;
 }
 
-export interface ReputationAdjustment {
-  adjustmentId: string;
+export interface TransactionForAnalysis {
+  id: string;
   userId: string;
-  amount: number;
-  reason: string;
-  timestamp: number;
-  appliedBy: string;
-}
-
-export interface WashTradingDetection {
-  detectionId: string;
-  userId: string;
-  buyerId: string;
-  sellerId: string;
   marketId: string;
-  transactions: TransactionPair[];
-  confidence: number;
-  detectedAt: number;
-  status: 'potential' | 'confirmed' | 'dismissed';
+  amount: number;
+  timestamp: number;
+  type: 'buy' | 'sell';
+  price: number;
 }
 
-export interface TransactionPair {
-  buyTransaction: string;
-  sellTransaction: string;
-  timeDelta: number;
-  priceDelta: number;
-  volumeMatching: number;
-}
-
-export interface SybilDetection {
-  detectionId: string;
-  accounts: string[];
-  similarity: number;
-  detectedAt: number;
-  status: 'potential' | 'confirmed' | 'dismissed';
-  evidence: SybilEvidence;
-}
-
-export interface SybilEvidence {
-  ipAddressMatches: number;
-  timingPatterns: number;
-  tradingBehavior: number;
-  fundingPatterns: number;
-  deviceFingerprints: number;
-}
-
-export interface ReputationBadge {
-  badgeId: string;
-  name: string;
-  description: string;
-  icon: string;
-  requirement: string;
-  earnedAt?: number;
-}
-
-export interface AccountLinkRequest {
-  requestId: string;
+export interface AccountForAnalysis {
   userId: string;
-  accountIdentifier: string;
-  linkType: 'wallet' | 'email' | 'phone' | 'social';
-  status: 'pending' | 'verified' | 'rejected';
+  address: string;
   createdAt: number;
-  verificationCode?: string;
+  ipAddress?: string;
+  deviceFingerprint?: string;
 }
