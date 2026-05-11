@@ -1,0 +1,70 @@
+name: Upgrade System Tests
+
+on:
+  push:
+    branches: [main, feature/contract-upgrade-system]
+  pull_request:
+    branches: [main]
+
+jobs:
+  contract-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Run contract tests
+        run: |
+          npm test tests/proxy-core.test.ts
+          npm test tests/migration-manager.test.ts
+          npm test tests/state-snapshot.test.ts
+
+  service-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: cd frontend && npm install
+      
+      - name: Run service tests
+        run: |
+          cd frontend
+          npm test src/services/__tests__/ContractUpgradeService.test.ts
+          npm test src/services/__tests__/MigrationService.test.ts
+      
+      - name: Run utility tests
+        run: |
+          cd frontend
+          npm test src/utils/__tests__/upgradeHelpers.test.ts
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: [contract-tests, service-tests]
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: |
+          npm install
+          cd frontend && npm install
+      
+      - name: Run integration tests
+        run: npm run test:integration
