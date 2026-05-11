@@ -320,6 +320,22 @@ export class OracleNetworkService {
     this.priceHistory.set(providerId, history);
   }
 
+  static clearPriceHistory(providerId?: string): void {
+    if (providerId) {
+      this.priceHistory.delete(providerId);
+    } else {
+      this.priceHistory.clear();
+    }
+  }
+
+  static getTotalPriceHistorySize(): number {
+    let total = 0;
+    for (const history of this.priceHistory.values()) {
+      total += history.length;
+    }
+    return total;
+  }
+
   private static aggregateValues(prices: OraclePrice[]): number {
     if (prices.length === 0) return 0;
 
