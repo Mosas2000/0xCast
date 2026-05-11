@@ -63,11 +63,11 @@ export function useActionQueue() {
   }, []);
 
   const addAction = useCallback(
-    (entityId: string, entityType: string, action: string, payload: Record<string, any>) => {
+    (entityId: string, entityType: string, action: string, payload: Record<string, unknown>) => {
       return queueRef.current.addAction(
         entityId,
         entityType,
-        action as any,
+        action as 'create' | 'update' | 'delete',
         payload
       );
     },
@@ -169,10 +169,10 @@ export function useConflictManagement() {
   }, []);
 
   const resolveConflict = useCallback(
-    (conflict: SyncConflict, strategy: string) => {
+    (conflict: SyncConflict, strategy: 'local' | 'remote' | 'merge' | 'manual') => {
       const resolved = conflictServiceRef.current.resolveConflict(
         conflict,
-        strategy as any
+        strategy
       );
       return resolved;
     },
@@ -224,7 +224,7 @@ export function useSyncHealth() {
 export function useLocalStorage() {
   const storageRef = useRef(new LocalStorageService());
 
-  const saveEntity = useCallback((entity: any) => {
+  const saveEntity = useCallback((entity: Record<string, unknown>) => {
     return storageRef.current.saveEntity(entity);
   }, []);
 
