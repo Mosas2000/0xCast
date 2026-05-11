@@ -15,12 +15,12 @@ interface UseApiCallResult<T> {
   data: T | null;
   error: ApiError | null;
   isLoading: boolean;
-  execute: (...args: any[]) => Promise<T | null>;
+  execute: (...args: unknown[]) => Promise<T | null>;
   reset: () => void;
 }
 
 export function useApiCall<T>(
-  apiFunction: (...args: any[]) => Promise<T>,
+  apiFunction: (...args: unknown[]) => Promise<T>,
   options: UseApiCallOptions<T> = {}
 ): UseApiCallResult<T> {
   const [data, setData] = useState<T | null>(null);
@@ -28,7 +28,7 @@ export function useApiCall<T>(
   const [isLoading, setIsLoading] = useState(false);
 
   const execute = useCallback(
-    async (...args: any[]): Promise<T | null> => {
+    async (...args: unknown[]): Promise<T | null> => {
       setIsLoading(true);
       setError(null);
 
@@ -83,7 +83,7 @@ export function useApiCall<T>(
 }
 
 export function useApiCallWithAutoRetry<T>(
-  apiFunction: (...args: any[]) => Promise<T>,
+  apiFunction: (...args: unknown[]) => Promise<T>,
   options: UseApiCallOptions<T> = {}
 ): UseApiCallResult<T> {
   return useApiCall(apiFunction, {
