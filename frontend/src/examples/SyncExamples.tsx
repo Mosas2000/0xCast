@@ -17,6 +17,8 @@ import {
   SyncControlPanel,
   OfflineIndicator,
 } from '@/components/SyncComponents';
+import type { Order } from '@/types/transactions';
+import type { SyncConflict } from '@/types/sync';
 
 /**
  * Example 1: Basic Synchronization
@@ -378,9 +380,9 @@ export function MarketTradingExample() {
   const { synchronize } = useSyncContext();
   const { addAction } = useActionQueue();
   const { conflicts, resolveConflict } = useConflictManagement();
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
 
-  const handlePlaceOrder = async (marketId: string, order: any) => {
+  const handlePlaceOrder = async (marketId: string, order: Order) => {
     // Add order action
     addAction(marketId, 'market', 'place_order', order);
 
@@ -388,12 +390,12 @@ export function MarketTradingExample() {
     await synchronize();
   };
 
-  const handlePriceConflict = (conflict: any) => {
+  const handlePriceConflict = (conflict: SyncConflict) => {
     // For trading: always use blockchain price (most recent)
     if (conflict.fieldName === 'currentPrice') {
-      resolveConflict(conflict.id, 'remote');
+      resolveConflict(conflict, 'remote');
     } else {
-      resolveConflict(conflict.id, 'merge');
+      resolveConflict(conflict, 'merge');
     }
   };
 
