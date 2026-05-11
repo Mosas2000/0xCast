@@ -39,6 +39,20 @@
 ;; Oracle Registry
 (define-map registered-oracles principal bool)
 
+;; Oracle provider registry with metadata
+(define-map oracle-providers
+  principal
+  {
+    name: (string-ascii 50),
+    endpoint: (string-ascii 200),
+    priority: uint,
+    enabled: bool,
+    registered-at: uint
+  })
+
+;; Oracle provider count
+(define-data-var oracle-provider-count uint u0)
+
 ;; Oracle stats
 (define-map oracle-stats
   principal
@@ -66,6 +80,25 @@
     timestamp: uint,
     oracle: principal,
     confirmed: bool
+  })
+
+;; Multiple price submissions for consensus
+(define-map price-submissions
+  { market-id: uint, oracle: principal }
+  {
+    price: uint,
+    timestamp: uint,
+    weight: uint
+  })
+
+;; Consensus tracking
+(define-map consensus-state
+  { market-id: uint }
+  {
+    submission-count: uint,
+    total-weight: uint,
+    consensus-reached: bool,
+    final-price: uint
   })
 
 ;; Market resolution records
@@ -105,6 +138,12 @@
 (define-read-only (is-registered-oracle (oracle principal))
   (default-to false (map-get? registered-oracles oracle)))
 
+(define-read-only (get-oracle-provider (oracle principal))
+  (map-get? oracle-providers oracle))
+
+(define-read-only (get-oracle-provider-count)
+  (var-get oracle-provider-count))
+
 (define-read-only (get-market-resolution (market-id uint))
   (map-get? market-resolutions market-id))
 
@@ -118,6 +157,12 @@
 
 (define-read-only (get-price-feed (market-id uint))
   (map-get? price-feeds { market-id: market-id }))
+
+(define-read-only (get-price-submission (market-id uint) (oracle principal))
+  (map-get? price-submissions { market-id: market-id, oracle: oracle }))
+
+(define-read-only (get-consensus-state (market-id uint))
+  (map-get? consensus-state { market-id: market-id }))
 
 (define-read-only (get-dispute (market-id uint))
   (map-get? disputes { market-id: market-id }))
@@ -159,6 +204,45 @@
     (asserts! (is-eq tx-sender contract-owner) err-owner-only)
     (ok (map-set registered-oracles oracle true))))
 
+(define-public (register-oracle-provider
+    (oracle principal)
+    (name (string-ascii 50))
+    (endpoint (string-ascii 200))
+    (priority uint))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (map-set registered-oracles oracle true)
+    (map-set oracle-providers oracle {
+      name: name,
+      endpoint: endpoint,
+      priority: priority,
+      enabled: true,
+      registered-at: stacks-block-height
+    })
+    (var-set oracle-provider-count (+ (var-get oracle-provider-count) u1))
+    (ok true)))
+
+(define-public (update-oracle-priority (oracle principal) (new-priority uint))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (let ((provider (unwrap! (map-get? oracle-providers oracle) err-unauthorized-oracle)))
+      (map-set oracle-providers oracle (merge provider { priority: new-priority }))
+      (ok true))))
+
+(define-public (enable-oracle-provider (oracle principal))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (let ((provider (unwrap! (map-get? oracle-providers oracle) err-unauthorized-oracle)))
+      (map-set oracle-providers oracle (merge provider { enabled: true }))
+      (ok true))))
+
+(define-public (disable-oracle-provider (oracle principal))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (let ((provider (unwrap! (map-get? oracle-providers oracle) err-unauthorized-oracle)))
+      (map-set oracle-providers oracle (merge provider { enabled: false }))
+      (ok true))))
+
 (define-public (remove-oracle (oracle principal))
   (begin
     (asserts! (is-eq tx-sender contract-owner) err-owner-only)
@@ -199,6 +283,42 @@
       })
     (print {event: "price-feed-submitted", market-id: market-id, price: price, oracle: oracle})
     (ok true)))
+
+(define-public (submit-price-for-consensus (market-id uint) (price uint))
+  (let (
+    (oracle tx-sender)
+    (provider (unwrap! (map-get? oracle-providers oracle) err-unauthorized-oracle))
+  )
+    (asserts! (is-registered-oracle oracle) err-unauthorized-oracle)
+    (asserts! (get enabled provider) err-unauthorized-oracle)
+    (asserts! (> price u0) err-invalid-price)
+    (asserts! (is-some (map-get? oracle-sources { market-id: market-id })) err-oracle-not-configured)
+    
+    (map-set price-submissions
+      { market-id: market-id, oracle: oracle }
+      {
+        price: price,
+        timestamp: stacks-block-height,
+        weight: (get priority provider)
+      })
+    
+    (let (
+      (current-state (default-to
+        { submission-count: u0, total-weight: u0, consensus-reached: false, final-price: u0 }
+        (map-get? consensus-state { market-id: market-id })))
+      (new-count (+ (get submission-count current-state) u1))
+      (new-weight (+ (get total-weight current-state) (get priority provider)))
+    )
+      (map-set consensus-state
+        { market-id: market-id }
+        {
+          submission-count: new-count,
+          total-weight: new-weight,
+          consensus-reached: (>= new-count u3),
+          final-price: price
+        })
+      (print {event: "price-submitted-for-consensus", market-id: market-id, price: price, oracle: oracle, count: new-count})
+      (ok true))))
 
 ;; Resolution Submission
 

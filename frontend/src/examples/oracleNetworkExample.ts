@@ -1,0 +1,248 @@
+import { OracleNetworkCoordinator } from '@/services/OracleNetworkCoordinator';
+import { OracleProvider, OracleConfig } from '@/types/oracle';
+
+export async function initializeOracleNetwork() {
+  const providers: OracleProvider[] = [
+    {
+      id: 'chainlink-btc',
+      name: 'Chainlink BTC/USD',
+      url: 'https://api.chainlink.com/btc-usd',
+      enabled: true,
+      priority: 100,
+      healthScore: 100,
+      errorCount: 0,
+      successCount: 0,
+    },
+    {
+      id: 'coinbase-btc',
+      name: 'Coinbase BTC/USD',
+      url: 'https://api.coinbase.com/v2/prices/BTC-USD/spot',
+      enabled: true,
+      priority: 90,
+      healthScore: 100,
+      errorCount: 0,
+      successCount: 0,
+    },
+    {
+      id: 'binance-btc',
+      name: 'Binance BTC/USDT',
+      url: 'https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT',
+      enabled: true,
+      priority: 85,
+      healthScore: 100,
+      errorCount: 0,
+      successCount: 0,
+    },
+  ];
+
+  const config: OracleConfig = {
+    consensusThreshold: 0.66,
+    minimumActiveProviders: 2,
+    aggregationMethod: 'median',
+    updateInterval: 60000,
+    fallbackStrategy: {
+      enabled: true,
+      type: 'cross_provider',
+      maxAge: 3600000,
+      minimumConfidence: 0.5,
+    },
+    timeout: 5000,
+    maxRetries: 3,
+  };
+
+  const coordinator = new OracleNetworkCoordinator({
+    enableAutoFailover: true,
+    enableHealthMonitoring: true,
+    healthCheckInterval: 60000,
+    providerRotationInterval: 300000,
+    consensusValidation: true,
+    fallbackEnabled: true,
+  });
+
+  await coordinator.initialize(providers, config);
+
+  return coordinator;
+}
+
+export async function fetchMarketPrice(
+  coordinator: OracleNetworkCoordinator,
+  marketId: string
+) {
+  try {
+    const price = await coordinator.fetchAggregatedPrice(marketId);
+
+    console.log('Price fetched successfully:');
+    console.log(`  Value: $${price.value.toFixed(2)}`);
+    console.log(`  Confidence: ${(price.confidence * 100).toFixed(1)}%`);
+    console.log(`  Consensus: ${price.consensusReached ? 'Yes' : 'No'}`);
+    console.log(`  Method: ${price.method}`);
+    console.log(`  Sources: ${price.sources.length}`);
+
+    return price;
+  } catch (error) {
+    console.error('Failed to fetch price:', error);
+    throw error;
+  }
+}
+
+export async function fetchWithDifferentStrategies(
+  coordinator: OracleNetworkCoordinator,
+  marketId: string
+) {
+  console.log('Fetching with different strategies...\n');
+
+  const fastPrice = await coordinator.fetchWithStrategy(marketId, 'fast');
+  console.log('Fast strategy:');
+  console.log(`  Value: $${fastPrice.value.toFixed(2)}`);
+  console.log(`  Confidence: ${(fastPrice.confidence * 100).toFixed(1)}%\n`);
+
+  const reliablePrice = await coordinator.fetchWithStrategy(marketId, 'reliable');
+  console.log('Reliable strategy:');
+  console.log(`  Value: $${reliablePrice.value.toFixed(2)}`);
+  console.log(`  Confidence: ${(reliablePrice.confidence * 100).toFixed(1)}%\n`);
+
+  const consensusPrice = await coordinator.fetchWithStrategy(marketId, 'consensus');
+  console.log('Consensus strategy:');
+  console.log(`  Value: $${consensusPrice.value.toFixed(2)}`);
+  console.log(`  Confidence: ${(consensusPrice.confidence * 100).toFixed(1)}%`);
+  console.log(`  Consensus: ${consensusPrice.consensusReached ? 'Yes' : 'No'}\n`);
+
+  return { fastPrice, reliablePrice, consensusPrice };
+}
+
+export function monitorNetworkHealth(coordinator: OracleNetworkCoordinator) {
+  const status = coordinator.getNetworkStatus();
+
+  console.log('Network Health Status:');
+  console.log(`  Total Providers: ${status.totalProviders}`);
+  console.log(`  Active Providers: ${status.activeProviders}`);
+  console.log(`  Average Health: ${status.averageHealth}%`);
+  console.log(`  Network Reliability: ${status.networkReliability}%`);
+  console.log('\nResilience Metrics:');
+  console.log(`  Score: ${status.resilience.score}%`);
+  console.log(`  Redundancy: ${status.resilience.redundancy}%`);
+  console.log(`  Diversification: ${status.resilience.diversification}%`);
+  console.log(`  Reliability: ${status.resilience.reliability}%`);
+  console.log(`\nActive Alerts: ${status.activeAlerts}`);
+
+  return status;
+}
+
+export async function testProviderConnectivity(
+  coordinator: OracleNetworkCoordinator,
+  providerId: string,
+  marketId: string
+) {
+  console.log(`Testing provider: ${providerId}`);
+
+  const result = await coordinator.testProvider(providerId, marketId);
+
+  if (result.success) {
+    console.log(`  Status: Success`);
+    console.log(`  Latency: ${result.latency}ms`);
+    console.log(`  Price: $${result.price?.value.toFixed(2)}`);
+  } else {
+    console.log(`  Status: Failed`);
+    console.log(`  Error: ${result.error}`);
+    console.log(`  Latency: ${result.latency}ms`);
+  }
+
+  return result;
+}
+
+export function addNewProvider(
+  coordinator: OracleNetworkCoordinator,
+  provider: OracleProvider
+) {
+  console.log(`Adding provider: ${provider.name}`);
+  coordinator.addProvider(provider);
+  console.log('Provider added successfully');
+}
+
+export function removeProvider(
+  coordinator: OracleNetworkCoordinator,
+  providerId: string
+) {
+  console.log(`Removing provider: ${providerId}`);
+  coordinator.removeProvider(providerId);
+  console.log('Provider removed successfully');
+}
+
+export function getProviderDetails(
+  coordinator: OracleNetworkCoordinator,
+  providerId: string
+) {
+  const status = coordinator.getProviderStatus(providerId);
+
+  if (!status.provider) {
+    console.log(`Provider ${providerId} not found`);
+    return null;
+  }
+
+  console.log(`Provider: ${status.provider.name}`);
+  console.log(`  ID: ${status.provider.id}`);
+  console.log(`  URL: ${status.provider.url}`);
+  console.log(`  Enabled: ${status.provider.enabled}`);
+  console.log(`  Priority: ${status.provider.priority}`);
+  console.log(`  Health Score: ${status.provider.healthScore}%`);
+
+  if (status.metrics) {
+    console.log('\nHealth Metrics:');
+    console.log(`  Uptime: ${status.metrics.uptime.toFixed(2)}%`);
+    console.log(`  Average Latency: ${status.metrics.averageLatency.toFixed(0)}ms`);
+    console.log(`  Error Rate: ${status.metrics.errorRate.toFixed(2)}%`);
+  }
+
+  if (status.performance) {
+    console.log('\nPerformance Stats:');
+    console.log(`  Total Requests: ${status.performance.totalRequests}`);
+    console.log(`  Successful: ${status.performance.successfulRequests}`);
+    console.log(`  Failed: ${status.performance.failedRequests}`);
+    console.log(`  Reliability: ${status.performance.reliability}%`);
+  }
+
+  return status;
+}
+
+export async function runCompleteExample() {
+  console.log('=== Oracle Network Example ===\n');
+
+  const coordinator = await initializeOracleNetwork();
+  console.log('Oracle network initialized\n');
+
+  const marketId = 'btc-usd-market';
+
+  await fetchMarketPrice(coordinator, marketId);
+  console.log('\n---\n');
+
+  await fetchWithDifferentStrategies(coordinator, marketId);
+  console.log('\n---\n');
+
+  monitorNetworkHealth(coordinator);
+  console.log('\n---\n');
+
+  await testProviderConnectivity(coordinator, 'chainlink-btc', marketId);
+  console.log('\n---\n');
+
+  getProviderDetails(coordinator, 'chainlink-btc');
+  console.log('\n---\n');
+
+  const newProvider: OracleProvider = {
+    id: 'kraken-btc',
+    name: 'Kraken BTC/USD',
+    url: 'https://api.kraken.com/0/public/Ticker?pair=XBTUSD',
+    enabled: true,
+    priority: 80,
+    healthScore: 100,
+    errorCount: 0,
+    successCount: 0,
+  };
+
+  addNewProvider(coordinator, newProvider);
+  console.log('\n---\n');
+
+  monitorNetworkHealth(coordinator);
+
+  coordinator.shutdown();
+  console.log('\nOracle network shut down');
+}

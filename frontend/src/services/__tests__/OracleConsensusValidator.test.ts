@@ -1,0 +1,223 @@
+import { OracleConsensusValidator } from '../OracleConsensusValidator';
+import { OraclePrice } from '@/types/oracle';
+
+describe('OracleConsensusValidator', () => {
+  let validator: OracleConsensusValidator;
+
+  beforeEach(() => {
+    validator = new OracleConsensusValidator();
+  });
+
+  describe('validateConsensus', () => {
+    it('should validate consensus with sufficient providers', () => {
+      const prices: OraclePrice[] = [
+        { value: 100, timestamp: Date.now(), source: 'p1', confidence: 0.9 },
+        { value: 101, timestamp: Date.now(), source: 'p2', confidence: 0.9 },
+        { value: 99, timestamp: Date.now(), source: 'p3', confidence: 0.9 },
+      ];
+
+      const result = validator.validateConsensus(prices);
+      expect(result.isValid).toBe(true);
+      expect(result.recommendation).toBe('accept');
+    });
+
+    it('should reject consensus with insufficient providers', () => {
+      const prices: OraclePrice[] = [
+        { value: 100, timestamp: Date.now(), source: 'p1', confidence: 0.9 },
+      ];
+
+      const result = validator.validateConsensus(prices);
+      expect(result.isValid).toBe(false);
+      expect(result.recommendation).toBe('retry');
+    });
+
+    it('should detect high variance', () => {
+      const prices: OraclePrice[] = [
+        { value: 100, timestamp: Date.now(), source: 'p1', confidence: 0.9 },
+        { value: 200, timestamp: Date.now(), source: 'p2', confidence: 0.9 },
+        { value: 50, timestamp: Date.now(), source: 'p3', confidence: 0.9 },
+      ];
+
+      const result = validator.validateConsensus(prices);
+      expect(result.isValid).toBe(false);
+    });
+
+    it('should identify outliers', () => {
+      const prices: OraclePrice[] = [
+        { value: 100, timestamp: Date.now(), source: 'p1', confidence: 0.9 },
+        { value: 101, timestamp: Date.now(), source: 'p2', confidence: 0.9 },
+        { value: 500, timestamp: Date.now(), source: 'p3', confidence: 0.9 },
+      ];
+
+      const result = validator.validateConsensus(prices);
+      expect(result.outliers).toContain('p3');
+    });
+  });
+
+  describe('analyzePriceDeviation', () => {
+    it('should calculate statistical measures', () => {
+      const prices: OraclePrice[] = [
+        { value: 100, timestamp: Date.now(), source: 'p1', confidence: 0.9 },
+        { value: 110, timestamp: Date.now(), source: 'p2', confidence: 0.9 },
+        { value: 90, timestamp: Date.now(), source: 'p3', confidence: 0.9 },
+      ];
+
+      const analysis = validator.analyzePriceDeviation(prices);
+      expect(analysis.mean).toBe(100);
+      expect(analysis.median).toBe(100);
+      expect(analysis.standardDeviation).toBeGreaterThan(0);
+      expect(analysis.variance).toBeGreaterThan(0);
+    });
+
+    it('should identify outliers based on z-score', () => {
+      const prices: OraclePrice[] = [
+        { value: 100, timestamp: Date.now(), source: 'p1', confidence: 0.9 },
+        { value: 101, timestamp: Date.now(), source: 'p2', confidence: 0.9 },
+        { value: 102, timestamp: Date.now(), source: 'p3', confidence: 0.9 },
+        { value: 1000, timestamp: Date.now(), source: 'p4', confidence: 0.9 },
+      ];
+
+      const analysis = validator.analyzePriceDeviation(prices);
+      expect(analysis.outliers.length).toBeGreaterThan(0);
+      expect(analysis.outliers[0].source).toBe('p4');
+    });
+  });
+
+  describe('detectPriceManipulation', () => {
+    it('should detect extreme price deviation', () => {
+      const prices: OraclePrice[] = [
+        { value: 100, timestamp: Date.now(), source: 'p1', confidence: 0.9 },
+        { value: 101, timestamp: Date.now(), source: 'p2', confidence: 0.9 },
+        { value: 500, timestamp: Date.now(), source: 'p3', confidence: 0.9 },
+      ];
+
+      const result = validator.detectPriceManipulation(prices);
+      expect(result.detected).toBe(true);
+      expect(result.suspiciousSources).toContain('p3');
+    });
+
+    it('should detect low confidence prices', () => {
+      const prices: OraclePrice[] = [
+        { value: 100, timestamp: Date.now(), source: 'p1', confidence: 0.3 },
+        { value: 101, timestamp: Date.now(), source: 'p2', confidence: 0.3 },
+        { value: 102, timestamp: Date.now(), source: 'p3', confidence: 0.9 },
+      ];
+
+      const result = validator.detectPriceManipulation(prices);
+      expect(result.detected).toBe(true);
+    });
+
+    it('should not detect manipulation in normal prices', () => {
+      const prices: OraclePrice[] = [
+        { value: 100, timestamp: Date.now(), source: 'p1', confidence: 0.9 },
+        { value: 101, timestamp: Date.now(), source: 'p2', confidence: 0.9 },
+        { value: 99, timestamp: Date.now(), source: 'p3', confidence: 0.9 },
+      ];
+
+      const result = validator.detectPriceManipulation(prices);
+      expect(result.detected).toBe(false);
+    });
+  });
+
+  describe('validatePriceMovement', () => {
+    it('should validate normal price movement', () => {
+      const result = validator.validatePriceMovement(105, 100, 0.1);
+      expect(result.valid).toBe(true);
+    });
+
+    it('should reject excessive price movement', () => {
+      const result = validator.validatePriceMovement(150, 100, 0.1);
+      expect(result.valid).toBe(false);
+    });
+
+    it('should handle zero previous price', () => {
+      const result = validator.validatePriceMovement(100, 0, 0.1);
+      expect(result.valid).toBe(true);
+    });
+  });
+
+  describe('filterReliablePrices', () => {
+    it('should filter out low confidence prices', () => {
+      const prices: OraclePrice[] = [
+        { value: 100, timestamp: Date.now(), source: 'p1', confidence: 0.9 },
+        { value: 101, timestamp: Date.now(), source: 'p2', confidence: 0.4 },
+        { value: 99, timestamp: Date.now(), source: 'p3', confidence: 0.8 },
+      ];
+
+      const filtered = validator.filterReliablePrices(prices, 0.6);
+      expect(filtered.length).toBe(2);
+      expect(filtered.find((p) => p.source === 'p2')).toBeUndefined();
+    });
+
+    it('should filter out outliers', () => {
+      const prices: OraclePrice[] = [
+        { value: 100, timestamp: Date.now(), source: 'p1', confidence: 0.9 },
+        { value: 101, timestamp: Date.now(), source: 'p2', confidence: 0.9 },
+        { value: 500, timestamp: Date.now(), source: 'p3', confidence: 0.9 },
+      ];
+
+      const filtered = validator.filterReliablePrices(prices);
+      expect(filtered.length).toBeLessThan(prices.length);
+    });
+  });
+
+  describe('compareAggregationMethods', () => {
+    it('should compare different aggregation methods', () => {
+      const prices: OraclePrice[] = [
+        { value: 100, timestamp: Date.now(), source: 'p1', confidence: 0.9 },
+        { value: 110, timestamp: Date.now(), source: 'p2', confidence: 0.8 },
+        { value: 90, timestamp: Date.now(), source: 'p3', confidence: 0.7 },
+      ];
+
+      const comparison = validator.compareAggregationMethods(prices);
+      expect(comparison.median).toBeDefined();
+      expect(comparison.mean).toBeDefined();
+      expect(comparison.weightedMean).toBeDefined();
+      expect(comparison.trimmedMean).toBeDefined();
+      expect(comparison.recommendation).toBeDefined();
+    });
+
+    it('should recommend appropriate method', () => {
+      const prices: OraclePrice[] = [
+        { value: 100, timestamp: Date.now(), source: 'p1', confidence: 0.9 },
+        { value: 101, timestamp: Date.now(), source: 'p2', confidence: 0.9 },
+        { value: 99, timestamp: Date.now(), source: 'p3', confidence: 0.9 },
+      ];
+
+      const comparison = validator.compareAggregationMethods(prices);
+      expect(['median', 'mean', 'weightedMean', 'trimmedMean']).toContain(comparison.recommendation);
+    });
+  });
+
+  describe('shouldUseFallback', () => {
+    it('should recommend fallback with insufficient providers', () => {
+      const prices: OraclePrice[] = [
+        { value: 100, timestamp: Date.now(), source: 'p1', confidence: 0.9 },
+      ];
+
+      const shouldFallback = validator.shouldUseFallback(prices, 2);
+      expect(shouldFallback).toBe(true);
+    });
+
+    it('should recommend fallback with low confidence', () => {
+      const prices: OraclePrice[] = [
+        { value: 100, timestamp: Date.now(), source: 'p1', confidence: 0.3 },
+        { value: 101, timestamp: Date.now(), source: 'p2', confidence: 0.3 },
+      ];
+
+      const shouldFallback = validator.shouldUseFallback(prices, 2, 0.5);
+      expect(shouldFallback).toBe(true);
+    });
+
+    it('should not recommend fallback with good data', () => {
+      const prices: OraclePrice[] = [
+        { value: 100, timestamp: Date.now(), source: 'p1', confidence: 0.9 },
+        { value: 101, timestamp: Date.now(), source: 'p2', confidence: 0.9 },
+        { value: 99, timestamp: Date.now(), source: 'p3', confidence: 0.9 },
+      ];
+
+      const shouldFallback = validator.shouldUseFallback(prices, 2, 0.5);
+      expect(shouldFallback).toBe(false);
+    });
+  });
+});

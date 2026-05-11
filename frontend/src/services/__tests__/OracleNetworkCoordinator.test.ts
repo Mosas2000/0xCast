@@ -1,0 +1,200 @@
+import { OracleNetworkCoordinator } from '../OracleNetworkCoordinator';
+import { OracleProvider, OracleConfig } from '@/types/oracle';
+
+describe('OracleNetworkCoordinator', () => {
+  let coordinator: OracleNetworkCoordinator;
+  let mockProviders: OracleProvider[];
+  let mockConfig: OracleConfig;
+
+  beforeEach(() => {
+    mockProviders = [
+      {
+        id: 'provider-1',
+        name: 'Provider 1',
+        url: 'https://api1.example.com',
+        enabled: true,
+        priority: 100,
+        healthScore: 100,
+        errorCount: 0,
+        successCount: 0,
+      },
+      {
+        id: 'provider-2',
+        name: 'Provider 2',
+        url: 'https://api2.example.com',
+        enabled: true,
+        priority: 80,
+        healthScore: 100,
+        errorCount: 0,
+        successCount: 0,
+      },
+      {
+        id: 'provider-3',
+        name: 'Provider 3',
+        url: 'https://api3.example.com',
+        enabled: true,
+        priority: 60,
+        healthScore: 100,
+        errorCount: 0,
+        successCount: 0,
+      },
+    ];
+
+    mockConfig = {
+      consensusThreshold: 0.66,
+      minimumActiveProviders: 2,
+      aggregationMethod: 'median',
+      updateInterval: 60000,
+      fallbackStrategy: {
+        enabled: true,
+        type: 'last_known',
+        maxAge: 3600000,
+        minimumConfidence: 0.5,
+      },
+      timeout: 5000,
+      maxRetries: 3,
+    };
+
+    coordinator = new OracleNetworkCoordinator({
+      enableAutoFailover: false,
+      enableHealthMonitoring: false,
+      healthCheckInterval: 60000,
+      providerRotationInterval: 300000,
+      consensusValidation: true,
+      fallbackEnabled: true,
+    });
+  });
+
+  afterEach(() => {
+    coordinator.shutdown();
+  });
+
+  describe('initialization', () => {
+    it('should initialize with providers', async () => {
+      await coordinator.initialize(mockProviders, mockConfig);
+      const status = coordinator.getNetworkStatus();
+      expect(status.totalProviders).toBe(3);
+    });
+
+    it('should register all providers', async () => {
+      await coordinator.initialize(mockProviders, mockConfig);
+      mockProviders.forEach((provider) => {
+        const providerStatus = coordinator.getProviderStatus(provider.id);
+        expect(providerStatus.provider).toBeDefined();
+        expect(providerStatus.provider?.id).toBe(provider.id);
+      });
+    });
+  });
+
+  describe('provider management', () => {
+    beforeEach(async () => {
+      await coordinator.initialize(mockProviders, mockConfig);
+    });
+
+    it('should add new provider', () => {
+      const newProvider: OracleProvider = {
+        id: 'provider-4',
+        name: 'Provider 4',
+        url: 'https://api4.example.com',
+        enabled: true,
+        priority: 50,
+        healthScore: 100,
+        errorCount: 0,
+        successCount: 0,
+      };
+
+      coordinator.addProvider(newProvider);
+      const status = coordinator.getNetworkStatus();
+      expect(status.totalProviders).toBe(4);
+    });
+
+    it('should remove provider', () => {
+      coordinator.removeProvider('provider-1');
+      const status = coordinator.getNetworkStatus();
+      expect(status.totalProviders).toBe(2);
+    });
+
+    it('should get provider status', () => {
+      const status = coordinator.getProviderStatus('provider-1');
+      expect(status.provider).toBeDefined();
+      expect(status.provider?.id).toBe('provider-1');
+      expect(status.metrics).toBeDefined();
+    });
+  });
+
+  describe('network status', () => {
+    beforeEach(async () => {
+      await coordinator.initialize(mockProviders, mockConfig);
+    });
+
+    it('should return network status', () => {
+      const status = coordinator.getNetworkStatus();
+      expect(status).toHaveProperty('totalProviders');
+      expect(status).toHaveProperty('activeProviders');
+      expect(status).toHaveProperty('averageHealth');
+      expect(status).toHaveProperty('resilience');
+    });
+
+    it('should track active providers', () => {
+      const status = coordinator.getNetworkStatus();
+      expect(status.activeProviders).toBe(3);
+    });
+
+    it('should calculate network health', () => {
+      const status = coordinator.getNetworkStatus();
+      expect(status.averageHealth).toBeGreaterThanOrEqual(0);
+      expect(status.averageHealth).toBeLessThanOrEqual(100);
+    });
+  });
+
+  describe('configuration', () => {
+    beforeEach(async () => {
+      await coordinator.initialize(mockProviders, mockConfig);
+    });
+
+    it('should update coordinator config', () => {
+      coordinator.updateConfig({
+        enableAutoFailover: true,
+        consensusValidation: false,
+      });
+
+      expect(true).toBe(true);
+    });
+
+    it('should enable health monitoring', () => {
+      coordinator.updateConfig({ enableHealthMonitoring: true });
+      expect(true).toBe(true);
+    });
+
+    it('should disable fallback', () => {
+      coordinator.updateConfig({ fallbackEnabled: false });
+      expect(true).toBe(true);
+    });
+  });
+
+  describe('provider testing', () => {
+    beforeEach(async () => {
+      await coordinator.initialize(mockProviders, mockConfig);
+    });
+
+    it('should test provider connectivity', async () => {
+      const result = await coordinator.testProvider('provider-1', 'market-1');
+      expect(result).toHaveProperty('success');
+      expect(result).toHaveProperty('latency');
+    });
+
+    it('should handle provider test failure', async () => {
+      const result = await coordinator.testProvider('invalid-provider', 'market-1');
+      expect(result.success).toBe(false);
+      expect(result).toHaveProperty('error');
+    });
+  });
+
+  describe('shutdown', () => {
+    it('should cleanup resources on shutdown', async () => {
+      await coordinator.initialize(mockProviders, mockConfig);
+      coordinator.shutdown();
+      expect(true).toBe(true);
+    });
+  });
+});

@@ -212,3 +212,133 @@ export function calculateReliability(stats: OracleStats): number {
     ((stats.successfulResolutions) / stats.totalResolutions) * 100
   );
 }
+
+/**
+ * Oracle provider configuration
+ */
+export interface OracleProvider {
+  id: string;
+  name: string;
+  url: string;
+  enabled: boolean;
+  priority: number;
+  healthScore: number;
+  errorCount: number;
+  successCount: number;
+  lastUpdate?: number;
+  lastError?: string;
+}
+
+/**
+ * Oracle price data point
+ */
+export interface OraclePrice {
+  value: number;
+  timestamp: number;
+  source: string;
+  confidence: number;
+}
+
+/**
+ * Aggregated price from multiple oracles
+ */
+export interface AggregatedPrice {
+  value: number;
+  timestamp: number;
+  sources: OraclePrice[];
+  confidence: number;
+  consensusReached: boolean;
+  method: string;
+}
+
+/**
+ * Consensus calculation result
+ */
+export interface ConsensusResult {
+  price: number;
+  confidence: number;
+  agreeingProviders: string[];
+  dissagreeingProviders: string[];
+  consensusLevel: 'strong' | 'moderate' | 'weak' | 'none';
+}
+
+/**
+ * Oracle network state
+ */
+export interface OracleNetworkState {
+  activeProviders: number;
+  totalProviders: number;
+  averageHealthScore: number;
+  lastUpdate: number;
+  consensusStrength: number;
+  fallbackActive: boolean;
+}
+
+/**
+ * Fallback strategy configuration
+ */
+export interface FallbackStrategy {
+  enabled: boolean;
+  type: 'last_known' | 'median_history' | 'weighted_history';
+  maxAge: number;
+  minimumConfidence: number;
+}
+
+/**
+ * Oracle configuration
+ */
+export interface OracleConfig {
+  consensusThreshold: number;
+  minimumActiveProviders: number;
+  aggregationMethod: 'median' | 'weighted_average';
+  updateInterval: number;
+  fallbackStrategy: FallbackStrategy;
+  timeout: number;
+  maxRetries: number;
+}
+
+/**
+ * Price history entry
+ */
+export interface PriceHistory {
+  price: number;
+  timestamp: number;
+  confidence: number;
+}
+
+/**
+ * Oracle consensus level
+ */
+export type ConsensusLevel = 'strong' | 'moderate' | 'weak' | 'none';
+
+/**
+ * Oracle aggregation method
+ */
+export type AggregationMethod = 'median' | 'weighted_average' | 'trimmed_mean';
+
+/**
+ * Oracle metrics for monitoring
+ */
+export interface OracleMetrics {
+  providerId: string;
+  uptime: number;
+  averageLatency: number;
+  successRate: number;
+  errorRate: number;
+  responseCount: number;
+  failureCount: number;
+  lastUpdate: number;
+}
+
+/**
+ * Monitoring alert
+ */
+export interface MonitoringAlert {
+  id: string;
+  timestamp: number;
+  severity: 'info' | 'warning' | 'critical';
+  type: string;
+  providerId: string;
+  message: string;
+  resolved: boolean;
+}

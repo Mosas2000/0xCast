@@ -28,6 +28,14 @@ export class OracleNetworkService {
     maxRetries: 3,
   };
 
+  static getConfig(): OracleConfig {
+    return { ...this.config };
+  }
+
+  static getAllProviders(): OracleProvider[] {
+    return Array.from(this.providers.values());
+  }
+
   static initializeProviders(providers: OracleProvider[]): void {
     providers.forEach((provider) => {
       this.providers.set(provider.id, {
@@ -35,9 +43,31 @@ export class OracleNetworkService {
         healthScore: 100,
         errorCount: 0,
         successCount: 0,
+        lastUpdate: Date.now(),
       });
       this.priceHistory.set(provider.id, []);
     });
+  }
+
+  static async fetchPricesFromAllProviders(marketId: string): Promise<OraclePrice[]> {
+    const activeProviders = Array.from(this.providers.values()).filter(
+      (p) => p.enabled && p.healthScore > 30
+    );
+
+    const pricePromises = activeProviders.map((provider) =>
+      this.fetchPrice(provider.id, marketId)
+    );
+
+    const results = await Promise.allSettled(pricePromises);
+    const prices: OraclePrice[] = [];
+
+    results.forEach((result) => {
+      if (result.status === 'fulfilled' && result.value !== null) {
+        prices.push(result.value);
+      }
+    });
+
+    return prices;
   }
 
   static async fetchPrice(providerId: string, marketId: string): Promise<OraclePrice | null> {
@@ -130,6 +160,52 @@ export class OracleNetworkService {
     };
   }
 
+  static calculateWeightedConsensus(prices: OraclePrice[]): ConsensusResult {
+    if (prices.length === 0) {
+      return {
+        price: 0,
+        confidence: 0,
+        agreeingProviders: [],
+        dissagreeingProviders: [],
+        consensusLevel: 'none',
+      };
+    }
+
+    const weightedPrice = this.calculateWeightedPrice(prices);
+    const tolerance = weightedPrice * 0.05;
+
+    const agreeing = prices.filter((p) => Math.abs(p.value - weightedPrice) <= tolerance);
+    const disagreeing = prices.filter((p) => Math.abs(p.value - weightedPrice) > tolerance);
+
+    const totalWeight = prices.reduce((sum, p) => sum + p.confidence, 0);
+    const agreeingWeight = agreeing.reduce((sum, p) => sum + p.confidence, 0);
+    const consensusPercentage = totalWeight > 0 ? agreeingWeight / totalWeight : 0;
+
+    let consensusLevel: 'strong' | 'moderate' | 'weak' | 'none' = 'none';
+    if (consensusPercentage >= 0.75) {
+      consensusLevel = 'strong';
+    } else if (consensusPercentage >= 0.5) {
+      consensusLevel = 'moderate';
+    } else if (agreeing.length > 0) {
+      consensusLevel = 'weak';
+    }
+
+    return {
+      price: weightedPrice,
+      confidence: consensusPercentage,
+      agreeingProviders: agreeing.map((p) => p.source),
+      dissagreeingProviders: disagreeing.map((p) => p.source),
+      consensusLevel,
+    };
+  }
+
+  private static calculateWeightedPrice(prices: OraclePrice[]): number {
+    if (prices.length === 0) return 0;
+    const totalWeight = prices.reduce((sum, p) => sum + p.confidence, 0);
+    if (totalWeight === 0) return this.getMedian(prices.map((p) => p.value));
+    return prices.reduce((sum, p) => sum + p.value * p.confidence, 0) / totalWeight;
+  }
+
   static getNetworkState(): OracleNetworkState {
     const providers = Array.from(this.providers.values());
     const activeProviders = providers.filter((p) => p.enabled && p.healthScore > 50);
@@ -148,6 +224,11 @@ export class OracleNetworkService {
 
   static updateProviderConfig(config: Partial<OracleConfig>): void {
     this.config = { ...this.config, ...config };
+    console.log('Oracle network configuration updated', {
+      consensusThreshold: this.config.consensusThreshold,
+      minimumActiveProviders: this.config.minimumActiveProviders,
+      aggregationMethod: this.config.aggregationMethod,
+    });
   }
 
   static addProvider(provider: OracleProvider): void {
@@ -195,6 +276,36 @@ export class OracleNetworkService {
     };
   }
 
+  static getHealthyProviders(): OracleProvider[] {
+    return Array.from(this.providers.values()).filter(
+      (p) => p.enabled && p.healthScore > 50
+    );
+  }
+
+  static selectBestProvider(): OracleProvider | null {
+    const healthy = this.getHealthyProviders();
+    if (healthy.length === 0) return null;
+
+    return healthy.reduce((best, current) => {
+      const bestScore = best.healthScore * (1 + best.priority / 100);
+      const currentScore = current.healthScore * (1 + current.priority / 100);
+      return currentScore > bestScore ? current : best;
+    });
+  }
+
+  static rotateProviders(): void {
+    const providers = Array.from(this.providers.values());
+    providers.forEach((provider) => {
+      if (provider.healthScore < 30 && provider.enabled) {
+        provider.enabled = false;
+        console.warn(`Provider ${provider.id} disabled due to low health score`);
+      } else if (provider.healthScore > 70 && !provider.enabled) {
+        provider.enabled = true;
+        console.info(`Provider ${provider.id} re-enabled after health recovery`);
+      }
+    });
+  }
+
   static getPriceHistory(providerId: string, limit: number = 100): PriceHistory[] {
     const history = this.priceHistory.get(providerId) || [];
     return history.slice(-limit);
@@ -207,6 +318,22 @@ export class OracleNetworkService {
       history.shift();
     }
     this.priceHistory.set(providerId, history);
+  }
+
+  static clearPriceHistory(providerId?: string): void {
+    if (providerId) {
+      this.priceHistory.delete(providerId);
+    } else {
+      this.priceHistory.clear();
+    }
+  }
+
+  static getTotalPriceHistorySize(): number {
+    let total = 0;
+    for (const history of this.priceHistory.values()) {
+      total += history.length;
+    }
+    return total;
   }
 
   private static aggregateValues(prices: OraclePrice[]): number {
@@ -337,5 +464,112 @@ export class OracleNetworkService {
       consensusReached: false,
       method: 'fallback',
     };
+  }
+
+  static async getFallbackPriceWithStrategy(
+    marketId: string,
+    strategy: 'last_known' | 'median_history' | 'weighted_history' | 'cross_provider'
+  ): Promise<AggregatedPrice | null> {
+    const now = Date.now();
+    const maxAge = this.config.fallbackStrategy.maxAge;
+    const minConfidence = this.config.fallbackStrategy.minimumConfidence;
+
+    const allHistory: PriceHistory[] = [];
+    for (const history of this.priceHistory.values()) {
+      const recent = history.filter((p) => now - p.timestamp <= maxAge);
+      allHistory.push(...recent);
+    }
+
+    if (allHistory.length === 0) return null;
+
+    switch (strategy) {
+      case 'last_known': {
+        const latest = allHistory.reduce((a, b) => (a.timestamp > b.timestamp ? a : b));
+        if (latest.confidence >= minConfidence) {
+          return {
+            value: latest.price,
+            timestamp: latest.timestamp,
+            sources: [],
+            confidence: latest.confidence,
+            consensusReached: false,
+            method: 'fallback_last_known',
+          };
+        }
+        return null;
+      }
+
+      case 'median_history': {
+        const prices = allHistory.map((p) => p.price);
+        const avgConfidence = allHistory.reduce((sum, p) => sum + p.confidence, 0) / allHistory.length;
+        if (avgConfidence >= minConfidence) {
+          return {
+            value: this.getMedian(prices),
+            timestamp: Math.max(...allHistory.map((p) => p.timestamp)),
+            sources: [],
+            confidence: avgConfidence,
+            consensusReached: false,
+            method: 'fallback_median',
+          };
+        }
+        return null;
+      }
+
+      case 'weighted_history': {
+        const totalConfidence = allHistory.reduce((sum, p) => sum + p.confidence, 0);
+        if (totalConfidence === 0) return null;
+        const weightedPrice = allHistory.reduce((sum, p) => sum + p.price * p.confidence, 0) / totalConfidence;
+        const avgConfidence = totalConfidence / allHistory.length;
+        if (avgConfidence >= minConfidence) {
+          return {
+            value: weightedPrice,
+            timestamp: Math.max(...allHistory.map((p) => p.timestamp)),
+            sources: [],
+            confidence: avgConfidence,
+            consensusReached: false,
+            method: 'fallback_weighted',
+          };
+        }
+        return null;
+      }
+
+      case 'cross_provider': {
+        const providerPrices = new Map<string, PriceHistory[]>();
+        for (const [providerId, history] of this.priceHistory.entries()) {
+          const recent = history.filter((p) => now - p.timestamp <= maxAge);
+          if (recent.length > 0) {
+            providerPrices.set(providerId, recent);
+          }
+        }
+
+        if (providerPrices.size < 2) return null;
+
+        const latestPerProvider: OraclePrice[] = [];
+        for (const [providerId, history] of providerPrices.entries()) {
+          const latest = history.reduce((a, b) => (a.timestamp > b.timestamp ? a : b));
+          latestPerProvider.push({
+            value: latest.price,
+            timestamp: latest.timestamp,
+            source: providerId,
+            confidence: latest.confidence,
+          });
+        }
+
+        const consensus = this.calculateConsensus(latestPerProvider);
+        if (consensus.consensusLevel !== 'none' && consensus.confidence >= minConfidence) {
+          return {
+            value: consensus.price,
+            timestamp: Math.max(...latestPerProvider.map((p) => p.timestamp)),
+            sources: latestPerProvider,
+            confidence: consensus.confidence,
+            consensusReached: true,
+            method: 'fallback_cross_provider',
+          };
+        }
+        return null;
+      }
+
+      default:
+        return null;
+    }
   }
 }
