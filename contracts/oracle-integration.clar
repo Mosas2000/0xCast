@@ -158,6 +158,12 @@
 (define-read-only (get-price-feed (market-id uint))
   (map-get? price-feeds { market-id: market-id }))
 
+(define-read-only (get-price-submission (market-id uint) (oracle principal))
+  (map-get? price-submissions { market-id: market-id, oracle: oracle }))
+
+(define-read-only (get-consensus-state (market-id uint))
+  (map-get? consensus-state { market-id: market-id }))
+
 (define-read-only (get-dispute (market-id uint))
   (map-get? disputes { market-id: market-id }))
 
@@ -277,6 +283,42 @@
       })
     (print {event: "price-feed-submitted", market-id: market-id, price: price, oracle: oracle})
     (ok true)))
+
+(define-public (submit-price-for-consensus (market-id uint) (price uint))
+  (let (
+    (oracle tx-sender)
+    (provider (unwrap! (map-get? oracle-providers oracle) err-unauthorized-oracle))
+  )
+    (asserts! (is-registered-oracle oracle) err-unauthorized-oracle)
+    (asserts! (get enabled provider) err-unauthorized-oracle)
+    (asserts! (> price u0) err-invalid-price)
+    (asserts! (is-some (map-get? oracle-sources { market-id: market-id })) err-oracle-not-configured)
+    
+    (map-set price-submissions
+      { market-id: market-id, oracle: oracle }
+      {
+        price: price,
+        timestamp: stacks-block-height,
+        weight: (get priority provider)
+      })
+    
+    (let (
+      (current-state (default-to
+        { submission-count: u0, total-weight: u0, consensus-reached: false, final-price: u0 }
+        (map-get? consensus-state { market-id: market-id })))
+      (new-count (+ (get submission-count current-state) u1))
+      (new-weight (+ (get total-weight current-state) (get priority provider)))
+    )
+      (map-set consensus-state
+        { market-id: market-id }
+        {
+          submission-count: new-count,
+          total-weight: new-weight,
+          consensus-reached: (>= new-count u3),
+          final-price: price
+        })
+      (print {event: "price-submitted-for-consensus", market-id: market-id, price: price, oracle: oracle, count: new-count})
+      (ok true))))
 
 ;; Resolution Submission
 
