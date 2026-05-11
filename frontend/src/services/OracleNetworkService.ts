@@ -35,9 +35,31 @@ export class OracleNetworkService {
         healthScore: 100,
         errorCount: 0,
         successCount: 0,
+        lastUpdate: Date.now(),
       });
       this.priceHistory.set(provider.id, []);
     });
+  }
+
+  static async fetchPricesFromAllProviders(marketId: string): Promise<OraclePrice[]> {
+    const activeProviders = Array.from(this.providers.values()).filter(
+      (p) => p.enabled && p.healthScore > 30
+    );
+
+    const pricePromises = activeProviders.map((provider) =>
+      this.fetchPrice(provider.id, marketId)
+    );
+
+    const results = await Promise.allSettled(pricePromises);
+    const prices: OraclePrice[] = [];
+
+    results.forEach((result) => {
+      if (result.status === 'fulfilled' && result.value !== null) {
+        prices.push(result.value);
+      }
+    });
+
+    return prices;
   }
 
   static async fetchPrice(providerId: string, marketId: string): Promise<OraclePrice | null> {
