@@ -28,6 +28,14 @@ export class OracleNetworkService {
     maxRetries: 3,
   };
 
+  static getConfig(): OracleConfig {
+    return { ...this.config };
+  }
+
+  static getAllProviders(): OracleProvider[] {
+    return Array.from(this.providers.values());
+  }
+
   static initializeProviders(providers: OracleProvider[]): void {
     providers.forEach((provider) => {
       this.providers.set(provider.id, {
