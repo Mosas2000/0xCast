@@ -88,10 +88,8 @@ export function useLiquidityActions(): UseLiquidityActionsReturn {
   const executeCall = useCallback(
     async (
       functionName: string,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      functionArgs: any[],
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      postConditions: any[] = [],
+      functionArgs: unknown[],
+      postConditions: unknown[] = [],
       postConditionMode: PostConditionMode = PostConditionMode.Deny
     ) => {
       if (!isConnected || !address) {
