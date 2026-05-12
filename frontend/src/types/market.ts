@@ -1,3 +1,16 @@
+export enum MarketStatus {
+  ACTIVE = 1,
+  RESOLVED = 2,
+  DISPUTED = 3,
+  REFUNDED = 4,
+}
+
+export enum MarketOutcome {
+  NONE = 0,
+  YES = 1,
+  NO = 2,
+}
+
 export interface Market {
   id: string;
   title: string;
