@@ -97,11 +97,21 @@ function parseStatusParam(value: string | null): 'all' | 'active' | 'resolved' {
   return 'all';
 }
 
+/**
+ * Parse time range filter from URL parameter
+ * @param value - URL parameter value for time range
+ * @returns Valid TimeRange or 'all' if invalid
+ */
 function parseTimeRangeParam(value: string | null): TimeRange {
   const ranges: TimeRange[] = ['all', '24h', '7d', '30d', 'custom'];
   return ranges.includes(value as TimeRange) ? (value as TimeRange) : 'all';
 }
 
+/**
+ * Parse volume range filter from URL parameter
+ * @param value - URL parameter value for volume range
+ * @returns Valid VolumeRange or 'all' if invalid
+ */
 function parseVolumeRangeParam(value: string | null): VolumeRange {
   const ranges: VolumeRange[] = ['all', 'low', 'medium', 'high'];
   return ranges.includes(value as VolumeRange) ? (value as VolumeRange) : 'all';
