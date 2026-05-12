@@ -123,13 +123,13 @@ function parseVolumeRangeParam(value: string | null): VolumeRange {
  * Provides comprehensive market filtering capabilities including:
  * - Category-based filtering (Crypto, DeFi, Sports, etc.)
  * - Status filtering (Active, Resolved, All)
- * - Text search with debouncing
+ * - Text search with debouncing (500ms delay)
  * - Time range filtering (24h, 7d, 30d)
  * - Volume range filtering (Low, Medium, High)
  * - Watchlist filtering
  * - Multiple sort options (Newest, Volume, Ending Soon, etc.)
  * - URL parameter synchronization for shareable filter states
- * - Recent search history persistence
+ * - Recent search history persistence (localStorage)
  * 
  * @param options - Configuration options
  * @param options.markets - Array of markets to filter
