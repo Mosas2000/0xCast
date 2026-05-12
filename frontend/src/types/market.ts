@@ -1,13 +1,30 @@
+/**
+ * Market Status Enum
+ * 
+ * Represents the current state of a prediction market
+ */
 export enum MarketStatus {
+  /** Market is active and accepting predictions */
   ACTIVE = 1,
+  /** Market has been resolved with a final outcome */
   RESOLVED = 2,
+  /** Market outcome is being disputed */
   DISPUTED = 3,
+  /** Market has been refunded to participants */
   REFUNDED = 4,
 }
 
+/**
+ * Market Outcome Enum
+ * 
+ * Represents the final outcome of a resolved market
+ */
 export enum MarketOutcome {
+  /** No outcome yet (market not resolved) */
   NONE = 0,
+  /** YES outcome won */
   YES = 1,
+  /** NO outcome won */
   NO = 2,
 }
 
