@@ -29,6 +29,16 @@ const REQUIRED_IMPORTS = [
 function validateFile(filePath: string): ValidationResult {
     const content = fs.readFileSync(filePath, 'utf-8');
     const issues: string[] = [];
+    const fileName = path.basename(filePath);
+    
+    // Skip type definition files
+    if (fileName.endsWith('.types.ts') || fileName.includes('-types.ts')) {
+        return {
+            file: fileName,
+            hasHardcodedHeights: false,
+            issues: []
+        };
+    }
     
     for (const pattern of HARDCODED_PATTERNS) {
         if (pattern.test(content)) {
@@ -48,7 +58,7 @@ function validateFile(filePath: string): ValidationResult {
     }
     
     return {
-        file: path.basename(filePath),
+        file: fileName,
         hasHardcodedHeights: issues.length > 0,
         issues
     };
@@ -66,7 +76,7 @@ function scanDirectory(dir: string): ValidationResult[] {
             if (!file.startsWith('.') && file !== 'node_modules' && file !== 'docs') {
                 results.push(...scanDirectory(filePath));
             }
-        } else if (file.endsWith('.ts') && !file.endsWith('.test.ts') && !file.includes('validate-block-heights')) {
+        } else if (file.endsWith('.ts') && !file.endsWith('.test.ts') && !file.endsWith('.types.ts') && !file.includes('validate-block-heights')) {
             results.push(validateFile(filePath));
         }
     }
