@@ -105,6 +105,7 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
   const initialSearch = syncWithUrl ? (searchParams.get('q') || '') : '';
   const initialTimeRange = syncWithUrl ? parseTimeRangeParam(searchParams.get('time')) : 'all';
   const initialVolumeRange = syncWithUrl ? parseVolumeRangeParam(searchParams.get('volume')) : 'all';
+  const initialOnlyWatchlist = syncWithUrl ? searchParams.get('watchlist') === 'true' : false;
   
   const [category, setCategoryState] = useState<MarketCategory>(initialCategory);
   const [sortOption, setSortOptionState] = useState<SortOption>(initialSort);
