@@ -41,3 +41,24 @@ export class RateLimitMiddleware {
 }
 
 export const rateLimitMiddleware = new RateLimitMiddleware();
+
+/**
+ * Create a rate limit middleware instance
+ * 
+ * Factory function for creating rate limit middleware.
+ * Returns the singleton instance.
+ * 
+ * @returns RateLimitMiddleware instance
+ * 
+ * @example
+ * ```typescript
+ * const middleware = createRateLimitMiddleware();
+ * const result = await middleware.checkAndRecord({
+ *   userId: 'user123',
+ *   action: 'create-market'
+ * });
+ * ```
+ */
+export function createRateLimitMiddleware(): RateLimitMiddleware {
+  return rateLimitMiddleware;
+}

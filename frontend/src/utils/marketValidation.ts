@@ -395,6 +395,142 @@ export function validateMarketEndTime(endTime: number): ValidationResult {
 }
 
 /**
+ * Format blocks to approximate time string
+ * 
+ * Converts block count to human-readable time estimate.
+ * Assumes ~10 minutes per block on Stacks.
+ * 
+ * @param blocks - Number of blocks
+ * @returns Human-readable time string
+ * 
+ * @example
+ * ```typescript
+ * formatBlocksToTime(6); // "1 hour"
+ * formatBlocksToTime(144); // "1 day"
+ * ```
+ */
+export function formatBlocksToTime(blocks: number): string {
+  const totalMinutes = blocks * 10;
+  
+  if (totalMinutes < 60) {
+    return `${totalMinutes} minute${totalMinutes !== 1 ? 's' : ''}`;
+  }
+  
+  const hours = Math.floor(totalMinutes / 60);
+  if (hours < 24) {
+    return `${hours} hour${hours !== 1 ? 's' : ''}`;
+  }
+  
+  const days = Math.floor(hours / 24);
+  return `${days} day${days !== 1 ? 's' : ''}`;
+}
+
+/**
+ * Suggest improvements for market questions
+ * 
+ * Analyzes a market question and provides suggestions for improvement.
+ * 
+ * @param question - Market question to analyze
+ * @returns Array of suggestion strings
+ * 
+ * @example
+ * ```typescript
+ * const suggestions = suggestQuestionImprovements('Will BTC go up?');
+ * // Returns suggestions for making the question more specific
+ * ```
+ */
+export function suggestQuestionImprovements(question: string): string[] {
+  const suggestions: string[] = [];
+  
+  if (!question || question.length < MIN_TITLE_LENGTH) {
+    return suggestions;
+  }
+  
+  // Check for vague terms
+  const vagueTerms = ['maybe', 'might', 'could', 'possibly', 'probably'];
+  if (vagueTerms.some(term => question.toLowerCase().includes(term))) {
+    suggestions.push('Consider removing vague terms like "maybe", "might", or "could"');
+  }
+  
+  // Check for specific date/time
+  const hasDate = /\d{4}|\d{1,2}\/\d{1,2}|january|february|march|april|may|june|july|august|september|october|november|december/i.test(question);
+  if (!hasDate) {
+    suggestions.push('Consider adding a specific date or timeframe');
+  }
+  
+  // Check for measurable outcome
+  const hasMeasurable = /\$|%|\d+|number|amount|price|value/i.test(question);
+  if (!hasMeasurable) {
+    suggestions.push('Consider adding a measurable outcome (e.g., price, percentage, number)');
+  }
+  
+  // Check for question mark
+  if (!question.includes('?')) {
+    suggestions.push('Consider ending with a question mark');
+  }
+  
+  return suggestions;
+}
+
+/**
+ * Validate complete market form data
+ * 
+ * Validates all fields in a market creation form.
+ * 
+ * @param formData - Form data to validate
+ * @returns Validation result with field-specific errors
+ * 
+ * @example
+ * ```typescript
+ * const result = validateMarketForm({
+ *   question: 'Will BTC reach $100k?',
+ *   category: 'crypto',
+ *   durationBlocks: 144
+ * });
+ * ```
+ */
+export function validateMarketForm(formData: {
+  question: string;
+  category?: string;
+  durationBlocks: number;
+}): {
+  isValid: boolean;
+  errors: {
+    question?: string;
+    category?: string;
+    duration?: string;
+  };
+} {
+  const errors: {
+    question?: string;
+    category?: string;
+    duration?: string;
+  } = {};
+  
+  // Validate question
+  const questionResult = validateMarketTitle(formData.question);
+  if (!questionResult.isValid) {
+    errors.question = questionResult.error;
+  }
+  
+  // Validate duration
+  const durationResult = validateMarketDuration(formData.durationBlocks);
+  if (!durationResult.isValid) {
+    errors.duration = durationResult.error;
+  }
+  
+  // Validate category if provided
+  if (formData.category && !formData.category.trim()) {
+    errors.category = 'Category is required';
+  }
+  
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+  };
+}
+
+/**
  * Validate complete market creation data
  * 
  * Validates all required fields for creating a new market.
