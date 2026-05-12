@@ -169,7 +169,7 @@ export function canResolveMarket(status: MarketStatus): boolean {
  * ```
  */
 export function canClaimWinnings(status: MarketStatus, outcome?: MarketOutcome): boolean {
-  return status === MarketStatus.RESOLVED && outcome !== MarketOutcome.NONE;
+  return status === MarketStatus.RESOLVED && outcome !== undefined && outcome !== MarketOutcome.NONE;
 }
 
 export interface Market {
