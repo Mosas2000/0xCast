@@ -98,6 +98,48 @@ Input validation functions.
 - String sanitization
 - Form field validation
 
+### marketValidation.ts
+
+Comprehensive validation utilities for market-related data.
+
+**Key Exports:**
+- `validateMarketTitle()` - Validate market title length and characters
+- `validateMarketDescription()` - Validate market description
+- `validateMarketDuration()` - Validate duration in blocks
+- `validatePredictionAmount()` - Validate prediction amounts
+- `validateMarketOutcome()` - Validate outcome enum values
+- `validateMarketStatus()` - Validate status enum values
+- `validateStacksAddress()` - Validate Stacks address format
+- `validateMarketEndTime()` - Validate end time is in future
+- `validateMarketCreation()` - Validate complete market creation data
+- `validatePrediction()` - Validate complete prediction data
+
+**Constants:**
+- `MIN_TITLE_LENGTH` / `MAX_TITLE_LENGTH` - Title length limits
+- `MIN_DESCRIPTION_LENGTH` / `MAX_DESCRIPTION_LENGTH` - Description limits
+- `MIN_PREDICTION_AMOUNT` / `MAX_PREDICTION_AMOUNT` - Amount limits
+- `MIN_MARKET_DURATION_BLOCKS` / `MAX_MARKET_DURATION_BLOCKS` - Duration limits
+
+**Example:**
+```typescript
+import { validateMarketCreation } from '@/utils/marketValidation';
+
+const data = {
+  title: 'Will BTC reach $100k?',
+  description: 'Market resolves YES if Bitcoin reaches $100,000',
+  durationBlocks: 144
+};
+
+const result = validateMarketCreation(data);
+if (!result.isValid) {
+  toast.error(result.error);
+  return;
+}
+
+// Proceed with market creation
+await createMarket(data);
+```
+
 ## WebSocket Utilities
 
 ### websocketUtils.ts
