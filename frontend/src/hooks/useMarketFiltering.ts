@@ -17,6 +17,7 @@ import {
   MarketCategory,
   SortOption,
   categorizeMarket,
+  getCategoryConfig,
 } from '../utils/marketCategories';
 import { loadWatchlistIds } from '../utils/watchlist';
 
