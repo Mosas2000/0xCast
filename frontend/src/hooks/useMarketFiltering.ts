@@ -107,14 +107,7 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
   const initialVolumeRange = syncWithUrl ? parseVolumeRangeParam(searchParams.get('volume')) : 'all';
   const initialOnlyWatchlist = syncWithUrl ? searchParams.get('watchlist') === 'true' : false;
   
-  const [category, setCategoryState] = useState<MarketCategory>(initialCategory);
-  const [sortOption, setSortOptionState] = useState<SortOption>(initialSort);
-  const [statusFilter, setStatusFilterState] = useState<'all' | 'active' | 'resolved'>(initialStatus);
-  const initialSearch = syncWithUrl ? (searchParams.get('q') || '') : '';
-  const initialTimeRange = syncWithUrl ? parseTimeRangeParam(searchParams.get('time')) : 'all';
-  const initialVolumeRange = syncWithUrl ? parseVolumeRangeParam(searchParams.get('volume')) : 'all';
-  const initialOnlyWatchlist = syncWithUrl ? searchParams.get('watchlist') === 'true' : false;
-  
+  // Initialize React state hooks with parsed URL values
   const [category, setCategoryState] = useState<MarketCategory>(initialCategory);
   const [sortOption, setSortOptionState] = useState<SortOption>(initialSort);
   const [statusFilter, setStatusFilterState] = useState<'all' | 'active' | 'resolved'>(initialStatus);
