@@ -8,11 +8,16 @@ import { useMemo, useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { Market } from '../types/market';
 import { MarketStatus } from '../types/market';
-import {
-  TimeRange,
-  VolumeRange,
-  VOLUME_THRESHOLDS,
-} from '../types/filters';
+
+// Temporary inline types to avoid import caching issues
+type TimeRange = 'all' | '24h' | '7d' | '30d' | 'custom';
+type VolumeRange = 'all' | 'low' | 'medium' | 'high';
+const VOLUME_THRESHOLDS = {
+  low: 1000,
+  medium: 10000,
+  high: 50000,
+};
+
 import {
   MarketCategory,
   SortOption,
