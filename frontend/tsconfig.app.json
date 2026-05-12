@@ -16,7 +16,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Path Mapping */
+    /* Path Mapping - Enables @ imports for cleaner code */
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
