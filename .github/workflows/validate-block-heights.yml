@@ -1,0 +1,45 @@
+name: Validate Block Heights
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/**/*.ts'
+      - 'scripts/**/*.js'
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'scripts/**/*.ts'
+      - 'scripts/**/*.js'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Validate block heights
+        run: npm run validate-blocks
+        
+      - name: Run block height tests
+        run: npm test -- scripts/utils/__tests__/block-height
+        
+      - name: Check for hardcoded values
+        run: |
+          if grep -r "const.*BLOCK.*=.*[0-9]\{7,\}" scripts/ --include="*.ts" --include="*.js" --exclude-dir=node_modules --exclude-dir=__tests__; then
+            echo "Found potential hardcoded block heights"
+            exit 1
+          fi
+          echo "No hardcoded block heights detected"
