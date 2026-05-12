@@ -153,7 +153,8 @@ function parseVolumeRangeParam(value: string | null): VolumeRange {
 export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFilteringOptions): UseMarketFilteringReturn {
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // Initialize state from URL params if syncing
+  // Parse URL parameters and initialize filter values
+  // These values are used to initialize React state hooks below
   const initialCategory = syncWithUrl ? parseCategoryParam(searchParams.get('category')) : MarketCategory.ALL;
   const initialSort = syncWithUrl ? parseSortParam(searchParams.get('sort')) : SortOption.NEWEST;
   const initialStatus = syncWithUrl ? parseStatusParam(searchParams.get('status')) : 'all';
