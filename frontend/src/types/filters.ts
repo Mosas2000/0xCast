@@ -1,3 +1,10 @@
+/**
+ * Market Filters Types
+ * 
+ * Type definitions for market filtering functionality.
+ * Updated: 2026-05-12
+ */
+
 import { MarketCategory, SortOption } from '../utils/marketCategories';
 
 export type TimeRange = 'all' | '24h' | '7d' | '30d' | 'custom';
