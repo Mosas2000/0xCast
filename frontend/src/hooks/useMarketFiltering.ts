@@ -87,7 +87,11 @@ function parseSortParam(value: string | null): SortOption {
     : SortOption.NEWEST;
 }
 
-// Parse status filter from URL param
+/**
+ * Parse status filter from URL parameter
+ * @param value - URL parameter value for status filter
+ * @returns 'active', 'resolved', or 'all' if invalid
+ */
 function parseStatusParam(value: string | null): 'all' | 'active' | 'resolved' {
   if (value === 'active' || value === 'resolved') return value;
   return 'all';
