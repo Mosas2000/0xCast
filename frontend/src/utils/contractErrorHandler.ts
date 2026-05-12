@@ -11,7 +11,34 @@
  * - Integrated error logging
  * - Type-safe result handling
  * 
+ * Error Flow:
+ * 1. Contract call fails with raw error
+ * 2. parseContractError() extracts error details
+ * 3. ContractError.fromClarityError() maps to user message
+ * 4. Error is logged to errorLoggingService
+ * 5. User-friendly message displayed to user
+ * 
  * @module contractErrorHandler
+ * 
+ * @example
+ * ```typescript
+ * // Wrap contract call with error handling
+ * const result = await handleContractCall(
+ *   'market-core',
+ *   'create-market',
+ *   async () => openContractCall({...}),
+ *   {
+ *     onSuccess: (data) => toast.success('Market created!'),
+ *     onError: (error) => toast.error(error.message)
+ *   }
+ * );
+ * 
+ * if (result.success) {
+ *   console.log('Transaction:', result.txId);
+ * } else {
+ *   console.error('Error:', result.error?.message);
+ * }
+ * ```
  */
 
 import { ContractError, ApiError, ErrorCode } from './apiErrors';
