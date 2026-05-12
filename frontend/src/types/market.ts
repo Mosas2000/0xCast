@@ -286,3 +286,111 @@ export interface Pool {
   totalShares: number;
   fee: number;
 }
+
+/**
+ * Market Categories
+ * 
+ * Available categories for prediction markets
+ */
+export const MARKET_CATEGORIES = {
+  CRYPTO: 'crypto',
+  SPORTS: 'sports',
+  POLITICS: 'politics',
+  ENTERTAINMENT: 'entertainment',
+  TECHNOLOGY: 'technology',
+  SCIENCE: 'science',
+  BUSINESS: 'business',
+  OTHER: 'other',
+} as const;
+
+export type MarketCategory = typeof MARKET_CATEGORIES[keyof typeof MARKET_CATEGORIES];
+
+/**
+ * Market Durations (in blocks)
+ * 
+ * Predefined duration options for market creation
+ * Assuming ~10 minutes per block on Stacks
+ */
+export const MARKET_DURATIONS = {
+  ONE_HOUR: 6,        // ~1 hour
+  SIX_HOURS: 36,      // ~6 hours
+  ONE_DAY: 144,       // ~1 day
+  THREE_DAYS: 432,    // ~3 days
+  ONE_WEEK: 1008,     // ~1 week
+  TWO_WEEKS: 2016,    // ~2 weeks
+  ONE_MONTH: 4320,    // ~30 days
+  THREE_MONTHS: 12960, // ~90 days
+  SIX_MONTHS: 25920,  // ~180 days
+  ONE_YEAR: 52560,    // ~365 days
+} as const;
+
+/**
+ * Category Metadata
+ * 
+ * Display information for each market category
+ */
+export const CATEGORY_METADATA: Record<string, {
+  label: string;
+  icon: string;
+  color: string;
+  description: string;
+}> = {
+  [MARKET_CATEGORIES.CRYPTO]: {
+    label: 'Crypto',
+    icon: '₿',
+    color: '#F7931A',
+    description: 'Cryptocurrency and blockchain markets',
+  },
+  [MARKET_CATEGORIES.SPORTS]: {
+    label: 'Sports',
+    icon: '⚽',
+    color: '#22C55E',
+    description: 'Sports events and competitions',
+  },
+  [MARKET_CATEGORIES.POLITICS]: {
+    label: 'Politics',
+    icon: '🏛️',
+    color: '#3B82F6',
+    description: 'Political events and elections',
+  },
+  [MARKET_CATEGORIES.ENTERTAINMENT]: {
+    label: 'Entertainment',
+    icon: '🎬',
+    color: '#EC4899',
+    description: 'Movies, TV, music, and entertainment',
+  },
+  [MARKET_CATEGORIES.TECHNOLOGY]: {
+    label: 'Technology',
+    icon: '💻',
+    color: '#8B5CF6',
+    description: 'Technology and innovation',
+  },
+  [MARKET_CATEGORIES.SCIENCE]: {
+    label: 'Science',
+    icon: '🔬',
+    color: '#06B6D4',
+    description: 'Scientific discoveries and research',
+  },
+  [MARKET_CATEGORIES.BUSINESS]: {
+    label: 'Business',
+    icon: '💼',
+    color: '#F59E0B',
+    description: 'Business and economics',
+  },
+  [MARKET_CATEGORIES.OTHER]: {
+    label: 'Other',
+    icon: '🌐',
+    color: '#6B7280',
+    description: 'Other markets',
+  },
+};
+
+/**
+ * Create Market Form Data
+ */
+export interface CreateMarketFormData {
+  question: string;
+  category: MarketCategory;
+  durationBlocks: number;
+  durationPreset?: keyof typeof MARKET_DURATIONS;
+}
