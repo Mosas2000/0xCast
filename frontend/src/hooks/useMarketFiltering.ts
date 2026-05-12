@@ -117,6 +117,39 @@ function parseVolumeRangeParam(value: string | null): VolumeRange {
   return ranges.includes(value as VolumeRange) ? (value as VolumeRange) : 'all';
 }
 
+/**
+ * Custom hook for filtering, sorting, and categorizing prediction markets
+ * 
+ * Provides comprehensive market filtering capabilities including:
+ * - Category-based filtering (Crypto, DeFi, Sports, etc.)
+ * - Status filtering (Active, Resolved, All)
+ * - Text search with debouncing
+ * - Time range filtering (24h, 7d, 30d)
+ * - Volume range filtering (Low, Medium, High)
+ * - Watchlist filtering
+ * - Multiple sort options (Newest, Volume, Ending Soon, etc.)
+ * - URL parameter synchronization for shareable filter states
+ * - Recent search history persistence
+ * 
+ * @param options - Configuration options
+ * @param options.markets - Array of markets to filter
+ * @param options.syncWithUrl - Whether to sync filter state with URL parameters (default: false)
+ * 
+ * @returns Object containing filtered markets, filter state, and setter functions
+ * 
+ * @example
+ * ```tsx
+ * const {
+ *   filteredMarkets,
+ *   setCategory,
+ *   setSearchQuery,
+ *   resetFilters
+ * } = useMarketFiltering({
+ *   markets: allMarkets,
+ *   syncWithUrl: true
+ * });
+ * ```
+ */
 export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFilteringOptions): UseMarketFilteringReturn {
   const [searchParams, setSearchParams] = useSearchParams();
   
