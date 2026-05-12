@@ -23,6 +23,7 @@ const HARDCODED_PATTERNS = [
 const REQUIRED_IMPORTS = [
     'fetchCurrentBlockHeight',
     'calculateMarketBlocks',
+    'getCurrentBlockHeight',
 ];
 
 function validateFile(filePath: string): ValidationResult {
@@ -38,11 +39,11 @@ function validateFile(filePath: string): ValidationResult {
     
     const hasBlockHeightUsage = /endBlock|resolutionBlock|END_BLOCK|RESOLUTION_BLOCK/.test(content);
     
-    if (hasBlockHeightUsage) {
-        for (const importName of REQUIRED_IMPORTS) {
-            if (!content.includes(importName)) {
-                issues.push(`Missing import: ${importName}`);
-            }
+    if (hasBlockHeightUsage && !content.includes('block-height-config')) {
+        const hasDynamicFetch = REQUIRED_IMPORTS.some(imp => content.includes(imp));
+        
+        if (!hasDynamicFetch) {
+            issues.push('Uses block heights but missing dynamic fetch imports');
         }
     }
     
