@@ -74,7 +74,11 @@ function parseCategoryParam(value: string | null): MarketCategory {
     : MarketCategory.ALL;
 }
 
-// Parse sort option from URL param
+/**
+ * Parse sort option from URL parameter
+ * @param value - URL parameter value for sort option
+ * @returns Valid SortOption or NEWEST if invalid
+ */
 function parseSortParam(value: string | null): SortOption {
   if (!value) return SortOption.NEWEST;
   const options = Object.values(SortOption);
