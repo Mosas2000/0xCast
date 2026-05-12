@@ -134,6 +134,23 @@ npm run analytics
 
 ## 🛠️ Utility Functions
 
+### Block Height Management (`utils/block-height.ts`, `utils/block-height-config.ts`)
+Dynamic block height calculation and validation:
+- Automatic current block height fetching from Hiro API
+- Retry logic with exponential backoff
+- Block height caching (60-second TTL)
+- Manual fallback for offline scenarios
+- Comprehensive validation rules
+- Time-to-block and block-to-time conversions
+
+**Key Features:**
+- No hardcoded block heights
+- Always uses current blockchain state
+- Validates market duration and resolution buffer
+- Prevents creation of markets with past timestamps
+
+See [Block Height Guide](./docs/BLOCK_HEIGHT_GUIDE.md) for detailed documentation.
+
 ### Transaction Helpers (`utils/transaction-helpers.ts`)
 Shared utilities for all scripts:
 - Private key management
@@ -245,11 +262,20 @@ const delayBetweenTx = 3000;  // milliseconds
 ```
 
 ### Block Heights
-Customize market timelines:
+All scripts now use dynamic block height calculation:
 ```typescript
-const daysUntilEnd = 30;        // Days until trading closes
-const daysUntilResolution = 35; // Days until resolution
+import { fetchCurrentBlockHeight } from './utils/block-height.js';
+import { calculateMarketBlocks } from './utils/block-height-config.js';
+
+const currentBlock = await fetchCurrentBlockHeight('mainnet');
+const { endBlock, resolutionBlock } = calculateMarketBlocks(
+    currentBlock,
+    30,  // 30 days duration
+    3    // 3 days resolution buffer
+);
 ```
+
+**No hardcoded values** - block heights are always calculated dynamically based on current blockchain state.
 
 ---
 
@@ -321,8 +347,10 @@ https://explorer.hiro.so/address/SP31PKQVQZVZCK3FM3NH67CGD6G1FMR17VQVS2W5T.marke
 - Wait for pending transactions to confirm
 
 ### "Block height in the past" errors
-- Update block height calculations
-- Ensure sufficient time until market end/resolution
+- This should no longer occur as all scripts use dynamic block heights
+- If it does occur, check your system clock and network connection
+- The script will automatically fetch the latest block height
+- Manual fallback is available if API is unreachable
 
 ### "Insufficient balance" errors
 - Check STX balance in wallet

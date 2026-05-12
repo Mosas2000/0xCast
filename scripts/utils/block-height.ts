@@ -1,14 +1,32 @@
 import prompts from 'prompts';
 
+export interface BlockHeightInfo {
+    height: number;
+    timestamp: number;
+    source: 'api' | 'manual' | 'cache';
+}
+
+let cachedBlockHeight: BlockHeightInfo | null = null;
+const CACHE_TTL_MS = 60000;
+
 /**
- * Fetch current Stacks block height with retry logic
+ * Fetch current Stacks block height with retry logic and caching
  */
 export async function fetchCurrentBlockHeight(
     network: 'mainnet' | 'testnet' | 'devnet' = 'mainnet',
     maxRetries: number = 3,
     retryDelayMs: number = 2000,
-    timeoutMs: number = 5000
+    timeoutMs: number = 5000,
+    useCache: boolean = true
 ): Promise<number> {
+    if (useCache && cachedBlockHeight) {
+        const age = Date.now() - cachedBlockHeight.timestamp;
+        if (age < CACHE_TTL_MS) {
+            console.log(`📦 Using cached block height: ${cachedBlockHeight.height} (${Math.floor(age / 1000)}s old)`);
+            return cachedBlockHeight.height;
+        }
+    }
+
     const apiUrl = network === 'mainnet'
         ? 'https://api.mainnet.hiro.so/v2/info'
         : network === 'testnet'
@@ -25,35 +43,85 @@ export async function fetchCurrentBlockHeight(
 
             const data = await response.json();
             if (data && typeof data.stacks_tip_height === 'number') {
-                return data.stacks_tip_height;
+                const height = data.stacks_tip_height;
+                
+                cachedBlockHeight = {
+                    height,
+                    timestamp: Date.now(),
+                    source: 'api'
+                };
+                
+                return height;
             }
             throw new Error('Invalid response format from API');
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            
             if (attempt < maxRetries) {
-                console.warn(`⚠️  Block height fetch attempt ${attempt} failed: ${error instanceof Error ? error.message : String(error)}`);
+                console.warn(`⚠️  Block height fetch attempt ${attempt}/${maxRetries} failed: ${errorMessage}`);
                 console.warn(`   Retrying in ${retryDelayMs / 1000}s...`);
                 await new Promise(resolve => setTimeout(resolve, retryDelayMs));
             } else {
                 console.error(`\n❌ Failed to fetch current block height after ${maxRetries} attempts.`);
+                console.error(`   Last error: ${errorMessage}`);
+                console.error(`   API URL: ${apiUrl}\n`);
                 
-                // Check if we are in an interactive environment
                 if (process.stdout.isTTY) {
+                    console.log('💡 You can find the current block height at:');
+                    console.log('   https://explorer.hiro.so\n');
+                    
                     const response = await prompts({
                         type: 'number',
                         name: 'height',
-                        message: 'Hiro API is unreachable. Please enter the current Stacks block height manually (check explorer.hiro.so):',
-                        validate: value => value > 0 || 'Block height must be a positive number'
+                        message: 'Please enter the current Stacks block height manually:',
+                        validate: value => {
+                            if (!value || value <= 0) {
+                                return 'Block height must be a positive number';
+                            }
+                            if (value < 1000000) {
+                                return 'Block height seems too low. Please verify the value.';
+                            }
+                            return true;
+                        }
                     });
 
                     if (response.height) {
+                        cachedBlockHeight = {
+                            height: response.height,
+                            timestamp: Date.now(),
+                            source: 'manual'
+                        };
                         return response.height;
                     }
                 }
 
-                throw new Error('Network error: Hiro API unreachable and no manual override provided.');
+                throw new Error(
+                    `Network error: Hiro API unreachable and no manual override provided. ` +
+                    `Please check your internet connection and try again.`
+                );
             }
         }
     }
 
     throw new Error('Unexpected error in fetchCurrentBlockHeight');
+}
+
+/**
+ * Clear the cached block height
+ */
+export function clearBlockHeightCache(): void {
+    cachedBlockHeight = null;
+}
+
+/**
+ * Get cached block height info if available
+ */
+export function getCachedBlockHeight(): BlockHeightInfo | null {
+    if (cachedBlockHeight) {
+        const age = Date.now() - cachedBlockHeight.timestamp;
+        if (age < CACHE_TTL_MS) {
+            return cachedBlockHeight;
+        }
+    }
+    return null;
 }
