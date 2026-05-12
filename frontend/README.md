@@ -14,9 +14,24 @@ npm run dev
 This project uses `@/` path aliases for cleaner imports:
 
 ```typescript
-// Instead of: import { Service } from '../../../services/Service'
+// ✅ Recommended: Use @ for cross-directory imports
 import { Service } from '@/services/Service'
+import { Type } from '@/types/Type'
+
+// ✅ Also fine: Relative imports for nearby files
+import { Component } from './Component'
+import { helper } from '../utils/helper'
 ```
+
+### When to Use @ Aliases
+- Importing from services, types, hooks, contexts
+- Cross-directory imports (e.g., pages → services)
+- Deep nested imports (3+ levels)
+
+### When to Use Relative Imports
+- Same directory imports
+- Parent/child component relationships
+- Utility functions in same module
 
 Configured in:
 - `vite.config.ts` - Vite module resolution
