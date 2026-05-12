@@ -61,7 +61,11 @@ interface UseMarketFilteringReturn {
   resetFilters: () => void;
 }
 
-// Parse category from URL param
+/**
+ * Parse category from URL parameter
+ * @param value - URL parameter value for category
+ * @returns Valid MarketCategory or ALL if invalid
+ */
 function parseCategoryParam(value: string | null): MarketCategory {
   if (!value) return MarketCategory.ALL;
   const categories = Object.values(MarketCategory);
