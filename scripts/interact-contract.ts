@@ -14,6 +14,12 @@ import prompts from 'prompts';
 import * as dotenv from 'dotenv';
 import { categoryFromQuestion } from './utils/market-categories.js';
 import { fetchCurrentBlockHeight } from './utils/block-height.js';
+import {
+    BLOCK_HEIGHT_CONFIG,
+    calculateMarketBlocks,
+    validateMarketBlocks,
+    daysFromBlocks
+} from './utils/block-height-config.js';
 import fs from 'fs';
 import toml from 'toml';
 import path from 'path';
@@ -40,11 +46,9 @@ const NO_STAKE_AMOUNT = 300000;  // 0.3 STX
 
 // Market parameters
 const MARKET_QUESTION = "Will STX reach $5 by March 1st, 2026?";
-// Stacks produces ~144 blocks per day (10 min per block)
-// Adding 5,000 blocks (~35 days) for end date
-// Adding 5,500 blocks (~38 days) for resolution date
-const END_BLOCK_OFFSET = 5000;
-const RESOLUTION_BLOCK_OFFSET = 5500;
+
+const MARKET_DURATION_DAYS = 35;
+const RESOLUTION_BUFFER_DAYS = 3;
 
 /**
  * Get private key from Mainnet.toml by deriving from mnemonic
@@ -232,24 +236,24 @@ async function main() {
     console.log(`Network: Stacks Mainnet\n`);
 
     try {
-        // Get current block height
         console.log('⏱️  Fetching current block height...');
         const currentBlock = await fetchCurrentBlockHeight('mainnet');
         console.log(`Current Stacks block: ${currentBlock.toLocaleString()}`);
         
-        const endBlockHeight = currentBlock + END_BLOCK_OFFSET;
-        const resolutionBlockHeight = currentBlock + RESOLUTION_BLOCK_OFFSET;
+        const { endBlock: endBlockHeight, resolutionBlock: resolutionBlockHeight } = 
+            calculateMarketBlocks(currentBlock, MARKET_DURATION_DAYS, RESOLUTION_BUFFER_DAYS);
         
-        console.log(`End block: ${endBlockHeight.toLocaleString()} (${END_BLOCK_OFFSET.toLocaleString()} blocks away)`);
-        console.log(`Resolution block: ${resolutionBlockHeight.toLocaleString()}\n`);
+        console.log(`End block: ${endBlockHeight.toLocaleString()} (${MARKET_DURATION_DAYS} days, ~${(endBlockHeight - currentBlock).toLocaleString()} blocks away)`);
+        console.log(`Resolution block: ${resolutionBlockHeight.toLocaleString()} (${RESOLUTION_BUFFER_DAYS} day buffer)\n`);
 
-        // Validate block heights are in the future
-        if (endBlockHeight <= currentBlock) {
-            throw new Error(`❌ END_BLOCK_HEIGHT (${endBlockHeight}) is in the past! Current block is ${currentBlock}.`);
+        const validation = validateMarketBlocks(currentBlock, endBlockHeight, resolutionBlockHeight);
+        if (!validation.valid) {
+            console.error('❌ Block height validation failed:');
+            validation.errors.forEach(error => console.error(`   - ${error}`));
+            process.exit(1);
         }
-        if (resolutionBlockHeight <= endBlockHeight) {
-            throw new Error(`❌ RESOLUTION_BLOCK_HEIGHT must be greater than END_BLOCK_HEIGHT`);
-        }
+        
+        console.log('✅ Block heights validated successfully\n');
 
         // Get private key
         const privateKey = await getPrivateKey();
