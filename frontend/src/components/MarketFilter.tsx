@@ -302,6 +302,9 @@ export function MarketFilter({
             setShowSortDropdown(!showSortDropdown);
             setShowCategoryDropdown(false);
           }}
+          aria-label="Select sort option"
+          aria-haspopup="listbox"
+          aria-expanded={showSortDropdown}
         >
           <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
@@ -311,7 +314,11 @@ export function MarketFilter({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
-        <div style={dropdownMenuStyle(showSortDropdown)}>
+        <div 
+          style={dropdownMenuStyle(showSortDropdown)}
+          role="listbox"
+          aria-label="Sort options"
+        >
           {SORT_OPTIONS.map((option) => (
             <div
               key={option.value}
@@ -320,6 +327,8 @@ export function MarketFilter({
                 onSortChange(option.value);
                 setShowSortDropdown(false);
               }}
+              role="option"
+              aria-selected={selectedSort === option.value}
             >
               <span>{option.label}</span>
             </div>
