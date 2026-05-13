@@ -21,6 +21,7 @@ export function LanguageSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const listboxId = 'language-listbox';
 
   const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
 
@@ -61,6 +62,7 @@ export function LanguageSwitcher() {
         aria-label="Select language"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
+        aria-controls={listboxId}
       >
         <span className="text-lg">{currentLanguage.flag}</span>
         <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
@@ -78,6 +80,7 @@ export function LanguageSwitcher() {
 
       {isOpen && (
         <div 
+          id={listboxId}
           className="absolute right-0 mt-2 w-48 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg z-50"
           role="listbox"
           aria-label="Language options"
