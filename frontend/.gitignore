@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# ESLint
+.eslintcache
+eslint-profile-results.json
+eslint-benchmark-results.json
+eslint-performance-history.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
