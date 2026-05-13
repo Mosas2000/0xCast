@@ -15,6 +15,7 @@ dist-ssr
 # ESLint
 .eslintcache
 eslint-profile-results.json
+eslint-benchmark-results.json
 
 # Editor directories and files
 .vscode/*
