@@ -261,6 +261,9 @@ export function MarketFilter({
             setShowCategoryDropdown(!showCategoryDropdown);
             setShowSortDropdown(false);
           }}
+          aria-label="Select category"
+          aria-haspopup="listbox"
+          aria-expanded={showCategoryDropdown}
         >
           <span>{selectedCategoryConfig.icon}</span>
           <span>{selectedCategoryConfig.label}</span>
@@ -268,7 +271,11 @@ export function MarketFilter({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
-        <div style={dropdownMenuStyle(showCategoryDropdown)}>
+        <div 
+          style={dropdownMenuStyle(showCategoryDropdown)}
+          role="listbox"
+          aria-label="Category options"
+        >
           {CATEGORIES.map((category) => (
             <div
               key={category.value}
@@ -277,6 +284,8 @@ export function MarketFilter({
                 onCategoryChange(category.value);
                 setShowCategoryDropdown(false);
               }}
+              role="option"
+              aria-selected={selectedCategory === category.value}
             >
               <span>{category.icon}</span>
               <span>{category.label}</span>
