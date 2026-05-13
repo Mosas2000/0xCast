@@ -3,7 +3,7 @@
  * 
  * Provides category, status, and sort controls for market filtering.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   MarketCategory,
   SortOption,
@@ -61,6 +61,19 @@ export function MarketFilter({
 
   const selectedCategoryConfig = CATEGORIES.find(c => c.value === selectedCategory) || CATEGORIES[0];
   const selectedSortConfig = SORT_OPTIONS.find(s => s.value === selectedSort) || SORT_OPTIONS[0];
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (showCategoryDropdown) setShowCategoryDropdown(false);
+        if (showSortDropdown) setShowSortDropdown(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showCategoryDropdown, showSortDropdown]);
 
   const timeRangeOptions: { value: TimeRange; label: string }[] = [
     { value: 'all', label: 'All Time' },
