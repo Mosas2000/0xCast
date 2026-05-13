@@ -3,10 +3,10 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import './styles/spacing.css';
 import './i18n/config';
-import { Test } from './Test';
+import App from './App';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Test />
+    <App />
   </StrictMode>
 );
