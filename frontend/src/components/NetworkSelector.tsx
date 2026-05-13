@@ -17,6 +17,7 @@ export function NetworkSelector({ variant = 'dropdown', showLabel = true }: Netw
   const { network, networkConfig, setNetwork, toggleNetwork } = useNetwork();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -75,6 +76,7 @@ export function NetworkSelector({ variant = 'dropdown', showLabel = true }: Netw
   return (
     <div className="relative" ref={dropdownRef}>
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-700 transition-colors"
         aria-label="Select network"
@@ -116,6 +118,7 @@ export function NetworkSelector({ variant = 'dropdown', showLabel = true }: Netw
                 onClick={() => {
                   setNetwork(config.name as NetworkType);
                   setIsOpen(false);
+                  buttonRef.current?.focus();
                 }}
                 role="option"
                 aria-selected={isSelected}
