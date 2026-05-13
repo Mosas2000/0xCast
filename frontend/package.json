@@ -13,6 +13,7 @@
     "lint:changed:fix": "node scripts/lint-changed.js --fix",
     "lint:profile": "node scripts/eslint-profile.js",
     "lint:benchmark": "node scripts/eslint-benchmark.js",
+    "lint:monitor": "node scripts/eslint-monitor.js",
     "lint:clear-cache": "rm -f .eslintcache",
     "preview": "vite preview",
     "interact": "node scripts/interact.js",
