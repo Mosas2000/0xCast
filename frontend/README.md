@@ -52,6 +52,30 @@ npm run build
 npm run preview
 ```
 
+## Code Quality
+
+### Linting
+
+The project uses ESLint with performance optimizations for the large codebase.
+
+```bash
+npm run lint              # Run with caching (recommended)
+npm run lint:fix          # Auto-fix issues
+npm run lint:changed      # Lint only changed files
+npm run lint:profile      # Profile ESLint performance
+npm run lint:benchmark    # Run performance benchmarks
+```
+
+See [ESLint Performance Guide](docs/ESLINT_PERFORMANCE.md) for detailed information.
+
+### Testing
+
+```bash
+npm run test              # Run tests in watch mode
+npm run test:run          # Run tests once
+npm run test:coverage     # Generate coverage report
+```
+
 ## Contract Integration
 
 The frontend connects to the deployed market-core contract on Stacks mainnet:
