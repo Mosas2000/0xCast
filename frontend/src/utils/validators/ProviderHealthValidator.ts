@@ -1,0 +1,80 @@
+import { ProviderHealth } from '@/types/oracle';
+import { BaseValidator, ExtendedValidationResult } from './BaseValidator';
+import { CommonValidators } from './commonValidators';
+
+export class ProviderHealthValidator extends BaseValidator<ProviderHealth> {
+  isValid(health: any): boolean {
+    if (!CommonValidators.isValidObject(health)) return false;
+
+    return (
+      CommonValidators.isValidString(health.id) &&
+      CommonValidators.isValidRatio(health.successRate) &&
+      CommonValidators.isValidRatio(health.uptime) &&
+      CommonValidators.isValidPositiveNumber(health.averageLatency) &&
+      CommonValidators.isValidPositiveNumber(health.responseCount) &&
+      CommonValidators.isValidPositiveNumber(health.errorCount) &&
+      CommonValidators.isValidRatio(health.healthScore)
+    );
+  }
+
+  validate(health: any): ExtendedValidationResult {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    if (!CommonValidators.isValidObject(health)) {
+      errors.push('Provider health data must be an object');
+      return { valid: false, errors, warnings };
+    }
+
+    errors.push(
+      ...this.collectErrors([
+        this.validateField(health.id, 'provider ID', (v) => CommonValidators.isValidString(v)),
+        this.validateField(health.successRate, 'success rate', CommonValidators.isValidRatio),
+        this.validateField(health.uptime, 'uptime', CommonValidators.isValidRatio),
+        this.validateField(health.averageLatency, 'average latency', CommonValidators.isValidPositiveNumber),
+        this.validateField(health.responseCount, 'response count', CommonValidators.isValidPositiveNumber),
+        this.validateField(health.errorCount, 'error count', CommonValidators.isValidPositiveNumber),
+        this.validateField(health.healthScore, 'health score', CommonValidators.isValidRatio),
+      ])
+    );
+
+    if (errors.length === 0) {
+      if (health.successRate < 0.5) {
+        warnings.push('Low success rate (<50%)');
+      }
+      if (health.uptime < 0.9) {
+        warnings.push('Low uptime (<90%)');
+      }
+      if (health.averageLatency > 5000) {
+        warnings.push('High latency (>5s)');
+      }
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors,
+      warnings,
+    };
+  }
+
+  sanitize(health: any): ProviderHealth | null {
+    if (!CommonValidators.isValidObject(health)) return null;
+
+    const sanitized: ProviderHealth = {
+      id: CommonValidators.sanitizeString(health.id, 'unknown', 256),
+      successRate: CommonValidators.sanitizeNumber(health.successRate, 0, 0, 1),
+      uptime: CommonValidators.sanitizeNumber(health.uptime, 0, 0, 1),
+      averageLatency: CommonValidators.sanitizeNumber(health.averageLatency, 0, 0),
+      responseCount: Math.floor(CommonValidators.sanitizeNumber(health.responseCount, 0, 0)),
+      errorCount: Math.floor(CommonValidators.sanitizeNumber(health.errorCount, 0, 0)),
+      lastResponseTime: CommonValidators.sanitizeTimestamp(health.lastResponseTime),
+      healthScore: CommonValidators.sanitizeNumber(health.healthScore, 0, 0, 1),
+    };
+
+    if (!this.isValid(sanitized)) {
+      return null;
+    }
+
+    return sanitized;
+  }
+}
