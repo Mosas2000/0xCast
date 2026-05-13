@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
+    "lint": "eslint . --cache",
+    "lint:no-cache": "eslint .",
+    "lint:fix": "eslint . --cache --fix",
+    "lint:profile": "node scripts/eslint-profile.js",
+    "lint:clear-cache": "rm -f .eslintcache",
     "preview": "vite preview",
     "interact": "node scripts/interact.js",
     "test": "vitest",
