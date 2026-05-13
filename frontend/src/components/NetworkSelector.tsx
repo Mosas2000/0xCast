@@ -18,6 +18,7 @@ export function NetworkSelector({ variant = 'dropdown', showLabel = true }: Netw
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const listboxId = 'network-listbox';
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -82,6 +83,7 @@ export function NetworkSelector({ variant = 'dropdown', showLabel = true }: Netw
         aria-label="Select network"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
+        aria-controls={listboxId}
       >
         <span className="text-base">{networkConfig.icon}</span>
         {showLabel && (
@@ -101,6 +103,7 @@ export function NetworkSelector({ variant = 'dropdown', showLabel = true }: Netw
 
       {isOpen && (
         <div 
+          id={listboxId}
           className="absolute top-full right-0 mt-2 w-48 bg-neutral-50 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-800 rounded-xl shadow-xl z-50 overflow-hidden"
           role="listbox"
           aria-label="Network options"
