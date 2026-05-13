@@ -17,6 +17,7 @@ import {
   MarketCategory,
   SortOption,
   categorizeMarket,
+  getCategoryConfig,
 } from '../utils/marketCategories';
 import { loadWatchlistIds } from '../utils/watchlist';
 
@@ -60,7 +61,11 @@ interface UseMarketFilteringReturn {
   resetFilters: () => void;
 }
 
-// Parse category from URL param
+/**
+ * Parse category from URL parameter
+ * @param value - URL parameter value for category
+ * @returns Valid MarketCategory or ALL if invalid
+ */
 function parseCategoryParam(value: string | null): MarketCategory {
   if (!value) return MarketCategory.ALL;
   const categories = Object.values(MarketCategory);
@@ -69,7 +74,11 @@ function parseCategoryParam(value: string | null): MarketCategory {
     : MarketCategory.ALL;
 }
 
-// Parse sort option from URL param
+/**
+ * Parse sort option from URL parameter
+ * @param value - URL parameter value for sort option
+ * @returns Valid SortOption or NEWEST if invalid
+ */
 function parseSortParam(value: string | null): SortOption {
   if (!value) return SortOption.NEWEST;
   const options = Object.values(SortOption);
@@ -78,41 +87,83 @@ function parseSortParam(value: string | null): SortOption {
     : SortOption.NEWEST;
 }
 
-// Parse status filter from URL param
+/**
+ * Parse status filter from URL parameter
+ * @param value - URL parameter value for status filter
+ * @returns 'active', 'resolved', or 'all' if invalid
+ */
 function parseStatusParam(value: string | null): 'all' | 'active' | 'resolved' {
   if (value === 'active' || value === 'resolved') return value;
   return 'all';
 }
 
+/**
+ * Parse time range filter from URL parameter
+ * @param value - URL parameter value for time range
+ * @returns Valid TimeRange or 'all' if invalid
+ */
 function parseTimeRangeParam(value: string | null): TimeRange {
   const ranges: TimeRange[] = ['all', '24h', '7d', '30d', 'custom'];
   return ranges.includes(value as TimeRange) ? (value as TimeRange) : 'all';
 }
 
+/**
+ * Parse volume range filter from URL parameter
+ * @param value - URL parameter value for volume range
+ * @returns Valid VolumeRange or 'all' if invalid
+ */
 function parseVolumeRangeParam(value: string | null): VolumeRange {
   const ranges: VolumeRange[] = ['all', 'low', 'medium', 'high'];
   return ranges.includes(value as VolumeRange) ? (value as VolumeRange) : 'all';
 }
 
+/**
+ * Custom hook for filtering, sorting, and categorizing prediction markets
+ * 
+ * Provides comprehensive market filtering capabilities including:
+ * - Category-based filtering (Crypto, DeFi, Sports, etc.)
+ * - Status filtering (Active, Resolved, All)
+ * - Text search with debouncing (500ms delay)
+ * - Time range filtering (24h, 7d, 30d)
+ * - Volume range filtering (Low, Medium, High)
+ * - Watchlist filtering
+ * - Multiple sort options (Newest, Volume, Ending Soon, etc.)
+ * - URL parameter synchronization for shareable filter states
+ * - Recent search history persistence (localStorage)
+ * 
+ * @param options - Configuration options
+ * @param options.markets - Array of markets to filter
+ * @param options.syncWithUrl - Whether to sync filter state with URL parameters (default: false)
+ * 
+ * @returns Object containing filtered markets, filter state, and setter functions
+ * 
+ * @example
+ * ```tsx
+ * const {
+ *   filteredMarkets,
+ *   setCategory,
+ *   setSearchQuery,
+ *   resetFilters
+ * } = useMarketFiltering({
+ *   markets: allMarkets,
+ *   syncWithUrl: true
+ * });
+ * ```
+ */
 export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFilteringOptions): UseMarketFilteringReturn {
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // Initialize state from URL params if syncing
+  // Parse URL parameters and initialize filter values
+  // These values are used to initialize React state hooks below
   const initialCategory = syncWithUrl ? parseCategoryParam(searchParams.get('category')) : MarketCategory.ALL;
   const initialSort = syncWithUrl ? parseSortParam(searchParams.get('sort')) : SortOption.NEWEST;
   const initialStatus = syncWithUrl ? parseStatusParam(searchParams.get('status')) : 'all';
   const initialSearch = syncWithUrl ? (searchParams.get('q') || '') : '';
   const initialTimeRange = syncWithUrl ? parseTimeRangeParam(searchParams.get('time')) : 'all';
   const initialVolumeRange = syncWithUrl ? parseVolumeRangeParam(searchParams.get('volume')) : 'all';
-  
-  const [category, setCategoryState] = useState<MarketCategory>(initialCategory);
-  const [sortOption, setSortOptionState] = useState<SortOption>(initialSort);
-  const [statusFilter, setStatusFilterState] = useState<'all' | 'active' | 'resolved'>(initialStatus);
-  const initialSearch = syncWithUrl ? (searchParams.get('q') || '') : '';
-  const initialTimeRange = syncWithUrl ? parseTimeRangeParam(searchParams.get('time')) : 'all';
-  const initialVolumeRange = syncWithUrl ? parseVolumeRangeParam(searchParams.get('volume')) : 'all';
   const initialOnlyWatchlist = syncWithUrl ? searchParams.get('watchlist') === 'true' : false;
   
+  // Initialize React state hooks with parsed URL values
   const [category, setCategoryState] = useState<MarketCategory>(initialCategory);
   const [sortOption, setSortOptionState] = useState<SortOption>(initialSort);
   const [statusFilter, setStatusFilterState] = useState<'all' | 'active' | 'resolved'>(initialStatus);

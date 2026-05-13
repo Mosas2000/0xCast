@@ -1,148 +1,496 @@
 /**
  * Market Validation Utilities
  * 
- * Utility functions for validating and formatting market creation data.
- * 
- * Validation Rules:
- * - Question: 10-256 characters, must end with "?"
- * - Category: Required selection
- * - Duration: 144-525,600 blocks (~1 day to ~1 year)
- * 
- * Block Time Calculations:
- * - 1 block ≈ 10 minutes
- * - 6 blocks ≈ 1 hour
- * - 144 blocks ≈ 1 day
- * - 1,008 blocks ≈ 1 week
+ * Provides validation functions for market-related data including
+ * market creation, predictions, and data integrity checks.
  * 
  * @module marketValidation
  */
 
-import type { CreateMarketFormData, MarketValidationResult } from '../types/market';
-
-/** Minimum question length for valid markets */
-const MIN_QUESTION_LENGTH = 10;
-
-/** Maximum question length for valid markets */
-const MAX_QUESTION_LENGTH = 256;
-
-/** Minimum duration in blocks (~1 day) */
-const MIN_DURATION_BLOCKS = 144;
-
-/** Maximum duration in blocks (~1 year) */
-const MAX_DURATION_BLOCKS = 525600;
+import { ValidationError } from './apiErrors';
+import { MarketStatus, MarketOutcome, isMarketStatus, isMarketOutcome } from '../types/market';
 
 /**
- * Validate market creation form data
+ * Minimum market title length
  */
-export function validateMarketForm(data: CreateMarketFormData): MarketValidationResult {
-  const errors: MarketValidationResult['errors'] = {};
-  
-  // Validate question
-  if (!data.question || data.question.trim().length === 0) {
-    errors.question = 'Question is required';
-  } else if (data.question.trim().length < MIN_QUESTION_LENGTH) {
-    errors.question = `Question must be at least ${MIN_QUESTION_LENGTH} characters`;
-  } else if (data.question.length > MAX_QUESTION_LENGTH) {
-    errors.question = `Question must not exceed ${MAX_QUESTION_LENGTH} characters`;
-  } else if (!data.question.endsWith('?')) {
-    errors.question = 'Question must end with a question mark (?)';
+export const MIN_TITLE_LENGTH = 10;
+
+/**
+ * Maximum market title length
+ */
+export const MAX_TITLE_LENGTH = 200;
+
+/**
+ * Minimum market description length
+ */
+export const MIN_DESCRIPTION_LENGTH = 20;
+
+/**
+ * Maximum market description length
+ */
+export const MAX_DESCRIPTION_LENGTH = 2000;
+
+/**
+ * Minimum prediction amount in micro-STX
+ */
+export const MIN_PREDICTION_AMOUNT = 1_000_000n; // 1 STX
+
+/**
+ * Maximum prediction amount in micro-STX
+ */
+export const MAX_PREDICTION_AMOUNT = 1_000_000_000_000n; // 1,000,000 STX
+
+/**
+ * Minimum market duration in blocks (approximately 1 hour)
+ */
+export const MIN_MARKET_DURATION_BLOCKS = 6;
+
+/**
+ * Maximum market duration in blocks (approximately 1 year)
+ */
+export const MAX_MARKET_DURATION_BLOCKS = 52_560;
+
+/**
+ * Validation result interface
+ */
+export interface ValidationResult {
+  /** Whether validation passed */
+  isValid: boolean;
+  /** Error message if validation failed */
+  error?: string;
+  /** Field name that failed validation */
+  field?: string;
+}
+
+/**
+ * Validate market title
+ * 
+ * Checks that the title is within length limits and contains valid characters.
+ * 
+ * @param title - Market title to validate
+ * @returns Validation result
+ * 
+ * @example
+ * ```typescript
+ * const result = validateMarketTitle('Will BTC reach $100k?');
+ * if (!result.isValid) {
+ *   toast.error(result.error);
+ * }
+ * ```
+ */
+export function validateMarketTitle(title: string): ValidationResult {
+  if (!title || typeof title !== 'string') {
+    return {
+      isValid: false,
+      error: 'Title is required',
+      field: 'title',
+    };
   }
-  
-  // Validate category
-  if (!data.category) {
-    errors.category = 'Category is required';
+
+  const trimmed = title.trim();
+
+  if (trimmed.length < MIN_TITLE_LENGTH) {
+    return {
+      isValid: false,
+      error: `Title must be at least ${MIN_TITLE_LENGTH} characters`,
+      field: 'title',
+    };
   }
-  
+
+  if (trimmed.length > MAX_TITLE_LENGTH) {
+    return {
+      isValid: false,
+      error: `Title must not exceed ${MAX_TITLE_LENGTH} characters`,
+      field: 'title',
+    };
+  }
+
+  // Check for valid characters (allow alphanumeric, spaces, and common punctuation)
+  const validPattern = /^[a-zA-Z0-9\s.,!?'"$%&()-]+$/;
+  if (!validPattern.test(trimmed)) {
+    return {
+      isValid: false,
+      error: 'Title contains invalid characters',
+      field: 'title',
+    };
+  }
+
+  return { isValid: true };
+}
+
+/**
+ * Validate market description
+ * 
+ * Checks that the description is within length limits.
+ * 
+ * @param description - Market description to validate
+ * @returns Validation result
+ * 
+ * @example
+ * ```typescript
+ * const result = validateMarketDescription(description);
+ * if (!result.isValid) {
+ *   setError(result.error);
+ * }
+ * ```
+ */
+export function validateMarketDescription(description: string): ValidationResult {
+  if (!description || typeof description !== 'string') {
+    return {
+      isValid: false,
+      error: 'Description is required',
+      field: 'description',
+    };
+  }
+
+  const trimmed = description.trim();
+
+  if (trimmed.length < MIN_DESCRIPTION_LENGTH) {
+    return {
+      isValid: false,
+      error: `Description must be at least ${MIN_DESCRIPTION_LENGTH} characters`,
+      field: 'description',
+    };
+  }
+
+  if (trimmed.length > MAX_DESCRIPTION_LENGTH) {
+    return {
+      isValid: false,
+      error: `Description must not exceed ${MAX_DESCRIPTION_LENGTH} characters`,
+      field: 'description',
+    };
+  }
+
+  return { isValid: true };
+}
+
+/**
+ * Validate market duration in blocks
+ * 
+ * Checks that the duration is within acceptable limits.
+ * 
+ * @param durationBlocks - Duration in blocks
+ * @returns Validation result
+ * 
+ * @example
+ * ```typescript
+ * const result = validateMarketDuration(144); // ~1 day
+ * if (!result.isValid) {
+ *   toast.error(result.error);
+ * }
+ * ```
+ */
+export function validateMarketDuration(durationBlocks: number): ValidationResult {
+  if (typeof durationBlocks !== 'number' || !Number.isInteger(durationBlocks)) {
+    return {
+      isValid: false,
+      error: 'Duration must be a whole number of blocks',
+      field: 'duration',
+    };
+  }
+
+  if (durationBlocks < MIN_MARKET_DURATION_BLOCKS) {
+    return {
+      isValid: false,
+      error: `Duration must be at least ${MIN_MARKET_DURATION_BLOCKS} blocks`,
+      field: 'duration',
+    };
+  }
+
+  if (durationBlocks > MAX_MARKET_DURATION_BLOCKS) {
+    return {
+      isValid: false,
+      error: `Duration must not exceed ${MAX_MARKET_DURATION_BLOCKS} blocks`,
+      field: 'duration',
+    };
+  }
+
+  return { isValid: true };
+}
+
+/**
+ * Validate prediction amount
+ * 
+ * Checks that the amount is within acceptable limits.
+ * 
+ * @param amountMicroStx - Amount in micro-STX
+ * @returns Validation result
+ * 
+ * @example
+ * ```typescript
+ * const result = validatePredictionAmount(10_000_000n); // 10 STX
+ * if (!result.isValid) {
+ *   toast.error(result.error);
+ * }
+ * ```
+ */
+export function validatePredictionAmount(amountMicroStx: bigint): ValidationResult {
+  if (typeof amountMicroStx !== 'bigint') {
+    return {
+      isValid: false,
+      error: 'Amount must be a BigInt value',
+      field: 'amount',
+    };
+  }
+
+  if (amountMicroStx < MIN_PREDICTION_AMOUNT) {
+    return {
+      isValid: false,
+      error: `Minimum prediction amount is ${Number(MIN_PREDICTION_AMOUNT) / 1_000_000} STX`,
+      field: 'amount',
+    };
+  }
+
+  if (amountMicroStx > MAX_PREDICTION_AMOUNT) {
+    return {
+      isValid: false,
+      error: `Maximum prediction amount is ${Number(MAX_PREDICTION_AMOUNT) / 1_000_000} STX`,
+      field: 'amount',
+    };
+  }
+
+  return { isValid: true };
+}
+
+/**
+ * Validate market outcome value
+ * 
+ * Checks that the outcome is a valid MarketOutcome enum value.
+ * 
+ * @param outcome - Outcome value to validate
+ * @returns Validation result
+ * 
+ * @example
+ * ```typescript
+ * const result = validateMarketOutcome(1); // YES
+ * if (!result.isValid) {
+ *   throw new ValidationError(result.error!, 'outcome', outcome);
+ * }
+ * ```
+ */
+export function validateMarketOutcome(outcome: unknown): ValidationResult {
+  if (!isMarketOutcome(outcome)) {
+    return {
+      isValid: false,
+      error: 'Invalid market outcome',
+      field: 'outcome',
+    };
+  }
+
+  return { isValid: true };
+}
+
+/**
+ * Validate market status value
+ * 
+ * Checks that the status is a valid MarketStatus enum value.
+ * 
+ * @param status - Status value to validate
+ * @returns Validation result
+ * 
+ * @example
+ * ```typescript
+ * const result = validateMarketStatus(1); // ACTIVE
+ * if (!result.isValid) {
+ *   throw new ValidationError(result.error!, 'status', status);
+ * }
+ * ```
+ */
+export function validateMarketStatus(status: unknown): ValidationResult {
+  if (!isMarketStatus(status)) {
+    return {
+      isValid: false,
+      error: 'Invalid market status',
+      field: 'status',
+    };
+  }
+
+  return { isValid: true };
+}
+
+/**
+ * Validate Stacks address format
+ * 
+ * Checks that an address follows the Stacks address format.
+ * 
+ * @param address - Address to validate
+ * @returns Validation result
+ * 
+ * @example
+ * ```typescript
+ * const result = validateStacksAddress('SP2...');
+ * if (!result.isValid) {
+ *   toast.error(result.error);
+ * }
+ * ```
+ */
+export function validateStacksAddress(address: string): ValidationResult {
+  if (!address || typeof address !== 'string') {
+    return {
+      isValid: false,
+      error: 'Address is required',
+      field: 'address',
+    };
+  }
+
+  // Stacks addresses start with SP (mainnet) or ST (testnet)
+  // followed by base58 characters
+  const stacksAddressPattern = /^S[PT][0-9A-HJ-NP-Z]{38,40}$/;
+
+  if (!stacksAddressPattern.test(address)) {
+    return {
+      isValid: false,
+      error: 'Invalid Stacks address format',
+      field: 'address',
+    };
+  }
+
+  return { isValid: true };
+}
+
+/**
+ * Validate market end time
+ * 
+ * Checks that the end time is in the future.
+ * 
+ * @param endTime - End time in Unix timestamp (seconds)
+ * @returns Validation result
+ * 
+ * @example
+ * ```typescript
+ * const endTime = Math.floor(Date.now() / 1000) + 86400; // 1 day from now
+ * const result = validateMarketEndTime(endTime);
+ * ```
+ */
+export function validateMarketEndTime(endTime: number): ValidationResult {
+  if (typeof endTime !== 'number' || !Number.isInteger(endTime)) {
+    return {
+      isValid: false,
+      error: 'End time must be a Unix timestamp',
+      field: 'endTime',
+    };
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+
+  if (endTime <= now) {
+    return {
+      isValid: false,
+      error: 'End time must be in the future',
+      field: 'endTime',
+    };
+  }
+
+  // Check if end time is too far in the future (more than 2 years)
+  const twoYearsFromNow = now + (2 * 365 * 24 * 60 * 60);
+  if (endTime > twoYearsFromNow) {
+    return {
+      isValid: false,
+      error: 'End time cannot be more than 2 years in the future',
+      field: 'endTime',
+    };
+  }
+
+  return { isValid: true };
+}
+
+/**
+ * Validate complete market creation data
+ * 
+ * Validates all required fields for creating a new market.
+ * 
+ * @param data - Market creation data
+ * @returns Validation result
+ * @throws ValidationError if validation fails
+ * 
+ * @example
+ * ```typescript
+ * const data = {
+ *   title: 'Will BTC reach $100k?',
+ *   description: 'Market resolves YES if...',
+ *   durationBlocks: 144
+ * };
+ * 
+ * const result = validateMarketCreation(data);
+ * if (!result.isValid) {
+ *   throw new ValidationError(result.error!, result.field!);
+ * }
+ * ```
+ */
+export function validateMarketCreation(data: {
+  title: string;
+  description: string;
+  durationBlocks: number;
+}): ValidationResult {
+  // Validate title
+  const titleResult = validateMarketTitle(data.title);
+  if (!titleResult.isValid) {
+    return titleResult;
+  }
+
+  // Validate description
+  const descriptionResult = validateMarketDescription(data.description);
+  if (!descriptionResult.isValid) {
+    return descriptionResult;
+  }
+
   // Validate duration
-  if (!data.durationBlocks || data.durationBlocks <= 0) {
-    errors.duration = 'Duration is required';
-  } else if (data.durationBlocks < MIN_DURATION_BLOCKS) {
-    errors.duration = `Duration must be at least ${MIN_DURATION_BLOCKS} blocks (~1 day)`;
-  } else if (data.durationBlocks > MAX_DURATION_BLOCKS) {
-    errors.duration = `Duration must not exceed ${MAX_DURATION_BLOCKS} blocks (~1 year)`;
+  const durationResult = validateMarketDuration(data.durationBlocks);
+  if (!durationResult.isValid) {
+    return durationResult;
   }
-  
-  return {
-    isValid: Object.keys(errors).length === 0,
-    errors,
-  };
+
+  return { isValid: true };
 }
 
 /**
- * Format blocks to human-readable time
+ * Validate complete prediction data
+ * 
+ * Validates all required fields for placing a prediction.
+ * 
+ * @param data - Prediction data
+ * @returns Validation result
+ * @throws ValidationError if validation fails
+ * 
+ * @example
+ * ```typescript
+ * const data = {
+ *   marketId: '1',
+ *   outcome: 1, // YES
+ *   amount: 10_000_000n // 10 STX
+ * };
+ * 
+ * const result = validatePrediction(data);
+ * if (!result.isValid) {
+ *   throw new ValidationError(result.error!, result.field!);
+ * }
+ * ```
  */
-export function formatBlocksToTime(blocks: number): string {
-  const days = Math.floor(blocks / 144);
-  const hours = Math.floor((blocks % 144) / 6);
-  
-  if (days === 0 && hours === 0) {
-    return `${blocks} blocks`;
+export function validatePrediction(data: {
+  marketId: string;
+  outcome: number;
+  amount: bigint;
+}): ValidationResult {
+  // Validate market ID
+  if (!data.marketId || typeof data.marketId !== 'string') {
+    return {
+      isValid: false,
+      error: 'Market ID is required',
+      field: 'marketId',
+    };
   }
-  
-  if (days === 0) {
-    return `~${hours} hour${hours !== 1 ? 's' : ''}`;
-  }
-  
-  if (hours === 0) {
-    return `~${days} day${days !== 1 ? 's' : ''}`;
-  }
-  
-  return `~${days} day${days !== 1 ? 's' : ''}, ${hours} hour${hours !== 1 ? 's' : ''}`;
-}
 
-/**
- * Convert time to blocks (approximation)
- */
-export function timeToBlocks(days: number, hours: number = 0): number {
-  return Math.floor(days * 144 + hours * 6);
-}
+  // Validate outcome
+  const outcomeResult = validateMarketOutcome(data.outcome);
+  if (!outcomeResult.isValid) {
+    return outcomeResult;
+  }
 
-/**
- * Check if question might be a duplicate (simple string similarity)
- */
-export function checkDuplicateQuestion(
-  question: string,
-  existingQuestions: string[]
-): boolean {
-  const normalized = question.toLowerCase().trim();
-  
-  return existingQuestions.some(existing => {
-    const existingNormalized = existing.toLowerCase().trim();
-    return existingNormalized === normalized;
-  });
-}
+  // Validate amount
+  const amountResult = validatePredictionAmount(data.amount);
+  if (!amountResult.isValid) {
+    return amountResult;
+  }
 
-/**
- * Suggest improvements to question format
- */
-export function suggestQuestionImprovements(question: string): string[] {
-  const suggestions: string[] = [];
-  
-  if (!question.trim()) {
-    return ['Enter a question to get suggestions'];
-  }
-  
-  if (!question.endsWith('?')) {
-    suggestions.push('Add a question mark (?) at the end');
-  }
-  
-  if (question.split(' ').length < 3) {
-    suggestions.push('Make the question more descriptive');
-  }
-  
-  if (question.length < MIN_QUESTION_LENGTH) {
-    suggestions.push(`Add at least ${MIN_QUESTION_LENGTH - question.length} more characters`);
-  }
-  
-  // Check for yes/no format
-  const yesNoStarters = ['will', 'can', 'does', 'is', 'are', 'has', 'have'];
-  const startsWithYesNo = yesNoStarters.some(starter => 
-    question.toLowerCase().startsWith(starter)
-  );
-  
-  if (!startsWithYesNo && suggestions.length === 0) {
-    suggestions.push('Consider starting with "Will", "Can", "Does", etc. for clarity');
-  }
-  
-  return suggestions.length > 0 ? suggestions : ['Question looks good! ✓'];
+  return { isValid: true };
 }

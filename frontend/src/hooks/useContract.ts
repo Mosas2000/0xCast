@@ -38,7 +38,7 @@ import {
 import { getNodeUrl } from '../config/network';
 import { useWallet } from '../components/WalletProvider';
 import { useNetwork } from '../contexts/NetworkContext';
-import { parseContractError, getUserFriendlyContractError } from './contractErrorHandler';
+import { parseContractError, getUserFriendlyContractError } from '../utils/contractErrorHandler';
 import { errorLoggingService } from '../services/ErrorLoggingService';
 
 // Type for optional Clarity values (someCV or noneCV)

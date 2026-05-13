@@ -18,7 +18,8 @@
     "liquidity": "tsx scripts/liquidity-operations.ts",
     "governance": "tsx scripts/governance-operations.ts",
     "multi-market": "tsx scripts/multi-outcome-trading.ts",
-    "oracle": "tsx scripts/oracle-operations.ts"
+    "oracle": "tsx scripts/oracle-operations.ts",
+    "validate-blocks": "tsx scripts/utils/validate-block-heights.ts"
   },
   "author": "",
   "license": "ISC",

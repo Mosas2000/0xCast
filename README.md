@@ -167,3 +167,24 @@ MIT License - see LICENSE file for details
 - [Frontend components integration](docs/frontend/components.md)
 - [Integration guide](docs/integration-guide.md)
 - [API reference](docs/api-reference.md)
+
+## Scripts
+
+The project includes comprehensive TypeScript scripts for interacting with deployed contracts:
+
+- [Scripts README](scripts/README.md) - Complete scripts documentation
+- [Block Height Guide](scripts/docs/BLOCK_HEIGHT_GUIDE.md) - Dynamic block height management
+- [Quick Reference](scripts/docs/QUICK_REFERENCE.md) - Common tasks and examples
+
+### Available Scripts
+
+```bash
+npm run interact        # Interactive contract operations
+npm run bulk-markets    # Create multiple markets
+npm run auto-trade      # Automated trading
+npm run lifecycle       # Market lifecycle simulation
+npm run analytics       # Generate analytics reports
+npm run validate-blocks # Validate block height usage
+```
+
+All scripts use dynamic block height calculation, ensuring they remain functional regardless of when they're run. See [Issue #64 Resolution](ISSUE_64_RESOLUTION.md) for details.
