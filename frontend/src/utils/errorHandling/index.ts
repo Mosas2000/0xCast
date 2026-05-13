@@ -31,3 +31,14 @@ export { ErrorFormatter } from './ErrorFormatter';
 
 export { ErrorAggregator, errorAggregator } from './ErrorAggregator';
 export type { AggregatedError } from './ErrorAggregator';
+
+export type {
+  BaseError,
+  ErrorMetadata,
+  ErrorHandlingConfig,
+  ErrorSeverity,
+  ErrorCategory,
+  CategorizedError,
+  ErrorReport,
+  ErrorStatistics,
+} from './types';
