@@ -3,7 +3,7 @@
  * 
  * Provides category, status, and sort controls for market filtering.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   MarketCategory,
   SortOption,
@@ -61,6 +61,19 @@ export function MarketFilter({
 
   const selectedCategoryConfig = CATEGORIES.find(c => c.value === selectedCategory) || CATEGORIES[0];
   const selectedSortConfig = SORT_OPTIONS.find(s => s.value === selectedSort) || SORT_OPTIONS[0];
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (showCategoryDropdown) setShowCategoryDropdown(false);
+        if (showSortDropdown) setShowSortDropdown(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showCategoryDropdown, showSortDropdown]);
 
   const timeRangeOptions: { value: TimeRange; label: string }[] = [
     { value: 'all', label: 'All Time' },
@@ -261,6 +274,9 @@ export function MarketFilter({
             setShowCategoryDropdown(!showCategoryDropdown);
             setShowSortDropdown(false);
           }}
+          aria-label="Select category"
+          aria-haspopup="listbox"
+          aria-expanded={showCategoryDropdown}
         >
           <span>{selectedCategoryConfig.icon}</span>
           <span>{selectedCategoryConfig.label}</span>
@@ -268,7 +284,11 @@ export function MarketFilter({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
-        <div style={dropdownMenuStyle(showCategoryDropdown)}>
+        <div 
+          style={dropdownMenuStyle(showCategoryDropdown)}
+          role="listbox"
+          aria-label="Category options"
+        >
           {CATEGORIES.map((category) => (
             <div
               key={category.value}
@@ -277,6 +297,8 @@ export function MarketFilter({
                 onCategoryChange(category.value);
                 setShowCategoryDropdown(false);
               }}
+              role="option"
+              aria-selected={selectedCategory === category.value}
             >
               <span>{category.icon}</span>
               <span>{category.label}</span>
@@ -293,6 +315,9 @@ export function MarketFilter({
             setShowSortDropdown(!showSortDropdown);
             setShowCategoryDropdown(false);
           }}
+          aria-label="Select sort option"
+          aria-haspopup="listbox"
+          aria-expanded={showSortDropdown}
         >
           <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
@@ -302,7 +327,11 @@ export function MarketFilter({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
-        <div style={dropdownMenuStyle(showSortDropdown)}>
+        <div 
+          style={dropdownMenuStyle(showSortDropdown)}
+          role="listbox"
+          aria-label="Sort options"
+        >
           {SORT_OPTIONS.map((option) => (
             <div
               key={option.value}
@@ -311,6 +340,8 @@ export function MarketFilter({
                 onSortChange(option.value);
                 setShowSortDropdown(false);
               }}
+              role="option"
+              aria-selected={selectedSort === option.value}
             >
               <span>{option.label}</span>
             </div>

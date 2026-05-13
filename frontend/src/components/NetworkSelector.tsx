@@ -17,6 +17,8 @@ export function NetworkSelector({ variant = 'dropdown', showLabel = true }: Netw
   const { network, networkConfig, setNetwork, toggleNetwork } = useNetwork();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const listboxId = 'network-listbox';
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -25,9 +27,20 @@ export function NetworkSelector({ variant = 'dropdown', showLabel = true }: Netw
         setIsOpen(false);
       }
     }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+    }
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
 
   // Toggle variant - simple button
   if (variant === 'toggle') {
@@ -64,8 +77,13 @@ export function NetworkSelector({ variant = 'dropdown', showLabel = true }: Netw
   return (
     <div className="relative" ref={dropdownRef}>
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-700 transition-colors"
+        aria-label="Select network"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-controls={listboxId}
       >
         <span className="text-base">{networkConfig.icon}</span>
         {showLabel && (
@@ -84,7 +102,12 @@ export function NetworkSelector({ variant = 'dropdown', showLabel = true }: Netw
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-48 bg-neutral-50 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-800 rounded-xl shadow-xl z-50 overflow-hidden">
+        <div 
+          id={listboxId}
+          className="absolute top-full right-0 mt-2 w-48 bg-neutral-50 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-800 rounded-xl shadow-xl z-50 overflow-hidden"
+          role="listbox"
+          aria-label="Network options"
+        >
           <div className="p-2">
             <p className="text-xs text-neutral-600 dark:text-neutral-500 uppercase tracking-wider px-2 py-1">
               Select Network
@@ -98,7 +121,10 @@ export function NetworkSelector({ variant = 'dropdown', showLabel = true }: Netw
                 onClick={() => {
                   setNetwork(config.name as NetworkType);
                   setIsOpen(false);
+                  buttonRef.current?.focus();
                 }}
+                role="option"
+                aria-selected={isSelected}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
                   isSelected 
                     ? 'bg-neutral-200 dark:bg-neutral-800' 

@@ -20,6 +20,8 @@ export function LanguageSwitcher() {
   const { i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const listboxId = 'language-listbox';
 
   const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
 
@@ -30,23 +32,37 @@ export function LanguageSwitcher() {
       }
     }
 
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+    }
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
 
   const handleLanguageChange = (languageCode: string) => {
     i18n.changeLanguage(languageCode);
     setIsOpen(false);
+    buttonRef.current?.focus();
   };
 
   return (
     <div className="relative" ref={dropdownRef}>
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
         aria-label="Select language"
+        aria-haspopup="listbox"
         aria-expanded={isOpen}
+        aria-controls={listboxId}
       >
         <span className="text-lg">{currentLanguage.flag}</span>
         <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
@@ -63,13 +79,20 @@ export function LanguageSwitcher() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg z-50">
+        <div 
+          id={listboxId}
+          className="absolute right-0 mt-2 w-48 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg z-50"
+          role="listbox"
+          aria-label="Language options"
+        >
           <div className="py-1">
             {languages.map((language) => (
               <button
                 key={language.code}
                 type="button"
                 onClick={() => handleLanguageChange(language.code)}
+                role="option"
+                aria-selected={language.code === i18n.language}
                 className={`w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors ${
                   language.code === i18n.language
                     ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
