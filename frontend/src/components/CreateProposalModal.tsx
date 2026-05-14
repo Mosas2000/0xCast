@@ -4,7 +4,7 @@
  * Modal for creating new governance proposals.
  */
 
-import { useState } from 'react';
+import { useReducer } from 'react';
 import { formatVotingPower } from '../hooks/useGovernance';
 
 interface CreateProposalModalProps {
@@ -17,6 +17,39 @@ interface CreateProposalModalProps {
   error: string | null;
 }
 
+interface ProposalFormState {
+  title: string;
+  description: string;
+  validationError: string | null;
+}
+
+type ProposalFormAction =
+  | { type: 'SET_TITLE'; payload: string }
+  | { type: 'SET_DESCRIPTION'; payload: string }
+  | { type: 'SET_VALIDATION_ERROR'; payload: string | null }
+  | { type: 'RESET_FORM' };
+
+const initialState: ProposalFormState = {
+  title: '',
+  description: '',
+  validationError: null,
+};
+
+function proposalFormReducer(state: ProposalFormState, action: ProposalFormAction): ProposalFormState {
+  switch (action.type) {
+    case 'SET_TITLE':
+      return { ...state, title: action.payload };
+    case 'SET_DESCRIPTION':
+      return { ...state, description: action.payload };
+    case 'SET_VALIDATION_ERROR':
+      return { ...state, validationError: action.payload };
+    case 'RESET_FORM':
+      return initialState;
+    default:
+      return state;
+  }
+}
+
 export function CreateProposalModal({
   isOpen,
   onClose,
@@ -26,48 +59,45 @@ export function CreateProposalModal({
   proposalThreshold,
   error,
 }: CreateProposalModalProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const [state, dispatch] = useReducer(proposalFormReducer, initialState);
 
   const hasEnoughTokens = userVotingPower >= proposalThreshold;
-  const titleLength = title.trim().length;
-  const descriptionLength = description.trim().length;
+  const titleLength = state.title.trim().length;
+  const descriptionLength = state.description.trim().length;
   const isTitleValid = titleLength > 0 && titleLength <= 256;
   const isDescriptionValid = descriptionLength > 0 && descriptionLength <= 1024;
   const canSubmit = hasEnoughTokens && isTitleValid && isDescriptionValid && !isSubmitting;
 
   const handleSubmit = async () => {
-    setValidationError(null);
+    dispatch({ type: 'SET_VALIDATION_ERROR', payload: null });
 
     if (!hasEnoughTokens) {
-      setValidationError(`You need at least ${formatVotingPower(proposalThreshold)} CAST tokens to create a proposal`);
+      dispatch({ 
+        type: 'SET_VALIDATION_ERROR', 
+        payload: `You need at least ${formatVotingPower(proposalThreshold)} CAST tokens to create a proposal` 
+      });
       return;
     }
 
     if (!isTitleValid) {
-      setValidationError('Title must be between 1 and 256 characters');
+      dispatch({ type: 'SET_VALIDATION_ERROR', payload: 'Title must be between 1 and 256 characters' });
       return;
     }
 
     if (!isDescriptionValid) {
-      setValidationError('Description must be between 1 and 1024 characters');
+      dispatch({ type: 'SET_VALIDATION_ERROR', payload: 'Description must be between 1 and 1024 characters' });
       return;
     }
 
-    await onSubmit(title.trim(), description.trim());
+    await onSubmit(state.title.trim(), state.description.trim());
     
-    // Reset form on success
     if (!error) {
-      setTitle('');
-      setDescription('');
+      dispatch({ type: 'RESET_FORM' });
     }
   };
 
   const handleClose = () => {
-    setTitle('');
-    setDescription('');
-    setValidationError(null);
+    dispatch({ type: 'RESET_FORM' });
     onClose();
   };
 
@@ -221,8 +251,8 @@ export function CreateProposalModal({
             </label>
             <input
               type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              value={state.title}
+              onChange={(e) => dispatch({ type: 'SET_TITLE', payload: e.target.value })}
               placeholder="Enter a clear, descriptive title"
               disabled={!hasEnoughTokens || isSubmitting}
               style={{
@@ -258,8 +288,8 @@ export function CreateProposalModal({
               </span>
             </label>
             <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              value={state.description}
+              onChange={(e) => dispatch({ type: 'SET_DESCRIPTION', payload: e.target.value })}
               placeholder="Describe your proposal in detail. What changes do you want to make and why?"
               disabled={!hasEnoughTokens || isSubmitting}
               rows={6}
@@ -281,7 +311,7 @@ export function CreateProposalModal({
         </div>
 
         {/* Errors */}
-        {(error || validationError) && (
+        {(error || state.validationError) && (
           <div style={{
             padding: '12px 16px',
             backgroundColor: '#EF444420',
@@ -291,7 +321,7 @@ export function CreateProposalModal({
             color: '#F87171',
             fontSize: '14px',
           }}>
-            {validationError || error}
+            {state.validationError || error}
           </div>
         )}
 
