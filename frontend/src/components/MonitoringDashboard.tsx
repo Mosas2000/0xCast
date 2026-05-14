@@ -1,24 +1,57 @@
-import React, { useState, useEffect } from 'react';
+import React, { useReducer, useEffect } from 'react';
 import { monitoringService } from '../services/MonitoringService';
 
 interface MonitoringDashboardProps {
   refreshInterval?: number;
 }
 
+interface MonitoringState {
+  performanceStats: {
+    total: number;
+    byName: Record<string, number>;
+    avgByName: Record<string, number>;
+  };
+  errorStats: {
+    total: number;
+    byType: Record<string, number>;
+    byMessage: Record<string, number>;
+  };
+  userActions: number;
+}
+
+type MonitoringAction =
+  | { type: 'UPDATE_STATS'; payload: MonitoringState }
+  | { type: 'CLEAR_ALL' };
+
+const initialState: MonitoringState = {
+  performanceStats: {
+    total: 0,
+    byName: {},
+    avgByName: {},
+  },
+  errorStats: {
+    total: 0,
+    byType: {},
+    byMessage: {},
+  },
+  userActions: 0,
+};
+
+function monitoringReducer(state: MonitoringState, action: MonitoringAction): MonitoringState {
+  switch (action.type) {
+    case 'UPDATE_STATS':
+      return action.payload;
+    case 'CLEAR_ALL':
+      return initialState;
+    default:
+      return state;
+  }
+}
+
 export const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
   refreshInterval = 5000,
 }) => {
-  const [performanceStats, setPerformanceStats] = useState({
-    total: 0,
-    byName: {} as Record<string, number>,
-    avgByName: {} as Record<string, number>,
-  });
-  const [errorStats, setErrorStats] = useState({
-    total: 0,
-    byType: {} as Record<string, number>,
-    byMessage: {} as Record<string, number>,
-  });
-  const [userActions, setUserActions] = useState(0);
+  const [state, dispatch] = useReducer(monitoringReducer, initialState);
 
   useEffect(() => {
     const updateStats = () => {
@@ -26,9 +59,14 @@ export const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
       const errStats = monitoringService.getErrorStats();
       const actions = monitoringService.getUserActions().length;
 
-      setPerformanceStats(perfStats);
-      setErrorStats(errStats);
-      setUserActions(actions);
+      dispatch({
+        type: 'UPDATE_STATS',
+        payload: {
+          performanceStats: perfStats,
+          errorStats: errStats,
+          userActions: actions,
+        },
+      });
     };
 
     updateStats();
@@ -39,9 +77,7 @@ export const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
 
   const handleClearAll = () => {
     monitoringService.clearAllMetrics();
-    setPerformanceStats({ total: 0, byName: {}, avgByName: {} });
-    setErrorStats({ total: 0, byType: {}, byMessage: {} });
-    setUserActions(0);
+    dispatch({ type: 'CLEAR_ALL' });
   };
 
   const formatNumber = (num: number): string => {
@@ -69,21 +105,21 @@ export const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
         <div className="bg-blue-50 rounded-lg p-4">
           <div className="text-sm text-gray-600 mb-1">Total Performance Metrics</div>
           <div className="text-3xl font-bold text-blue-600">
-            {formatNumber(performanceStats.total)}
+            {formatNumber(state.performanceStats.total)}
           </div>
         </div>
 
         <div className="bg-red-50 rounded-lg p-4">
           <div className="text-sm text-gray-600 mb-1">Total Errors</div>
           <div className="text-3xl font-bold text-red-600">
-            {formatNumber(errorStats.total)}
+            {formatNumber(state.errorStats.total)}
           </div>
         </div>
 
         <div className="bg-green-50 rounded-lg p-4">
           <div className="text-sm text-gray-600 mb-1">User Actions Tracked</div>
           <div className="text-3xl font-bold text-green-600">
-            {formatNumber(userActions)}
+            {formatNumber(state.userActions)}
           </div>
         </div>
       </div>
@@ -92,7 +128,7 @@ export const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
         <div className="bg-gray-50 rounded-lg p-4">
           <h3 className="font-semibold mb-3">Performance Metrics by Name</h3>
           <div className="space-y-2">
-            {Object.entries(performanceStats.byName)
+            {Object.entries(state.performanceStats.byName)
               .sort(([, a], [, b]) => b - a)
               .slice(0, 10)
               .map(([name, count]) => (
@@ -103,7 +139,7 @@ export const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
                   <span className="font-medium">{count}</span>
                 </div>
               ))}
-            {Object.keys(performanceStats.byName).length === 0 && (
+            {Object.keys(state.performanceStats.byName).length === 0 && (
               <div className="text-gray-500 text-center py-4">No performance data</div>
             )}
           </div>
@@ -112,7 +148,7 @@ export const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
         <div className="bg-gray-50 rounded-lg p-4">
           <h3 className="font-semibold mb-3">Errors by Type</h3>
           <div className="space-y-2">
-            {Object.entries(errorStats.byType)
+            {Object.entries(state.errorStats.byType)
               .sort(([, a], [, b]) => b - a)
               .slice(0, 10)
               .map(([type, count]) => (
@@ -123,7 +159,7 @@ export const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
                   <span className="font-medium">{count}</span>
                 </div>
               ))}
-            {Object.keys(errorStats.byType).length === 0 && (
+            {Object.keys(state.errorStats.byType).length === 0 && (
               <div className="text-gray-500 text-center py-4">No errors</div>
             )}
           </div>
