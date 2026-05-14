@@ -1,9 +1,54 @@
-import React, { useState, useEffect } from 'react';
+import React, { useReducer, useEffect } from 'react';
 import { useContractUpgrade } from '../hooks/useContractUpgrade';
 import { UpgradeProposal } from '../services/ContractUpgradeService';
 
 interface UpgradeManagerProps {
   proxyContract: { address: string; name: string };
+}
+
+interface UpgradeState {
+  newImplementation: string;
+  timelockBlocks: number;
+  currentImplementation: string | null;
+  pendingUpgrade: UpgradeProposal | null;
+}
+
+type UpgradeAction =
+  | { type: 'SET_NEW_IMPLEMENTATION'; payload: string }
+  | { type: 'SET_TIMELOCK_BLOCKS'; payload: number }
+  | { type: 'SET_CURRENT_IMPLEMENTATION'; payload: string | null }
+  | { type: 'SET_PENDING_UPGRADE'; payload: UpgradeProposal | null }
+  | { type: 'RESET_NEW_IMPLEMENTATION' }
+  | { type: 'LOAD_DATA'; payload: { implementation: string | null; pending: UpgradeProposal | null } };
+
+const initialState: UpgradeState = {
+  newImplementation: '',
+  timelockBlocks: 144,
+  currentImplementation: null,
+  pendingUpgrade: null,
+};
+
+function upgradeReducer(state: UpgradeState, action: UpgradeAction): UpgradeState {
+  switch (action.type) {
+    case 'SET_NEW_IMPLEMENTATION':
+      return { ...state, newImplementation: action.payload };
+    case 'SET_TIMELOCK_BLOCKS':
+      return { ...state, timelockBlocks: action.payload };
+    case 'SET_CURRENT_IMPLEMENTATION':
+      return { ...state, currentImplementation: action.payload };
+    case 'SET_PENDING_UPGRADE':
+      return { ...state, pendingUpgrade: action.payload };
+    case 'RESET_NEW_IMPLEMENTATION':
+      return { ...state, newImplementation: '' };
+    case 'LOAD_DATA':
+      return {
+        ...state,
+        currentImplementation: action.payload.implementation,
+        pendingUpgrade: action.payload.pending,
+      };
+    default:
+      return state;
+  }
 }
 
 export function UpgradeManager({ proxyContract }: UpgradeManagerProps) {
@@ -18,10 +63,7 @@ export function UpgradeManager({ proxyContract }: UpgradeManagerProps) {
     error,
   } = useContractUpgrade(proxyContract);
 
-  const [newImplementation, setNewImplementation] = useState('');
-  const [timelockBlocks, setTimelockBlocks] = useState(144);
-  const [currentImplementation, setCurrentImplementation] = useState<string | null>(null);
-  const [pendingUpgrade, setPendingUpgrade] = useState<UpgradeProposal | null>(null);
+  const [state, dispatch] = useReducer(upgradeReducer, initialState);
 
   useEffect(() => {
     loadData();
@@ -29,16 +71,14 @@ export function UpgradeManager({ proxyContract }: UpgradeManagerProps) {
 
   const loadData = async () => {
     const impl = await getImplementation();
-    setCurrentImplementation(impl);
-
     const pending = await getPendingUpgrade();
-    setPendingUpgrade(pending);
+    dispatch({ type: 'LOAD_DATA', payload: { implementation: impl, pending } });
   };
 
   const handleProposeUpgrade = async () => {
-    if (!newImplementation) return;
-    await proposeUpgrade(newImplementation);
-    setNewImplementation('');
+    if (!state.newImplementation) return;
+    await proposeUpgrade(state.newImplementation);
+    dispatch({ type: 'RESET_NEW_IMPLEMENTATION' });
     await loadData();
   };
 
@@ -53,7 +93,7 @@ export function UpgradeManager({ proxyContract }: UpgradeManagerProps) {
   };
 
   const handleSetTimelock = async () => {
-    await setTimelock(timelockBlocks);
+    await setTimelock(state.timelockBlocks);
   };
 
   return (
@@ -73,21 +113,21 @@ export function UpgradeManager({ proxyContract }: UpgradeManagerProps) {
               Current Implementation
             </label>
             <div className="bg-gray-50 p-3 rounded border">
-              {currentImplementation || 'Loading...'}
+              {state.currentImplementation || 'Loading...'}
             </div>
           </div>
 
-          {pendingUpgrade && (
+          {state.pendingUpgrade && (
             <div className="bg-yellow-50 border border-yellow-200 p-4 rounded">
               <h3 className="font-semibold mb-2">Pending Upgrade</h3>
               <p className="text-sm mb-2">
-                New Implementation: {pendingUpgrade.newImplementation}
+                New Implementation: {state.pendingUpgrade.newImplementation}
               </p>
               <p className="text-sm mb-2">
-                Proposed By: {pendingUpgrade.proposedBy}
+                Proposed By: {state.pendingUpgrade.proposedBy}
               </p>
               <p className="text-sm mb-4">
-                Timelock Expires: Block {pendingUpgrade.timelockExpires}
+                Timelock Expires: Block {state.pendingUpgrade.timelockExpires}
               </p>
               <div className="flex gap-2">
                 <button
@@ -114,14 +154,14 @@ export function UpgradeManager({ proxyContract }: UpgradeManagerProps) {
             </label>
             <input
               type="text"
-              value={newImplementation}
-              onChange={(e) => setNewImplementation(e.target.value)}
+              value={state.newImplementation}
+              onChange={(e) => dispatch({ type: 'SET_NEW_IMPLEMENTATION', payload: e.target.value })}
               placeholder="New implementation address"
               className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
             />
             <button
               onClick={handleProposeUpgrade}
-              disabled={isLoading || !newImplementation}
+              disabled={isLoading || !state.newImplementation}
               className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
             >
               Propose Upgrade
@@ -134,8 +174,8 @@ export function UpgradeManager({ proxyContract }: UpgradeManagerProps) {
             </label>
             <input
               type="number"
-              value={timelockBlocks}
-              onChange={(e) => setTimelockBlocks(Number(e.target.value))}
+              value={state.timelockBlocks}
+              onChange={(e) => dispatch({ type: 'SET_TIMELOCK_BLOCKS', payload: Number(e.target.value) })}
               className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
             />
             <button

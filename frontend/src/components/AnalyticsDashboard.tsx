@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useReducer, useEffect } from 'react';
 import { TradingAnalytics, TradeMetrics } from '@/services/TradingAnalytics';
 import { PriceMonitor } from '@/services/PriceMonitor';
 import { AMMPool } from '@/types/amm';
@@ -10,26 +10,70 @@ interface AnalyticsDashboardProps {
   pools: AMMPool[];
 }
 
+interface AnalyticsState {
+  metrics: TradeMetrics | null;
+  pnl: number;
+  roi: number;
+  successRate: number;
+}
+
+type AnalyticsAction =
+  | { type: 'SET_METRICS'; payload: TradeMetrics }
+  | { type: 'SET_PNL'; payload: number }
+  | { type: 'SET_ROI'; payload: number }
+  | { type: 'SET_SUCCESS_RATE'; payload: number }
+  | { type: 'UPDATE_ALL'; payload: Omit<AnalyticsState, 'metrics'> & { metrics: TradeMetrics } };
+
+const initialState: AnalyticsState = {
+  metrics: null,
+  pnl: 0,
+  roi: 0,
+  successRate: 0,
+};
+
+function analyticsReducer(state: AnalyticsState, action: AnalyticsAction): AnalyticsState {
+  switch (action.type) {
+    case 'SET_METRICS':
+      return { ...state, metrics: action.payload };
+    case 'SET_PNL':
+      return { ...state, pnl: action.payload };
+    case 'SET_ROI':
+      return { ...state, roi: action.payload };
+    case 'SET_SUCCESS_RATE':
+      return { ...state, successRate: action.payload };
+    case 'UPDATE_ALL':
+      return action.payload;
+    default:
+      return state;
+  }
+}
+
 export function AnalyticsDashboard({
   userId,
   analytics,
   priceMonitor,
   pools,
 }: AnalyticsDashboardProps) {
-  const [metrics, setMetrics] = useState<any>(null);
-  const [pnl, setPnL] = useState(0);
-  const [roi, setROI] = useState(0);
-  const [successRate, setSuccessRate] = useState(0);
+  const [state, dispatch] = useReducer(analyticsReducer, initialState);
 
   useEffect(() => {
     const m = analytics.getUserMetrics(userId);
-    setMetrics(m);
-    setPnL(analytics.calculatePnL(userId));
-    setROI(analytics.calculateROI(userId));
-    setSuccessRate(analytics.calculateSuccessRate(userId));
+    const calculatedPnl = analytics.calculatePnL(userId);
+    const calculatedRoi = analytics.calculateROI(userId);
+    const calculatedSuccessRate = analytics.calculateSuccessRate(userId);
+
+    dispatch({
+      type: 'UPDATE_ALL',
+      payload: {
+        metrics: m,
+        pnl: calculatedPnl,
+        roi: calculatedRoi,
+        successRate: calculatedSuccessRate,
+      },
+    });
   }, [userId, analytics]);
 
-  if (!metrics) {
+  if (!state.metrics) {
     return <div className="p-4">No trading data available</div>;
   }
 
@@ -38,32 +82,32 @@ export function AnalyticsDashboard({
       <div className="grid grid-cols-4 gap-4">
         <MetricCard
           title="Total Trades"
-          value={metrics.totalTrades}
+          value={state.metrics.totalTrades}
           format="number"
         />
         <MetricCard
           title="Win Rate"
-          value={successRate}
+          value={state.successRate}
           format="percent"
-          color={successRate > 50 ? 'green' : 'red'}
+          color={state.successRate > 50 ? 'green' : 'red'}
         />
         <MetricCard
           title="P&L"
-          value={pnl}
+          value={state.pnl}
           format="number"
-          color={pnl > 0 ? 'green' : 'red'}
+          color={state.pnl > 0 ? 'green' : 'red'}
         />
         <MetricCard
           title="ROI"
-          value={roi}
+          value={state.roi}
           format="percent"
-          color={roi > 0 ? 'green' : 'red'}
+          color={state.roi > 0 ? 'green' : 'red'}
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <PerformanceChart metrics={metrics} />
-        <VolumeChart metrics={metrics} />
+        <PerformanceChart metrics={state.metrics} />
+        <VolumeChart metrics={state.metrics} />
       </div>
 
       <TradeHistoryTable userId={userId} analytics={analytics} />

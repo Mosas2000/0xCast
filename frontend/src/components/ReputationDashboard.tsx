@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useReducer } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UserReputation, ReputationBadge } from '../types/reputation';
 import { reputationFraudIntegration } from '../services/ReputationFraudIntegrationService';
@@ -7,11 +7,42 @@ interface ReputationDashboardProps {
   userId: string;
 }
 
+interface ReputationState {
+  reputation: UserReputation | null;
+  trustScore: any | null;
+  badges: ReputationBadge[];
+}
+
+type ReputationAction =
+  | { type: 'SET_REPUTATION'; payload: UserReputation }
+  | { type: 'SET_TRUST_SCORE'; payload: any }
+  | { type: 'SET_BADGES'; payload: ReputationBadge[] }
+  | { type: 'LOAD_ALL'; payload: ReputationState };
+
+const initialState: ReputationState = {
+  reputation: null,
+  trustScore: null,
+  badges: [],
+};
+
+function reputationReducer(state: ReputationState, action: ReputationAction): ReputationState {
+  switch (action.type) {
+    case 'SET_REPUTATION':
+      return { ...state, reputation: action.payload };
+    case 'SET_TRUST_SCORE':
+      return { ...state, trustScore: action.payload };
+    case 'SET_BADGES':
+      return { ...state, badges: action.payload };
+    case 'LOAD_ALL':
+      return action.payload;
+    default:
+      return state;
+  }
+}
+
 export function ReputationDashboard({ userId }: ReputationDashboardProps) {
   const { t } = useTranslation(['common', 'reputation']);
-  const [reputation, setReputation] = useState<UserReputation | null>(null);
-  const [trustScore, setTrustScore] = useState<any>(null);
-  const [badges, setBadges] = useState<ReputationBadge[]>([]);
+  const [state, dispatch] = useReducer(reputationReducer, initialState);
 
   useEffect(() => {
     loadReputationData();
@@ -22,16 +53,21 @@ export function ReputationDashboard({ userId }: ReputationDashboardProps) {
     const userReputation = reputationService.getReputation(userId);
     
     if (userReputation) {
-      setReputation(userReputation);
       const userBadges = reputationService.getUserBadges(userId);
-      setBadges(userBadges);
-    }
+      const trust = reputationFraudIntegration.getUserTrustScore(userId);
 
-    const trust = reputationFraudIntegration.getUserTrustScore(userId);
-    setTrustScore(trust);
+      dispatch({
+        type: 'LOAD_ALL',
+        payload: {
+          reputation: userReputation,
+          badges: userBadges,
+          trustScore: trust,
+        },
+      });
+    }
   };
 
-  if (!reputation) {
+  if (!state.reputation) {
     return (
       <div className="p-6 bg-white dark:bg-neutral-900 rounded-lg border border-neutral-300 dark:border-neutral-800">
         <p className="text-neutral-600 dark:text-neutral-400">Loading reputation data...</p>
@@ -68,11 +104,11 @@ export function ReputationDashboard({ userId }: ReputationDashboardProps) {
 
         <div className="flex items-center justify-between mb-6">
           <div>
-            <div className={`text-5xl font-bold ${getScoreColor(reputation.reputationScore.score)}`}>
-              {reputation.reputationScore.score}
+            <div className={`text-5xl font-bold ${getScoreColor(state.reputation.reputationScore.score)}`}>
+              {state.reputation.reputationScore.score}
             </div>
-            <div className={`text-lg font-medium ${getLevelColor(reputation.reputationScore.level)} capitalize`}>
-              {reputation.reputationScore.level}
+            <div className={`text-lg font-medium ${getLevelColor(state.reputation.reputationScore.level)} capitalize`}>
+              {state.reputation.reputationScore.level}
             </div>
           </div>
 
@@ -81,7 +117,7 @@ export function ReputationDashboard({ userId }: ReputationDashboardProps) {
               Completion Rate
             </div>
             <div className="text-2xl font-bold text-neutral-900 dark:text-white">
-              {(reputation.reputationScore.completionRate * 100).toFixed(1)}%
+              {(state.reputation.reputationScore.completionRate * 100).toFixed(1)}%
             </div>
           </div>
         </div>
@@ -89,7 +125,7 @@ export function ReputationDashboard({ userId }: ReputationDashboardProps) {
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="text-center p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
             <div className="text-2xl font-bold text-neutral-900 dark:text-white">
-              {reputation.reputationScore.totalTransactions}
+              {state.reputation.reputationScore.totalTransactions}
             </div>
             <div className="text-sm text-neutral-600 dark:text-neutral-400">
               Total Transactions
@@ -98,7 +134,7 @@ export function ReputationDashboard({ userId }: ReputationDashboardProps) {
 
           <div className="text-center p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
             <div className="text-2xl font-bold text-green-500">
-              {reputation.reputationScore.successfulTransactions}
+              {state.reputation.reputationScore.successfulTransactions}
             </div>
             <div className="text-sm text-neutral-600 dark:text-neutral-400">
               Successful
@@ -107,7 +143,7 @@ export function ReputationDashboard({ userId }: ReputationDashboardProps) {
 
           <div className="text-center p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
             <div className="text-2xl font-bold text-red-500">
-              {reputation.reputationScore.failedTransactions}
+              {state.reputation.reputationScore.failedTransactions}
             </div>
             <div className="text-sm text-neutral-600 dark:text-neutral-400">
               Failed
@@ -118,40 +154,40 @@ export function ReputationDashboard({ userId }: ReputationDashboardProps) {
         <div className="mb-6">
           <div className="flex justify-between text-sm text-neutral-600 dark:text-neutral-400 mb-2">
             <span>Progress to Next Level</span>
-            <span>{reputation.reputationScore.score}/1000</span>
+            <span>{state.reputation.reputationScore.score}/1000</span>
           </div>
           <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
             <div
               className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(reputation.reputationScore.score / 1000) * 100}%` }}
+              style={{ width: `${(state.reputation.reputationScore.score / 1000) * 100}%` }}
             />
           </div>
         </div>
 
-        {trustScore && (
+        {state.trustScore && (
           <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium text-neutral-900 dark:text-white">
                 Trust Score
               </span>
               <span className="text-2xl font-bold text-blue-500">
-                {trustScore.score}/100
+                {state.trustScore.score}/100
               </span>
             </div>
             <div className="text-xs text-neutral-600 dark:text-neutral-400 capitalize">
-              Level: {trustScore.level.replace('_', ' ')}
+              Level: {state.trustScore.level.replace('_', ' ')}
             </div>
           </div>
         )}
       </div>
 
-      {badges.length > 0 && (
+      {state.badges.length > 0 && (
         <div className="p-6 bg-white dark:bg-neutral-900 rounded-lg border border-neutral-300 dark:border-neutral-800">
           <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-4">
             Badges
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {badges.map((badge) => (
+            {state.badges.map((badge) => (
               <div
                 key={badge.badgeId}
                 className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg text-center"
@@ -179,11 +215,11 @@ export function ReputationDashboard({ userId }: ReputationDashboardProps) {
               KYC Status
             </span>
             <span className={`text-sm font-medium ${
-              reputation.kycStatus.status === 'approved' ? 'text-green-500' :
-              reputation.kycStatus.status === 'pending' ? 'text-yellow-500' :
+              state.reputation.kycStatus.status === 'approved' ? 'text-green-500' :
+              state.reputation.kycStatus.status === 'pending' ? 'text-yellow-500' :
               'text-neutral-500'
             } capitalize`}>
-              {reputation.kycStatus.status.replace('_', ' ')}
+              {state.reputation.kycStatus.status.replace('_', ' ')}
             </span>
           </div>
 
@@ -192,9 +228,9 @@ export function ReputationDashboard({ userId }: ReputationDashboardProps) {
               Document Verified
             </span>
             <span className={`text-sm font-medium ${
-              reputation.kycStatus.documentVerified ? 'text-green-500' : 'text-neutral-500'
+              state.reputation.kycStatus.documentVerified ? 'text-green-500' : 'text-neutral-500'
             }`}>
-              {reputation.kycStatus.documentVerified ? 'Yes' : 'No'}
+              {state.reputation.kycStatus.documentVerified ? 'Yes' : 'No'}
             </span>
           </div>
 
@@ -203,9 +239,9 @@ export function ReputationDashboard({ userId }: ReputationDashboardProps) {
               Address Verified
             </span>
             <span className={`text-sm font-medium ${
-              reputation.kycStatus.addressVerified ? 'text-green-500' : 'text-neutral-500'
+              state.reputation.kycStatus.addressVerified ? 'text-green-500' : 'text-neutral-500'
             }`}>
-              {reputation.kycStatus.addressVerified ? 'Yes' : 'No'}
+              {state.reputation.kycStatus.addressVerified ? 'Yes' : 'No'}
             </span>
           </div>
 
@@ -214,9 +250,9 @@ export function ReputationDashboard({ userId }: ReputationDashboardProps) {
               Face Verified
             </span>
             <span className={`text-sm font-medium ${
-              reputation.kycStatus.faceVerified ? 'text-green-500' : 'text-neutral-500'
+              state.reputation.kycStatus.faceVerified ? 'text-green-500' : 'text-neutral-500'
             }`}>
-              {reputation.kycStatus.faceVerified ? 'Yes' : 'No'}
+              {state.reputation.kycStatus.faceVerified ? 'Yes' : 'No'}
             </span>
           </div>
         </div>

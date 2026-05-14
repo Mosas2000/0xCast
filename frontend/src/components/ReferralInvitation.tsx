@@ -1,51 +1,91 @@
-import React, { useState } from 'react';
+import React, { useReducer } from 'react';
 
 interface ReferralInvitationProps {
   referralCode?: string;
   onInvitationSent?: (method: string) => void;
 }
 
+interface InvitationState {
+  invitationEmail: string;
+  isSubmitting: boolean;
+  successMessage: string;
+  errorMessage: string;
+}
+
+type InvitationAction =
+  | { type: 'SET_EMAIL'; payload: string }
+  | { type: 'SET_SUBMITTING'; payload: boolean }
+  | { type: 'SET_SUCCESS'; payload: string }
+  | { type: 'SET_ERROR'; payload: string }
+  | { type: 'RESET_EMAIL' }
+  | { type: 'CLEAR_MESSAGES' };
+
+const initialState: InvitationState = {
+  invitationEmail: '',
+  isSubmitting: false,
+  successMessage: '',
+  errorMessage: '',
+};
+
+function invitationReducer(state: InvitationState, action: InvitationAction): InvitationState {
+  switch (action.type) {
+    case 'SET_EMAIL':
+      return { ...state, invitationEmail: action.payload };
+    case 'SET_SUBMITTING':
+      return { ...state, isSubmitting: action.payload };
+    case 'SET_SUCCESS':
+      return { ...state, successMessage: action.payload, errorMessage: '' };
+    case 'SET_ERROR':
+      return { ...state, errorMessage: action.payload, successMessage: '' };
+    case 'RESET_EMAIL':
+      return { ...state, invitationEmail: '' };
+    case 'CLEAR_MESSAGES':
+      return { ...state, successMessage: '', errorMessage: '' };
+    default:
+      return state;
+  }
+}
+
 export const ReferralInvitation: React.FC<ReferralInvitationProps> = ({
   referralCode = '',
   onInvitationSent,
 }) => {
-  const [invitationEmail, setInvitationEmail] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [state, dispatch] = useReducer(invitationReducer, initialState);
 
   const handleEmailInvitation = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMessage('');
-    setSuccessMessage('');
-    setIsSubmitting(true);
+    dispatch({ type: 'CLEAR_MESSAGES' });
+    dispatch({ type: 'SET_SUBMITTING', payload: true });
 
     try {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(invitationEmail)) {
+      if (!emailRegex.test(state.invitationEmail)) {
         throw new Error('Invalid email address');
       }
 
-      console.log(`Sending referral invitation to ${invitationEmail}`);
+      console.log(`Sending referral invitation to ${state.invitationEmail}`);
 
-      setSuccessMessage(`Invitation sent to ${invitationEmail}`);
-      setInvitationEmail('');
+      dispatch({ type: 'SET_SUCCESS', payload: `Invitation sent to ${state.invitationEmail}` });
+      dispatch({ type: 'RESET_EMAIL' });
 
       if (onInvitationSent) {
         onInvitationSent('email');
       }
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Failed to send invitation');
+      dispatch({ 
+        type: 'SET_ERROR', 
+        payload: error instanceof Error ? error.message : 'Failed to send invitation' 
+      });
     } finally {
-      setIsSubmitting(false);
+      dispatch({ type: 'SET_SUBMITTING', payload: false });
     }
   };
 
   const handleCopyMessage = () => {
     const message = `Join me on 0xCast! Use my referral code: ${referralCode}`;
     navigator.clipboard.writeText(message);
-    setSuccessMessage('Message copied to clipboard');
-    setTimeout(() => setSuccessMessage(''), 3000);
+    dispatch({ type: 'SET_SUCCESS', payload: 'Message copied to clipboard' });
+    setTimeout(() => dispatch({ type: 'CLEAR_MESSAGES' }), 3000);
   };
 
   return (
@@ -56,15 +96,15 @@ export const ReferralInvitation: React.FC<ReferralInvitationProps> = ({
           Share your referral code and earn rewards when they join
         </p>
 
-        {successMessage && (
+        {state.successMessage && (
           <div className="referral-invitation__message referral-invitation__message--success">
-            {successMessage}
+            {state.successMessage}
           </div>
         )}
 
-        {errorMessage && (
+        {state.errorMessage && (
           <div className="referral-invitation__message referral-invitation__message--error">
-            {errorMessage}
+            {state.errorMessage}
           </div>
         )}
 
@@ -76,16 +116,16 @@ export const ReferralInvitation: React.FC<ReferralInvitationProps> = ({
                 type="email"
                 className="referral-invitation__input"
                 placeholder="friend@example.com"
-                value={invitationEmail}
-                onChange={(e) => setInvitationEmail(e.target.value)}
-                disabled={isSubmitting}
+                value={state.invitationEmail}
+                onChange={(e) => dispatch({ type: 'SET_EMAIL', payload: e.target.value })}
+                disabled={state.isSubmitting}
               />
               <button
                 type="submit"
                 className="referral-invitation__btn referral-invitation__btn--primary"
-                disabled={isSubmitting || !invitationEmail}
+                disabled={state.isSubmitting || !state.invitationEmail}
               >
-                {isSubmitting ? 'Sending...' : 'Send Invitation'}
+                {state.isSubmitting ? 'Sending...' : 'Send Invitation'}
               </button>
             </div>
           </form>
