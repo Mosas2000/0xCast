@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useReducer } from 'react';
 import { FraudAlert, SuspiciousActivity } from '../types/reputation';
 import { reputationFraudIntegration } from '../services/ReputationFraudIntegrationService';
 
@@ -6,10 +6,41 @@ interface FraudAlertPanelProps {
   userId: string;
 }
 
+interface FraudState {
+  alerts: FraudAlert[];
+  activities: SuspiciousActivity[];
+  riskScore: number;
+}
+
+type FraudAction =
+  | { type: 'SET_ALERTS'; payload: FraudAlert[] }
+  | { type: 'SET_ACTIVITIES'; payload: SuspiciousActivity[] }
+  | { type: 'SET_RISK_SCORE'; payload: number }
+  | { type: 'LOAD_ALL'; payload: FraudState };
+
+const initialState: FraudState = {
+  alerts: [],
+  activities: [],
+  riskScore: 0,
+};
+
+function fraudReducer(state: FraudState, action: FraudAction): FraudState {
+  switch (action.type) {
+    case 'SET_ALERTS':
+      return { ...state, alerts: action.payload };
+    case 'SET_ACTIVITIES':
+      return { ...state, activities: action.payload };
+    case 'SET_RISK_SCORE':
+      return { ...state, riskScore: action.payload };
+    case 'LOAD_ALL':
+      return action.payload;
+    default:
+      return state;
+  }
+}
+
 export function FraudAlertPanel({ userId }: FraudAlertPanelProps) {
-  const [alerts, setAlerts] = useState<FraudAlert[]>([]);
-  const [activities, setActivities] = useState<SuspiciousActivity[]>([]);
-  const [riskScore, setRiskScore] = useState<number>(0);
+  const [state, dispatch] = useReducer(fraudReducer, initialState);
 
   useEffect(() => {
     loadFraudData();
@@ -19,13 +50,17 @@ export function FraudAlertPanel({ userId }: FraudAlertPanelProps) {
     const fraudService = reputationFraudIntegration.getFraudDetectionService();
     
     const userAlerts = fraudService.getAlerts(userId);
-    setAlerts(userAlerts);
-
     const userActivities = fraudService.getSuspiciousActivities(userId);
-    setActivities(userActivities);
-
     const risk = fraudService.getRiskScore(userId);
-    setRiskScore(risk);
+
+    dispatch({
+      type: 'LOAD_ALL',
+      payload: {
+        alerts: userAlerts,
+        activities: userActivities,
+        riskScore: risk,
+      },
+    });
   };
 
   const handleAcknowledgeAlert = (alertId: string) => {
@@ -60,7 +95,7 @@ export function FraudAlertPanel({ userId }: FraudAlertPanelProps) {
     return 'text-green-500';
   };
 
-  const activeAlerts = alerts.filter(a => a.status === 'active');
+  const activeAlerts = state.alerts.filter(a => a.status === 'active');
 
   return (
     <div className="space-y-6">
@@ -73,8 +108,8 @@ export function FraudAlertPanel({ userId }: FraudAlertPanelProps) {
             <div className="text-sm text-neutral-600 dark:text-neutral-400">
               Risk Score
             </div>
-            <div className={`text-3xl font-bold ${getRiskScoreColor(riskScore)}`}>
-              {riskScore}/100
+            <div className={`text-3xl font-bold ${getRiskScoreColor(state.riskScore)}`}>
+              {state.riskScore}/100
             </div>
           </div>
         </div>
@@ -82,12 +117,12 @@ export function FraudAlertPanel({ userId }: FraudAlertPanelProps) {
         <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-3 mb-2">
           <div
             className={`h-3 rounded-full transition-all duration-300 ${
-              riskScore >= 80 ? 'bg-red-500' :
-              riskScore >= 60 ? 'bg-orange-500' :
-              riskScore >= 40 ? 'bg-yellow-500' :
+              state.riskScore >= 80 ? 'bg-red-500' :
+              state.riskScore >= 60 ? 'bg-orange-500' :
+              state.riskScore >= 40 ? 'bg-yellow-500' :
               'bg-green-500'
             }`}
-            style={{ width: `${riskScore}%` }}
+            style={{ width: `${state.riskScore}%` }}
           />
         </div>
 
@@ -147,13 +182,13 @@ export function FraudAlertPanel({ userId }: FraudAlertPanelProps) {
         </div>
       )}
 
-      {activities.length > 0 && (
+      {state.activities.length > 0 && (
         <div className="p-6 bg-white dark:bg-neutral-900 rounded-lg border border-neutral-300 dark:border-neutral-800">
           <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-4">
             Suspicious Activities
           </h3>
           <div className="space-y-3">
-            {activities.slice(0, 5).map((activity) => (
+            {state.activities.slice(0, 5).map((activity) => (
               <div
                 key={activity.activityId}
                 className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg"
@@ -185,7 +220,7 @@ export function FraudAlertPanel({ userId }: FraudAlertPanelProps) {
         </div>
       )}
 
-      {activeAlerts.length === 0 && activities.length === 0 && (
+      {activeAlerts.length === 0 && state.activities.length === 0 && (
         <div className="p-6 bg-white dark:bg-neutral-900 rounded-lg border border-neutral-300 dark:border-neutral-800 text-center">
           <div className="text-green-500 text-5xl mb-3">✓</div>
           <div className="text-lg font-medium text-neutral-900 dark:text-white mb-2">
