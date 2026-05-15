@@ -111,6 +111,8 @@ export function RoleAssignmentUI({
               onChange={e => setUserId(e.target.value)}
               placeholder="Enter user ID"
               required
+              aria-invalid={error ? 'true' : 'false'}
+              aria-describedby={error ? 'assignment-error' : undefined}
             />
           </div>
 
@@ -121,6 +123,8 @@ export function RoleAssignmentUI({
               value={roleId}
               onChange={e => setRoleId(e.target.value)}
               required
+              aria-invalid={error ? 'true' : 'false'}
+              aria-describedby={error ? 'assignment-error' : undefined}
             >
               <option value="">Select a role</option>
               {availableRoles.map(role => (
@@ -170,8 +174,16 @@ export function RoleAssignmentUI({
           </button>
         </form>
 
-        {error && <div className="error-message">{error}</div>}
-        {success && <div className="success-message">{success}</div>}
+        {error && (
+          <div id="assignment-error" className="error-message" role="alert">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="success-message" role="status">
+            {success}
+          </div>
+        )}
       </div>
 
       {assignmentHistory.length > 0 && (
