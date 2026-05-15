@@ -143,19 +143,23 @@ export function CreateMultiMarketPage() {
           </div>
 
           {!inputValidation.isValid && (
-            <p className="text-sm text-red-500">
+            <p id="input-validation-error" className="text-sm text-red-500" role="alert">
               {inputValidation.error}
             </p>
           )}
 
-          {state.error && <p className="text-sm text-red-500">{state.error}</p>}
+          {state.error && (
+            <p id="market-creation-error" className="text-sm text-red-500" role="alert">
+              {state.error}
+            </p>
+          )}
           {isContractPaused && (
-            <p className="text-sm text-amber-500">
+            <p className="text-sm text-amber-500" role="status">
               Market creation is temporarily paused. Claim and refund operations remain available.
             </p>
           )}
           {state.success && (
-            <p className="text-sm text-emerald-500">
+            <p className="text-sm text-emerald-500" role="status">
               Multi-outcome market creation transaction submitted successfully.
             </p>
           )}
