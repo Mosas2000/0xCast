@@ -183,6 +183,10 @@ export function MarketForm({ onSubmit, isSubmitting, error }: MarketFormProps) {
           rows={3}
           maxLength={256}
           autoFocus
+          aria-invalid={touched.question && validation.errors.question ? 'true' : 'false'}
+          aria-describedby={
+            touched.question && validation.errors.question ? 'question-error' : undefined
+          }
           style={{
             ...inputStyle,
             borderColor: touched.question && validation.errors.question ? '#EF4444' : '#2F2F2F',
@@ -196,7 +200,9 @@ export function MarketForm({ onSubmit, isSubmitting, error }: MarketFormProps) {
         }}>
           <div style={{ flex: 1 }}>
             {touched.question && validation.errors.question && (
-              <div style={errorStyle}>{validation.errors.question}</div>
+              <div id="question-error" style={errorStyle} role="alert">
+                {validation.errors.question}
+              </div>
             )}
             {!validation.errors.question && formData.question && (
               <div style={{ fontSize: '12px', color: '#6B7280' }}>
