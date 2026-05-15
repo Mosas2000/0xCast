@@ -462,7 +462,10 @@ export function MarketForm({ onSubmit, isSubmitting, error }: MarketFormProps) {
 
       {/* Error Display */}
       {error && (
-        <div style={{
+        <div 
+          id="market-form-error"
+          role="alert"
+          style={{
           padding: '14px 16px',
           backgroundColor: '#EF444420',
           border: '1px solid #EF444440',
