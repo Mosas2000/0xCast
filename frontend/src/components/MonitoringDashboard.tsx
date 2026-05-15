@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect } from 'react';
+import React, { useReducer, useEffect, memo } from 'react';
 import { monitoringService } from '../services/MonitoringService';
 
 interface MonitoringDashboardProps {
@@ -18,6 +18,38 @@ interface MonitoringState {
   };
   userActions: number;
 }
+
+interface MetricItemProps {
+  name: string;
+  count: number;
+}
+
+const MetricItem = memo(({ name, count }: MetricItemProps) => (
+  <div className="flex justify-between text-sm">
+    <span className="truncate max-w-[200px]" title={name}>
+      {name}
+    </span>
+    <span className="font-medium">{count}</span>
+  </div>
+));
+
+interface UserActionItemProps {
+  action: string;
+  context?: any;
+  index: number;
+}
+
+const UserActionItem = memo(({ action, context, index }: UserActionItemProps) => (
+  <div key={index} className="text-sm py-1 border-b border-gray-200 last:border-0">
+    <span className="font-medium">{action}</span>
+    {context && (
+      <span className="text-gray-600 ml-2">
+        {JSON.stringify(context)}
+      </span>
+    )}
+  </div>
+));
+
 
 type MonitoringAction =
   | { type: 'UPDATE_STATS'; payload: MonitoringState }
@@ -132,12 +164,7 @@ export const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
               .sort(([, a], [, b]) => b - a)
               .slice(0, 10)
               .map(([name, count]) => (
-                <div key={name} className="flex justify-between text-sm">
-                  <span className="truncate max-w-[200px]" title={name}>
-                    {name}
-                  </span>
-                  <span className="font-medium">{count}</span>
-                </div>
+                <MetricItem key={name} name={name} count={count} />
               ))}
             {Object.keys(state.performanceStats.byName).length === 0 && (
               <div className="text-gray-500 text-center py-4">No performance data</div>
@@ -152,12 +179,7 @@ export const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
               .sort(([, a], [, b]) => b - a)
               .slice(0, 10)
               .map(([type, count]) => (
-                <div key={type} className="flex justify-between text-sm">
-                  <span className="truncate max-w-[200px]" title={type}>
-                    {type}
-                  </span>
-                  <span className="font-medium">{count}</span>
-                </div>
+                <MetricItem key={type} name={type} count={count} />
               ))}
             {Object.keys(state.errorStats.byType).length === 0 && (
               <div className="text-gray-500 text-center py-4">No errors</div>
@@ -170,14 +192,12 @@ export const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({
         <h3 className="font-semibold mb-3">Recent User Actions</h3>
         <div className="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
           {monitoringService.getRecentUserActions(10).map((action, index) => (
-            <div key={index} className="text-sm py-1 border-b border-gray-200 last:border-0">
-              <span className="font-medium">{action.action}</span>
-              {action.context && (
-                <span className="text-gray-600 ml-2">
-                  {JSON.stringify(action.context)}
-                </span>
-              )}
-            </div>
+            <UserActionItem
+              key={index}
+              action={action.action}
+              context={action.context}
+              index={index}
+            />
           ))}
           {monitoringService.getUserActions().length === 0 && (
             <div className="text-gray-500 text-center py-4">No user actions tracked</div>

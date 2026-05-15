@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { Market } from '../types/market';
@@ -12,7 +13,7 @@ interface MarketCardProps {
   showCategory?: boolean;
 }
 
-export function MarketCard({ market, showCategory = true }: MarketCardProps) {
+const MarketCardBase = ({ market, showCategory = true }: MarketCardProps) => {
   const { t } = useTranslation(['common', 'markets']);
   const odds = calculateOdds(market.totalYesStake, market.totalNoStake);
   const totalPool = market.totalYesStake + market.totalNoStake;
@@ -121,4 +122,6 @@ export function MarketCard({ market, showCategory = true }: MarketCardProps) {
       </div>
     </div>
   );
-}
+};
+
+export const MarketCard = memo(MarketCardBase);

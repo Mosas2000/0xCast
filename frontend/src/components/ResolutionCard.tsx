@@ -5,6 +5,7 @@
  * Shows oracle, result, status, and dispute period.
  */
 
+import { memo } from 'react';
 import type { MarketResolution } from '../types/oracle';
 import { formatBlocksToTime } from '../types/oracle';
 
@@ -19,7 +20,7 @@ interface ResolutionCardProps {
   isSubmitting?: boolean;
 }
 
-export function ResolutionCard({
+const ResolutionCardBase = ({
   resolution,
   marketQuestion,
   currentBlock = 0,
@@ -139,7 +140,9 @@ export function ResolutionCard({
       </div>
     </div>
   );
-}
+};
+
+export const ResolutionCard = memo(ResolutionCardBase);
 
 /**
  * ResolutionCardSkeleton Component

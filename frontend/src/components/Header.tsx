@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Logo } from './Logo';
@@ -8,6 +8,48 @@ import { NetworkSelector } from './NetworkSelector';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { useNetwork } from '../contexts/NetworkContext';
+
+interface NavItemProps {
+  path: string;
+  label: string;
+  highlight?: boolean;
+  isActive: boolean;
+  onClick?: () => void;
+  mobile?: boolean;
+}
+
+const NavItem = memo(({ path, label, highlight, isActive, onClick, mobile }: NavItemProps) => {
+  if (mobile) {
+    return (
+      <Link
+        to={path}
+        onClick={onClick}
+        className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+          isActive
+            ? 'bg-neutral-200 dark:bg-neutral-800 text-black dark:text-white'
+            : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-900'
+        }`}
+      >
+        {label}
+      </Link>
+    );
+  }
+
+  return (
+    <Link
+      to={path}
+      className={`text-sm font-medium transition-colors ${
+        highlight
+          ? 'px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700'
+          : isActive
+          ? 'text-black dark:text-white'
+          : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
+      }`}
+    >
+      {label}
+    </Link>
+  );
+});
 
 export function Header() {
   const location = useLocation();
@@ -42,19 +84,13 @@ export function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
             {navItems.map((item) => (
-              <Link
+              <NavItem
                 key={item.path}
-                to={item.path}
-                className={`text-sm font-medium transition-colors ${
-                  item.highlight
-                    ? 'px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700'
-                    : location.pathname === item.path
-                    ? 'text-black dark:text-white'
-                    : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
-                }`}
-              >
-                {item.label}
-              </Link>
+                path={item.path}
+                label={item.label}
+                highlight={item.highlight}
+                isActive={location.pathname === item.path}
+              />
             ))}
           </nav>
 
@@ -123,18 +159,14 @@ export function Header() {
           <div className="md:hidden py-4 border-t border-neutral-300 dark:border-neutral-800">
             <nav className="flex flex-col gap-2">
               {navItems.map((item) => (
-                <Link
+                <NavItem
                   key={item.path}
-                  to={item.path}
+                  path={item.path}
+                  label={item.label}
+                  isActive={location.pathname === item.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                    location.pathname === item.path
-                      ? 'bg-neutral-200 dark:bg-neutral-800 text-black dark:text-white'
-                      : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-900'
-                  }`}
-                >
-                  {item.label}
-                </Link>
+                  mobile
+                />
               ))}
             </nav>
           </div>

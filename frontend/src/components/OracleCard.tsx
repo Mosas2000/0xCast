@@ -5,6 +5,7 @@
  * Shows stats, reputation, and status.
  */
 
+import { memo } from 'react';
 import type { OracleStats } from '../types/oracle';
 
 interface OracleCardProps {
@@ -13,7 +14,7 @@ interface OracleCardProps {
   compact?: boolean;
 }
 
-export function OracleCard({ oracle, onSelect, compact = false }: OracleCardProps) {
+const OracleCardBase = ({ oracle, onSelect, compact = false }: OracleCardProps) => {
   const reliabilityColor = 
     oracle.reliability >= 90 ? 'text-green-400' :
     oracle.reliability >= 70 ? 'text-yellow-400' :
@@ -103,7 +104,9 @@ export function OracleCard({ oracle, onSelect, compact = false }: OracleCardProp
       </div>
     </div>
   );
-}
+};
+
+export const OracleCard = memo(OracleCardBase);
 
 /**
  * OracleCardSkeleton Component
