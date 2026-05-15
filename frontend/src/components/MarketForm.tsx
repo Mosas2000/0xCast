@@ -221,7 +221,13 @@ export function MarketForm({ onSubmit, isSubmitting, error }: MarketFormProps) {
         <label style={labelStyle}>
           Category <span style={{ color: '#EF4444' }}>*</span>
         </label>
-        <div style={{ 
+        <div 
+          role="radiogroup"
+          aria-labelledby="category-label"
+          aria-describedby={
+            touched.category && validation.errors.category ? 'category-error' : undefined
+          }
+          style={{ 
           display: 'flex', 
           gap: '12px', 
           flexWrap: 'wrap',
@@ -230,7 +236,16 @@ export function MarketForm({ onSubmit, isSubmitting, error }: MarketFormProps) {
           {Object.values(CATEGORY_METADATA).map(cat => (
             <div
               key={cat.id}
+              role="radio"
+              aria-checked={formData.category === cat.id}
+              tabIndex={0}
               onClick={() => handleCategoryChange(cat.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleCategoryChange(cat.id);
+                }
+              }}
               style={categoryCardStyle(formData.category === cat.id)}
             >
               <div style={{ fontSize: '32px', marginBottom: '8px' }}>{cat.icon}</div>
@@ -245,7 +260,9 @@ export function MarketForm({ onSubmit, isSubmitting, error }: MarketFormProps) {
           ))}
         </div>
         {touched.category && validation.errors.category && (
-          <div style={errorStyle}>{validation.errors.category}</div>
+          <div id="category-error" style={errorStyle} role="alert">
+            {validation.errors.category}
+          </div>
         )}
       </div>
 
