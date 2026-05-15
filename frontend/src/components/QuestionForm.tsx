@@ -149,7 +149,9 @@ export function QuestionForm({
   return (
     <div style={containerStyle}>
       <div style={sectionStyle}>
-        <label style={labelStyle}>Your Prediction Question</label>
+        <label htmlFor="question-input" style={labelStyle}>
+          Your Prediction Question
+        </label>
         <div style={descriptionStyle}>
           Write a clear, specific question that can be objectively resolved. Include a timeframe and make the outcome verifiable.
         </div>
@@ -194,7 +196,15 @@ export function QuestionForm({
       </div>
 
       <div style={sectionStyle}>
-        <label style={labelStyle}>Market Duration</label>
+        <div 
+          id="duration-label" 
+          style={labelStyle} 
+          role="group" 
+          aria-labelledby="duration-label"
+          aria-describedby={validation.duration.error ? durationErrorId : undefined}
+        >
+          Market Duration
+        </div>
         <div style={descriptionStyle}>
           How long should the market remain active? The market will close after this period and then resolve.
         </div>
@@ -213,12 +223,16 @@ export function QuestionForm({
           Closes: {formatEndDate(duration)}
         </div>
         {validation.duration.error && (
-          <div style={errorStyle}>⚠ {validation.duration.error}</div>
+          <div id={durationErrorId} style={errorStyle} role="alert">
+            ⚠ {validation.duration.error}
+          </div>
         )}
       </div>
 
       <div style={sectionStyle}>
-        <label style={labelStyle}>Market Category</label>
+        <label htmlFor="category-select" style={labelStyle}>
+          Market Category
+        </label>
         <div style={descriptionStyle}>
           Select a category to help users discover your market.
         </div>
