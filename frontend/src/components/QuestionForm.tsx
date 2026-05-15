@@ -47,6 +47,11 @@ export function QuestionForm({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestions = getQuestionSuggestions(question);
 
+  const questionErrorId = 'question-error';
+  const questionSuggestionId = 'question-suggestion';
+  const durationErrorId = 'duration-error';
+  const categoryErrorId = 'category-error';
+
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
@@ -149,20 +154,33 @@ export function QuestionForm({
           Write a clear, specific question that can be objectively resolved. Include a timeframe and make the outcome verifiable.
         </div>
         <textarea
+          id="question-input"
           value={question}
           onChange={(e) => onQuestionChange(e.target.value)}
           placeholder="e.g., Will Bitcoin reach $50,000 by end of Q2 2024?"
           style={textareaStyle}
           maxLength={500}
+          aria-invalid={validation.question.error ? 'true' : 'false'}
+          aria-describedby={
+            validation.question.error
+              ? questionErrorId
+              : validation.question.suggestion
+              ? questionSuggestionId
+              : undefined
+          }
         />
         <div style={charCountStyle}>
           {question.length}/500
         </div>
         {validation.question.error && (
-          <div style={errorStyle}>⚠ {validation.question.error}</div>
+          <div id={questionErrorId} style={errorStyle} role="alert">
+            ⚠ {validation.question.error}
+          </div>
         )}
         {validation.question.suggestion && !validation.question.error && (
-          <div style={suggestionStyle}>💡 {validation.question.suggestion}</div>
+          <div id={questionSuggestionId} style={suggestionStyle}>
+            💡 {validation.question.suggestion}
+          </div>
         )}
         {suggestions.length > 0 && showSuggestions && (
           <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
