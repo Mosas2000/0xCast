@@ -223,9 +223,12 @@ export function QuestionForm({
           Select a category to help users discover your market.
         </div>
         <select
+          id="category-select"
           value={category}
           onChange={(e) => onCategoryChange(e.target.value)}
           style={selectStyle}
+          aria-invalid={validation.category.error ? 'true' : 'false'}
+          aria-describedby={validation.category.error ? categoryErrorId : undefined}
         >
           {CATEGORIES.map(cat => (
             <option key={cat.value} value={cat.value}>
@@ -234,7 +237,9 @@ export function QuestionForm({
           ))}
         </select>
         {validation.category.error && (
-          <div style={errorStyle}>⚠ {validation.category.error}</div>
+          <div id={categoryErrorId} style={errorStyle} role="alert">
+            ⚠ {validation.category.error}
+          </div>
         )}
       </div>
     </div>
