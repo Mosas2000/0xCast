@@ -1,0 +1,39 @@
+import { useState, useRef } from 'react';
+import { Candlestick, ChartScale, Timeframe, TechnicalIndicator, DrawingTool } from '@/types/charting';
+import { ChartDataManager } from '@/services/ChartDataManager';
+import { DrawingToolManager } from '@/services/DrawingToolManager';
+import { TechnicalIndicatorCalculator } from '@/services/TechnicalIndicatorCalculator';
+
+export function useChartState() {
+  const [timeframe, setTimeframe] = useState<Timeframe>('1h');
+  const [indicators, setIndicators] = useState<TechnicalIndicator[]>([]);
+  const [drawingTools, setDrawingTools] = useState<DrawingTool[]>([]);
+  const [scale, setScale] = useState<ChartScale | null>(null);
+  const [hoveredCandle, setHoveredCandle] = useState<Candlestick | null>(null);
+  const [selectedDrawingTool, setSelectedDrawingTool] = useState<DrawingTool | null>(null);
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
+
+  const dataManagerRef = useRef(new ChartDataManager());
+  const drawingManagerRef = useRef(new DrawingToolManager());
+  const indicatorCalculatorRef = useRef(new TechnicalIndicatorCalculator());
+
+  return {
+    timeframe,
+    setTimeframe,
+    indicators,
+    setIndicators,
+    drawingTools,
+    setDrawingTools,
+    scale,
+    setScale,
+    hoveredCandle,
+    setHoveredCandle,
+    selectedDrawingTool,
+    setSelectedDrawingTool,
+    isDrawingMode,
+    setIsDrawingMode,
+    dataManagerRef,
+    drawingManagerRef,
+    indicatorCalculatorRef,
+  };
+}
