@@ -47,6 +47,11 @@ export function QuestionForm({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestions = getQuestionSuggestions(question);
 
+  const questionErrorId = 'question-error';
+  const questionSuggestionId = 'question-suggestion';
+  const durationErrorId = 'duration-error';
+  const categoryErrorId = 'category-error';
+
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
@@ -144,25 +149,40 @@ export function QuestionForm({
   return (
     <div style={containerStyle}>
       <div style={sectionStyle}>
-        <label style={labelStyle}>Your Prediction Question</label>
+        <label htmlFor="question-input" style={labelStyle}>
+          Your Prediction Question
+        </label>
         <div style={descriptionStyle}>
           Write a clear, specific question that can be objectively resolved. Include a timeframe and make the outcome verifiable.
         </div>
         <textarea
+          id="question-input"
           value={question}
           onChange={(e) => onQuestionChange(e.target.value)}
           placeholder="e.g., Will Bitcoin reach $50,000 by end of Q2 2024?"
           style={textareaStyle}
           maxLength={500}
+          aria-invalid={validation.question.error ? 'true' : 'false'}
+          aria-describedby={
+            validation.question.error
+              ? questionErrorId
+              : validation.question.suggestion
+              ? questionSuggestionId
+              : undefined
+          }
         />
         <div style={charCountStyle}>
           {question.length}/500
         </div>
         {validation.question.error && (
-          <div style={errorStyle}>⚠ {validation.question.error}</div>
+          <div id={questionErrorId} style={errorStyle} role="alert">
+            ⚠ {validation.question.error}
+          </div>
         )}
         {validation.question.suggestion && !validation.question.error && (
-          <div style={suggestionStyle}>💡 {validation.question.suggestion}</div>
+          <div id={questionSuggestionId} style={suggestionStyle}>
+            💡 {validation.question.suggestion}
+          </div>
         )}
         {suggestions.length > 0 && showSuggestions && (
           <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -176,7 +196,15 @@ export function QuestionForm({
       </div>
 
       <div style={sectionStyle}>
-        <label style={labelStyle}>Market Duration</label>
+        <div 
+          id="duration-label" 
+          style={labelStyle} 
+          role="group" 
+          aria-labelledby="duration-label"
+          aria-describedby={validation.duration.error ? durationErrorId : undefined}
+        >
+          Market Duration
+        </div>
         <div style={descriptionStyle}>
           How long should the market remain active? The market will close after this period and then resolve.
         </div>
@@ -195,19 +223,26 @@ export function QuestionForm({
           Closes: {formatEndDate(duration)}
         </div>
         {validation.duration.error && (
-          <div style={errorStyle}>⚠ {validation.duration.error}</div>
+          <div id={durationErrorId} style={errorStyle} role="alert">
+            ⚠ {validation.duration.error}
+          </div>
         )}
       </div>
 
       <div style={sectionStyle}>
-        <label style={labelStyle}>Market Category</label>
+        <label htmlFor="category-select" style={labelStyle}>
+          Market Category
+        </label>
         <div style={descriptionStyle}>
           Select a category to help users discover your market.
         </div>
         <select
+          id="category-select"
           value={category}
           onChange={(e) => onCategoryChange(e.target.value)}
           style={selectStyle}
+          aria-invalid={validation.category.error ? 'true' : 'false'}
+          aria-describedby={validation.category.error ? categoryErrorId : undefined}
         >
           {CATEGORIES.map(cat => (
             <option key={cat.value} value={cat.value}>
@@ -216,7 +251,9 @@ export function QuestionForm({
           ))}
         </select>
         {validation.category.error && (
-          <div style={errorStyle}>⚠ {validation.category.error}</div>
+          <div id={categoryErrorId} style={errorStyle} role="alert">
+            ⚠ {validation.category.error}
+          </div>
         )}
       </div>
     </div>
