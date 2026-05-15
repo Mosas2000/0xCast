@@ -268,10 +268,16 @@ export function MarketForm({ onSubmit, isSubmitting, error }: MarketFormProps) {
 
       {/* Duration Selection */}
       <div style={{ marginBottom: '28px' }}>
-        <label style={labelStyle}>
+        <label id="duration-label" style={labelStyle}>
           Duration <span style={{ color: '#EF4444' }}>*</span>
         </label>
-        <div style={{ 
+        <div 
+          role="radiogroup"
+          aria-labelledby="duration-label"
+          aria-describedby={
+            touched.duration && validation.errors.duration ? 'duration-error' : undefined
+          }
+          style={{ 
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
           gap: '10px',
@@ -321,11 +327,16 @@ export function MarketForm({ onSubmit, isSubmitting, error }: MarketFormProps) {
             }}>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <input
+                  id="custom-duration-input"
                   type="number"
                   value={customDurationDays}
                   onChange={(e) => handleCustomDurationChange(e.target.value)}
                   placeholder="Enter days"
                   min="1"
+                  aria-invalid={touched.duration && validation.errors.duration ? 'true' : 'false'}
+                  aria-describedby={
+                    touched.duration && validation.errors.duration ? 'duration-error' : undefined
+                  }
                   style={{
                     flex: 1,
                     padding: '10px 12px',
@@ -374,7 +385,9 @@ export function MarketForm({ onSubmit, isSubmitting, error }: MarketFormProps) {
           </span> ({formatBlocksToTime(formData.durationBlocks)})
         </div>
         {touched.duration && validation.errors.duration && (
-          <div style={errorStyle}>{validation.errors.duration}</div>
+          <div id="duration-error" style={errorStyle} role="alert">
+            {validation.errors.duration}
+          </div>
         )}
       </div>
 
