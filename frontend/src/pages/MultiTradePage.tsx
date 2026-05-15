@@ -132,15 +132,23 @@ export function MultiTradePage() {
                   </p>
                 )}
                 <input
+                  id="stake-amount"
                   type="number"
                   min={MIN_STAKE}
                   max={MAX_STAKE}
                   value={stakeAmount}
                   onChange={(e) => setStakeAmount(e.target.value)}
                   className="input w-full"
+                  aria-invalid={!stakeValidation.isValid ? 'true' : 'false'}
+                  aria-describedby={
+                    !stakeValidation.isValid ? 'stake-validation-error' : 
+                    stakeError ? 'stake-error' : undefined
+                  }
                 />
                 {!stakeValidation.isValid && (
-                  <p className="text-sm text-red-500">{stakeValidation.error}</p>
+                  <p id="stake-validation-error" className="text-sm text-red-500" role="alert">
+                    {stakeValidation.error}
+                  </p>
                 )}
                 <button
                   type="button"
@@ -153,8 +161,16 @@ export function MultiTradePage() {
               </>
             )}
 
-            {stakeError && <p className="text-sm text-red-500">{stakeError}</p>}
-            {tradeSuccess && <p className="text-sm text-emerald-500">Stake submitted successfully.</p>}
+            {stakeError && (
+              <p id="stake-error" className="text-sm text-red-500" role="alert">
+                {stakeError}
+              </p>
+            )}
+            {tradeSuccess && (
+              <p className="text-sm text-emerald-500" role="status">
+                Stake submitted successfully.
+              </p>
+            )}
             {txId && (
               <p className="text-xs text-neutral-500 break-all">
                 Transaction: {txId}
