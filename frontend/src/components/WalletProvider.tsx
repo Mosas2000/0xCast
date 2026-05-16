@@ -1,40 +1,29 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { connect as stacksConnect } from '@stacks/connect';
+import { GDPRComplianceService } from '../services/GDPRComplianceService';
 
-/**
- * WalletProvider context type
- * Manages wallet connection state with verification on mount
- */
 interface WalletContextType {
-  /** Whether wallet is currently connected */
   isConnected: boolean;
-  /** Connected wallet address (SP/ST format) */
   address: string | null;
-  /** Connect to wallet (opens Hiro Wallet) */
   connect: () => void;
-  /** Disconnect wallet and clear state */
   disconnect: () => void;
-  /** Whether initial connection verification is in progress */
   isVerifying: boolean;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
-// LocalStorage key for persisting wallet address
 const STORAGE_KEY = '0xcast-wallet-address';
 
 /**
  * WalletProvider component
- * 
+ *
  * Provides wallet connection state management with:
  * - Persistent storage of wallet address
  * - Address validation on mount
  * - Stale connection cleanup
  * - Verification status tracking
- * 
- * On mount, checks localStorage for a saved address and validates it.
- * Invalid addresses are cleared automatically.
+ * - GDPR-compliant storage (wallet address stored under contract legal basis)
  */
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [isConnected, setIsConnected] = useState(false);
@@ -102,17 +91,25 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const connect = useCallback(async () => {
     try {
       const result = await stacksConnect();
-      
+
       if (result && result.addresses && result.addresses.length > 0) {
-        // Find the Stacks address (not BTC)
         const stacksAddress = result.addresses.find(
-          (addr: { address: string }) => addr.address.startsWith('SP') || addr.address.startsWith('ST')
+          (addr: { address: string }) =>
+            addr.address.startsWith('SP') || addr.address.startsWith('ST')
         );
-        
+
         if (stacksAddress) {
           setIsConnected(true);
           setAddress(stacksAddress.address);
-          localStorage.setItem(STORAGE_KEY, stacksAddress.address);
+
+          const consentCheck = GDPRComplianceService.checkConsentForStorage(
+            { walletAddress: stacksAddress.address },
+            'necessary'
+          );
+
+          if (consentCheck.allowed) {
+            localStorage.setItem(STORAGE_KEY, stacksAddress.address);
+          }
         }
       }
     } catch (error) {
