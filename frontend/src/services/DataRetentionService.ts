@@ -152,9 +152,7 @@ export class DataRetentionService {
   static getRetentionReport(): {
     totalItems: number;
     itemsByCategory: Record<string, number>;
-    expiringS
-
-oon: number;
+    expiringSoon: number;
     expired: number;
   } {
     const report = {
