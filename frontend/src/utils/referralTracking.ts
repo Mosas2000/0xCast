@@ -1,4 +1,5 @@
 import { getReferralCodeFromUrl } from '../utils/referralUtils';
+import { GDPRComplianceService } from '../services/GDPRComplianceService';
 
 interface ReferralTrackingContext {
   referralCode: string | null;
@@ -35,6 +36,16 @@ export class ReferralTracker {
 
   static saveReferralCode(code: string): void {
     if (typeof window !== 'undefined' && window.localStorage) {
+      const consentCheck = GDPRComplianceService.checkConsentForStorage(
+        { referralCode: code },
+        'necessary'
+      );
+
+      if (!consentCheck.allowed) {
+        console.warn('Referral code storage blocked: consent not provided');
+        return;
+      }
+
       localStorage.setItem(this.STORAGE_KEY, code);
       localStorage.setItem('referral_timestamp', new Date().toISOString());
     }
@@ -50,6 +61,15 @@ export class ReferralTracker {
 
     let trackingId = localStorage.getItem(this.TRACKING_ID_KEY);
     if (!trackingId) {
+      const consentCheck = GDPRComplianceService.checkConsentForStorage(
+        { trackingId: 'new' },
+        'necessary'
+      );
+
+      if (!consentCheck.allowed) {
+        return `session_${Date.now()}`;
+      }
+
       trackingId = `tracking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       localStorage.setItem(this.TRACKING_ID_KEY, trackingId);
     }
@@ -79,6 +99,10 @@ export class ReferralTracker {
   }
 
   static trackPageView(pageName: string): void {
+    if (!GDPRComplianceService.isAnalyticsEnabled()) {
+      return;
+    }
+
     const trackingData = {
       page: pageName,
       timestamp: new Date().toISOString(),
@@ -94,6 +118,10 @@ export class ReferralTracker {
   }
 
   static trackReferralAction(action: string, data: any = {}): void {
+    if (!GDPRComplianceService.isAnalyticsEnabled()) {
+      return;
+    }
+
     const trackingData = {
       action,
       timestamp: new Date().toISOString(),
