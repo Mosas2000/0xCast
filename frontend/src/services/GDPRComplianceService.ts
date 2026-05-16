@@ -1,15 +1,13 @@
-/**
- * GDPR Compliance Service
- * 
- * Handles user data privacy, consent management, and data export/deletion
- */
+import { PIIDetectionService } from './PIIDetectionService';
 
 export interface UserConsent {
+  necessary: boolean;
   analytics: boolean;
   marketing: boolean;
   personalization: boolean;
   timestamp: number;
   version: string;
+  ipAddress?: string;
 }
 
 export interface UserData {
@@ -35,14 +33,86 @@ export interface UserData {
   }>;
 }
 
-const CONSENT_VERSION = '1.0.0';
+export interface DataProcessingActivity {
+  name: string;
+  purpose: string;
+  legalBasis: 'consent' | 'contract' | 'legal_obligation' | 'legitimate_interest';
+  dataCategories: string[];
+  retentionPeriod: string;
+  thirdParties: string[];
+}
+
+export interface ConsentCheckResult {
+  allowed: boolean;
+  reason?: string;
+  requiredConsent?: keyof Omit<UserConsent, 'timestamp' | 'version' | 'ipAddress'>;
+}
+
+const CONSENT_VERSION = '1.1.0';
 const CONSENT_STORAGE_KEY = 'gdpr_user_consent';
 const ANALYTICS_ENABLED_KEY = 'analytics_enabled';
+const CONSENT_HISTORY_KEY = 'gdpr_consent_history';
+
+const DATA_PROCESSING_ACTIVITIES: DataProcessingActivity[] = [
+  {
+    name: 'Wallet Connection',
+    purpose: 'Authenticate user and enable blockchain interactions',
+    legalBasis: 'contract',
+    dataCategories: ['wallet_address'],
+    retentionPeriod: 'Duration of session',
+    thirdParties: ['Stacks blockchain network'],
+  },
+  {
+    name: 'Transaction History',
+    purpose: 'Display user prediction history and portfolio',
+    legalBasis: 'contract',
+    dataCategories: ['wallet_address', 'transaction_data'],
+    retentionPeriod: '365 days',
+    thirdParties: ['Stacks blockchain network'],
+  },
+  {
+    name: 'Analytics',
+    purpose: 'Improve application performance and user experience',
+    legalBasis: 'consent',
+    dataCategories: ['usage_data', 'interaction_data'],
+    retentionPeriod: '30 days',
+    thirdParties: [],
+  },
+  {
+    name: 'Personalization',
+    purpose: 'Customize user interface and recommendations',
+    legalBasis: 'consent',
+    dataCategories: ['preferences', 'behavior_data'],
+    retentionPeriod: '90 days',
+    thirdParties: [],
+  },
+  {
+    name: 'Marketing',
+    purpose: 'Send relevant updates and promotional content',
+    legalBasis: 'consent',
+    dataCategories: ['contact_preferences'],
+    retentionPeriod: '60 days',
+    thirdParties: [],
+  },
+  {
+    name: 'KYC Verification',
+    purpose: 'Verify user identity for regulatory compliance',
+    legalBasis: 'legal_obligation',
+    dataCategories: ['identity_documents', 'personal_information'],
+    retentionPeriod: '5 years',
+    thirdParties: ['KYC verification provider'],
+  },
+  {
+    name: 'Referral Tracking',
+    purpose: 'Track referral codes and reward referrers',
+    legalBasis: 'legitimate_interest',
+    dataCategories: ['referral_code', 'tracking_id'],
+    retentionPeriod: '90 days',
+    thirdParties: [],
+  },
+];
 
 export class GDPRComplianceService {
-  /**
-   * Get user consent preferences
-   */
   static getUserConsent(): UserConsent | null {
     try {
       if (typeof localStorage === 'undefined') return null;
@@ -54,92 +124,173 @@ export class GDPRComplianceService {
     }
   }
 
-  /**
-   * Save user consent preferences
-   */
-  static setUserConsent(consent: Omit<UserConsent, 'timestamp' | 'version'>): void {
+  static setUserConsent(
+    consent: Omit<UserConsent, 'timestamp' | 'version'>
+  ): void {
     try {
       if (typeof localStorage === 'undefined') return;
+
+      const previous = this.getUserConsent();
+
       const userConsent: UserConsent = {
         ...consent,
+        necessary: true,
         timestamp: Date.now(),
         version: CONSENT_VERSION,
       };
+
       localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(userConsent));
+
+      this.recordConsentHistory(previous, userConsent);
     } catch {
       // Silently fail if localStorage is not available
     }
   }
 
-  /**
-   * Check if analytics is enabled
-   */
+  private static recordConsentHistory(
+    previous: UserConsent | null,
+    current: UserConsent
+  ): void {
+    try {
+      if (typeof localStorage === 'undefined') return;
+
+      const stored = localStorage.getItem(CONSENT_HISTORY_KEY);
+      const history: any[] = stored ? JSON.parse(stored) : [];
+
+      history.push({
+        timestamp: current.timestamp,
+        previous: previous
+          ? {
+              analytics: previous.analytics,
+              marketing: previous.marketing,
+              personalization: previous.personalization,
+            }
+          : null,
+        current: {
+          analytics: current.analytics,
+          marketing: current.marketing,
+          personalization: current.personalization,
+        },
+      });
+
+      localStorage.setItem(
+        CONSENT_HISTORY_KEY,
+        JSON.stringify(history.slice(-20))
+      );
+    } catch {
+      // Silently fail
+    }
+  }
+
+  static checkConsentForStorage(
+    data: Record<string, any>,
+    category: 'analytics' | 'marketing' | 'personalization' | 'necessary'
+  ): ConsentCheckResult {
+    if (category === 'necessary') {
+      return { allowed: true };
+    }
+
+    const detection = PIIDetectionService.detectPII(data);
+
+    if (!detection.hasPII && !detection.requiresConsent) {
+      return { allowed: true };
+    }
+
+    const consent = this.getUserConsent();
+
+    if (!consent) {
+      return {
+        allowed: false,
+        reason: 'No consent provided',
+        requiredConsent: category,
+      };
+    }
+
+    if (!this.isConsentUpToDate()) {
+      return {
+        allowed: false,
+        reason: 'Consent is outdated and needs to be renewed',
+        requiredConsent: category,
+      };
+    }
+
+    const categoryAllowed = consent[category];
+
+    if (!categoryAllowed) {
+      return {
+        allowed: false,
+        reason: `User has not consented to ${category} data processing`,
+        requiredConsent: category,
+      };
+    }
+
+    return { allowed: true };
+  }
+
   static isAnalyticsEnabled(): boolean {
     const consent = this.getUserConsent();
-    if (!consent) {
-      // Default to false until user provides consent
-      return false;
-    }
+    if (!consent) return false;
     return consent.analytics;
   }
 
-  /**
-   * Check if marketing is enabled
-   */
   static isMarketingEnabled(): boolean {
     const consent = this.getUserConsent();
     if (!consent) return false;
     return consent.marketing;
   }
 
-  /**
-   * Check if personalization is enabled
-   */
   static isPersonalizationEnabled(): boolean {
     const consent = this.getUserConsent();
     if (!consent) return false;
     return consent.personalization;
   }
 
-  /**
-   * Accept all analytics
-   */
+  static hasAnyConsent(): boolean {
+    const consent = this.getUserConsent();
+    return !!consent;
+  }
+
   static acceptAll(): void {
     this.setUserConsent({
+      necessary: true,
       analytics: true,
       marketing: true,
       personalization: true,
     });
   }
 
-  /**
-   * Reject all analytics
-   */
   static rejectAll(): void {
     this.setUserConsent({
+      necessary: true,
       analytics: false,
       marketing: false,
       personalization: false,
     });
   }
 
-  /**
-   * Accept only necessary analytics
-   */
   static acceptNecessary(): void {
     this.setUserConsent({
+      necessary: true,
       analytics: false,
       marketing: false,
       personalization: false,
     });
   }
 
-  /**
-   * Export user data (GDPR right to data portability)
-   */
+  static updateConsent(
+    updates: Partial<Omit<UserConsent, 'necessary' | 'timestamp' | 'version'>>
+  ): void {
+    const current = this.getUserConsent();
+    this.setUserConsent({
+      necessary: true,
+      analytics: current?.analytics ?? false,
+      marketing: current?.marketing ?? false,
+      personalization: current?.personalization ?? false,
+      ...updates,
+    });
+  }
+
   static async exportUserData(userId: string): Promise<UserData> {
-    // This would typically fetch from backend
-    // For now, return mock data structure
     return {
       userId,
       walletAddress: '',
@@ -155,14 +306,9 @@ export class GDPRComplianceService {
     };
   }
 
-  /**
-   * Delete user data (GDPR right to be forgotten)
-   */
   static async deleteUserData(userId: string): Promise<boolean> {
     try {
       if (typeof localStorage === 'undefined') return true;
-      // This would typically call backend API
-      // For now, just clear local storage
       localStorage.removeItem(CONSENT_STORAGE_KEY);
       localStorage.removeItem(ANALYTICS_ENABLED_KEY);
       return true;
@@ -171,50 +317,35 @@ export class GDPRComplianceService {
     }
   }
 
-  /**
-   * Get privacy policy version
-   */
   static getPrivacyPolicyVersion(): string {
-    return '1.0.0';
+    return CONSENT_VERSION;
   }
 
-  /**
-   * Check if consent is up to date
-   */
   static isConsentUpToDate(): boolean {
     const consent = this.getUserConsent();
     if (!consent) return false;
     return consent.version === CONSENT_VERSION;
   }
 
-  /**
-   * Request consent update
-   */
   static requestConsentUpdate(): void {
     try {
       if (typeof localStorage === 'undefined') return;
-      // Mark that consent needs to be updated
       localStorage.setItem('consent_update_required', 'true');
     } catch {
       // Silently fail
     }
   }
 
-  /**
-   * Check if consent update is required
-   */
   static isConsentUpdateRequired(): boolean {
     try {
       if (typeof localStorage === 'undefined') return false;
-      return localStorage.getItem('consent_update_required') === 'true';
+      if (localStorage.getItem('consent_update_required') === 'true') return true;
+      return !this.isConsentUpToDate();
     } catch {
       return false;
     }
   }
 
-  /**
-   * Clear consent update flag
-   */
   static clearConsentUpdateFlag(): void {
     try {
       if (typeof localStorage === 'undefined') return;
@@ -224,49 +355,36 @@ export class GDPRComplianceService {
     }
   }
 
-  /**
-   * Get data retention period in days
-   */
   static getDataRetentionPeriod(): number {
-    return 90; // 90 days default
+    return 90;
   }
 
-  /**
-   * Check if data should be deleted based on retention policy
-   */
   static shouldDeleteData(createdAt: number): boolean {
     const retentionMs = this.getDataRetentionPeriod() * 24 * 60 * 60 * 1000;
     return Date.now() - createdAt > retentionMs;
   }
 
-  /**
-   * Anonymize user data
-   */
   static anonymizeUserData(userData: UserData): UserData {
     return {
       ...userData,
       userId: 'anonymous',
       walletAddress: 'anonymous',
-      predictions: userData.predictions.map((p) => ({
-        ...p,
-        // Keep only essential data
-      })),
-      activityLog: userData.activityLog.map((log) => ({
-        ...log,
-        details: undefined,
+      predictions: userData.predictions.map(p => ({ ...p })),
+      activityLog: userData.activityLog.map(log => ({
+        action: log.action,
+        timestamp: log.timestamp,
       })),
     };
   }
 
-  /**
-   * Get GDPR compliance status
-   */
   static getComplianceStatus(): {
     consentProvided: boolean;
     consentUpToDate: boolean;
     analyticsEnabled: boolean;
     marketingEnabled: boolean;
     personalizationEnabled: boolean;
+    consentVersion: string;
+    consentTimestamp: number | null;
   } {
     const consent = this.getUserConsent();
     return {
@@ -275,6 +393,40 @@ export class GDPRComplianceService {
       analyticsEnabled: this.isAnalyticsEnabled(),
       marketingEnabled: this.isMarketingEnabled(),
       personalizationEnabled: this.isPersonalizationEnabled(),
+      consentVersion: consent?.version ?? '',
+      consentTimestamp: consent?.timestamp ?? null,
+    };
+  }
+
+  static getDataProcessingActivities(): DataProcessingActivity[] {
+    return [...DATA_PROCESSING_ACTIVITIES];
+  }
+
+  static getDataProcessingActivity(name: string): DataProcessingActivity | undefined {
+    return DATA_PROCESSING_ACTIVITIES.find(a => a.name === name);
+  }
+
+  static getConsentHistory(): any[] {
+    try {
+      if (typeof localStorage === 'undefined') return [];
+      const stored = localStorage.getItem(CONSENT_HISTORY_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  static generatePrivacyReport(): {
+    status: ReturnType<typeof GDPRComplianceService.getComplianceStatus>;
+    processingActivities: DataProcessingActivity[];
+    consentHistory: any[];
+    dataRetentionDays: number;
+  } {
+    return {
+      status: this.getComplianceStatus(),
+      processingActivities: this.getDataProcessingActivities(),
+      consentHistory: this.getConsentHistory(),
+      dataRetentionDays: this.getDataRetentionPeriod(),
     };
   }
 }
