@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { ScheduledExport, ExportSchedule } from '../types/export';
+import { GDPRComplianceService } from '../services/GDPRComplianceService';
 
 interface UseScheduledExportsReturn {
   exports: ScheduledExport[];
@@ -38,7 +39,9 @@ export function useScheduledExports(): UseScheduledExportsReturn {
   };
 
   const persistExports = useCallback((updatedExports: ScheduledExport[]) => {
-    localStorage.setItem('scheduledExports', JSON.stringify(updatedExports));
+    if (GDPRComplianceService.isPersonalizationEnabled()) {
+      localStorage.setItem('scheduledExports', JSON.stringify(updatedExports));
+    }
     setExports(updatedExports);
   }, []);
 
