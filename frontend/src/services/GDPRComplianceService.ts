@@ -1,4 +1,5 @@
 import { PIIDetectionService } from './PIIDetectionService';
+import { SecureStorageV2Service } from './SecureStorageV2Service';
 
 export interface UserConsent {
   necessary: boolean;
@@ -124,6 +125,14 @@ export class GDPRComplianceService {
     }
   }
 
+  static async getUserConsentSecure(): Promise<UserConsent | null> {
+    try {
+      return await SecureStorageV2Service.getItem<UserConsent>(CONSENT_STORAGE_KEY);
+    } catch {
+      return this.getUserConsent();
+    }
+  }
+
   static setUserConsent(
     consent: Omit<UserConsent, 'timestamp' | 'version'>
   ): void {
@@ -142,6 +151,14 @@ export class GDPRComplianceService {
       localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(userConsent));
 
       this.recordConsentHistory(previous, userConsent);
+
+      SecureStorageV2Service.setItem(CONSENT_STORAGE_KEY, userConsent, {
+        encrypt: true,
+        category: 'necessary',
+        requireConsent: false,
+      }).catch(error => {
+        console.error('Failed to store consent in secure storage:', error);
+      });
     } catch {
       // Silently fail if localStorage is not available
     }
@@ -173,10 +190,16 @@ export class GDPRComplianceService {
         },
       });
 
-      localStorage.setItem(
-        CONSENT_HISTORY_KEY,
-        JSON.stringify(history.slice(-20))
-      );
+      const trimmedHistory = history.slice(-20);
+      localStorage.setItem(CONSENT_HISTORY_KEY, JSON.stringify(trimmedHistory));
+
+      SecureStorageV2Service.setItem(CONSENT_HISTORY_KEY, trimmedHistory, {
+        encrypt: true,
+        category: 'necessary',
+        requireConsent: false,
+      }).catch(error => {
+        console.error('Failed to store consent history in secure storage:', error);
+      });
     } catch {
       // Silently fail
     }
