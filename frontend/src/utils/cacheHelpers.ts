@@ -1,4 +1,5 @@
 import { cacheManager } from './cache';
+import { GDPRComplianceService } from '../services/GDPRComplianceService';
 
 export function isCacheAvailable(): boolean {
   try {
@@ -66,6 +67,16 @@ export function exportCache(): string {
 
 export function importCache(jsonData: string): void {
   try {
+    const consentCheck = GDPRComplianceService.checkConsentForStorage(
+      { operation: 'importCache' },
+      'personalization'
+    );
+
+    if (!consentCheck.allowed) {
+      console.warn('Cache import blocked:', consentCheck.reason);
+      return;
+    }
+
     const data = JSON.parse(jsonData);
     
     Object.entries(data.session || {}).forEach(([key, value]) => {
