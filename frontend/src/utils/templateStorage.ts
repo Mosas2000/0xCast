@@ -1,5 +1,6 @@
 import type { TemplateCategory } from '../types/template';
 import { GDPRComplianceService } from '../services/GDPRComplianceService';
+import { SecureStorageV2Service } from '../services/SecureStorageV2Service';
 
 export class TemplateCache {
   private static cache: Map<string, any> = new Map();
@@ -40,6 +41,14 @@ export class TemplateCache {
       };
       this.cache.set(key, entry);
       localStorage.setItem(`template_cache_${key}`, JSON.stringify(entry));
+
+      SecureStorageV2Service.setItem(`template_cache_${key}`, entry, {
+        encrypt: true,
+        category: 'personalization',
+        expiresIn: ttlMs,
+      }).catch(error => {
+        console.warn(`Failed to store template cache ${key} in secure storage:`, error);
+      });
     } catch (e) {
       console.warn(`Failed to cache ${key}:`, e);
     }
@@ -116,6 +125,14 @@ export class TemplatePreferences {
       }
 
       localStorage.setItem(`template_pref_${key}`, JSON.stringify(value));
+
+      SecureStorageV2Service.setItem(`template_pref_${key}`, value, {
+        encrypt: true,
+        category: 'personalization',
+        expiresIn: 90 * 24 * 60 * 60 * 1000,
+      }).catch(error => {
+        console.warn(`Failed to store template preference ${key} in secure storage:`, error);
+      });
     } catch (e) {
       console.warn('Failed to save preference:', e);
     }
@@ -174,6 +191,9 @@ export class TemplatePreferences {
   static clearFormDraft(): void {
     try {
       localStorage.removeItem('template_pref_formDraft');
+      SecureStorageV2Service.removeItem('template_pref_formDraft').catch(error => {
+        console.warn('Failed to clear form draft from secure storage:', error);
+      });
     } catch (e) {
       console.warn('Failed to clear draft:', e);
     }
