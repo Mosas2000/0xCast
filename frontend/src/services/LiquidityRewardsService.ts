@@ -4,6 +4,7 @@ import type {
   MarketVolume,
 } from '../utils/liquidityRewardsCalculator';
 import { GDPRComplianceService } from './GDPRComplianceService';
+import { SecureStorageV2Service } from './SecureStorageV2Service';
 
 const STORAGE_KEY_POSITIONS = 'liquidity_positions';
 const STORAGE_KEY_REWARDS = 'historical_rewards';
@@ -18,30 +19,55 @@ export class LiquidityRewardsService {
     this.loadFromStorage();
   }
 
-  private loadFromStorage(): void {
+  private async loadFromStorage(): Promise<void> {
     try {
-      const positionsData = localStorage.getItem(STORAGE_KEY_POSITIONS);
+      const positionsData = await SecureStorageV2Service.getItem<Record<string, LiquidityPosition[]>>(
+        STORAGE_KEY_POSITIONS
+      );
       if (positionsData) {
-        const parsed = JSON.parse(positionsData);
-        this.positions = new Map(Object.entries(parsed));
+        this.positions = new Map(Object.entries(positionsData));
+      } else {
+        const localData = localStorage.getItem(STORAGE_KEY_POSITIONS);
+        if (localData) {
+          const parsed = JSON.parse(localData);
+          this.positions = new Map(Object.entries(parsed));
+        }
       }
 
-      const rewardsData = localStorage.getItem(STORAGE_KEY_REWARDS);
+      const rewardsData = await SecureStorageV2Service.getItem<HistoricalReward[]>(
+        STORAGE_KEY_REWARDS
+      );
       if (rewardsData) {
-        this.rewards = JSON.parse(rewardsData);
+        this.rewards = rewardsData;
+      } else {
+        const localData = localStorage.getItem(STORAGE_KEY_REWARDS);
+        if (localData) {
+          this.rewards = JSON.parse(localData);
+        }
       }
 
-      const volumesData = localStorage.getItem(STORAGE_KEY_VOLUMES);
+      const volumesData = await SecureStorageV2Service.getItem<Record<string, MarketVolume>>(
+        STORAGE_KEY_VOLUMES
+      );
       if (volumesData) {
-        const parsed = JSON.parse(volumesData);
-        this.volumes = new Map(Object.entries(parsed).map(([k, v]) => [parseInt(k), v as MarketVolume]));
+        this.volumes = new Map(
+          Object.entries(volumesData).map(([k, v]) => [parseInt(k), v])
+        );
+      } else {
+        const localData = localStorage.getItem(STORAGE_KEY_VOLUMES);
+        if (localData) {
+          const parsed = JSON.parse(localData);
+          this.volumes = new Map(
+            Object.entries(parsed).map(([k, v]) => [parseInt(k), v as MarketVolume])
+          );
+        }
       }
     } catch (error) {
       console.error('Failed to load liquidity data from storage:', error);
     }
   }
 
-  private saveToStorage(): void {
+  private async saveToStorage(): Promise<void> {
     try {
       const consentCheck = GDPRComplianceService.checkConsentForStorage(
         { liquidityData: true },
@@ -50,12 +76,24 @@ export class LiquidityRewardsService {
       if (!consentCheck.allowed) return;
 
       const positionsObj = Object.fromEntries(this.positions);
-      localStorage.setItem(STORAGE_KEY_POSITIONS, JSON.stringify(positionsObj));
+      await SecureStorageV2Service.setItem(STORAGE_KEY_POSITIONS, positionsObj, {
+        encrypt: true,
+        category: 'necessary',
+        expiresIn: 365 * 24 * 60 * 60 * 1000,
+      });
 
-      localStorage.setItem(STORAGE_KEY_REWARDS, JSON.stringify(this.rewards));
+      await SecureStorageV2Service.setItem(STORAGE_KEY_REWARDS, this.rewards, {
+        encrypt: true,
+        category: 'necessary',
+        expiresIn: 365 * 24 * 60 * 60 * 1000,
+      });
 
       const volumesObj = Object.fromEntries(this.volumes);
-      localStorage.setItem(STORAGE_KEY_VOLUMES, JSON.stringify(volumesObj));
+      await SecureStorageV2Service.setItem(STORAGE_KEY_VOLUMES, volumesObj, {
+        encrypt: true,
+        category: 'necessary',
+        expiresIn: 90 * 24 * 60 * 60 * 1000,
+      });
     } catch (error) {
       console.error('Failed to save liquidity data to storage:', error);
     }
@@ -158,13 +196,16 @@ export class LiquidityRewardsService {
     this.saveToStorage();
   }
 
-  clearAllData(): void {
+  async clearAllData(): Promise<void> {
     this.positions.clear();
     this.rewards = [];
     this.volumes.clear();
     localStorage.removeItem(STORAGE_KEY_POSITIONS);
     localStorage.removeItem(STORAGE_KEY_REWARDS);
     localStorage.removeItem(STORAGE_KEY_VOLUMES);
+    await SecureStorageV2Service.removeItem(STORAGE_KEY_POSITIONS);
+    await SecureStorageV2Service.removeItem(STORAGE_KEY_REWARDS);
+    await SecureStorageV2Service.removeItem(STORAGE_KEY_VOLUMES);
   }
 }
 
