@@ -1,5 +1,6 @@
 import { getReferralCodeFromUrl } from '../utils/referralUtils';
 import { GDPRComplianceService } from '../services/GDPRComplianceService';
+import { SecureStorageV2Service } from '../services/SecureStorageV2Service';
 
 interface ReferralTrackingContext {
   referralCode: string | null;
@@ -48,6 +49,24 @@ export class ReferralTracker {
 
       localStorage.setItem(this.STORAGE_KEY, code);
       localStorage.setItem('referral_timestamp', new Date().toISOString());
+
+      SecureStorageV2Service.setItem(this.STORAGE_KEY, code, {
+        encrypt: true,
+        category: 'necessary',
+        expiresIn: 30 * 24 * 60 * 60 * 1000,
+        requireConsent: false,
+      }).catch(error => {
+        console.error('Failed to store referral code in secure storage:', error);
+      });
+
+      SecureStorageV2Service.setItem('referral_timestamp', new Date().toISOString(), {
+        encrypt: true,
+        category: 'necessary',
+        expiresIn: 30 * 24 * 60 * 60 * 1000,
+        requireConsent: false,
+      }).catch(error => {
+        console.error('Failed to store referral timestamp in secure storage:', error);
+      });
     }
   }
 
@@ -72,6 +91,15 @@ export class ReferralTracker {
 
       trackingId = `tracking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       localStorage.setItem(this.TRACKING_ID_KEY, trackingId);
+
+      SecureStorageV2Service.setItem(this.TRACKING_ID_KEY, trackingId, {
+        encrypt: true,
+        category: 'necessary',
+        expiresIn: 90 * 24 * 60 * 60 * 1000,
+        requireConsent: false,
+      }).catch(error => {
+        console.error('Failed to store tracking ID in secure storage:', error);
+      });
     }
     return trackingId;
   }
