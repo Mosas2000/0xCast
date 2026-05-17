@@ -3,6 +3,7 @@ import type {
   HistoricalReward,
   MarketVolume,
 } from '../utils/liquidityRewardsCalculator';
+import { GDPRComplianceService } from './GDPRComplianceService';
 
 const STORAGE_KEY_POSITIONS = 'liquidity_positions';
 const STORAGE_KEY_REWARDS = 'historical_rewards';
@@ -42,6 +43,12 @@ export class LiquidityRewardsService {
 
   private saveToStorage(): void {
     try {
+      const consentCheck = GDPRComplianceService.checkConsentForStorage(
+        { liquidityData: true },
+        'necessary'
+      );
+      if (!consentCheck.allowed) return;
+
       const positionsObj = Object.fromEntries(this.positions);
       localStorage.setItem(STORAGE_KEY_POSITIONS, JSON.stringify(positionsObj));
 
