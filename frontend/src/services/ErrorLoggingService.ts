@@ -1,5 +1,6 @@
 import { ApiError, ErrorCode } from '../utils/apiErrors';
 import { GDPRComplianceService } from './GDPRComplianceService';
+import { SecureStorageV2Service } from './SecureStorageV2Service';
 
 interface ErrorLogEntry {
   id: string;
@@ -215,6 +216,9 @@ class ErrorLoggingService {
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem('error_logs');
     }
+    SecureStorageV2Service.removeItem('error_logs').catch(error => {
+      console.error('Failed to clear error logs from secure storage:', error);
+    });
   }
 
   private generateId(): string {
@@ -235,6 +239,14 @@ class ErrorLoggingService {
 
       if (GDPRComplianceService.isAnalyticsEnabled()) {
         localStorage.setItem('error_logs', JSON.stringify(trimmed));
+
+        SecureStorageV2Service.setItem('error_logs', trimmed, {
+          encrypt: true,
+          category: 'analytics',
+          expiresIn: 30 * 24 * 60 * 60 * 1000,
+        }).catch(error => {
+          console.error('Failed to persist error log to secure storage:', error);
+        });
       }
     } catch {
       // Storage full or unavailable, ignore
