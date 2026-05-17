@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { ScheduledExport, ExportSchedule } from '../types/export';
 import { GDPRComplianceService } from '../services/GDPRComplianceService';
+import { SecureStorageV2Service } from '../services/SecureStorageV2Service';
 
 interface UseScheduledExportsReturn {
   exports: ScheduledExport[];
@@ -26,6 +27,13 @@ export function useScheduledExports(): UseScheduledExportsReturn {
   const loadScheduledExports = async () => {
     try {
       setIsLoading(true);
+
+      const secure = await SecureStorageV2Service.getItem<ScheduledExport[]>('scheduledExports');
+      if (secure) {
+        setExports(secure);
+        return;
+      }
+
       const stored = localStorage.getItem('scheduledExports');
       if (stored) {
         setExports(JSON.parse(stored));
@@ -41,6 +49,14 @@ export function useScheduledExports(): UseScheduledExportsReturn {
   const persistExports = useCallback((updatedExports: ScheduledExport[]) => {
     if (GDPRComplianceService.isPersonalizationEnabled()) {
       localStorage.setItem('scheduledExports', JSON.stringify(updatedExports));
+
+      SecureStorageV2Service.setItem('scheduledExports', updatedExports, {
+        encrypt: true,
+        category: 'personalization',
+        expiresIn: 365 * 24 * 60 * 60 * 1000,
+      }).catch(error => {
+        console.warn('Failed to store scheduled exports in secure storage:', error);
+      });
     }
     setExports(updatedExports);
   }, []);

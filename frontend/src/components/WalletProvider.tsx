@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { connect as stacksConnect } from '@stacks/connect';
 import { GDPRComplianceService } from '../services/GDPRComplianceService';
+import { SecureStorageV2Service } from '../services/SecureStorageV2Service';
 
 interface WalletContextType {
   isConnected: boolean;
@@ -33,6 +34,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   // Clear stale wallet connection data
   const clearWalletData = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
+    SecureStorageV2Service.removeItem(STORAGE_KEY).catch(error => {
+      console.error('Failed to clear wallet data from secure storage:', error);
+    });
     setIsConnected(false);
     setAddress(null);
   }, []);
@@ -63,22 +67,23 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Verify saved connection on mount
     const verifySavedConnection = async () => {
-      const savedAddress = localStorage.getItem(STORAGE_KEY);
+      let savedAddress = await SecureStorageV2Service.getItem<string>(STORAGE_KEY);
       
       if (!savedAddress) {
-        // No saved address, mark verification complete
+        savedAddress = localStorage.getItem(STORAGE_KEY);
+      }
+      
+      if (!savedAddress) {
         setIsVerifying(false);
         return;
       }
 
-      // Verify the saved address is still valid
       const isValid = await verifyConnection(savedAddress);
       
       if (isValid) {
         setIsConnected(true);
         setAddress(savedAddress);
       } else {
-        // Clear stale data
         clearWalletData();
       }
       
@@ -109,6 +114,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
           if (consentCheck.allowed) {
             localStorage.setItem(STORAGE_KEY, stacksAddress.address);
+            
+            await SecureStorageV2Service.setItem(STORAGE_KEY, stacksAddress.address, {
+              encrypt: true,
+              category: 'necessary',
+              requireConsent: false,
+            });
           }
         }
       }

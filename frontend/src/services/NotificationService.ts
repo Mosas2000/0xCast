@@ -8,6 +8,7 @@ import type {
   NotificationType,
 } from '../types/notifications';
 import { GDPRComplianceService } from './GDPRComplianceService';
+import { SecureStorageV2Service } from './SecureStorageV2Service';
 
 export class NotificationService {
   private static readonly STORAGE_KEY = 'notifications';
@@ -32,7 +33,7 @@ export class NotificationService {
   }
 
   static async getNotifications(query: NotificationQuery): Promise<Notification[]> {
-    const notifications = this.getAllNotifications();
+    const notifications = await this.getAllNotifications();
     let filtered = notifications.filter(n => n.userId === query.userId);
 
     if (query.status) {
@@ -58,13 +59,13 @@ export class NotificationService {
   }
 
   static async markAsRead(notificationId: string): Promise<Notification | null> {
-    const notifications = this.getAllNotifications();
+    const notifications = await this.getAllNotifications();
     const notification = notifications.find(n => n.id === notificationId);
 
     if (notification) {
       notification.status = 'read';
       notification.readAt = new Date().toISOString();
-      this.saveAllNotifications(notifications);
+      await this.saveAllNotifications(notifications);
       return notification;
     }
 
@@ -72,13 +73,13 @@ export class NotificationService {
   }
 
   static async markAsUnread(notificationId: string): Promise<Notification | null> {
-    const notifications = this.getAllNotifications();
+    const notifications = await this.getAllNotifications();
     const notification = notifications.find(n => n.id === notificationId);
 
     if (notification) {
       notification.status = 'unread';
       notification.readAt = undefined;
-      this.saveAllNotifications(notifications);
+      await this.saveAllNotifications(notifications);
       return notification;
     }
 
@@ -86,13 +87,13 @@ export class NotificationService {
   }
 
   static async archive(notificationId: string): Promise<Notification | null> {
-    const notifications = this.getAllNotifications();
+    const notifications = await this.getAllNotifications();
     const notification = notifications.find(n => n.id === notificationId);
 
     if (notification) {
       notification.status = 'archived';
       notification.archivedAt = new Date().toISOString();
-      this.saveAllNotifications(notifications);
+      await this.saveAllNotifications(notifications);
       return notification;
     }
 
@@ -100,11 +101,11 @@ export class NotificationService {
   }
 
   static async delete(notificationId: string): Promise<boolean> {
-    const notifications = this.getAllNotifications();
+    const notifications = await this.getAllNotifications();
     const filtered = notifications.filter(n => n.id !== notificationId);
 
     if (filtered.length < notifications.length) {
-      this.saveAllNotifications(filtered);
+      await this.saveAllNotifications(filtered);
       return true;
     }
 
@@ -112,7 +113,7 @@ export class NotificationService {
   }
 
   static async bulkMarkAsRead(notificationIds: string[]): Promise<Notification[]> {
-    const notifications = this.getAllNotifications();
+    const notifications = await this.getAllNotifications();
     const updated: Notification[] = [];
 
     notificationIds.forEach(id => {
@@ -124,12 +125,12 @@ export class NotificationService {
       }
     });
 
-    this.saveAllNotifications(notifications);
+    await this.saveAllNotifications(notifications);
     return updated;
   }
 
   static async bulkArchive(notificationIds: string[]): Promise<Notification[]> {
-    const notifications = this.getAllNotifications();
+    const notifications = await this.getAllNotifications();
     const updated: Notification[] = [];
 
     notificationIds.forEach(id => {
@@ -141,19 +142,19 @@ export class NotificationService {
       }
     });
 
-    this.saveAllNotifications(notifications);
+    await this.saveAllNotifications(notifications);
     return updated;
   }
 
   static async getUnreadCount(userId: string): Promise<number> {
-    const notifications = this.getAllNotifications();
+    const notifications = await this.getAllNotifications();
     return notifications.filter(
       n => n.userId === userId && n.status === 'unread'
     ).length;
   }
 
   static async getNotificationStats(userId: string) {
-    const notifications = this.getAllNotifications().filter(
+    const notifications = (await this.getAllNotifications()).filter(
       n => n.userId === userId
     );
 
@@ -167,14 +168,14 @@ export class NotificationService {
         notifications.length > 0
           ? notifications[0].createdAt
           : undefined,
-      preferenceCount: this.getUserPreferencesCount(userId),
+      preferenceCount: await this.getUserPreferencesCount(userId),
     };
   }
 
   static async setPreference(
     preference: Omit<NotificationPreference, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<NotificationPreference> {
-    const preferences = this.getAllPreferences();
+    const preferences = await this.getAllPreferences();
     const existing = preferences.find(
       p =>
         p.userId === preference.userId &&
@@ -198,7 +199,7 @@ export class NotificationService {
       preferences.push(newPref);
     }
 
-    this.saveAllPreferences(preferences);
+    await this.saveAllPreferences(preferences);
     return existing || preferences[preferences.length - 1];
   }
 
@@ -207,7 +208,7 @@ export class NotificationService {
     type: NotificationType,
     channel: string
   ): Promise<NotificationPreference | null> {
-    const preferences = this.getAllPreferences();
+    const preferences = await this.getAllPreferences();
     return (
       preferences.find(
         p =>
@@ -219,7 +220,7 @@ export class NotificationService {
   }
 
   static async getUserPreferences(userId: string): Promise<NotificationPreference[]> {
-    const preferences = this.getAllPreferences();
+    const preferences = await this.getAllPreferences();
     return preferences.filter(p => p.userId === userId);
   }
 
@@ -227,7 +228,7 @@ export class NotificationService {
     preferenceId: string,
     updates: NotificationPreferenceUpdate
   ): Promise<NotificationPreference | null> {
-    const preferences = this.getAllPreferences();
+    const preferences = await this.getAllPreferences();
     const preference = preferences.find(p => p.id === preferenceId);
 
     if (preference) {
@@ -238,7 +239,7 @@ export class NotificationService {
         preference.enabled = updates.enabled;
       }
       preference.updatedAt = new Date().toISOString();
-      this.saveAllPreferences(preferences);
+      await this.saveAllPreferences(preferences);
       return preference;
     }
 
@@ -246,11 +247,11 @@ export class NotificationService {
   }
 
   static async deletePreference(preferenceId: string): Promise<boolean> {
-    const preferences = this.getAllPreferences();
+    const preferences = await this.getAllPreferences();
     const filtered = preferences.filter(p => p.id !== preferenceId);
 
     if (filtered.length < preferences.length) {
-      this.saveAllPreferences(filtered);
+      await this.saveAllPreferences(filtered);
       return true;
     }
 
@@ -258,15 +259,15 @@ export class NotificationService {
   }
 
   static async clearUserNotifications(userId: string): Promise<number> {
-    const notifications = this.getAllNotifications();
+    const notifications = await this.getAllNotifications();
     const beforeCount = notifications.length;
     const filtered = notifications.filter(n => n.userId !== userId);
-    this.saveAllNotifications(filtered);
+    await this.saveAllNotifications(filtered);
     return beforeCount - filtered.length;
   }
 
   static async deleteOldNotifications(daysOld: number): Promise<number> {
-    const notifications = this.getAllNotifications();
+    const notifications = await this.getAllNotifications();
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysOld);
 
@@ -274,61 +275,80 @@ export class NotificationService {
     const filtered = notifications.filter(
       n => new Date(n.createdAt) > cutoffDate
     );
-    this.saveAllNotifications(filtered);
+    await this.saveAllNotifications(filtered);
     return beforeCount - filtered.length;
   }
 
-  private static saveNotification(notification: Notification): void {
-    const notifications = this.getAllNotifications();
+  private static async saveNotification(notification: Notification): Promise<void> {
+    const notifications = await this.getAllNotifications();
     notifications.unshift(notification);
-    this.saveAllNotifications(notifications);
+    await this.saveAllNotifications(notifications);
   }
 
-  private static getAllNotifications(): Notification[] {
+  private static async getAllNotifications(): Promise<Notification[]> {
     try {
-      const data = localStorage.getItem(this.STORAGE_KEY);
-      return data ? JSON.parse(data) : [];
+      const data = await SecureStorageV2Service.getItem<Notification[]>(this.STORAGE_KEY);
+      if (data) return data;
+
+      const localData = localStorage.getItem(this.STORAGE_KEY);
+      return localData ? JSON.parse(localData) : [];
     } catch {
       return [];
     }
   }
 
-  private static saveAllNotifications(notifications: Notification[]): void {
+  private static async saveAllNotifications(notifications: Notification[]): Promise<void> {
     try {
       const consentCheck = GDPRComplianceService.checkConsentForStorage(
         { notifications: true },
         'necessary'
       );
       if (!consentCheck.allowed) return;
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(notifications));
+
+      await SecureStorageV2Service.setItem(this.STORAGE_KEY, notifications, {
+        encrypt: true,
+        category: 'necessary',
+        expiresIn: 90 * 24 * 60 * 60 * 1000,
+      });
     } catch {
       console.error('Failed to save notifications');
     }
   }
 
-  private static getAllPreferences(): NotificationPreference[] {
+  private static async getAllPreferences(): Promise<NotificationPreference[]> {
     try {
-      const data = localStorage.getItem(this.PREFERENCES_KEY);
-      return data ? JSON.parse(data) : [];
+      const data = await SecureStorageV2Service.getItem<NotificationPreference[]>(
+        this.PREFERENCES_KEY
+      );
+      if (data) return data;
+
+      const localData = localStorage.getItem(this.PREFERENCES_KEY);
+      return localData ? JSON.parse(localData) : [];
     } catch {
       return [];
     }
   }
 
-  private static saveAllPreferences(preferences: NotificationPreference[]): void {
+  private static async saveAllPreferences(preferences: NotificationPreference[]): Promise<void> {
     try {
       const consentCheck = GDPRComplianceService.checkConsentForStorage(
         { preferences: true },
         'personalization'
       );
       if (!consentCheck.allowed) return;
-      localStorage.setItem(this.PREFERENCES_KEY, JSON.stringify(preferences));
+
+      await SecureStorageV2Service.setItem(this.PREFERENCES_KEY, preferences, {
+        encrypt: true,
+        category: 'personalization',
+        expiresIn: 90 * 24 * 60 * 60 * 1000,
+      });
     } catch {
       console.error('Failed to save preferences');
     }
   }
 
-  private static getUserPreferencesCount(userId: string): number {
-    return this.getAllPreferences().filter(p => p.userId === userId).length;
+  private static async getUserPreferencesCount(userId: string): Promise<number> {
+    const prefs = await this.getAllPreferences();
+    return prefs.filter(p => p.userId === userId).length;
   }
 }

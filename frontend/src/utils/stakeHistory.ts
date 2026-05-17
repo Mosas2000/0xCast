@@ -10,6 +10,7 @@ export interface StakeHistoryEntry {
 }
 
 import { GDPRComplianceService } from '../services/GDPRComplianceService';
+import { SecureStorageV2Service } from '../services/SecureStorageV2Service';
 
 const STAKE_HISTORY_KEY = '0xcast-stake-history';
 const MAX_HISTORY = 200;
@@ -25,13 +26,34 @@ function readHistory(): StakeHistoryEntry[] {
   }
 }
 
+async function readHistorySecure(): Promise<StakeHistoryEntry[]> {
+  try {
+    const stored = await SecureStorageV2Service.getItem<StakeHistoryEntry[]>(STAKE_HISTORY_KEY);
+    if (stored) return stored;
+    return readHistory();
+  } catch {
+    return readHistory();
+  }
+}
+
 function writeHistory(entries: StakeHistoryEntry[]): void {
   const consentCheck = GDPRComplianceService.checkConsentForStorage(
     { stakeHistory: true },
     'necessary'
   );
   if (!consentCheck.allowed) return;
-  localStorage.setItem(STAKE_HISTORY_KEY, JSON.stringify(entries.slice(0, MAX_HISTORY)));
+
+  const trimmed = entries.slice(0, MAX_HISTORY);
+  localStorage.setItem(STAKE_HISTORY_KEY, JSON.stringify(trimmed));
+
+  SecureStorageV2Service.setItem(STAKE_HISTORY_KEY, trimmed, {
+    encrypt: true,
+    category: 'necessary',
+    expiresIn: 365 * 24 * 60 * 60 * 1000,
+    requireConsent: false,
+  }).catch(error => {
+    console.error('Failed to store stake history in secure storage:', error);
+  });
 }
 
 export function addStakeHistoryEntry(entry: StakeHistoryEntry): void {
@@ -43,6 +65,16 @@ export function addStakeHistoryEntry(entry: StakeHistoryEntry): void {
 
 export function getStakeHistoryForMarketUser(marketId: number, userAddress: string): StakeHistoryEntry[] {
   return readHistory().filter((entry) => entry.marketId === marketId && entry.userAddress === userAddress);
+}
+
+export async function getStakeHistoryForMarketUserSecure(
+  marketId: number,
+  userAddress: string
+): Promise<StakeHistoryEntry[]> {
+  const history = await readHistorySecure();
+  return history.filter(
+    (entry) => entry.marketId === marketId && entry.userAddress === userAddress
+  );
 }
 
 export function getStakeHistoryTotals(entries: StakeHistoryEntry[]): { yes: number; no: number; total: number } {

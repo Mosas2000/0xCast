@@ -1,52 +1,103 @@
 import { RateLimitRecord } from '@/types/rateLimit';
+import { SecureStorageV2Service } from './SecureStorageV2Service';
 
 const STORAGE_KEY = 'rate_limit_records';
 const STORAGE_VERSION = '1.0';
 
 export class RateLimitStorageService {
-  saveRecords(records: Map<string, RateLimitRecord[]>): void {
+  async saveRecords(records: Map<string, RateLimitRecord[]>): Promise<void> {
     try {
       const data = {
         version: STORAGE_VERSION,
         timestamp: Date.now(),
         records: Array.from(records.entries()),
       };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
+      await SecureStorageV2Service.setItem(STORAGE_KEY, data, {
+        encrypt: true,
+        category: 'necessary',
+        expiresIn: 3600000,
+        requireConsent: false,
+      });
     } catch (error) {
       console.error('Failed to save rate limit records:', error);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch {
+        // Fallback failed
+      }
     }
   }
 
-  loadRecords(): Map<string, RateLimitRecord[]> | null {
+  async loadRecords(): Promise<Map<string, RateLimitRecord[]> | null> {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (!stored) return null;
+      const data = await SecureStorageV2Service.getItem<{
+        version: string;
+        timestamp: number;
+        records: Array<[string, RateLimitRecord[]]>;
+      }>(STORAGE_KEY);
 
-      const data = JSON.parse(stored);
-      
+      if (!data) {
+        return this.loadRecordsFromLocalStorage();
+      }
+
       if (data.version !== STORAGE_VERSION) {
-        this.clearRecords();
+        await this.clearRecords();
         return null;
       }
 
       const ageMs = Date.now() - data.timestamp;
       if (ageMs > 3600000) {
-        this.clearRecords();
+        await this.clearRecords();
         return null;
       }
 
       return new Map(data.records);
     } catch (error) {
       console.error('Failed to load rate limit records:', error);
+      return this.loadRecordsFromLocalStorage();
+    }
+  }
+
+  private loadRecordsFromLocalStorage(): Map<string, RateLimitRecord[]> | null {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return null;
+
+      const data = JSON.parse(stored);
+
+      if (data.version !== STORAGE_VERSION) {
+        this.clearRecordsFromLocalStorage();
+        return null;
+      }
+
+      const ageMs = Date.now() - data.timestamp;
+      if (ageMs > 3600000) {
+        this.clearRecordsFromLocalStorage();
+        return null;
+      }
+
+      return new Map(data.records);
+    } catch (error) {
+      console.error('Failed to load rate limit records from localStorage:', error);
       return null;
     }
   }
 
-  clearRecords(): void {
+  async clearRecords(): Promise<void> {
+    try {
+      await SecureStorageV2Service.removeItem(STORAGE_KEY);
+      this.clearRecordsFromLocalStorage();
+    } catch (error) {
+      console.error('Failed to clear rate limit records:', error);
+    }
+  }
+
+  private clearRecordsFromLocalStorage(): void {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
-      console.error('Failed to clear rate limit records:', error);
+      console.error('Failed to clear rate limit records from localStorage:', error);
     }
   }
 }
