@@ -7,6 +7,7 @@ import type {
   NotificationStatus,
   NotificationType,
 } from '../types/notifications';
+import { GDPRComplianceService } from './GDPRComplianceService';
 
 export class NotificationService {
   private static readonly STORAGE_KEY = 'notifications';
@@ -294,6 +295,11 @@ export class NotificationService {
 
   private static saveAllNotifications(notifications: Notification[]): void {
     try {
+      const consentCheck = GDPRComplianceService.checkConsentForStorage(
+        { notifications: true },
+        'necessary'
+      );
+      if (!consentCheck.allowed) return;
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(notifications));
     } catch {
       console.error('Failed to save notifications');
@@ -311,6 +317,11 @@ export class NotificationService {
 
   private static saveAllPreferences(preferences: NotificationPreference[]): void {
     try {
+      const consentCheck = GDPRComplianceService.checkConsentForStorage(
+        { preferences: true },
+        'personalization'
+      );
+      if (!consentCheck.allowed) return;
       localStorage.setItem(this.PREFERENCES_KEY, JSON.stringify(preferences));
     } catch {
       console.error('Failed to save preferences');

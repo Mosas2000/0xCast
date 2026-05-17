@@ -13,6 +13,7 @@ import {
   VolumeRange,
   VOLUME_THRESHOLDS,
 } from '../types/filters';
+import { GDPRComplianceService } from '../services/GDPRComplianceService';
 import {
   MarketCategory,
   SortOption,
@@ -227,7 +228,9 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
       if (searchQuery.trim() && searchQuery.length > 2) {
         setRecentSearches(prev => {
           const updated = [searchQuery, ...prev.filter(s => s !== searchQuery)].slice(0, 5);
-          localStorage.setItem('0xcast_recent_searches', JSON.stringify(updated));
+          if (GDPRComplianceService.isPersonalizationEnabled()) {
+            localStorage.setItem('0xcast_recent_searches', JSON.stringify(updated));
+          }
           return updated;
         });
       }
@@ -397,7 +400,6 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
     }
   }, [syncWithUrl, setSearchParams]);
 
-  // Persist filters to localStorage
   useEffect(() => {
     const filters = {
       category,
@@ -406,7 +408,9 @@ export function useMarketFiltering({ markets, syncWithUrl = false }: UseMarketFi
       timeRange,
       volumeRange,
     };
-    localStorage.setItem('0xcast_last_filters', JSON.stringify(filters));
+    if (GDPRComplianceService.isPersonalizationEnabled()) {
+      localStorage.setItem('0xcast_last_filters', JSON.stringify(filters));
+    }
   }, [category, sortOption, statusFilter, timeRange, volumeRange]);
 
   return {

@@ -11,6 +11,7 @@ import {
   DEFAULT_NETWORK, 
   NETWORK_STORAGE_KEY 
 } from '../types/network';
+import { GDPRComplianceService } from '../services/GDPRComplianceService';
 
 /**
  * Get Stacks network instance for the given network type
@@ -33,6 +34,16 @@ export function getNetworkConfig(networkType: NetworkType) {
  */
 export function saveNetworkPreference(networkType: NetworkType): void {
   try {
+    const consentCheck = GDPRComplianceService.checkConsentForStorage(
+      { networkType },
+      'personalization'
+    );
+
+    if (!consentCheck.allowed) {
+      console.warn('Network preference storage blocked:', consentCheck.reason);
+      return;
+    }
+
     localStorage.setItem(NETWORK_STORAGE_KEY, networkType);
   } catch (error) {
     console.warn('Failed to save network preference:', error);

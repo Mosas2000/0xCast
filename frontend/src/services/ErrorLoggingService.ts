@@ -1,4 +1,5 @@
 import { ApiError, ErrorCode } from '../utils/apiErrors';
+import { GDPRComplianceService } from './GDPRComplianceService';
 
 interface ErrorLogEntry {
   id: string;
@@ -229,9 +230,12 @@ class ErrorLoggingService {
       const stored = localStorage.getItem('error_logs');
       const logs = stored ? JSON.parse(stored) : [];
       logs.push(entry);
-      
+
       const trimmed = logs.slice(-this.config.maxLogSize);
-      localStorage.setItem('error_logs', JSON.stringify(trimmed));
+
+      if (GDPRComplianceService.isAnalyticsEnabled()) {
+        localStorage.setItem('error_logs', JSON.stringify(trimmed));
+      }
     } catch {
       // Storage full or unavailable, ignore
     }

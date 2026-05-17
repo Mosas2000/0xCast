@@ -9,6 +9,8 @@ export interface StakeHistoryEntry {
   timestamp: number;
 }
 
+import { GDPRComplianceService } from '../services/GDPRComplianceService';
+
 const STAKE_HISTORY_KEY = '0xcast-stake-history';
 const MAX_HISTORY = 200;
 
@@ -24,6 +26,11 @@ function readHistory(): StakeHistoryEntry[] {
 }
 
 function writeHistory(entries: StakeHistoryEntry[]): void {
+  const consentCheck = GDPRComplianceService.checkConsentForStorage(
+    { stakeHistory: true },
+    'necessary'
+  );
+  if (!consentCheck.allowed) return;
   localStorage.setItem(STAKE_HISTORY_KEY, JSON.stringify(entries.slice(0, MAX_HISTORY)));
 }
 

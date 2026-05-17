@@ -7,6 +7,7 @@
 import { getExplorerUrls } from '../config/network';
 import { getTransactionExplorerUrl, getAddressExplorerUrl } from './explorerLinks';
 import type { NetworkType } from '../types/network';
+import { GDPRComplianceService } from '../services/GDPRComplianceService';
 
 export const TransactionStatus = {
   PENDING: 'pending',
@@ -62,6 +63,16 @@ export function getTransactionHistory(): Transaction[] {
  * Save transaction to history
  */
 export function saveTransaction(tx: Transaction): void {
+  const consentCheck = GDPRComplianceService.checkConsentForStorage(
+    { transaction: tx },
+    'necessary'
+  );
+
+  if (!consentCheck.allowed) {
+    console.warn('Transaction storage blocked:', consentCheck.reason);
+    return;
+  }
+
   const history = getTransactionHistory();
   
   // Add new transaction at the beginning
@@ -82,6 +93,16 @@ export function updateTransactionStatus(
   blockHeight?: number,
   error?: string
 ): void {
+  const consentCheck = GDPRComplianceService.checkConsentForStorage(
+    { txId, status, blockHeight, error },
+    'necessary'
+  );
+
+  if (!consentCheck.allowed) {
+    console.warn('Transaction update blocked:', consentCheck.reason);
+    return;
+  }
+
   const history = getTransactionHistory();
   const index = history.findIndex(tx => tx.txId === txId);
   

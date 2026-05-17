@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FilterPreset, MarketFilters } from '../types/filters';
+import { GDPRComplianceService } from '../services/GDPRComplianceService';
 
 const STORAGE_KEY = '0xcast_filter_presets';
 
@@ -46,17 +47,21 @@ export function useFilterPresets() {
       ...preset,
       id: Date.now().toString(),
     };
-    
+
     const updated = [...presets, newPreset];
     setPresets(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    if (GDPRComplianceService.isPersonalizationEnabled()) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    }
     return newPreset;
   }, [presets]);
 
   const deletePreset = useCallback((id: string) => {
     const updated = presets.filter(p => p.id !== id);
     setPresets(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    if (GDPRComplianceService.isPersonalizationEnabled()) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    }
   }, [presets]);
 
   return {

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { WalletProvider } from './components/WalletProvider';
 import { TransactionProvider } from './components/TransactionProvider';
@@ -29,8 +30,16 @@ import { MultiTradePage } from './pages/MultiTradePage';
 import { CreateMultiMarketPage } from './pages/CreateMultiMarketPage';
 import { WatchlistPage } from './pages/WatchlistPage';
 import { RecentlyViewedPage } from './pages/RecentlyViewedPage';
+import { GDPRInitializer } from './utils/gdprInitializer';
 
 function App() {
+  useEffect(() => {
+    GDPRInitializer.initialize();
+    
+    return () => {
+      GDPRInitializer.shutdown();
+    };
+  }, []);
   return (
     <ErrorBoundary>
       <ThemeProvider>
