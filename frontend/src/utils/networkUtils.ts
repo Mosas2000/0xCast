@@ -12,6 +12,7 @@ import {
   NETWORK_STORAGE_KEY 
 } from '../types/network';
 import { GDPRComplianceService } from '../services/GDPRComplianceService';
+import { SecureStorageV2Service } from '../services/SecureStorageV2Service';
 
 /**
  * Get Stacks network instance for the given network type
@@ -45,14 +46,31 @@ export function saveNetworkPreference(networkType: NetworkType): void {
     }
 
     localStorage.setItem(NETWORK_STORAGE_KEY, networkType);
+
+    SecureStorageV2Service.setItem(NETWORK_STORAGE_KEY, networkType, {
+      encrypt: true,
+      category: 'personalization',
+      expiresIn: 365 * 24 * 60 * 60 * 1000,
+    }).catch(error => {
+      console.warn('Failed to store network preference in secure storage:', error);
+    });
   } catch (error) {
     console.warn('Failed to save network preference:', error);
   }
 }
 
-/**
- * Load network selection from localStorage
- */
+export async function loadNetworkPreferenceSecure(): Promise<NetworkType> {
+  try {
+    const saved = await SecureStorageV2Service.getItem<NetworkType>(NETWORK_STORAGE_KEY);
+    if (saved === NetworkType.MAINNET || saved === NetworkType.TESTNET) {
+      return saved;
+    }
+  } catch (error) {
+    console.warn('Failed to load network preference from secure storage:', error);
+  }
+  return loadNetworkPreference();
+}
+
 export function loadNetworkPreference(): NetworkType {
   try {
     const saved = localStorage.getItem(NETWORK_STORAGE_KEY);
@@ -65,12 +83,12 @@ export function loadNetworkPreference(): NetworkType {
   return DEFAULT_NETWORK;
 }
 
-/**
- * Clear network preference from localStorage
- */
 export function clearNetworkPreference(): void {
   try {
     localStorage.removeItem(NETWORK_STORAGE_KEY);
+    SecureStorageV2Service.removeItem(NETWORK_STORAGE_KEY).catch(error => {
+      console.warn('Failed to clear network preference from secure storage:', error);
+    });
   } catch (error) {
     console.warn('Failed to clear network preference:', error);
   }
