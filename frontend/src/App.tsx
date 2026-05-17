@@ -34,8 +34,10 @@ import { GDPRInitializer } from './utils/gdprInitializer';
 
 function App() {
   useEffect(() => {
-    GDPRInitializer.initialize();
-    
+    GDPRInitializer.initialize().catch(error => {
+      console.error('GDPR initialization failed:', error);
+    });
+
     return () => {
       GDPRInitializer.shutdown();
     };
