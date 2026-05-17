@@ -8,6 +8,7 @@ import { getExplorerUrls } from '../config/network';
 import { getTransactionExplorerUrl, getAddressExplorerUrl } from './explorerLinks';
 import type { NetworkType } from '../types/network';
 import { GDPRComplianceService } from '../services/GDPRComplianceService';
+import { SecureStorageV2Service } from '../services/SecureStorageV2Service';
 
 export const TransactionStatus = {
   PENDING: 'pending',
@@ -59,6 +60,16 @@ export function getTransactionHistory(): Transaction[] {
   }
 }
 
+export async function getTransactionHistorySecure(): Promise<Transaction[]> {
+  try {
+    const stored = await SecureStorageV2Service.getItem<Transaction[]>(TX_HISTORY_KEY);
+    if (stored) return stored;
+    return getTransactionHistory();
+  } catch {
+    return getTransactionHistory();
+  }
+}
+
 /**
  * Save transaction to history
  */
@@ -74,21 +85,26 @@ export function saveTransaction(tx: Transaction): void {
   }
 
   const history = getTransactionHistory();
-  
-  // Add new transaction at the beginning
   history.unshift(tx);
-  
-  // Limit history size
   const limitedHistory = history.slice(0, MAX_TX_HISTORY);
-  
+
   localStorage.setItem(TX_HISTORY_KEY, JSON.stringify(limitedHistory));
+
+  SecureStorageV2Service.setItem(TX_HISTORY_KEY, limitedHistory, {
+    encrypt: true,
+    category: 'necessary',
+    expiresIn: 365 * 24 * 60 * 60 * 1000,
+    requireConsent: false,
+  }).catch(error => {
+    console.error('Failed to store transaction in secure storage:', error);
+  });
 }
 
 /**
  * Update transaction status in history
  */
 export function updateTransactionStatus(
-  txId: string, 
+  txId: string,
   status: TransactionStatus,
   blockHeight?: number,
   error?: string
@@ -105,7 +121,7 @@ export function updateTransactionStatus(
 
   const history = getTransactionHistory();
   const index = history.findIndex(tx => tx.txId === txId);
-  
+
   if (index !== -1) {
     history[index] = {
       ...history[index],
@@ -114,14 +130,23 @@ export function updateTransactionStatus(
       ...(error && { error }),
     };
     localStorage.setItem(TX_HISTORY_KEY, JSON.stringify(history));
+
+    SecureStorageV2Service.setItem(TX_HISTORY_KEY, history, {
+      encrypt: true,
+      category: 'necessary',
+      expiresIn: 365 * 24 * 60 * 60 * 1000,
+      requireConsent: false,
+    }).catch(err => {
+      console.error('Failed to update transaction in secure storage:', err);
+    });
   }
 }
 
-/**
- * Clear transaction history
- */
 export function clearTransactionHistory(): void {
   localStorage.removeItem(TX_HISTORY_KEY);
+  SecureStorageV2Service.removeItem(TX_HISTORY_KEY).catch(error => {
+    console.error('Failed to clear transaction history from secure storage:', error);
+  });
 }
 
 /**
