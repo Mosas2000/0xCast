@@ -1,5 +1,6 @@
 import { cacheManager } from './cache';
 import { GDPRComplianceService } from '../services/GDPRComplianceService';
+import { SecureStorageV2Service } from '../services/SecureStorageV2Service';
 
 export function isCacheAvailable(): boolean {
   try {
@@ -78,13 +79,21 @@ export function importCache(jsonData: string): void {
     }
 
     const data = JSON.parse(jsonData);
-    
+
     Object.entries(data.session || {}).forEach(([key, value]) => {
       sessionStorage.setItem(key, value as string);
     });
 
     Object.entries(data.local || {}).forEach(([key, value]) => {
       localStorage.setItem(key, value as string);
+
+      SecureStorageV2Service.setItem(key, value, {
+        encrypt: true,
+        category: 'personalization',
+        expiresIn: 30 * 24 * 60 * 60 * 1000,
+      }).catch(error => {
+        console.warn(`Failed to store cache key ${key} in secure storage:`, error);
+      });
     });
   } catch (error) {
     console.error('Failed to import cache:', error);
