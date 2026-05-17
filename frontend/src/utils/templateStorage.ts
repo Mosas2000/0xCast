@@ -1,4 +1,5 @@
 import type { TemplateCategory } from '../types/template';
+import { GDPRComplianceService } from '../services/GDPRComplianceService';
 
 export class TemplateCache {
   private static cache: Map<string, any> = new Map();
@@ -22,6 +23,16 @@ export class TemplateCache {
 
   static set(key: string, value: any, ttlMs: number = 24 * 60 * 60 * 1000): void {
     try {
+      const consentCheck = GDPRComplianceService.checkConsentForStorage(
+        { key, value },
+        'personalization'
+      );
+
+      if (!consentCheck.allowed) {
+        console.warn('Template cache storage blocked:', consentCheck.reason);
+        return;
+      }
+
       const entry = {
         value,
         timestamp: Date.now(),
@@ -94,6 +105,16 @@ const CACHE_VERSION = '1.0.0';
 export class TemplatePreferences {
   static saveUserPreference(key: string, value: any): void {
     try {
+      const consentCheck = GDPRComplianceService.checkConsentForStorage(
+        { key, value },
+        'personalization'
+      );
+
+      if (!consentCheck.allowed) {
+        console.warn('Template preference storage blocked:', consentCheck.reason);
+        return;
+      }
+
       localStorage.setItem(`template_pref_${key}`, JSON.stringify(value));
     } catch (e) {
       console.warn('Failed to save preference:', e);
