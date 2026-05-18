@@ -15,7 +15,11 @@ export function AMMPoolCard({ poolId, onSelect }: PoolCardProps) {
   if (!pool) return <div className="p-4">Pool not found</div>;
 
   return (
-    <div className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50" onClick={() => onSelect(poolId)}>
+    <button
+      type="button"
+      className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50 w-full text-left"
+      onClick={() => onSelect(poolId)}
+    >
       <div className="flex justify-between mb-2">
         <span className="font-semibold">
           {pool.tokenA} / {pool.tokenB}
@@ -32,7 +36,7 @@ export function AMMPoolCard({ poolId, onSelect }: PoolCardProps) {
           <div className="font-mono">{Number(pool.reserveB) / 1e12}</div>
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 
