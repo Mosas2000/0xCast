@@ -42,6 +42,7 @@ export const RewardNotification: React.FC<RewardNotificationProps> = ({
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"
@@ -64,12 +65,14 @@ export const RewardNotification: React.FC<RewardNotificationProps> = ({
               onDismiss();
             }}
             className="flex-shrink-0 text-white hover:text-gray-200"
+            aria-label="Dismiss notification"
           >
             <svg
               className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"

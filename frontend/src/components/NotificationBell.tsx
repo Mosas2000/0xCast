@@ -19,13 +19,15 @@ export default function NotificationBell({
       <button
         onClick={() => setShowCenter(!showCenter)}
         className={`relative p-2 text-gray-600 hover:text-gray-900 transition ${className}`}
-        title="Notifications"
+        aria-label="Notifications"
+        aria-expanded={showCenter}
       >
         <svg
           className="w-6 h-6"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
