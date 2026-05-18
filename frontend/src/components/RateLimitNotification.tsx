@@ -61,6 +61,7 @@ export const RateLimitNotification: React.FC<RateLimitNotificationProps> = ({
             className="w-5 h-5"
             fill="currentColor"
             viewBox="0 0 20 20"
+            aria-hidden="true"
           >
             <path
               fillRule="evenodd"
@@ -95,6 +96,7 @@ export const RateLimitNotification: React.FC<RateLimitNotificationProps> = ({
                 className="w-5 h-5"
                 fill="currentColor"
                 viewBox="0 0 20 20"
+                aria-hidden="true"
               >
                 <path
                   fillRule="evenodd"

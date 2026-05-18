@@ -13,7 +13,7 @@ export function Logo({ className = '', size = 'md' }: LogoProps) {
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <div className={`${sizes[size]} relative`}>
-        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full" role="img" aria-label="0xCast logo">
           <defs>
             <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" style={{ stopColor: '#0a0a0a', stopOpacity: 1 }} />

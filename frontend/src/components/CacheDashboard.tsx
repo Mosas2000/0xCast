@@ -49,9 +49,9 @@ export function CacheDashboard() {
       <button
         onClick={() => setIsOpen(true)}
         className="fixed bottom-4 right-4 p-3 bg-neutral-900 border border-neutral-800 rounded-lg shadow-lg hover:bg-neutral-800 transition-colors"
-        title="Cache Dashboard"
+        aria-label="Open cache dashboard"
       >
-        <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
         </svg>
       </button>
@@ -65,8 +65,9 @@ export function CacheDashboard() {
         <button
           onClick={() => setIsOpen(false)}
           className="text-neutral-500 hover:text-white"
+          aria-label="Close cache dashboard"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
