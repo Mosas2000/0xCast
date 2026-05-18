@@ -43,17 +43,18 @@ interface CategoryOptionProps {
 }
 
 const CategoryOption = memo(({ category, isSelected, onSelect }: CategoryOptionProps) => (
-  <div
+  <button
+    type="button"
     role="option"
     aria-selected={isSelected}
     onClick={() => onSelect(category.value)}
-    className={`px-4 py-2 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+    className={`w-full text-left px-4 py-2 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
       isSelected ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : ''
     }`}
   >
     <span className="mr-2">{category.icon}</span>
     {category.label}
-  </div>
+  </button>
 ));
 
 interface SortOptionItemProps {
@@ -63,16 +64,17 @@ interface SortOptionItemProps {
 }
 
 const SortOptionItem = memo(({ option, isSelected, onSelect }: SortOptionItemProps) => (
-  <div
+  <button
+    type="button"
     role="option"
     aria-selected={isSelected}
     onClick={() => onSelect(option.value)}
-    className={`px-4 py-2 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+    className={`w-full text-left px-4 py-2 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
       isSelected ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : ''
     }`}
   >
     {option.label}
-  </div>
+  </button>
 ));
 
 export function MarketFilter({
