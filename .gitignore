@@ -13,3 +13,12 @@ costs-reports.json
 node_modules
 .env
 *.json
+
+# SDK build output
+sdk/dist
+sdk/node_modules
+
+# Allow sdk config files despite *.json rule
+!sdk/package.json
+!sdk/package-lock.json
+!sdk/tsconfig.json
