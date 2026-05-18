@@ -8,11 +8,18 @@ interface MobileFormInputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const MobileFormInput = forwardRef<HTMLInputElement, MobileFormInputProps>(
-  ({ label, error, helperText, icon, className = '', ...props }, ref) => {
+  ({ label, error, helperText, icon, className = '', id, ...props }, ref) => {
+    const inputId = id || props.name || 'input';
+    const errorId = `${inputId}-error`;
+    const helperId = `${inputId}-helper`;
+
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+          <label 
+            htmlFor={inputId}
+            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
+          >
             {label}
           </label>
         )}
@@ -24,6 +31,11 @@ export const MobileFormInput = forwardRef<HTMLInputElement, MobileFormInputProps
           )}
           <input
             ref={ref}
+            id={inputId}
+            aria-invalid={error ? 'true' : 'false'}
+            aria-describedby={
+              error ? errorId : helperText ? helperId : undefined
+            }
             className={`
               w-full
               min-h-[44px]
@@ -50,10 +62,14 @@ export const MobileFormInput = forwardRef<HTMLInputElement, MobileFormInputProps
           />
         </div>
         {error && (
-          <p className="mt-2 text-sm text-red-500">{error}</p>
+          <p id={errorId} className="mt-2 text-sm text-red-500" role="alert">
+            {error}
+          </p>
         )}
         {helperText && !error && (
-          <p className="mt-2 text-sm text-neutral-500">{helperText}</p>
+          <p id={helperId} className="mt-2 text-sm text-neutral-500">
+            {helperText}
+          </p>
         )}
       </div>
     );

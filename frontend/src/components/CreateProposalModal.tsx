@@ -233,7 +233,9 @@ export function CreateProposalModal({
         <div style={{ marginBottom: '24px' }}>
           {/* Title */}
           <div style={{ marginBottom: '20px' }}>
-            <label style={{
+            <label 
+              htmlFor="proposal-title"
+              style={{
               display: 'block',
               fontSize: '14px',
               fontWeight: '600',
@@ -250,11 +252,16 @@ export function CreateProposalModal({
               </span>
             </label>
             <input
+              id="proposal-title"
               type="text"
               value={state.title}
               onChange={(e) => dispatch({ type: 'SET_TITLE', payload: e.target.value })}
               placeholder="Enter a clear, descriptive title"
               disabled={!hasEnoughTokens || isSubmitting}
+              aria-invalid={!isTitleValid && titleLength > 0 ? 'true' : 'false'}
+              aria-describedby={
+                (error || state.validationError) ? 'proposal-error' : undefined
+              }
               style={{
                 width: '100%',
                 padding: '14px 16px',
@@ -271,7 +278,9 @@ export function CreateProposalModal({
 
           {/* Description */}
           <div>
-            <label style={{
+            <label 
+              htmlFor="proposal-description"
+              style={{
               display: 'block',
               fontSize: '14px',
               fontWeight: '600',
@@ -288,11 +297,16 @@ export function CreateProposalModal({
               </span>
             </label>
             <textarea
+              id="proposal-description"
               value={state.description}
               onChange={(e) => dispatch({ type: 'SET_DESCRIPTION', payload: e.target.value })}
               placeholder="Describe your proposal in detail. What changes do you want to make and why?"
               disabled={!hasEnoughTokens || isSubmitting}
               rows={6}
+              aria-invalid={!isDescriptionValid && descriptionLength > 0 ? 'true' : 'false'}
+              aria-describedby={
+                (error || state.validationError) ? 'proposal-error' : undefined
+              }
               style={{
                 width: '100%',
                 padding: '14px 16px',
@@ -312,7 +326,10 @@ export function CreateProposalModal({
 
         {/* Errors */}
         {(error || state.validationError) && (
-          <div style={{
+          <div 
+            id="proposal-error"
+            role="alert"
+            style={{
             padding: '12px 16px',
             backgroundColor: '#EF444420',
             border: '1px solid #EF444440',

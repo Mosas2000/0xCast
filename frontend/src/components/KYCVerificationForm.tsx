@@ -266,7 +266,11 @@ export function KYCVerificationForm({ userId, onComplete }: KYCVerificationFormP
       </div>
 
       {error && (
-        <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-sm text-red-700 dark:text-red-400">
+        <div 
+          id="kyc-error"
+          role="alert"
+          className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-sm text-red-700 dark:text-red-400"
+        >
           {error}
         </div>
       )}

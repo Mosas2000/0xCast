@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 
 interface Language {
   code: string;
@@ -15,6 +15,43 @@ const languages: Language[] = [
   { code: 'zh', name: '中文', flag: '🇨🇳' },
   { code: 'ja', name: '日本語', flag: '🇯🇵' },
 ];
+
+interface LanguageOptionProps {
+  language: Language;
+  isSelected: boolean;
+  onSelect: (code: string) => void;
+}
+
+const LanguageOption = memo(({ language, isSelected, onSelect }: LanguageOptionProps) => (
+  <button
+    type="button"
+    onClick={() => onSelect(language.code)}
+    role="option"
+    aria-selected={isSelected}
+    className={`w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors ${
+      isSelected
+        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+        : 'text-neutral-900 dark:text-neutral-100'
+    }`}
+  >
+    <span className="text-lg">{language.flag}</span>
+    <span className="font-medium">{language.name}</span>
+    {isSelected && (
+      <svg
+        className="ml-auto w-4 h-4"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+        aria-hidden="true"
+      >
+        <path
+          fillRule="evenodd"
+          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+          clipRule="evenodd"
+        />
+      </svg>
+    )}
+  </button>
+));
 
 export function LanguageSwitcher() {
   const { i18n } = useTranslation();
@@ -88,36 +125,12 @@ export function LanguageSwitcher() {
         >
           <div className="py-1">
             {languages.map((language) => (
-              <button
+              <LanguageOption
                 key={language.code}
-                type="button"
-                onClick={() => handleLanguageChange(language.code)}
-                role="option"
-                aria-selected={language.code === i18n.language}
-                className={`w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors ${
-                  language.code === i18n.language
-                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                    : 'text-neutral-900 dark:text-neutral-100'
-                }`}
-              >
-                <span className="text-lg">{language.flag}</span>
-                <span className="font-medium">{language.name}</span>
-                {language.code === i18n.language && (
-                  <svg
-                    className="ml-auto w-4 h-4"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                )}
-              </button>
-            ))}
+                language={language}
+                isSelected={language.code === i18n.language}
+                onSelect={handleLanguageChange}
+              />
           </div>
         </div>
       )}

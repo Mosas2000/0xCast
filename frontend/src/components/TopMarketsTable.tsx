@@ -4,6 +4,7 @@
  * Display top markets ranked by pool size
  */
 
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import type { MarketStats } from '../types/analytics';
 import { MarketBar } from './charts/MarketDistributionChart';
@@ -109,7 +110,7 @@ export function TopMarketsTable({
   );
 }
 
-function StatusBadge({ status }: { status: 'active' | 'resolved' | 'disputed' }) {
+const StatusBadge = memo(({ status }: { status: 'active' | 'resolved' | 'disputed' }) => {
   const styles = {
     active: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
     resolved: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
@@ -121,7 +122,7 @@ function StatusBadge({ status }: { status: 'active' | 'resolved' | 'disputed' })
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
-}
+});
 
 // Compact card version for mobile
 interface TopMarketCardProps {
@@ -129,7 +130,7 @@ interface TopMarketCardProps {
   rank: number;
 }
 
-export function TopMarketCard({ market, rank }: TopMarketCardProps) {
+const TopMarketCardBase = ({ market, rank }: TopMarketCardProps) => {
   return (
     <Link 
       to={`/trade/${market.id}`}
@@ -157,4 +158,6 @@ export function TopMarketCard({ market, rank }: TopMarketCardProps) {
       </div>
     </Link>
   );
-}
+};
+
+export const TopMarketCard = memo(TopMarketCardBase);

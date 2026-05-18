@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect } from 'react';
+import React, { useReducer, useEffect, memo } from 'react';
 import { TradingAnalytics, TradeMetrics } from '@/services/TradingAnalytics';
 import { PriceMonitor } from '@/services/PriceMonitor';
 import { AMMPool } from '@/types/amm';
@@ -30,6 +30,49 @@ const initialState: AnalyticsState = {
   roi: 0,
   successRate: 0,
 };
+
+interface TradeRowProps {
+  trade: any;
+}
+
+const TradeRow = memo(({ trade }: TradeRowProps) => (
+  <tr className="border-b hover:bg-gray-50">
+    <td className="py-2">{trade.poolId}</td>
+    <td className="text-right font-mono">
+      {(Number(trade.amountIn) / 1e12).toFixed(4)}
+    </td>
+    <td className="text-right font-mono">
+      {(Number(trade.amountOut) / 1e12).toFixed(4)}
+    </td>
+    <td className="text-right">{trade.slippage.toFixed(3)}%</td>
+    <td className="text-right">
+      <span
+        className={
+          trade.profitable
+            ? 'text-green-600 font-semibold'
+            : 'text-red-600 font-semibold'
+        }
+      >
+        {trade.profitable ? 'Win' : 'Loss'}
+      </span>
+    </td>
+  </tr>
+));
+
+interface PoolStatRowProps {
+  stat: any;
+}
+
+const PoolStatRow = memo(({ stat }: PoolStatRowProps) => (
+  <tr className="border-b hover:bg-gray-50">
+    <td className="py-2">{stat.poolId}</td>
+    <td className="text-right">{stat.trades}</td>
+    <td className="text-right">{stat.winRate.toFixed(1)}%</td>
+    <td className="text-right font-mono">
+      {(Number(stat.volume) / 1e12).toFixed(2)}
+    </td>
+  </tr>
+));
 
 function analyticsReducer(state: AnalyticsState, action: AnalyticsAction): AnalyticsState {
   switch (action.type) {
@@ -238,27 +281,7 @@ function TradeHistoryTable({ userId, analytics }: TradeHistoryTableProps) {
           </thead>
           <tbody>
             {trades.map(trade => (
-              <tr key={trade.id} className="border-b hover:bg-gray-50">
-                <td className="py-2">{trade.poolId}</td>
-                <td className="text-right font-mono">
-                  {(Number(trade.amountIn) / 1e12).toFixed(4)}
-                </td>
-                <td className="text-right font-mono">
-                  {(Number(trade.amountOut) / 1e12).toFixed(4)}
-                </td>
-                <td className="text-right">{trade.slippage.toFixed(3)}%</td>
-                <td className="text-right">
-                  <span
-                    className={
-                      trade.profitable
-                        ? 'text-green-600 font-semibold'
-                        : 'text-red-600 font-semibold'
-                    }
-                  >
-                    {trade.profitable ? 'Win' : 'Loss'}
-                  </span>
-                </td>
-              </tr>
+              <TradeRow key={trade.id} trade={trade} />
             ))}
           </tbody>
         </table>
@@ -310,14 +333,7 @@ function PoolPerformanceTable({
               .filter(s => s.trades > 0)
               .sort((a, b) => b.trades - a.trades)
               .map(stat => (
-                <tr key={stat.poolId} className="border-b hover:bg-gray-50">
-                  <td className="py-2">{stat.poolId}</td>
-                  <td className="text-right">{stat.trades}</td>
-                  <td className="text-right">{stat.winRate.toFixed(1)}%</td>
-                  <td className="text-right font-mono">
-                    {(Number(stat.volume) / 1e12).toFixed(2)}
-                  </td>
-                </tr>
+                <PoolStatRow key={stat.poolId} stat={stat} />
               ))}
           </tbody>
         </table>

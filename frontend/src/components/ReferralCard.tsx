@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { useReferral } from '../hooks/useReferral';
 import { createReferralLink, generateShareMessage } from '../utils/referralUtils';
 
@@ -8,7 +8,7 @@ interface ReferralCardProps {
   compact?: boolean;
 }
 
-export const ReferralCard: React.FC<ReferralCardProps> = ({ userAddress, appUrl, compact = false }) => {
+const ReferralCardBase: React.FC<ReferralCardProps> = ({ userAddress, appUrl, compact = false }) => {
   const { referralCode, stats, isLoading, generateCode } = useReferral(userAddress);
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
 
@@ -105,5 +105,7 @@ export const ReferralCard: React.FC<ReferralCardProps> = ({ userAddress, appUrl,
     </div>
   );
 };
+
+export const ReferralCard = memo(ReferralCardBase);
 
 export default ReferralCard;

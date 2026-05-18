@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from 'react';
+import { useEffect, useReducer, memo } from 'react';
 import { FraudAlert, SuspiciousActivity } from '../types/reputation';
 import { reputationFraudIntegration } from '../services/ReputationFraudIntegrationService';
 
@@ -23,6 +23,93 @@ const initialState: FraudState = {
   activities: [],
   riskScore: 0,
 };
+
+interface AlertItemProps {
+  alert: FraudAlert;
+  onAcknowledge: (alertId: string) => void;
+  onResolve: (alertId: string) => void;
+}
+
+const AlertItem = memo(({ alert, onAcknowledge, onResolve }: AlertItemProps) => {
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'high':
+        return 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-300 dark:border-red-800';
+      case 'medium':
+        return 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-yellow-300 dark:border-yellow-800';
+      default:
+        return 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800';
+    }
+  };
+
+  return (
+    <div
+      className={`p-4 rounded-lg border ${getSeverityColor(alert.severity)}`}
+    >
+      <div className="flex items-start justify-between mb-2">
+        <div>
+          <div className="font-medium capitalize">
+            {alert.type.replace(/_/g, ' ')}
+          </div>
+          <div className="text-sm mt-1">
+            {alert.message}
+          </div>
+        </div>
+        <span className="text-xs px-2 py-1 rounded bg-white dark:bg-neutral-800 capitalize">
+          {alert.severity}
+        </span>
+      </div>
+      <div className="flex items-center justify-between mt-3">
+        <div className="text-xs">
+          {new Date(alert.createdAt).toLocaleString()}
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => onAcknowledge(alert.alertId)}
+            className="text-xs px-3 py-1 rounded bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+          >
+            Acknowledge
+          </button>
+          <button
+            onClick={() => onResolve(alert.alertId)}
+            className="text-xs px-3 py-1 rounded bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+          >
+            Resolve
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+interface ActivityItemProps {
+  activity: SuspiciousActivity;
+}
+
+const ActivityItem = memo(({ activity }: ActivityItemProps) => (
+  <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+    <div className="flex items-start justify-between mb-2">
+      <div>
+        <div className="font-medium capitalize">
+          {activity.type.replace(/_/g, ' ')}
+        </div>
+        <div className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+          {activity.description}
+        </div>
+      </div>
+      <span className={`text-xs px-2 py-1 rounded capitalize ${
+        activity.status === 'confirmed' ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400' :
+        activity.status === 'investigating' ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400' :
+        'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-400'
+      }`}>
+        {activity.status}
+      </span>
+    </div>
+    <div className="text-xs text-neutral-600 dark:text-neutral-400">
+      Detected: {new Date(activity.detectedAt).toLocaleString()}
+    </div>
+  </div>
+));
 
 function fraudReducer(state: FraudState, action: FraudAction): FraudState {
   switch (action.type) {
@@ -139,44 +226,12 @@ export function FraudAlertPanel({ userId }: FraudAlertPanelProps) {
           </h3>
           <div className="space-y-3">
             {activeAlerts.map((alert) => (
-              <div
+              <AlertItem
                 key={alert.alertId}
-                className={`p-4 rounded-lg border ${getSeverityColor(alert.severity)}`}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <div className="font-medium capitalize">
-                      {alert.type.replace(/_/g, ' ')}
-                    </div>
-                    <div className="text-sm mt-1">
-                      {alert.message}
-                    </div>
-                  </div>
-                  <span className="text-xs px-2 py-1 rounded bg-white dark:bg-neutral-800 capitalize">
-                    {alert.severity}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between mt-3">
-                  <div className="text-xs">
-                    {new Date(alert.createdAt).toLocaleString()}
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleAcknowledgeAlert(alert.alertId)}
-                      className="text-xs px-3 py-1 rounded bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
-                    >
-                      Acknowledge
-                    </button>
-                    <button
-                      onClick={() => handleResolveAlert(alert.alertId)}
-                      className="text-xs px-3 py-1 rounded bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
-                    >
-                      Resolve
-                    </button>
-                  </div>
-                </div>
-              </div>
+                alert={alert}
+                onAcknowledge={handleAcknowledgeAlert}
+                onResolve={handleResolveAlert}
+              />
             ))}
           </div>
         </div>
@@ -189,32 +244,7 @@ export function FraudAlertPanel({ userId }: FraudAlertPanelProps) {
           </h3>
           <div className="space-y-3">
             {state.activities.slice(0, 5).map((activity) => (
-              <div
-                key={activity.activityId}
-                className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <div className="font-medium capitalize">
-                      {activity.type.replace(/_/g, ' ')}
-                    </div>
-                    <div className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-                      {activity.description}
-                    </div>
-                  </div>
-                  <span className={`text-xs px-2 py-1 rounded capitalize ${
-                    activity.status === 'confirmed' ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400' :
-                    activity.status === 'investigating' ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400' :
-                    'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-400'
-                  }`}>
-                    {activity.status}
-                  </span>
-                </div>
-
-                <div className="text-xs text-neutral-600 dark:text-neutral-400">
-                  Detected: {new Date(activity.detectedAt).toLocaleString()}
-                </div>
-              </div>
+              <ActivityItem key={activity.activityId} activity={activity} />
             ))}
           </div>
         </div>

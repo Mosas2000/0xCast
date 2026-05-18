@@ -3,7 +3,7 @@
  * 
  * Provides category, status, and sort controls for market filtering.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import {
   MarketCategory,
   SortOption,
@@ -35,6 +35,45 @@ interface MarketFilterProps {
     resolved: number;
   };
 }
+
+interface CategoryOptionProps {
+  category: { value: MarketCategory; label: string; icon: string };
+  isSelected: boolean;
+  onSelect: (value: MarketCategory) => void;
+}
+
+const CategoryOption = memo(({ category, isSelected, onSelect }: CategoryOptionProps) => (
+  <div
+    role="option"
+    aria-selected={isSelected}
+    onClick={() => onSelect(category.value)}
+    className={`px-4 py-2 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+      isSelected ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : ''
+    }`}
+  >
+    <span className="mr-2">{category.icon}</span>
+    {category.label}
+  </div>
+));
+
+interface SortOptionItemProps {
+  option: { value: SortOption; label: string };
+  isSelected: boolean;
+  onSelect: (value: SortOption) => void;
+}
+
+const SortOptionItem = memo(({ option, isSelected, onSelect }: SortOptionItemProps) => (
+  <div
+    role="option"
+    aria-selected={isSelected}
+    onClick={() => onSelect(option.value)}
+    className={`px-4 py-2 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+      isSelected ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : ''
+    }`}
+  >
+    {option.label}
+  </div>
+));
 
 export function MarketFilter({
   selectedCategory,
@@ -290,19 +329,15 @@ export function MarketFilter({
           aria-label="Category options"
         >
           {CATEGORIES.map((category) => (
-            <div
+            <CategoryOption
               key={category.value}
-              style={dropdownItemStyle(selectedCategory === category.value)}
-              onClick={() => {
-                onCategoryChange(category.value);
+              category={category}
+              isSelected={selectedCategory === category.value}
+              onSelect={(value) => {
+                onCategoryChange(value);
                 setShowCategoryDropdown(false);
               }}
-              role="option"
-              aria-selected={selectedCategory === category.value}
-            >
-              <span>{category.icon}</span>
-              <span>{category.label}</span>
-            </div>
+            />
           ))}
         </div>
       </div>
@@ -333,18 +368,15 @@ export function MarketFilter({
           aria-label="Sort options"
         >
           {SORT_OPTIONS.map((option) => (
-            <div
+            <SortOptionItem
               key={option.value}
-              style={dropdownItemStyle(selectedSort === option.value)}
-              onClick={() => {
-                onSortChange(option.value);
+              option={option}
+              isSelected={selectedSort === option.value}
+              onSelect={(value) => {
+                onSortChange(value);
                 setShowSortDropdown(false);
               }}
-              role="option"
-              aria-selected={selectedSort === option.value}
-            >
-              <span>{option.label}</span>
-            </div>
+            />
           ))}
         </div>
       </div>

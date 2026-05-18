@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from 'react';
+import { useEffect, useReducer, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UserReputation, ReputationBadge } from '../types/reputation';
 import { reputationFraudIntegration } from '../services/ReputationFraudIntegrationService';
@@ -24,6 +24,22 @@ const initialState: ReputationState = {
   trustScore: null,
   badges: [],
 };
+
+interface BadgeItemProps {
+  badge: ReputationBadge;
+}
+
+const BadgeItem = memo(({ badge }: BadgeItemProps) => (
+  <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg text-center">
+    <div className="text-4xl mb-2">{badge.icon}</div>
+    <div className="text-sm font-medium text-neutral-900 dark:text-white">
+      {badge.name}
+    </div>
+    <div className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
+      {badge.description}
+    </div>
+  </div>
+));
 
 function reputationReducer(state: ReputationState, action: ReputationAction): ReputationState {
   switch (action.type) {
@@ -188,18 +204,7 @@ export function ReputationDashboard({ userId }: ReputationDashboardProps) {
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {state.badges.map((badge) => (
-              <div
-                key={badge.badgeId}
-                className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg text-center"
-              >
-                <div className="text-4xl mb-2">{badge.icon}</div>
-                <div className="text-sm font-medium text-neutral-900 dark:text-white">
-                  {badge.name}
-                </div>
-                <div className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
-                  {badge.description}
-                </div>
-              </div>
+              <BadgeItem key={badge.badgeId} badge={badge} />
             ))}
           </div>
         </div>

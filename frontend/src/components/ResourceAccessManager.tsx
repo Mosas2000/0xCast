@@ -103,6 +103,8 @@ export function ResourceAccessManager({ accessControl, onAccessChange }: Resourc
                 value={userId}
                 onChange={e => setUserId(e.target.value)}
                 placeholder="Enter user ID"
+                aria-invalid={error ? 'true' : 'false'}
+                aria-describedby={error ? 'access-error' : undefined}
               />
             </div>
 
@@ -114,6 +116,8 @@ export function ResourceAccessManager({ accessControl, onAccessChange }: Resourc
                 value={resourceId}
                 onChange={e => setResourceId(e.target.value)}
                 placeholder="Enter resource ID"
+                aria-invalid={error ? 'true' : 'false'}
+                aria-describedby={error ? 'access-error' : undefined}
               />
             </div>
 
@@ -123,6 +127,8 @@ export function ResourceAccessManager({ accessControl, onAccessChange }: Resourc
                 id="accessType"
                 value={accessType}
                 onChange={e => setAccessType(e.target.value as 'read' | 'write' | 'delete' | 'admin')}
+                aria-invalid={error ? 'true' : 'false'}
+                aria-describedby={error ? 'access-error' : undefined}
               >
                 {accessTypes.map(type => (
                   <option key={type} value={type}>
@@ -143,8 +149,16 @@ export function ResourceAccessManager({ accessControl, onAccessChange }: Resourc
           </div>
         </form>
 
-        {error && <div className="error-message">{error}</div>}
-        {success && <div className="success-message">{success}</div>}
+        {error && (
+          <div id="access-error" className="error-message" role="alert">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="success-message" role="status">
+            {success}
+          </div>
+        )}
       </div>
 
       {resourceAccesses.size > 0 && (
