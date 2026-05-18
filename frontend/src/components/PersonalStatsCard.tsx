@@ -18,7 +18,7 @@ export function PersonalStatsCard({ stats, isConnected }: PersonalStatsCardProps
         <h3 className="text-lg font-semibold text-black dark:text-white mb-4">Your Performance</h3>
         <div className="flex flex-col items-center justify-center py-8 text-center">
           <div className="w-16 h-16 bg-neutral-300 dark:bg-neutral-800 rounded-full flex items-center justify-center mb-4">
-            <svg className="w-8 h-8 text-neutral-600 dark:text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-8 h-8 text-neutral-600 dark:text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
           </div>
