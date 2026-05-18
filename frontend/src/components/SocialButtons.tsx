@@ -35,13 +35,14 @@ export function SocialButtons({
       <button
         onClick={() => setShowShareModal(true)}
         className={baseClasses[variant]}
-        title="Share this market"
+        aria-label="Share this market"
       >
         <svg
           className={variant === 'icon' ? iconClasses : 'w-4 h-4'}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
