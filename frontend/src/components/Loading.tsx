@@ -17,6 +17,7 @@ export function LoadingSpinner({ size = 'md', className = '' }: LoadingSpinnerPr
         viewBox="0 0 24 24"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
       >
         <circle
           className="opacity-25"
@@ -38,7 +39,7 @@ export function LoadingSpinner({ size = 'md', className = '' }: LoadingSpinnerPr
 
 export function LoadingState({ message = 'Loading...' }: { message?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-20">
+    <div className="flex flex-col items-center justify-center py-20" role="status">
       <LoadingSpinner size="lg" className="text-blue-500" />
       <p className="mt-4 text-zinc-500">{message}</p>
     </div>
