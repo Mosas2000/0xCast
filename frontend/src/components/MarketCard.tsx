@@ -54,6 +54,7 @@ export function MarketCard({ market, showCategory = true }: MarketCardProps) {
             fill={watched ? 'currentColor' : 'none'}
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"

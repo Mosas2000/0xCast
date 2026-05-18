@@ -241,7 +241,7 @@ export function MarketFilter({
               justifyContent: 'center',
             }}
           >
-            <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -280,7 +280,7 @@ export function MarketFilter({
         >
           <span>{selectedCategoryConfig.icon}</span>
           <span>{selectedCategoryConfig.label}</span>
-          <svg style={chevronStyle} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg style={chevronStyle} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
@@ -319,11 +319,11 @@ export function MarketFilter({
           aria-haspopup="listbox"
           aria-expanded={showSortDropdown}
         >
-          <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
           </svg>
           <span>{selectedSortConfig.label}</span>
-          <svg style={chevronStyle} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg style={chevronStyle} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
@@ -359,7 +359,7 @@ export function MarketFilter({
         }}
         onClick={() => setShowAdvanced(!showAdvanced)}
       >
-        <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
         </svg>
         <span>Advanced</span>
@@ -390,7 +390,7 @@ export function MarketFilter({
           }}
           onClick={onSavePreset}
         >
-          <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
           </svg>
           <span>Save Preset</span>
@@ -408,7 +408,7 @@ export function MarketFilter({
         }}
         onClick={() => onOnlyWatchlistChange(!selectedOnlyWatchlist)}
       >
-        <svg style={{ width: '16px', height: '16px' }} fill={selectedOnlyWatchlist ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+        <svg style={{ width: '16px', height: '16px' }} fill={selectedOnlyWatchlist ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
         </svg>
         <span>Watchlist</span>
