@@ -29,8 +29,9 @@ export function PerformanceDashboard() {
         <button
           onClick={() => setIsVisible(false)}
           className="text-neutral-500 hover:text-white"
+          aria-label="Close performance dashboard"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -89,9 +90,9 @@ export function PerformanceDashboardToggle() {
       <button
         onClick={() => setIsVisible(!isVisible)}
         className="fixed top-20 right-4 p-2 bg-neutral-900 border border-neutral-800 rounded-lg shadow-lg hover:bg-neutral-800 transition-colors"
-        title="Performance Dashboard"
+        aria-label="Toggle performance dashboard"
       >
-        <svg className="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
       </button>
