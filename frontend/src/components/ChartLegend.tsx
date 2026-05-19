@@ -61,6 +61,10 @@ export function TechnicalIndicatorLegend({
           key={indicator.name}
           className="indicator-item"
           onClick={() => onToggleIndicator?.(indicator.name)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggleIndicator?.(indicator.name); } }}
+          role="button"
+          tabIndex={onToggleIndicator ? 0 : undefined}
+          aria-label={`Toggle indicator ${indicator.name}`}
         >
           <div className="indicator-header">
             {indicator.color && (
