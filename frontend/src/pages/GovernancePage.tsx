@@ -721,8 +721,19 @@ export function GovernancePage() {
 
         {/* Proposal Detail Modal */}
         {selectedProposal && (
-          <div style={modalOverlayStyle} onClick={() => setSelectedProposal(null)}>
-            <div style={{ ...modalStyle, position: 'relative' }} onClick={e => e.stopPropagation()}>
+          <div
+            style={modalOverlayStyle}
+            onClick={() => setSelectedProposal(null)}
+            onKeyDown={(e) => { if (e.key === 'Escape') setSelectedProposal(null); }}
+            role="presentation"
+          >
+            <div
+              style={{ ...modalStyle, position: 'relative' }}
+              onClick={e => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-label={selectedProposal.title}
+            >
               <button style={closeButtonStyle} onClick={() => setSelectedProposal(null)}>
                 ×
               </button>
@@ -906,8 +917,19 @@ export function GovernancePage() {
 
         {/* Delegate Modal */}
         {showDelegateModal && (
-          <div style={modalOverlayStyle} onClick={() => setShowDelegateModal(false)}>
-            <div style={{ ...modalStyle, position: 'relative', maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
+          <div
+            style={modalOverlayStyle}
+            onClick={() => setShowDelegateModal(false)}
+            onKeyDown={(e) => { if (e.key === 'Escape') setShowDelegateModal(false); }}
+            role="presentation"
+          >
+            <div
+              style={{ ...modalStyle, position: 'relative', maxWidth: '500px' }}
+              onClick={e => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Delegate Voting Power"
+            >
               <button style={closeButtonStyle} onClick={() => setShowDelegateModal(false)}>
                 ×
               </button>
