@@ -53,6 +53,10 @@ export function ProposalCard({
   return (
     <div
       onClick={() => onSelect(proposal)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(proposal); } }}
+      role="button"
+      tabIndex={0}
+      aria-label={`View proposal: ${proposal.title}`}
       style={{
         backgroundColor: '#0A0A0A',
         border: '1px solid #1F1F1F',
