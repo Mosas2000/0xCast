@@ -118,7 +118,15 @@ export function APIServiceExample() {
     }
   }
 
-  return <div onClick={() => performOperation()}>Perform Operation</div>;
+  return (
+    <button
+      type="button"
+      onClick={() => performOperation()}
+      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+    >
+      Perform Operation
+    </button>
+  );
 }
 
 export function ResourceAccessExample() {
@@ -183,5 +191,13 @@ export function ValidationExample() {
     };
   }
 
-  return <div onClick={() => validateSetup()}>Validate System</div>;
+  return (
+    <button
+      type="button"
+      onClick={() => validateSetup()}
+      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+    >
+      Validate System
+    </button>
+  );
 }

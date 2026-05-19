@@ -108,8 +108,16 @@ export function WizardProgress({
             key={index}
             style={stepStyle(index)}
             onClick={() => onStepClick?.(index)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onStepClick?.(index);
+              }
+            }}
             role="button"
-            tabIndex={0}
+            tabIndex={onStepClick ? 0 : -1}
+            aria-label={`Step ${index + 1}: ${label}`}
+            aria-current={index === currentStep ? 'step' : undefined}
           >
             <div style={stepCircleStyle(index)}>
               {index < currentStep ? '✓' : index + 1}

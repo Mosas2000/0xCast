@@ -66,6 +66,10 @@ export function IndicatorPanel({
                     expandedIndicator === indicator.name ? null : indicator.name
                   )
                 }
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpandedIndicator(expandedIndicator === indicator.name ? null : indicator.name); } }}
+                role="button"
+                tabIndex={0}
+                aria-expanded={expandedIndicator === indicator.name}
               >
                 <div className="indicator-title">
                   <input

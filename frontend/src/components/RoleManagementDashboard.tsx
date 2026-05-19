@@ -65,6 +65,10 @@ export function RoleManagementDashboard({
               key={role.id}
               className={`role-card ${selectedRoleId === role.id ? 'selected' : ''}`}
               onClick={() => handleRoleSelect(role.id)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleRoleSelect(role.id); } }}
+              role="button"
+              tabIndex={0}
+              aria-pressed={selectedRoleId === role.id}
             >
               <div className="role-header">
                 <h4>{role.name}</h4>

@@ -72,6 +72,10 @@ export function DrawingToolsPanel({
                 onClick={() =>
                   setExpandedToolId(expandedToolId === tool.id ? null : tool.id)
                 }
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpandedToolId(expandedToolId === tool.id ? null : tool.id); } }}
+                role="button"
+                tabIndex={0}
+                aria-expanded={expandedToolId === tool.id}
               >
                 <div className="tool-info">
                   <input

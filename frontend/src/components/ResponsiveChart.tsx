@@ -191,14 +191,15 @@ export function CompactIndicatorPanel({
     <div className="compact-indicator-panel">
       <div className="indicators-summary">
         {indicators.slice(0, 3).map(indicator => (
-          <div
+          <button
             key={indicator.name}
+            type="button"
             className="indicator-badge"
             onClick={() => onShowDetails?.(indicator.name)}
           >
             <span className="name">{indicator.name}</span>
             <span className="value">{indicator.value.toFixed(2)}</span>
-          </div>
+          </button>
         ))}
         {indicators.length > 3 && (
           <div className="more-indicators">

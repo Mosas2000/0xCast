@@ -30,6 +30,10 @@ const OracleCardBase = ({ oracle, onSelect, compact = false }: OracleCardProps) 
       <div 
         className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg border border-gray-700 hover:border-purple-500/50 transition-colors cursor-pointer"
         onClick={() => onSelect?.(oracle.address)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect?.(oracle.address); } }}
+        role="button"
+        tabIndex={onSelect ? 0 : undefined}
+        aria-label={`Select oracle ${oracle.address}`}
       >
         <div className="flex items-center gap-3">
           <div className={`w-2 h-2 rounded-full ${oracle.isRegistered ? 'bg-green-500' : 'bg-gray-500'}`} />
@@ -50,6 +54,10 @@ const OracleCardBase = ({ oracle, onSelect, compact = false }: OracleCardProps) 
     <div 
       className="bg-gray-800/50 rounded-xl p-5 border border-gray-700 hover:border-purple-500/50 transition-colors cursor-pointer"
       onClick={() => onSelect?.(oracle.address)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect?.(oracle.address); } }}
+      role="button"
+      tabIndex={onSelect ? 0 : undefined}
+      aria-label={`Select oracle ${oracle.address}`}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
