@@ -173,16 +173,37 @@ export function AuditLogViewer({ auditLogger, pageSize = 20 }: AuditLogViewerPro
         <table className="logs-table">
           <thead>
             <tr>
-              <th onClick={() => handleSort('timestamp')} className="sortable">
+              <th
+                onClick={() => handleSort('timestamp')}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('timestamp'); } }}
+                className="sortable"
+                tabIndex={0}
+                role="columnheader"
+                aria-sort={sortBy === 'timestamp' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
+              >
                 Timestamp {sortBy === 'timestamp' && (sortOrder === 'asc' ? '↑' : '↓')}
               </th>
               <th>User ID</th>
-              <th onClick={() => handleSort('action')} className="sortable">
+              <th
+                onClick={() => handleSort('action')}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('action'); } }}
+                className="sortable"
+                tabIndex={0}
+                role="columnheader"
+                aria-sort={sortBy === 'action' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
+              >
                 Action {sortBy === 'action' && (sortOrder === 'asc' ? '↑' : '↓')}
               </th>
               <th>Resource</th>
               <th>Resource ID</th>
-              <th onClick={() => handleSort('status')} className="sortable">
+              <th
+                onClick={() => handleSort('status')}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('status'); } }}
+                className="sortable"
+                tabIndex={0}
+                role="columnheader"
+                aria-sort={sortBy === 'status' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
+              >
                 Status {sortBy === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}
               </th>
               <th>Details</th>
