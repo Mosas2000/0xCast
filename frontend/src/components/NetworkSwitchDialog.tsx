@@ -44,6 +44,9 @@ export function NetworkSwitchDialog({
       <div 
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onCancel}
+        onKeyDown={(e) => { if (e.key === 'Escape') onCancel(); }}
+        role="presentation"
+        tabIndex={-1}
       />
       
       {/* Dialog */}
