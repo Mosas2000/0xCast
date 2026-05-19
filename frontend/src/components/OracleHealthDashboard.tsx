@@ -140,6 +140,10 @@ export const OracleHealthDashboard: React.FC<HealthDashboardProps> = ({
             key={stat.provider}
             className={`border p-4 rounded-lg cursor-pointer transition ${getStatusColor(stat)}`}
             onClick={() => setSelectedProvider(stat.provider)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedProvider(stat.provider); } }}
+            role="button"
+            tabIndex={0}
+            aria-label={`View details for oracle provider ${stat.provider}`}
           >
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-gray-900">{stat.provider}</h3>
