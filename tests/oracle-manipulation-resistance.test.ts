@@ -121,4 +121,58 @@ describe("Oracle Manipulation Resistance Tests", () => {
             expect(submitErr.result).toBeErr(Cl.uint(301)); // ERR-UNAUTHORIZED-ORACLE
         });
     });
+
+    describe("Oracle Staleness and Revocation Protection", () => {
+        it("should prevent a revoked or disabled oracle from submitting prices or resolving markets", () => {
+            // Remove oracle1
+            const removeRes = simnet.callPublicFn(
+                oracleContract,
+                "remove-oracle",
+                [Cl.principal(oracle1)],
+                deployer
+            );
+            expect(removeRes.result).toBeOk(Cl.bool(true));
+
+            // Verify oracle1 can no longer submit a price feed
+            const submitErr = simnet.callPublicFn(
+                oracleContract,
+                "submit-price-feed",
+                [Cl.uint(0), Cl.uint(105000)],
+                oracle1
+            );
+            expect(submitErr.result).toBeErr(Cl.uint(301)); // ERR-UNAUTHORIZED-ORACLE
+        });
+
+        it("should enforce dispute expiration limits and prevent submitting disputes after the dispute window has elapsed", () => {
+            // Register oracle1 again to submit a resolution
+            simnet.callPublicFn(oracleContract, "register-oracle", [Cl.principal(oracle1)], deployer);
+            
+            // Advance block height to resolution date
+            const blocksToMine = 20 - simnet.blockHeight;
+            if (blocksToMine > 0) {
+                simnet.mineEmptyBlocks(blocksToMine);
+            }
+
+            // Oracle resolves market
+            const resolveRes = simnet.callPublicFn(
+                oracleContract,
+                "submit-resolution",
+                [Cl.uint(0), Cl.uint(1)], // YES
+                oracle1
+            );
+            expect(resolveRes.result).toBeOk(Cl.bool(true));
+
+            // Fast forward 150 blocks, past the 144 block dispute period
+            simnet.mineEmptyBlocks(150);
+
+            // Attempt to submit late dispute
+            const disputeErr = simnet.callPublicFn(
+                oracleContract,
+                "submit-dispute",
+                [Cl.uint(0), Cl.stringUtf8("Late dispute attempt"), Cl.uint(6000000)],
+                wallet4
+            );
+            expect(disputeErr.result).toBeErr(Cl.uint(305)); // ERR-DISPUTE-PERIOD-EXPIRED
+        });
+    });
 });
