@@ -22,6 +22,24 @@ vi.mock('../../contexts/NetworkContext', () => ({
   }),
 }));
 
+vi.mock('react-i18next', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-i18next')>();
+  return {
+    ...actual,
+    useTranslation: () => ({
+      t: (key: string) => {
+        if (key === 'nav.watchlist') return 'Watchlist';
+        if (key === 'nav.recent') return 'Recent';
+        return key;
+      },
+      i18n: {
+        language: 'en',
+        changeLanguage: vi.fn(),
+      },
+    }),
+  };
+});
+
 vi.mock('../NetworkSelector', () => ({
   NetworkSelector: () => <div data-testid="network-selector" />,
 }));
