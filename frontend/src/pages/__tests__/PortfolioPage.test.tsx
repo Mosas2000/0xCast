@@ -86,7 +86,11 @@ describe('PortfolioPage', () => {
     });
     fetchCallReadOnlyFunctionMock.mockResolvedValue({});
 
-    render(React.createElement(MemoryRouter, null, React.createElement(PortfolioPage)));
+    render(
+      <MemoryRouter>
+        <PortfolioPage />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       expect(fetchCallReadOnlyFunctionMock).toHaveBeenCalled();
