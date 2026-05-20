@@ -32,7 +32,7 @@ interface MonitoringReport {
 type AlertSeverity = 'low' | 'medium' | 'high' | 'critical';
 
 export const RateLimitMonitoringDashboard: React.FC = () => {
-  const [report, setReport] = useState<any>(null);
+  const [report, setReport] = useState<MonitoringReport | null>(null);
   const [alerts, setAlerts] = useState<RateLimitAlert[]>([]);
   const [selectedSeverity, setSelectedSeverity] = useState<string>('all');
 
