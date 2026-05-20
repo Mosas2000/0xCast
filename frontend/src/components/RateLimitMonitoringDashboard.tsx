@@ -130,7 +130,7 @@ export const RateLimitMonitoringDashboard: React.FC = () => {
         <div className="bg-white p-4 rounded-lg shadow">
           <h2 className="text-lg font-bold mb-4">Top Violators</h2>
           <div className="space-y-2">
-            {report.topUsers.map((user: any, index: number) => (
+            {report.topUsers.map((user: TopUserItem, index: number) => (
               <div
                 key={user.userId}
                 className="flex justify-between items-center p-2 border rounded"
