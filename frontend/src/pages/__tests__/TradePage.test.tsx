@@ -96,15 +96,11 @@ describe('TradePage', () => {
     fetchCallReadOnlyFunctionMock.mockResolvedValue({});
 
     const { container } = render(
-      React.createElement(
-        MemoryRouter,
-        { initialEntries: ['/trade/1'] },
-        React.createElement(
-          Routes,
-          null,
-          React.createElement(Route, { path: '/trade/:id', element: React.createElement(TradePage) })
-        )
-      )
+      <MemoryRouter initialEntries={['/trade/1']}>
+        <Routes>
+          <Route path="/trade/:id" element={<TradePage />} />
+        </Routes>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
