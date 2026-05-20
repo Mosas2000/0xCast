@@ -55,6 +55,10 @@ epoch = "latest"
 path = "contracts/rate-limiter.clar"
 epoch = "latest"
 
+[contracts.migration-manager]
+path = "contracts/migration-manager.clar"
+epoch = "latest"
+
 [repl.analysis]
 passes = ["check_checker"]
 check_checker = { trusted_sender = false, trusted_caller = false, callee_filter = false }

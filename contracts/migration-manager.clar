@@ -98,7 +98,7 @@
     
     (map-set migrations migration-id (merge migration {
       executed: true,
-      executed-at: (some block-height),
+      executed-at: (some stacks-block-height),
       executed-by: (some tx-sender)
     }))
     

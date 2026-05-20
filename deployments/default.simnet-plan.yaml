@@ -104,6 +104,11 @@ plan:
             path: contracts/market-multi.clar
             clarity-version: 3
         - emulated-contract-publish:
+            contract-name: migration-manager
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/migration-manager.clar
+            clarity-version: 3
+        - emulated-contract-publish:
             contract-name: oracle-integration
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
             path: contracts/oracle-integration.clar
