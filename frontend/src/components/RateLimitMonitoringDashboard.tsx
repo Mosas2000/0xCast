@@ -9,6 +9,11 @@ interface TopActionItem {
   count: number;
 }
 
+interface TopUserItem {
+  userId: string;
+  violations: number;
+}
+
 export const RateLimitMonitoringDashboard: React.FC = () => {
   const [report, setReport] = useState<any>(null);
   const [alerts, setAlerts] = useState<RateLimitAlert[]>([]);
