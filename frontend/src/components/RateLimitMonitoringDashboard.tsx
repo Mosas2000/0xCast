@@ -113,7 +113,7 @@ export const RateLimitMonitoringDashboard: React.FC = () => {
         <div className="bg-white p-4 rounded-lg shadow">
           <h2 className="text-lg font-bold mb-4">Top Violating Actions</h2>
           <div className="space-y-2">
-            {report.topActions.map((item: any) => (
+            {report.topActions.map((item: TopActionItem) => (
               <div
                 key={item.action}
                 className="flex justify-between items-center p-2 border rounded"
