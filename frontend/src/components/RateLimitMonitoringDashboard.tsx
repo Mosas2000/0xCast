@@ -4,6 +4,11 @@ import { RateLimitAlert } from '@/services/RateLimitMonitoringService';
 import { RateLimitAction } from '@/types/rateLimit';
 import { getActionDisplayName } from '@/utils/rateLimitHelpers';
 
+interface TopActionItem {
+  action: RateLimitAction;
+  count: number;
+}
+
 export const RateLimitMonitoringDashboard: React.FC = () => {
   const [report, setReport] = useState<any>(null);
   const [alerts, setAlerts] = useState<RateLimitAlert[]>([]);
