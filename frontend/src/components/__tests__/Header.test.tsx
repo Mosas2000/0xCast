@@ -1,4 +1,3 @@
-import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
@@ -24,11 +23,11 @@ vi.mock('../../contexts/NetworkContext', () => ({
 }));
 
 vi.mock('../NetworkSelector', () => ({
-  NetworkSelector: () => React.createElement('div', { 'data-testid': 'network-selector' }),
+  NetworkSelector: () => <div data-testid="network-selector" />,
 }));
 
 vi.mock('../ThemeSwitcher', () => ({
-  ThemeSwitcher: () => React.createElement('div', { 'data-testid': 'theme-switcher' }),
+  ThemeSwitcher: () => <div data-testid="theme-switcher" />,
 }));
 
 describe('Header', () => {
