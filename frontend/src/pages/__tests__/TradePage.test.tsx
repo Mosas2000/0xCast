@@ -68,7 +68,7 @@ vi.mock('../../utils/helpers', async () => {
 });
 
 vi.mock('../../components/SocialButtons', () => ({
-  SocialButtons: () => React.createElement('div', { 'data-testid': 'social-buttons' }),
+  SocialButtons: () => <div data-testid="social-buttons" />,
 }));
 
 describe('TradePage', () => {
