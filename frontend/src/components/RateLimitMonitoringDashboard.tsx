@@ -29,6 +29,8 @@ interface MonitoringReport {
   topUsers: TopUserItem[];
 }
 
+type AlertSeverity = 'low' | 'medium' | 'high' | 'critical';
+
 export const RateLimitMonitoringDashboard: React.FC = () => {
   const [report, setReport] = useState<any>(null);
   const [alerts, setAlerts] = useState<RateLimitAlert[]>([]);
