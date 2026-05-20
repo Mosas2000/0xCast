@@ -50,7 +50,7 @@ export const RateLimitMonitoringDashboard: React.FC = () => {
       selectedSeverity === 'all'
         ? rateLimitMonitoringService.getActiveAlerts()
         : rateLimitMonitoringService.getActiveAlerts(
-            selectedSeverity as any
+            selectedSeverity as AlertSeverity
           );
     setAlerts(newAlerts);
   };
