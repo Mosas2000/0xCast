@@ -19,7 +19,10 @@
     "governance": "tsx scripts/governance-operations.ts",
     "multi-market": "tsx scripts/multi-outcome-trading.ts",
     "oracle": "tsx scripts/oracle-operations.ts",
-    "validate-blocks": "tsx scripts/utils/validate-block-heights.ts"
+    "validate-blocks": "tsx scripts/utils/validate-block-heights.ts",
+    "security-scan": "tsx scripts/run-security-scanner.ts",
+    "pen-test": "tsx scripts/run-frontend-pen-test.ts",
+    "audit-all": "npm run security-scan && npm run pen-test"
   },
   "author": "",
   "license": "ISC",
