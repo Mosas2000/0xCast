@@ -1,10 +1,10 @@
-import React from 'react';
+import type { ReactNode } from 'react';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { describe, expect, it, beforeEach } from 'vitest';
 import { WatchlistProvider, useWatchlist } from '../WatchlistContext';
 import { loadWatchlistIds, saveWatchlistIds } from '../../utils/watchlist';
 
-function wrapper({ children }: { children: React.ReactNode }) {
+function wrapper({ children }: { children: ReactNode }) {
   return <WatchlistProvider>{children}</WatchlistProvider>;
 }
 
