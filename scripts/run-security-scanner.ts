@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { execSync } from 'child_process';
 
 interface SecurityFinding {
     file: string;
@@ -62,7 +63,6 @@ const SCAN_RULES: ScanRule[] = [
         description: 'Arithmetic division before multiplication can cause integer truncation and precision loss.',
         matcher: (lineText) => {
             const clean = lineText.trim();
-            // Basic heuristic check for nested expressions where / is outer and * is inner or adjacent.
             return clean.includes('/') && clean.includes('*') && clean.indexOf('/') < clean.indexOf('*');
         }
     }
@@ -95,8 +95,6 @@ function scanFile(filePath: string): SecurityFinding[] {
     
     lines.forEach((lineText, index) => {
         const lineNumber = index + 1;
-        
-        // Skip comment lines
         if (lineText.trim().startsWith(';;')) return;
         
         for (const rule of SCAN_RULES) {
@@ -114,6 +112,27 @@ function scanFile(filePath: string): SecurityFinding[] {
     });
     
     return findings;
+}
+
+/**
+ * Runs npm audit to verify third party packages dependency health.
+ */
+function auditDependencies(): boolean {
+    console.log('Running npm package dependency vulnerability scan...');
+    try {
+        // Runs npm audit. If vulnerabilities are found, it exits with non-zero exit code.
+        execSync('npm audit --audit-level=high', { stdio: 'pipe' });
+        console.log('SUCCESS: No high/critical package vulnerabilities detected.');
+        return true;
+    } catch (error: any) {
+        console.log('WARNING: Package vulnerabilities or scan failures detected:');
+        if (error.stdout) {
+            console.log(error.stdout.toString().split('\n').slice(0, 15).join('\n'));
+        } else {
+            console.log(error.message);
+        }
+        return false;
+    }
 }
 
 function runScanner() {
@@ -140,31 +159,30 @@ function runScanner() {
         }
     }
     
-    if (totalFindings === 0) {
-        console.log('SUCCESS: No Clarity smart contract security vulnerabilities detected.');
-        console.log('================================================================');
-        return;
+    if (totalFindings > 0) {
+        console.log(`FOUND ${totalFindings} POTENTIAL CONTRACT SECURITY ISSUES:\n`);
+        allFindings.forEach((finding) => {
+            console.log(`[${finding.severity}] Rule ID: ${finding.ruleId}`);
+            console.log(`  File: ${finding.file}:${finding.line}`);
+            console.log(`  Description: ${finding.description}`);
+            console.log(`  Code snippet: "${finding.snippet}"`);
+            console.log('----------------------------------------------------------------');
+        });
+    } else {
+        console.log('SUCCESS: No Clarity contract static analysis vulnerabilities detected.\n');
     }
     
-    console.log(`FOUND ${totalFindings} POTENTIAL SECURITY ISSUES:\n`);
+    const auditPassed = auditDependencies();
     
-    allFindings.forEach((finding) => {
-        console.log(`[${finding.severity}] Rule ID: ${finding.ruleId}`);
-        console.log(`  File: ${finding.file}:${finding.line}`);
-        console.log(`  Description: ${finding.description}`);
-        console.log(`  Code snippet: "${finding.snippet}"`);
-        console.log('----------------------------------------------------------------');
-    });
-    
+    console.log('\n================================================================');
     const highSeverityIssues = allFindings.filter(f => f.severity === 'HIGH').length;
-    
-    console.log(`Summary: ${highSeverityIssues} HIGH severity issues, ${allFindings.length - highSeverityIssues} other issues.`);
+    console.log(`Scan Summary:`);
+    console.log(`  - Clarity Findings: ${allFindings.length} issues (${highSeverityIssues} HIGH)`);
+    console.log(`  - Dependency Audit: ${auditPassed ? 'PASSED' : 'VULNERABILITIES DETECTED'}`);
     console.log('================================================================');
     
-    // Do not crash execution during initial lint setup if it's informational,
-    // but flag HIGH severity issues as CI build failure warning.
-    if (highSeverityIssues > 0) {
-        console.log('WARNING: High severity items detected. Please resolve prior to mainnet launch.');
+    if (highSeverityIssues > 0 || !auditPassed) {
+        console.log('WARNING: Outstanding security concerns found. Review the reports above.');
     }
 }
 
