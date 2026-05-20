@@ -100,14 +100,23 @@ describe("Oracle Manipulation Resistance Tests", () => {
 
             // Verify still no consensus at count 2
             let state = simnet.callReadOnlyFn(oracleContract, "get-consensus-state", [Cl.uint(0)], deployer);
-            expect((state.result as any).value.data["consensus-reached"]).toStrictEqual(Cl.bool(false));
+            expect(state.result).toBeSome(Cl.tuple({
+                "submission-count": Cl.uint(2),
+                "total-weight": Cl.uint(20),
+                "consensus-reached": Cl.bool(false),
+                "final-price": Cl.uint(99000)
+            }));
 
             // Oracle 3 submits, triggering consensus
             simnet.callPublicFn(oracleContract, "submit-price-for-consensus", [Cl.uint(0), Cl.uint(101000)], oracle3);
 
             state = simnet.callReadOnlyFn(oracleContract, "get-consensus-state", [Cl.uint(0)], deployer);
-            expect((state.result as any).value.data["consensus-reached"]).toStrictEqual(Cl.bool(true));
-            expect((state.result as any).value.data["submission-count"]).toStrictEqual(Cl.uint(3));
+            expect(state.result).toBeSome(Cl.tuple({
+                "submission-count": Cl.uint(3),
+                "total-weight": Cl.uint(30),
+                "consensus-reached": Cl.bool(true),
+                "final-price": Cl.uint(101000)
+            }));
         });
 
         it("should reject price submissions from unregistered or disabled oracles trying to skew consensus", () => {
@@ -147,11 +156,8 @@ describe("Oracle Manipulation Resistance Tests", () => {
             // Register oracle1 again to submit a resolution
             simnet.callPublicFn(oracleContract, "register-oracle", [Cl.principal(oracle1)], deployer);
             
-            // Advance block height to resolution date
-            const blocksToMine = 20 - simnet.blockHeight;
-            if (blocksToMine > 0) {
-                simnet.mineEmptyBlocks(blocksToMine);
-            }
+            // Advance block height past the resolution date (which is currentBlock + 20)
+            simnet.mineEmptyBlocks(25);
 
             // Oracle resolves market
             const resolveRes = simnet.callPublicFn(

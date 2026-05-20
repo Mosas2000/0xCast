@@ -179,7 +179,7 @@ describe("Access Control Vulnerability Scenarios", () => {
                 [Cl.uint(1)],
                 wallet2
             );
-            expect(thresholdErr.result).toBeErr(Cl.uint(2000)); // ERR-NOT-AUTHORIZED
+            expect(thresholdErr.result).toBeErr(Cl.uint(100)); // ERR-NOT-AUTHORIZED (u100 in market-core)
         });
     });
 });
