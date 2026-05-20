@@ -21,6 +21,14 @@ interface AlertsBySeverity {
   critical: number;
 }
 
+interface MonitoringReport {
+  totalViolations: number;
+  uniqueUsers: number;
+  alertsBySeverity: AlertsBySeverity;
+  topActions: TopActionItem[];
+  topUsers: TopUserItem[];
+}
+
 export const RateLimitMonitoringDashboard: React.FC = () => {
   const [report, setReport] = useState<any>(null);
   const [alerts, setAlerts] = useState<RateLimitAlert[]>([]);
