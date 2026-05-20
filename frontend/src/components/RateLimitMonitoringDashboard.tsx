@@ -1,10 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { rateLimitMonitoringService } from '@/services/RateLimitMonitoringService';
 import { RateLimitAlert } from '@/services/RateLimitMonitoringService';
+import { RateLimitAction } from '@/types/rateLimit';
 import { getActionDisplayName } from '@/utils/rateLimitHelpers';
 
+interface TopActionItem {
+  action: RateLimitAction;
+  count: number;
+}
+
+interface TopUserItem {
+  userId: string;
+  violations: number;
+}
+
+interface AlertsBySeverity {
+  low: number;
+  medium: number;
+  high: number;
+  critical: number;
+}
+
+interface MonitoringReport {
+  totalViolations: number;
+  uniqueUsers: number;
+  alertsBySeverity: AlertsBySeverity;
+  topActions: TopActionItem[];
+  topUsers: TopUserItem[];
+}
+
+type AlertSeverity = 'low' | 'medium' | 'high' | 'critical';
+
 export const RateLimitMonitoringDashboard: React.FC = () => {
-  const [report, setReport] = useState<any>(null);
+  const [report, setReport] = useState<MonitoringReport | null>(null);
   const [alerts, setAlerts] = useState<RateLimitAlert[]>([]);
   const [selectedSeverity, setSelectedSeverity] = useState<string>('all');
 
@@ -22,7 +50,7 @@ export const RateLimitMonitoringDashboard: React.FC = () => {
       selectedSeverity === 'all'
         ? rateLimitMonitoringService.getActiveAlerts()
         : rateLimitMonitoringService.getActiveAlerts(
-            selectedSeverity as any
+            selectedSeverity as AlertSeverity
           );
     setAlerts(newAlerts);
   };
@@ -85,7 +113,7 @@ export const RateLimitMonitoringDashboard: React.FC = () => {
         <div className="bg-white p-4 rounded-lg shadow">
           <h2 className="text-lg font-bold mb-4">Top Violating Actions</h2>
           <div className="space-y-2">
-            {report.topActions.map((item: any) => (
+            {report.topActions.map((item: TopActionItem) => (
               <div
                 key={item.action}
                 className="flex justify-between items-center p-2 border rounded"
@@ -102,7 +130,7 @@ export const RateLimitMonitoringDashboard: React.FC = () => {
         <div className="bg-white p-4 rounded-lg shadow">
           <h2 className="text-lg font-bold mb-4">Top Violators</h2>
           <div className="space-y-2">
-            {report.topUsers.map((user: any, index: number) => (
+            {report.topUsers.map((user: TopUserItem, index: number) => (
               <div
                 key={user.userId}
                 className="flex justify-between items-center p-2 border rounded"
