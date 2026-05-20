@@ -131,6 +131,7 @@ export function LanguageSwitcher() {
                 isSelected={language.code === i18n.language}
                 onSelect={handleLanguageChange}
               />
+            ))}
           </div>
         </div>
       )}

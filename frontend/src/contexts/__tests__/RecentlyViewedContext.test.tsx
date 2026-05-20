@@ -1,10 +1,10 @@
-import React from 'react';
+import type { ReactNode } from 'react';
 import { renderHook, act } from '@testing-library/react';
 import { describe, expect, it, beforeEach } from 'vitest';
 import { RecentlyViewedProvider, useRecentlyViewed } from '../RecentlyViewedContext';
 import { loadRecentlyViewedEntries, saveRecentlyViewedEntries } from '../../utils/recentlyViewed';
 
-function wrapper({ children }: { children: React.ReactNode }) {
+function wrapper({ children }: { children: ReactNode }) {
   return <RecentlyViewedProvider>{children}</RecentlyViewedProvider>;
 }
 

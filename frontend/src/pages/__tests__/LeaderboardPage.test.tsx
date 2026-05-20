@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { LeaderboardPage } from '../LeaderboardPage';
@@ -28,7 +27,7 @@ vi.mock('../../hooks/useLeaderboard', () => ({
 
 describe('LeaderboardPage', () => {
   it('renders leaderboard entries', () => {
-    render(React.createElement(LeaderboardPage));
+    render(<LeaderboardPage />);
 
     expect(screen.getByText('Leaderboard')).toBeInTheDocument();
     expect(screen.getByText('TradeKing')).toBeInTheDocument();

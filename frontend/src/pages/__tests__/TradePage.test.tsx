@@ -1,4 +1,3 @@
-import React from 'react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { render, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
@@ -68,7 +67,7 @@ vi.mock('../../utils/helpers', async () => {
 });
 
 vi.mock('../../components/SocialButtons', () => ({
-  SocialButtons: () => React.createElement('div', { 'data-testid': 'social-buttons' }),
+  SocialButtons: () => <div data-testid="social-buttons" />,
 }));
 
 describe('TradePage', () => {
@@ -96,15 +95,11 @@ describe('TradePage', () => {
     fetchCallReadOnlyFunctionMock.mockResolvedValue({});
 
     const { container } = render(
-      React.createElement(
-        MemoryRouter,
-        { initialEntries: ['/trade/1'] },
-        React.createElement(
-          Routes,
-          null,
-          React.createElement(Route, { path: '/trade/:id', element: React.createElement(TradePage) })
-        )
-      )
+      <MemoryRouter initialEntries={['/trade/1']}>
+        <Routes>
+          <Route path="/trade/:id" element={<TradePage />} />
+        </Routes>
+      </MemoryRouter>
     );
 
     await waitFor(() => {

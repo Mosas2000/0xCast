@@ -1,4 +1,3 @@
-import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
@@ -23,12 +22,30 @@ vi.mock('../../contexts/NetworkContext', () => ({
   }),
 }));
 
+vi.mock('react-i18next', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-i18next')>();
+  return {
+    ...actual,
+    useTranslation: () => ({
+      t: (key: string) => {
+        if (key === 'nav.watchlist') return 'Watchlist';
+        if (key === 'nav.recent') return 'Recent';
+        return key;
+      },
+      i18n: {
+        language: 'en',
+        changeLanguage: vi.fn(),
+      },
+    }),
+  };
+});
+
 vi.mock('../NetworkSelector', () => ({
-  NetworkSelector: () => React.createElement('div', { 'data-testid': 'network-selector' }),
+  NetworkSelector: () => <div data-testid="network-selector" />,
 }));
 
 vi.mock('../ThemeSwitcher', () => ({
-  ThemeSwitcher: () => React.createElement('div', { 'data-testid': 'theme-switcher' }),
+  ThemeSwitcher: () => <div data-testid="theme-switcher" />,
 }));
 
 describe('Header', () => {
