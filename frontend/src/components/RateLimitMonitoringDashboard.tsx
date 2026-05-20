@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { rateLimitMonitoringService } from '@/services/RateLimitMonitoringService';
 import { RateLimitAlert } from '@/services/RateLimitMonitoringService';
+import { RateLimitAction } from '@/types/rateLimit';
 import { getActionDisplayName } from '@/utils/rateLimitHelpers';
 
 export const RateLimitMonitoringDashboard: React.FC = () => {
