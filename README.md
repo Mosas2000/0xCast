@@ -188,3 +188,40 @@ npm run validate-blocks # Validate block height usage
 ```
 
 All scripts use dynamic block height calculation, ensuring they remain functional regardless of when they're run. See [Issue #64 Resolution](ISSUE_64_RESOLUTION.md) for details.
+
+## Security Audit and Verification
+
+Before mainnet launch, a comprehensive security review and vulnerability assessment framework was established to verify contract behaviors, access controls, oracle integration resistance, and frontend posture.
+
+### Security Framework and Checklists
+Detailed audit criteria, verification methodologies, and remediation logs are located under the `docs/security/` directory:
+- [Security Audit Methodology](docs/security/SECURITY_AUDIT_METHODOLOGY.md) - Standard operational procedures, audit tools, threat models, and report requirements.
+- [Clarity Contracts Audit Checklist](docs/security/CLARITY_CONTRACTS_AUDIT.md) - Verification parameters for Clarity contracts including reentrancy, integer overflow, check-after-send, and validation rules.
+- [Access Control Verification](docs/security/ACCESS_CONTROL_VERIFICATION.md) - Role privileges, privilege escalation controls, migration/upgrade restrictions, and emergency pausing.
+- [Oracle Manipulation Resistance](docs/security/ORACLE_MANIPULATION_RESISTANCE.md) - Consensus mechanism evaluation, staleness thresholds, and dispute windows.
+- [Frontend Penetration Testing](docs/security/FRONTEND_PENETRATION_TESTING.md) - Client security assessment checklist covering XSS, local storage, API security, and data protection.
+- [Remediation Log Template](docs/security/remediation/REMEDIATION_LOG_TEMPLATE.md) - Template to catalog, prioritize, and verify vulnerability fixes.
+
+### Automated Scanners
+Automated security checks have been integrated into the repository to perform static analysis and dependency analysis:
+- **Clarity Static Security Scanner**: Runs AST pattern matching on Clarity files to detect unsafe tx-sender authorization, arithmetic division priority, and unchecked return variables.
+- **Frontend Penetration Scanner**: Audits frontend source directories to flag insecure storage (localStorage/sessionStorage usage for sensitive data) and secret disclosure.
+- **Dependency Audit**: Performs dependency vulnerability reports utilizing standard package audits.
+
+Run scanners using the following commands:
+```bash
+npm run security-scan   # Execute Clarity and package vulnerability scans
+npm run pen-test        # Execute frontend penetration checks
+npm run audit-all       # Run both contract and frontend security scanners
+```
+
+### Dedicated Verification Test Suites
+Unit and integration test suites enforce critical security invariants on-chain:
+- **Access Control & Upgrades**: `tests/access-control-vulnerabilities.test.ts` validates role assignments, migration registration/execution permissions, and emergency pause activation.
+- **Oracle Manipulation Resistance**: `tests/oracle-manipulation-resistance.test.ts` validates multi-oracle consensus weight limits, price skew resistance, provider state validation, and dispute expiration timings.
+
+Run verification tests with Vitest:
+```bash
+npx vitest run tests/access-control-vulnerabilities.test.ts tests/oracle-manipulation-resistance.test.ts
+```
+
