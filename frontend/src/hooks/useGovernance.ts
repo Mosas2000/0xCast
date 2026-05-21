@@ -8,14 +8,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fetchCallReadOnlyFunction, cvToValue, Cl, AnchorMode } from '@stacks/transactions';
 import { getNetwork } from '../config';
-import { GOVERNANCE_CONFIG, mapProposalStatus } from '../config/governance';
+import { GOVERNANCE_CONFIG, mapProposalStatus } from '@/config/governance';
 import type { 
   Proposal, 
   GovernanceStats, 
   GovernanceParameters, 
   ContractProposal,
   VoteType,
-} from '../types/governance';
+} from '@/types/governance';
 
 // Default stats when data is not available
 const DEFAULT_STATS: GovernanceStats = {

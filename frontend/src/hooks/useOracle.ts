@@ -25,8 +25,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { cvToValue, hexToCV } from '@stacks/transactions';
-import { getContractPrincipal, CONTRACT_NAMES } from '../config/contracts';
-import { getNodeUrl } from '../config/network';
+import { getContractPrincipal, CONTRACT_NAMES } from '@/config/contracts';
+import { getNodeUrl } from '@/config/network';
 import type {
   OracleStats,
   OracleReputation,
@@ -38,7 +38,7 @@ import type {
   OracleSettings,
   DisputeStatus,
   VoteType,
-} from '../types/oracle';
+} from '@/types/oracle';
 
 /**
  * Get oracle contract configuration

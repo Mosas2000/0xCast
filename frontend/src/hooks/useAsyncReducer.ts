@@ -1,5 +1,5 @@
 import { useReducer, useCallback } from 'react';
-import { AsyncState, AsyncAction } from '../types/reducers';
+import { AsyncState, AsyncAction } from '@/types/reducers';
 
 const initialAsyncState = {
   data: null,

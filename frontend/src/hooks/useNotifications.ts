@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { NotificationService } from '../services/NotificationService';
+import { NotificationService } from '@/services/NotificationService';
 import type {
   Notification,
   NotificationPreference,
@@ -8,7 +8,7 @@ import type {
   NotificationType,
   NotificationChannel,
   NotificationFrequency,
-} from '../types/notifications';
+} from '@/types/notifications';
 
 interface UseNotificationsReturn {
   notifications: Notification[];

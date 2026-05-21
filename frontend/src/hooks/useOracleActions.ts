@@ -46,11 +46,11 @@ import {
   PostConditionMode,
   Pc,
 } from '@stacks/transactions';
-import { getContractPrincipal, CONTRACT_NAMES } from '../config/contracts';
-import { useWallet } from '../components/WalletProvider';
+import { getContractPrincipal, CONTRACT_NAMES } from '@/config/contracts';
+import { useWallet } from '@/components/WalletProvider';
 import { safeBigIntToNumber } from './useContract';
-import { parseContractError, getUserFriendlyContractError } from '../utils/contractErrorHandler';
-import { errorLoggingService } from '../services/ErrorLoggingService';
+import { parseContractError, getUserFriendlyContractError } from '@/utils/contractErrorHandler';
+import { errorLoggingService } from '@/services/ErrorLoggingService';
 
 /**
  * Get oracle contract configuration

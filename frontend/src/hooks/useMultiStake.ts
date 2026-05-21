@@ -2,10 +2,10 @@ import { useState, useCallback } from 'react';
 import { openContractCall } from '@stacks/connect';
 import { uintCV, PostConditionMode, Pc } from '@stacks/transactions';
 import { stxToMicroStx, MIN_STAKE, MAX_STAKE } from '../constants';
-import { useWallet } from '../components/WalletProvider';
-import { useNetwork } from '../contexts/NetworkContext';
-import { MARKET_MULTI_CONTRACT } from '../config/contracts';
-import { validateAmount, validateMarketId } from '../utils/validation';
+import { useWallet } from '@/components/WalletProvider';
+import { useNetwork } from '@/contexts/NetworkContext';
+import { MARKET_MULTI_CONTRACT } from '@/config/contracts';
+import { validateAmount, validateMarketId } from '@/utils/validation';
 import { useContractPause } from './useContractPause';
 
 interface UseMultiStakeReturn {

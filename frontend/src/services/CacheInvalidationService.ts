@@ -1,5 +1,5 @@
 import { marketCacheService } from './MarketCacheService';
-import { cacheManager } from '../utils/cache';
+import { cacheManager } from '@/utils/cache';
 
 type InvalidationStrategy = 'immediate' | 'delayed' | 'smart';
 

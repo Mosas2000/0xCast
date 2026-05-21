@@ -1,4 +1,4 @@
-import { ApiError, ErrorCode } from '../utils/apiErrors';
+import { ApiError, ErrorCode } from '@/utils/apiErrors';
 import { GDPRComplianceService } from './GDPRComplianceService';
 import { SecureStorageV2Service } from './SecureStorageV2Service';
 

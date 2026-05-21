@@ -4,7 +4,7 @@ import {
   UserReputation,
   ReputationAdjustment,
   ReputationBadge,
-} from '../types/reputation';
+} from '@/types/reputation';
 
 export class ReputationService {
   private reputations: Map<string, UserReputation> = new Map();

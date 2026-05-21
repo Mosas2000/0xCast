@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { MigrationService, Migration, MigrationData } from '../services/MigrationService';
-import { useWallet } from '../components/WalletProvider';
+import { MigrationService, Migration, MigrationData } from '@/services/MigrationService';
+import { useWallet } from '@/components/WalletProvider';
 
 interface UseMigrationReturn {
   registerMigration: (

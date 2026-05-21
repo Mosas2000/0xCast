@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
-import type { TemplateCategory } from '../types/template';
-import { validateMarketForm } from '../utils/templateValidation';
-import type { ValidationState } from '../types/template';
+import type { TemplateCategory } from '@/types/template';
+import { validateMarketForm } from '@/utils/templateValidation';
+import type { ValidationState } from '@/types/template';
 
 interface UseTemplateWizardReturn {
   currentStep: number;

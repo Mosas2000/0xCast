@@ -6,9 +6,9 @@ import {
   calculateHistoricalAPY,
   type RewardCalculation,
   type MarketVolume,
-} from '../utils/liquidityRewardsCalculator';
-import { liquidityRewardsService } from '../services/LiquidityRewardsService';
-import { useWallet } from '../components/WalletProvider';
+} from '@/utils/liquidityRewardsCalculator';
+import { liquidityRewardsService } from '@/services/LiquidityRewardsService';
+import { useWallet } from '@/components/WalletProvider';
 
 interface UseLiquidityRewardsReturn {
   calculateRewards: (

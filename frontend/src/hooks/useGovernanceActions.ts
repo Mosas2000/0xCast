@@ -11,13 +11,13 @@
 import { useState, useCallback } from 'react';
 import { openContractCall } from '@stacks/connect';
 import { Cl, PostConditionMode } from '@stacks/transactions';
-import { useWallet } from '../components/WalletProvider';
-import { GOVERNANCE_CONFIG } from '../config/governance';
+import { useWallet } from '@/components/WalletProvider';
+import { GOVERNANCE_CONFIG } from '@/config/governance';
 import { getNetwork } from '../config';
-import type { VoteType } from '../types/governance';
+import type { VoteType } from '@/types/governance';
 import { useRateLimit } from './useRateLimit';
-import { parseContractError, getUserFriendlyContractError } from '../utils/contractErrorHandler';
-import { errorLoggingService } from '../services/ErrorLoggingService';
+import { parseContractError, getUserFriendlyContractError } from '@/utils/contractErrorHandler';
+import { errorLoggingService } from '@/services/ErrorLoggingService';
 
 interface ActionState {
   isLoading: boolean;

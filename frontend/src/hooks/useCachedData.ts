@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { cacheManager } from '../utils/cache';
-import { performanceMonitor } from '../utils/performanceMonitor';
+import { cacheManager } from '@/utils/cache';
+import { performanceMonitor } from '@/utils/performanceMonitor';
 
 interface UseCachedDataOptions<T> {
   key: string;

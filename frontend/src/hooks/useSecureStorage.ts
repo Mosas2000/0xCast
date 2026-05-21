@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { SecureStorageV2Service } from '../services/SecureStorageV2Service';
-import { StorageMigrationService } from '../services/StorageMigrationService';
-import { EncryptionService } from '../services/EncryptionService';
+import { SecureStorageV2Service } from '@/services/SecureStorageV2Service';
+import { StorageMigrationService } from '@/services/StorageMigrationService';
+import { EncryptionService } from '@/services/EncryptionService';
 
 export interface SecureStorageStatus {
   initialized: boolean;

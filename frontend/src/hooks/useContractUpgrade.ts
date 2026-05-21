@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { ContractUpgradeService, UpgradeProposal, UpgradeHistory } from '../services/ContractUpgradeService';
-import { useWallet } from '../components/WalletProvider';
+import { ContractUpgradeService, UpgradeProposal, UpgradeHistory } from '@/services/ContractUpgradeService';
+import { useWallet } from '@/components/WalletProvider';
 
 interface UseContractUpgradeReturn {
   proposeUpgrade: (newImplementation: string) => Promise<void>;

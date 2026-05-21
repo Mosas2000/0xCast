@@ -25,13 +25,13 @@
 
 import { useState, useCallback } from 'react';
 import { useContract } from './useContract';
-import type { CreateMarketFormData } from '../types/market';
+import type { CreateMarketFormData } from '@/types/market';
 import { useContractPause } from './useContractPause';
 import { createRateLimitMiddleware } from '../middleware/rateLimitMiddleware';
-import { useWallet } from '../components/WalletProvider';
-import { parseContractError, getUserFriendlyContractError } from '../utils/contractErrorHandler';
-import { errorLoggingService } from '../services/ErrorLoggingService';
-import { MARKET_CONTRACT } from '../config/contracts';
+import { useWallet } from '@/components/WalletProvider';
+import { parseContractError, getUserFriendlyContractError } from '@/utils/contractErrorHandler';
+import { errorLoggingService } from '@/services/ErrorLoggingService';
+import { MARKET_CONTRACT } from '@/config/contracts';
 
 interface MarketCreationState {
   isCreating: boolean;

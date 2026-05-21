@@ -12,7 +12,7 @@ import {
   updateTransactionStatus,
   getPendingTransactions,
   clearTransactionHistory,
-} from '../utils/transactions';
+} from '@/utils/transactions';
 
 // Polling interval for checking pending transactions (15 seconds)
 const POLL_INTERVAL = 15000;

@@ -6,8 +6,8 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useMarkets } from './useMarkets';
-import { useWallet } from '../components/WalletProvider';
-import { MarketStatus, MarketOutcome } from '../types/market';
+import { useWallet } from '@/components/WalletProvider';
+import { MarketStatus, MarketOutcome } from '@/types/market';
 import type {
   PlatformStats,
   MarketStats,
@@ -16,7 +16,7 @@ import type {
   UserActivityData,
   PersonalStats,
   TimeRange,
-} from '../types/analytics';
+} from '@/types/analytics';
 import {
   buildCategoryDistribution,
   buildMarketHealth,
@@ -24,7 +24,7 @@ import {
   buildUserActivity,
   buildVolumeHistory,
   getDaysFromTimeRange,
-} from '../utils/analytics';
+} from '@/utils/analytics';
 
 export function useAnalytics(initialTimeRange: TimeRange = '30d') {
   const { markets, isLoading: marketsLoading } = useMarkets();

@@ -1,4 +1,4 @@
-import type { PushNotificationPayload } from '../types/notifications';
+import type { PushNotificationPayload } from '@/types/notifications';
 
 export class PushNotificationService {
   private static serviceWorkerReady = false;

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { StateSnapshotService, Snapshot } from '../services/StateSnapshotService';
-import { useWallet } from '../components/WalletProvider';
+import { StateSnapshotService, Snapshot } from '@/services/StateSnapshotService';
+import { useWallet } from '@/components/WalletProvider';
 
 interface UseStateSnapshotReturn {
   createSnapshot: (stateHash: Uint8Array, dataSize: number, description: string) => Promise<void>;

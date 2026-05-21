@@ -5,8 +5,8 @@
  */
 
 import { useMemo } from 'react';
-import { useNetwork } from '../contexts/NetworkContext';
-import { API_URLS, EXPLORER_URLS } from '../config/network';
+import { useNetwork } from '@/contexts/NetworkContext';
+import { API_URLS, EXPLORER_URLS } from '@/config/network';
 
 export interface ApiConfig {
   baseUrl: string;

@@ -2,11 +2,11 @@
 import { useState, useCallback } from 'react';
 import { openContractCall } from '@stacks/connect';
 import { uintCV, PostConditionMode, Pc } from '@stacks/transactions';
-import { TOKEN_CONTRACT } from '../config/contracts';
-import { useWallet } from '../components/WalletProvider';
+import { TOKEN_CONTRACT } from '@/config/contracts';
+import { useWallet } from '@/components/WalletProvider';
 import { safeBigIntToNumber, validateTransactionAmount } from './useContract';
-import { parseContractError, getUserFriendlyContractError } from '../utils/contractErrorHandler';
-import { errorLoggingService } from '../services/ErrorLoggingService';
+import { parseContractError, getUserFriendlyContractError } from '@/utils/contractErrorHandler';
+import { errorLoggingService } from '@/services/ErrorLoggingService';
 
 interface UseStakingActionsReturn {
   stake: (amount: bigint, onSuccess?: () => void) => Promise<void>;

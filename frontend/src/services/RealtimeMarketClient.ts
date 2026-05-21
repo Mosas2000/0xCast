@@ -7,7 +7,7 @@ import {
   TradeUpdate,
   WebSocketEventMap,
   WebSocketEventHandler,
-} from '../types/websocket';
+} from '@/types/websocket';
 
 export class RealtimeMarketClient {
   private ws: WebSocket | null = null;

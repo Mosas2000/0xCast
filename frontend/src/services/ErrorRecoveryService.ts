@@ -5,8 +5,8 @@
  * Implements retry logic, fallback mechanisms, and user guidance for error resolution.
  */
 
-import { ApiError, ErrorCode, ContractError } from '../utils/apiErrors';
-import { withRetry } from '../utils/retry';
+import { ApiError, ErrorCode, ContractError } from '@/utils/apiErrors';
+import { withRetry } from '@/utils/retry';
 import { errorLoggingService } from './ErrorLoggingService';
 
 export interface RecoveryStrategy {

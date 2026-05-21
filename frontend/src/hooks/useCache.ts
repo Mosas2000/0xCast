@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { cacheManager } from '../utils/cache';
+import { cacheManager } from '@/utils/cache';
 
 interface UseCacheOptions<T> {
   key: string;

@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Portfolio, PortfolioMetrics, PortfolioRecommendation, RecommendationResponse } from '../types/portfolio';
-import { PortfolioAnalysisService } from '../services/PortfolioAnalysisService';
-import { RecommendationEngineService } from '../services/RecommendationEngineService';
-import { PerformanceComparisonService } from '../services/PerformanceComparisonService';
+import { Portfolio, PortfolioMetrics, PortfolioRecommendation, RecommendationResponse } from '@/types/portfolio';
+import { PortfolioAnalysisService } from '@/services/PortfolioAnalysisService';
+import { RecommendationEngineService } from '@/services/RecommendationEngineService';
+import { PerformanceComparisonService } from '@/services/PerformanceComparisonService';
 
 export function usePortfolioAnalysis(userId: string) {
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);

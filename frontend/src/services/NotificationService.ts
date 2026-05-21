@@ -6,7 +6,7 @@ import type {
   NotificationPreferenceUpdate,
   NotificationStatus,
   NotificationType,
-} from '../types/notifications';
+} from '@/types/notifications';
 import { GDPRComplianceService } from './GDPRComplianceService';
 import { SecureStorageV2Service } from './SecureStorageV2Service';
 

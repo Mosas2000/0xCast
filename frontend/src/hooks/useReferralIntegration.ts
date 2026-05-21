@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { TxStatus } from '@stacks/connect';
-import type { Market, Prediction } from '../types/market';
+import type { Market, Prediction } from '@/types/market';
 
 interface ReferralReward {
   id: string;

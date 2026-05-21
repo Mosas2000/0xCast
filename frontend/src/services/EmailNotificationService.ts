@@ -1,4 +1,4 @@
-import type { EmailNotificationPayload } from '../types/notifications';
+import type { EmailNotificationPayload } from '@/types/notifications';
 
 export class EmailNotificationService {
   static async sendEmail(payload: EmailNotificationPayload): Promise<boolean> {

@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { cvToJSON, fetchCallReadOnlyFunction, uintCV } from '@stacks/transactions';
-import { useNetwork } from '../contexts/NetworkContext';
-import { MARKET_MULTI_CONTRACT } from '../config/contracts';
-import type { MultiMarket } from '../types/market';
-import { parseMultiMarketData } from '../utils/multiMarket';
+import { useNetwork } from '@/contexts/NetworkContext';
+import { MARKET_MULTI_CONTRACT } from '@/config/contracts';
+import type { MultiMarket } from '@/types/market';
+import { parseMultiMarketData } from '@/utils/multiMarket';
 
 export function useMultiMarkets() {
   const { stacksNetwork } = useNetwork();

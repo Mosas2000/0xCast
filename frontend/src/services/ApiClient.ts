@@ -1,5 +1,5 @@
-import { ApiError, ErrorCode } from '../utils/apiErrors';
-import { withRetry, RetryConfig } from '../utils/retry';
+import { ApiError, ErrorCode } from '@/utils/apiErrors';
+import { withRetry, RetryConfig } from '@/utils/retry';
 import { errorLoggingService } from './ErrorLoggingService';
 
 interface RequestConfig extends RequestInit {

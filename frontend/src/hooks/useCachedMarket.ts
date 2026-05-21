@@ -1,10 +1,10 @@
 import { useCallback } from 'react';
 import { cvToJSON, fetchCallReadOnlyFunction, uintCV } from '@stacks/transactions';
-import { useNetwork } from '../contexts/NetworkContext';
-import { parseMarketData } from '../utils/helpers';
-import { marketCacheService } from '../services/MarketCacheService';
+import { useNetwork } from '@/contexts/NetworkContext';
+import { parseMarketData } from '@/utils/helpers';
+import { marketCacheService } from '@/services/MarketCacheService';
 import { useCache } from './useCache';
-import type { Market } from '../types/market';
+import type { Market } from '@/types/market';
 
 interface UseCachedMarketOptions {
   marketId: number;

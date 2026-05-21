@@ -6,7 +6,7 @@ import {
   DiversificationAnalysis,
   HistoricalPerformance,
   HistoricalDataPoint,
-} from '../types/portfolio';
+} from '@/types/portfolio';
 
 export class PortfolioAnalysisService {
   static analyzePortfolio(portfolio: Portfolio): PortfolioMetrics {

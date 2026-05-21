@@ -1,15 +1,15 @@
 import { useState, useCallback } from 'react';
 import { openContractCall } from '@stacks/connect';
 import { uintCV, PostConditionMode, Pc } from '@stacks/transactions';
-import { MARKET_CONTRACT } from '../config/contracts';
+import { MARKET_CONTRACT } from '@/config/contracts';
 import { stxToMicroStx, MIN_STAKE, MAX_STAKE } from '../constants';
-import { useWallet } from '../components/WalletProvider';
-import { validateAmount, validateMarketId } from '../utils/validation';
-import { addStakeHistoryEntry, type StakeOutcome } from '../utils/stakeHistory';
+import { useWallet } from '@/components/WalletProvider';
+import { validateAmount, validateMarketId } from '@/utils/validation';
+import { addStakeHistoryEntry, type StakeOutcome } from '@/utils/stakeHistory';
 import { useContractPause } from './useContractPause';
 import { createRateLimitMiddleware } from '../middleware/rateLimitMiddleware';
-import { parseContractError, getUserFriendlyContractError } from '../utils/contractErrorHandler';
-import { errorLoggingService } from '../services/ErrorLoggingService';
+import { parseContractError, getUserFriendlyContractError } from '@/utils/contractErrorHandler';
+import { errorLoggingService } from '@/services/ErrorLoggingService';
 
 interface UseStakeReturn {
   placeYesStake: (marketId: number, amount: number, onSuccess?: () => void) => Promise<void>;

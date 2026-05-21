@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { cvToJSON, fetchCallReadOnlyFunction } from '@stacks/transactions';
-import { MARKET_CONTRACT } from '../config/contracts';
-import { useNetwork } from '../contexts/NetworkContext';
+import { MARKET_CONTRACT } from '@/config/contracts';
+import { useNetwork } from '@/contexts/NetworkContext';
 
 export function useContractPause() {
   const { stacksNetwork } = useNetwork();

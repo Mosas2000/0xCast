@@ -1,6 +1,6 @@
 import { RealtimeMarketClient } from './RealtimeMarketClient';
 import { MarketPollingService } from './MarketPollingService';
-import { MarketUpdate, OrderBookUpdate, TradeUpdate, WebSocketEventMap, WebSocketEventHandler } from '../types/websocket';
+import { MarketUpdate, OrderBookUpdate, TradeUpdate, WebSocketEventMap, WebSocketEventHandler } from '@/types/websocket';
 
 export interface RealtimeDataManagerConfig {
   wsUrl: string;

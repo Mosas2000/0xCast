@@ -7,7 +7,7 @@ import {
   formatTime, 
   formatPercentage,
   formatStx as formatStxUtil
-} from '../utils/i18n/formatters';
+} from '@/utils/i18n/formatters';
 
 export function useLocale() {
   const { i18n } = useTranslation();
