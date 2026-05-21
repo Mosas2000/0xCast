@@ -1,7 +1,7 @@
 import React from 'react';
-import { useLiquidityRewards } from '../hooks/useLiquidityRewards';
-import { formatAPY } from '../utils/liquidityRewardsCalculator';
-import type { MarketVolume } from '../utils/liquidityRewardsCalculator';
+import { useLiquidityRewards } from '@/hooks/useLiquidityRewards';
+import { formatAPY } from '@/utils/liquidityRewardsCalculator';
+import type { MarketVolume } from '@/utils/liquidityRewardsCalculator';
 
 interface APYComparisonProps {
   liquidityAmount: number;

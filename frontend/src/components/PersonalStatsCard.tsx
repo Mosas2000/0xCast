@@ -4,7 +4,7 @@
  * Display user's personal analytics when connected
  */
 
-import type { PersonalStats } from '../types/analytics';
+import type { PersonalStats } from '@/types/analytics';
 
 interface PersonalStatsCardProps {
   stats: PersonalStats | null;

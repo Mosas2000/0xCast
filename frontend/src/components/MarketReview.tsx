@@ -1,6 +1,6 @@
 import React from 'react';
-import type { MarketTemplate } from '../types/template';
-import { CATEGORY_METADATA } from '../types/market';
+import type { MarketTemplate } from '@/types/template';
+import { CATEGORY_METADATA } from '@/types/market';
 
 interface MarketReviewProps {
   question: string;

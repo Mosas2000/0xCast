@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import type { LiquidityPool, LPPosition, PendingRewards } from '../types/liquidity';
-import { formatStxAmount, calculateAPY } from '../types/liquidity';
+import type { LiquidityPool, LPPosition, PendingRewards } from '@/types/liquidity';
+import { formatStxAmount, calculateAPY } from '@/types/liquidity';
 
 interface LiquidityStatsProps {
   pools: LiquidityPool[];

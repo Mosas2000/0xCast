@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useLiquidityRewards } from '../hooks/useLiquidityRewards';
-import { formatRewardAmount, formatAPY } from '../utils/liquidityRewardsCalculator';
+import { useLiquidityRewards } from '@/hooks/useLiquidityRewards';
+import { formatRewardAmount, formatAPY } from '@/utils/liquidityRewardsCalculator';
 
 interface LiquidityRewardsCalculatorProps {
   marketId?: number;

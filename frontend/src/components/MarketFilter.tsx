@@ -9,8 +9,8 @@ import {
   SortOption,
   CATEGORIES,
   SORT_OPTIONS,
-} from '../utils/marketCategories';
-import { TimeRange, VolumeRange } from '../types/filters';
+} from '@/utils/marketCategories';
+import { TimeRange, VolumeRange } from '@/types/filters';
 
 interface MarketFilterProps {
   selectedCategory: MarketCategory;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatTimeRemaining } from '../utils/rateLimitHelpers';
+import { formatTimeRemaining } from '@/utils/rateLimitHelpers';
 
 interface RateLimitNotificationProps {
   message: string;

@@ -1,11 +1,11 @@
 import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import type { Market } from '../types/market';
-import { MarketStatus } from '../types/market';
-import { calculateOdds, formatStx, getStatusLabel } from '../utils/helpers';
-import { categorizeMarket, getCategoryConfig } from '../utils/marketCategories';
-import { useWatchlist } from '../contexts/WatchlistContext';
+import type { Market } from '@/types/market';
+import { MarketStatus } from '@/types/market';
+import { calculateOdds, formatStx, getStatusLabel } from '@/utils/helpers';
+import { categorizeMarket, getCategoryConfig } from '@/utils/marketCategories';
+import { useWatchlist } from '@/contexts/WatchlistContext';
 import type { MouseEvent } from 'react';
 
 interface MarketCardProps {

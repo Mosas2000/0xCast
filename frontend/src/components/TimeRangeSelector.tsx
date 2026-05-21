@@ -4,7 +4,7 @@
  * Toggle buttons for selecting analytics time range
  */
 
-import type { TimeRange } from '../types/analytics';
+import type { TimeRange } from '@/types/analytics';
 
 interface TimeRangeSelectorProps {
   value: TimeRange;

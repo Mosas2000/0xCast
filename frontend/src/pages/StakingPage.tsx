@@ -1,14 +1,14 @@
 import { useState, useMemo } from 'react';
-import { useWallet } from '../components/WalletProvider';
-import { useStakingData } from '../hooks/useStakingData';
-import { useStakingActions } from '../hooks/useStakingActions';
+import { useWallet } from '@/components/WalletProvider';
+import { useStakingData } from '@/hooks/useStakingData';
+import { useStakingActions } from '@/hooks/useStakingActions';
 import { 
   formatOxcAmount, 
   parseOxcInput, 
   calculateEstimatedApy,
   formatLockStatus,
-} from '../utils/stakingHelpers';
-import { validateAmount, type ValidationResult } from '../utils/validation';
+} from '@/utils/stakingHelpers';
+import { validateAmount, type ValidationResult } from '@/utils/validation';
 
 type StakingTab = 'stake' | 'unstake' | 'rewards';
 

@@ -4,7 +4,7 @@
  * Toggle button for switching between light and dark themes
  */
 
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface ThemeSwitcherProps {
   variant?: 'button' | 'icon';

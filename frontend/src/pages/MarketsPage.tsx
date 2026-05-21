@@ -1,13 +1,13 @@
 import { useEffect, useReducer } from 'react';
 import { Link } from 'react-router-dom';
-import { useMarkets } from '../hooks/useMarkets';
-import { useMarketFiltering } from '../hooks/useMarketFiltering';
-import { useFilterPresets } from '../hooks/useFilterPresets';
-import { useRealtimeSignal } from '../hooks/useRealtimeSignal';
-import { MarketCard } from '../components/MarketCard';
-import { MarketFilter } from '../components/MarketFilter';
-import { MarketRecommendations } from '../components/MarketRecommendations';
-import { getCategoryConfig, CATEGORIES, MarketCategory } from '../utils/marketCategories';
+import { useMarkets } from '@/hooks/useMarkets';
+import { useMarketFiltering } from '@/hooks/useMarketFiltering';
+import { useFilterPresets } from '@/hooks/useFilterPresets';
+import { useRealtimeSignal } from '@/hooks/useRealtimeSignal';
+import { MarketCard } from '@/components/MarketCard';
+import { MarketFilter } from '@/components/MarketFilter';
+import { MarketRecommendations } from '@/components/MarketRecommendations';
+import { getCategoryConfig, CATEGORIES, MarketCategory } from '@/utils/marketCategories';
 
 export function MarketsPage() {
   const { markets, isLoading, error, refetch } = useMarkets();

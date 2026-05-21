@@ -1,6 +1,6 @@
 import React, { useReducer, useEffect } from 'react';
-import { useContractUpgrade } from '../hooks/useContractUpgrade';
-import { UpgradeProposal } from '../services/ContractUpgradeService';
+import { useContractUpgrade } from '@/hooks/useContractUpgrade';
+import { UpgradeProposal } from '@/services/ContractUpgradeService';
 
 interface UpgradeManagerProps {
   proxyContract: { address: string; name: string };

@@ -5,8 +5,8 @@
  */
 
 import { Link } from 'react-router-dom';
-import { useMarkets } from '../hooks/useMarkets';
-import { formatBlocksToTime } from '../utils/marketValidation';
+import { useMarkets } from '@/hooks/useMarkets';
+import { formatBlocksToTime } from '@/utils/marketValidation';
 
 export function RecentMarkets() {
   const { markets, isLoading } = useMarkets();

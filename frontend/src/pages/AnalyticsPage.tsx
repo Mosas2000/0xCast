@@ -4,14 +4,14 @@
  * Dashboard displaying platform statistics and market insights
  */
 
-import { useAnalytics } from '../hooks/useAnalytics';
-import { useWallet } from '../components/WalletProvider';
-import { StatsCard, StatsGrid } from '../components/StatsCard';
-import { VolumeChart, CategoryPieChart, ActivityChart } from '../components/charts';
-import { TopMarketsTable, TopMarketCard } from '../components/TopMarketsTable';
-import { TimeRangeSelector, TimeRangeDropdown } from '../components/TimeRangeSelector';
-import { PersonalStatsCard } from '../components/PersonalStatsCard';
-import { LoadingState } from '../components/Loading';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { useWallet } from '@/components/WalletProvider';
+import { StatsCard, StatsGrid } from '@/components/StatsCard';
+import { VolumeChart, CategoryPieChart, ActivityChart } from '@/components/charts';
+import { TopMarketsTable, TopMarketCard } from '@/components/TopMarketsTable';
+import { TimeRangeSelector, TimeRangeDropdown } from '@/components/TimeRangeSelector';
+import { PersonalStatsCard } from '@/components/PersonalStatsCard';
+import { LoadingState } from '@/components/Loading';
 
 export function AnalyticsPage() {
   const { isConnected } = useWallet();

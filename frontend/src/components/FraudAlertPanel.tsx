@@ -1,6 +1,6 @@
 import { useEffect, useReducer, memo } from 'react';
-import { FraudAlert, SuspiciousActivity } from '../types/reputation';
-import { reputationFraudIntegration } from '../services/ReputationFraudIntegrationService';
+import { FraudAlert, SuspiciousActivity } from '@/types/reputation';
+import { reputationFraudIntegration } from '@/services/ReputationFraudIntegrationService';
 
 interface FraudAlertPanelProps {
   userId: string;

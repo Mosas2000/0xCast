@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { rateLimitService } from '../services/RateLimitService';
-import { DEFAULT_RATE_LIMITS } from '../config/rateLimits';
+import { rateLimitService } from '@/services/RateLimitService';
+import { DEFAULT_RATE_LIMITS } from '@/config/rateLimits';
 
 interface RateLimitConfigForm {
   action: string;

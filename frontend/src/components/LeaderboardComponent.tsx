@@ -6,7 +6,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { getLeaderboardService, type LeaderboardSortBy } from '../services/LeaderboardService';
+import { getLeaderboardService, type LeaderboardSortBy } from '@/services/LeaderboardService';
 
 interface LeaderboardComponentProps {
   limit?: number;

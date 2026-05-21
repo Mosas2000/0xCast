@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useMemo } from 'react';
-import { useMarkets } from '../hooks/useMarkets';
-import { MarketCard } from '../components/MarketCard';
-import { useWatchlist } from '../contexts/WatchlistContext';
-import type { Market } from '../types/market';
+import { useMarkets } from '@/hooks/useMarkets';
+import { MarketCard } from '@/components/MarketCard';
+import { useWatchlist } from '@/contexts/WatchlistContext';
+import type { Market } from '@/types/market';
 
 export function WatchlistPage() {
   const { markets, isLoading, error, refetch } = useMarkets();

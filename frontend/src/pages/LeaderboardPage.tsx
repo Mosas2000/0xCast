@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useLeaderboard } from '../hooks/useLeaderboard';
-import { formatStx } from '../utils/helpers';
+import { useLeaderboard } from '@/hooks/useLeaderboard';
+import { formatStx } from '@/utils/helpers';
 
 type LeaderboardTab = 'win-rate' | 'volume' | 'weekly' | 'monthly';
 

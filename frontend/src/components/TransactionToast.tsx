@@ -4,7 +4,7 @@
  * Shows a toast notification for transaction status updates.
  */
 import { useEffect, useState, useCallback } from 'react';
-import { useNetwork } from '../contexts/NetworkContext';
+import { useNetwork } from '@/contexts/NetworkContext';
 import {
   type Transaction,
   TransactionStatus,
@@ -12,7 +12,7 @@ import {
   getStatusColor,
   getStatusLabel,
   getExplorerUrl,
-} from '../utils/transactions';
+} from '@/utils/transactions';
 
 interface TransactionToastProps {
   transaction: Transaction;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { errorLoggingService } from '../services/ErrorLoggingService';
-import type { ErrorLog } from '../services/ErrorLoggingService';
+import { errorLoggingService } from '@/services/ErrorLoggingService';
+import type { ErrorLog } from '@/services/ErrorLoggingService';
 
 interface ErrorStats {
   total: number;

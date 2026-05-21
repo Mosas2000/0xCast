@@ -19,10 +19,10 @@
 
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useWallet } from '../components/WalletProvider';
-import { useMarketCreation } from '../hooks/useMarketCreation';
-import { MarketForm } from '../components/MarketForm';
-import type { CreateMarketFormData } from '../types/market';
+import { useWallet } from '@/components/WalletProvider';
+import { useMarketCreation } from '@/hooks/useMarketCreation';
+import { MarketForm } from '@/components/MarketForm';
+import type { CreateMarketFormData } from '@/types/market';
 
 export function CreateMarketPage() {
   const navigate = useNavigate();

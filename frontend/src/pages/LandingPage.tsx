@@ -1,14 +1,14 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { useWallet } from '../components/WalletProvider';
-import { useMarkets } from '../hooks/useMarkets';
-import { MarketCard } from '../components/MarketCard';
-import { MarketStatus } from '../types/market';
-import { formatStx } from '../utils/helpers';
-import { useNetwork } from '../contexts/NetworkContext';
-import { getExplorerAddressUrl } from '../utils/transactions';
-import { useRecentlyViewed } from '../contexts/RecentlyViewedContext';
-import type { Market } from '../types/market';
+import { useWallet } from '@/components/WalletProvider';
+import { useMarkets } from '@/hooks/useMarkets';
+import { MarketCard } from '@/components/MarketCard';
+import { MarketStatus } from '@/types/market';
+import { formatStx } from '@/utils/helpers';
+import { useNetwork } from '@/contexts/NetworkContext';
+import { getExplorerAddressUrl } from '@/utils/transactions';
+import { useRecentlyViewed } from '@/contexts/RecentlyViewedContext';
+import type { Market } from '@/types/market';
 
 export function LandingPage() {
   const { connect, isConnected } = useWallet();

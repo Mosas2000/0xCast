@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Market } from '../types/market';
+import { Market } from '@/types/market';
 import { MarketCard } from './MarketCard';
 
 interface MarketRecommendationsProps {

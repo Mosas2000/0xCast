@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { monitoringService } from '../services/MonitoringService';
+import { monitoringService } from '@/services/MonitoringService';
 
 interface PerformanceMetric {
   name: string;

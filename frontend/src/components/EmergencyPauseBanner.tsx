@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useWallet } from './WalletProvider';
-import { useContractPause } from '../hooks/useContractPause';
-import { NotificationService } from '../services/NotificationService';
-import { PushNotificationService } from '../services/PushNotificationService';
+import { useContractPause } from '@/hooks/useContractPause';
+import { NotificationService } from '@/services/NotificationService';
+import { PushNotificationService } from '@/services/PushNotificationService';
 
 export function EmergencyPauseBanner() {
   const { address } = useWallet();

@@ -5,12 +5,12 @@
  * Provides global transaction tracking state throughout the app.
  */
 import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from 'react';
-import { useTransactionTracking } from '../hooks/useTransactionTracking';
+import { useTransactionTracking } from '@/hooks/useTransactionTracking';
 import { TransactionToast } from './TransactionToast';
 import {
   type Transaction,
   TransactionStatus,
-} from '../utils/transactions';
+} from '@/utils/transactions';
 
 interface TransactionContextValue {
   transactions: Transaction[];

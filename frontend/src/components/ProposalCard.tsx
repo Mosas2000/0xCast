@@ -4,9 +4,9 @@
  * Displays a governance proposal with voting progress and actions.
  */
 
-import type { Proposal, VoteType } from '../types/governance';
-import { formatVotingPower, calculateVotePercentage, isQuorumReached } from '../hooks/useGovernance';
-import { formatBlocksRemaining } from '../config/governance';
+import type { Proposal, VoteType } from '@/types/governance';
+import { formatVotingPower, calculateVotePercentage, isQuorumReached } from '@/hooks/useGovernance';
+import { formatBlocksRemaining } from '@/config/governance';
 
 interface ProposalCardProps {
   proposal: Proposal;

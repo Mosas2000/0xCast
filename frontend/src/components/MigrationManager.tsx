@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useMigration } from '../hooks/useMigration';
-import { Migration } from '../services/MigrationService';
+import { useMigration } from '@/hooks/useMigration';
+import { Migration } from '@/services/MigrationService';
 
 interface MigrationManagerProps {
   migrationContract: { address: string; name: string };

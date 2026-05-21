@@ -1,6 +1,6 @@
-import { useCachedMarket } from '../hooks/useCachedMarket';
-import { CacheStatus } from '../components/CacheStatus';
-import { cacheInvalidationService } from '../services/CacheInvalidationService';
+import { useCachedMarket } from '@/hooks/useCachedMarket';
+import { CacheStatus } from '@/components/CacheStatus';
+import { cacheInvalidationService } from '@/services/CacheInvalidationService';
 
 export function CachingExample() {
   const { data: market, isLoading, isCached, refetch } = useCachedMarket({

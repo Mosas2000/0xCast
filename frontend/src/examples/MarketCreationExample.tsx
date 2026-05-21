@@ -13,7 +13,7 @@
  */
 
 import { useState, FormEvent } from 'react';
-import { useContract } from '../hooks/useContract';
+import { useContract } from '@/hooks/useContract';
 import {
   validateMarketCreation,
   MIN_TITLE_LENGTH,
@@ -22,7 +22,7 @@ import {
   MAX_DESCRIPTION_LENGTH,
   MIN_MARKET_DURATION_BLOCKS,
   MAX_MARKET_DURATION_BLOCKS,
-} from '../utils/marketValidation';
+} from '@/utils/marketValidation';
 
 interface FormErrors {
   title?: string;

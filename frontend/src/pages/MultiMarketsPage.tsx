@@ -1,8 +1,8 @@
 import { useEffect, useReducer } from 'react';
 import { Link } from 'react-router-dom';
-import { useMultiMarkets } from '../hooks/useMultiMarkets';
-import { useRealtimeSignal } from '../hooks/useRealtimeSignal';
-import { formatAddress, formatStx } from '../utils/helpers';
+import { useMultiMarkets } from '@/hooks/useMultiMarkets';
+import { useRealtimeSignal } from '@/hooks/useRealtimeSignal';
+import { formatAddress, formatStx } from '@/utils/helpers';
 
 export function MultiMarketsPage() {
   const { markets, isLoading, error, refetch } = useMultiMarkets();

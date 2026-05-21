@@ -1,19 +1,19 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { cvToJSON, fetchCallReadOnlyFunction, uintCV } from '@stacks/transactions';
-import type { Market } from '../types/market';
-import { MarketStatus, MarketOutcome } from '../types/market';
-import { parseMarketData, calculateOdds, formatStx, getStatusLabel, formatAddress } from '../utils/helpers';
+import type { Market } from '@/types/market';
+import { MarketStatus, MarketOutcome } from '@/types/market';
+import { parseMarketData, calculateOdds, formatStx, getStatusLabel, formatAddress } from '@/utils/helpers';
 import { MIN_STAKE, MAX_STAKE } from '../constants';
-import { useWallet } from '../components/WalletProvider';
-import { useNetwork } from '../contexts/NetworkContext';
-import { useStake } from '../hooks/useStake';
-import { useRealtimeSignal } from '../hooks/useRealtimeSignal';
-import { validateAmount, validateMarketId } from '../utils/validation';
-import { SocialButtons } from '../components/SocialButtons';
-import { getStakeHistoryForMarketUser, getStakeHistoryTotals, type StakeHistoryEntry } from '../utils/stakeHistory';
-import { getExplorerAddressUrl, getExplorerUrl } from '../utils/transactions';
-import { useRecentlyViewed } from '../contexts/RecentlyViewedContext';
+import { useWallet } from '@/components/WalletProvider';
+import { useNetwork } from '@/contexts/NetworkContext';
+import { useStake } from '@/hooks/useStake';
+import { useRealtimeSignal } from '@/hooks/useRealtimeSignal';
+import { validateAmount, validateMarketId } from '@/utils/validation';
+import { SocialButtons } from '@/components/SocialButtons';
+import { getStakeHistoryForMarketUser, getStakeHistoryTotals, type StakeHistoryEntry } from '@/utils/stakeHistory';
+import { getExplorerAddressUrl, getExplorerUrl } from '@/utils/transactions';
+import { useRecentlyViewed } from '@/contexts/RecentlyViewedContext';
 
 /**
  * TradePage Component

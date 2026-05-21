@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { performanceMonitor } from '../utils/performanceMonitor';
+import { performanceMonitor } from '@/utils/performanceMonitor';
 
 export function PerformanceDashboard() {
   const [summary, setSummary] = useState<Record<string, any>>({});

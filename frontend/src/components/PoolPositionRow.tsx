@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import type { LPPosition, PendingRewards } from '../types/liquidity';
-import { formatStxAmount } from '../types/liquidity';
+import type { LPPosition, PendingRewards } from '@/types/liquidity';
+import { formatStxAmount } from '@/types/liquidity';
 
 interface PoolPositionRowProps {
   position: LPPosition;

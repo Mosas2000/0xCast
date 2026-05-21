@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useCallback } from 'react';
-import { logger } from '../utils/logger';
-import { useWallet } from '../components/WalletProvider';
+import { logger } from '@/utils/logger';
+import { useWallet } from '@/components/WalletProvider';
 
 interface UserIdContextType {
   userId: string | null;

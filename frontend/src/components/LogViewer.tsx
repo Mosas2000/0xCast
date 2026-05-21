@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { logger, type LogEntry, type LogLevel } from '../utils/logger';
+import { logger, type LogEntry, type LogLevel } from '@/utils/logger';
 
 interface LogViewerProps {
   refreshInterval?: number;

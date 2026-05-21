@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { LiquidityRewardsCalculator } from './LiquidityRewardsCalculator';
 import { RewardHistoryChart } from './RewardHistoryChart';
 import { APYComparison } from './APYComparison';
-import type { MarketVolume } from '../utils/liquidityRewardsCalculator';
+import type { MarketVolume } from '@/utils/liquidityRewardsCalculator';
 
 interface LiquidityMiningPageProps {
   marketId?: number;

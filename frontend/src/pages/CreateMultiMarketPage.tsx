@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useMultiMarketCreation } from '../hooks/useMultiMarketCreation';
-import { validateMultiOutcomeInputs } from '../utils/validation';
+import { useMultiMarketCreation } from '@/hooks/useMultiMarketCreation';
+import { validateMultiOutcomeInputs } from '@/utils/validation';
 
 function getCurrentBlockEstimate(): number {
   return Math.floor(Date.now() / 600000);

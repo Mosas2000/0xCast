@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useReferral } from '../hooks/useReferral';
+import { useReferral } from '@/hooks/useReferral';
 import {
   createReferralLink,
   generateShareMessage,
@@ -8,7 +8,7 @@ import {
   formatRewardAmount,
   calculateCommissionTiers,
   estimateMonthlyRewards,
-} from '../utils/referralUtils';
+} from '@/utils/referralUtils';
 
 interface ReferralDashboardProps {
   userAddress: string | null;

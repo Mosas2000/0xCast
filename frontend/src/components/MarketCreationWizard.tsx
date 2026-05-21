@@ -1,16 +1,16 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWallet } from './WalletProvider';
-import { useMarketCreation } from '../hooks/useMarketCreation';
-import { useTemplateWizard } from '../hooks/useTemplateWizard';
-import { getTemplate } from '../config/templates';
+import { useMarketCreation } from '@/hooks/useMarketCreation';
+import { useTemplateWizard } from '@/hooks/useTemplateWizard';
+import { getTemplate } from '@/config/templates';
 import { TemplateSelection } from './TemplateSelection';
 import { QuestionForm } from './QuestionForm';
 import { MarketReview } from './MarketReview';
 import { WizardProgress } from './WizardProgress';
 import { TemplateHelp } from './TemplateHelp';
-import type { CreateMarketFormData } from '../types/market';
-import type { TemplateCategory } from '../types/template';
+import type { CreateMarketFormData } from '@/types/market';
+import type { TemplateCategory } from '@/types/template';
 
 export function MarketCreationWizard() {
   const navigate = useNavigate();

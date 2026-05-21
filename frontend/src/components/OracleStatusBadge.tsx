@@ -5,7 +5,7 @@
  * Useful for showing oracle status in various contexts.
  */
 
-import type { OracleStats } from '../types/oracle';
+import type { OracleStats } from '@/types/oracle';
 
 interface OracleStatusBadgeProps {
   oracle?: OracleStats | null;

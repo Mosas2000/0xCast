@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useContractUpgrade } from '../hooks/useContractUpgrade';
-import { useMigration } from '../hooks/useMigration';
-import { useStateSnapshot } from '../hooks/useStateSnapshot';
+import { useContractUpgrade } from '@/hooks/useContractUpgrade';
+import { useMigration } from '@/hooks/useMigration';
+import { useStateSnapshot } from '@/hooks/useStateSnapshot';
 
 const PROXY_CONTRACT = {
   address: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM',

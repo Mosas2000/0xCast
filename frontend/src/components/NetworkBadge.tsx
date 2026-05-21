@@ -4,7 +4,7 @@
  * Visual indicator showing current network status
  */
 
-import { useNetwork } from '../contexts/NetworkContext';
+import { useNetwork } from '@/contexts/NetworkContext';
 
 interface NetworkBadgeProps {
   size?: 'sm' | 'md' | 'lg';

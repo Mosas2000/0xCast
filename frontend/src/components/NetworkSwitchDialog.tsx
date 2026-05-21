@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react';
-import { NetworkType, NETWORK_CONFIGS } from '../types/network';
+import { NetworkType, NETWORK_CONFIGS } from '@/types/network';
 
 interface NetworkSwitchDialogProps {
   isOpen: boolean;

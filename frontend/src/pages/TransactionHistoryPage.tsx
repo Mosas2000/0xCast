@@ -1,10 +1,10 @@
 /**
  * Transaction History Page
  */
-import { useTransactions } from '../components/TransactionProvider';
-import { TransactionHistory } from '../components/TransactionHistory';
-import { useWallet } from '../components/WalletProvider';
-import { TransactionStatus, getStatusColor } from '../utils/transactions';
+import { useTransactions } from '@/components/TransactionProvider';
+import { TransactionHistory } from '@/components/TransactionHistory';
+import { useWallet } from '@/components/WalletProvider';
+import { TransactionStatus, getStatusColor } from '@/utils/transactions';
 
 function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
   return (
