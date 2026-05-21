@@ -1,7 +1,7 @@
 import { useEffect, useReducer, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { UserReputation, ReputationBadge } from '../types/reputation';
-import { reputationFraudIntegration } from '../services/ReputationFraudIntegrationService';
+import { UserReputation, ReputationBadge } from '@/types/reputation';
+import { reputationFraudIntegration } from '@/services/ReputationFraudIntegrationService';
 
 interface ReputationDashboardProps {
   userId: string;

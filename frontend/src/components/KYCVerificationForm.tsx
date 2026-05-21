@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { reputationFraudIntegration } from '../services/ReputationFraudIntegrationService';
+import { reputationFraudIntegration } from '@/services/ReputationFraudIntegrationService';
 
 interface KYCVerificationFormProps {
   userId: string;

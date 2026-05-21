@@ -1,4 +1,4 @@
-import { TemplateCategory, TEMPLATE_CATEGORIES } from '../types/template';
+import { TemplateCategory, TEMPLATE_CATEGORIES } from '@/types/template';
 
 export interface TemplateAnalytics {
   templateId: TemplateCategory;

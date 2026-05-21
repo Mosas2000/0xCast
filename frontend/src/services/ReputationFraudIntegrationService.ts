@@ -2,7 +2,7 @@ import { ReputationService } from './ReputationService';
 import { FraudDetectionService } from './FraudDetectionService';
 import { KYCAMLService } from './KYCAMLService';
 import { AccountLinkingService } from './AccountLinkingService';
-import { UserReputation, SuspiciousActivity } from '../types/reputation';
+import { UserReputation, SuspiciousActivity } from '@/types/reputation';
 import type { FraudTransaction } from '@/types/common';
 
 export class ReputationFraudIntegrationService {

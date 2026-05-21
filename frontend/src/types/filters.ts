@@ -1,4 +1,4 @@
-import { MarketCategory, SortOption } from '../utils/marketCategories';
+import { MarketCategory, SortOption } from '@/utils/marketCategories';
 
 export type TimeRange = 'all' | '24h' | '7d' | '30d' | 'custom';
 export type VolumeRange = 'all' | 'low' | 'medium' | 'high';

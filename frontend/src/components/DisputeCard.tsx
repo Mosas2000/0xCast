@@ -6,8 +6,8 @@
  */
 
 import { useState } from 'react';
-import type { Dispute, DisputeVote } from '../types/oracle';
-import { formatDisputeStatus, getDisputeStatusColor, formatBlocksToTime, DISPUTE_STATUS } from '../types/oracle';
+import type { Dispute, DisputeVote } from '@/types/oracle';
+import { formatDisputeStatus, getDisputeStatusColor, formatBlocksToTime, DISPUTE_STATUS } from '@/types/oracle';
 
 interface DisputeCardProps {
   dispute: Dispute;

@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { cvToJSON, fetchCallReadOnlyFunction, uintCV, principalCV } from '@stacks/transactions';
-import { useWallet } from '../components/WalletProvider';
-import { useNetwork } from '../contexts/NetworkContext';
-import { useMarkets } from '../hooks/useMarkets';
-import { useContract } from '../hooks/useContract';
-import type { Market, Position } from '../types/market';
-import { MarketStatus, MarketOutcome } from '../types/market';
-import { parsePosition, formatStx, calculateOdds } from '../utils/helpers';
-import { validateMarketId } from '../utils/validation';
+import { useWallet } from '@/components/WalletProvider';
+import { useNetwork } from '@/contexts/NetworkContext';
+import { useMarkets } from '@/hooks/useMarkets';
+import { useContract } from '@/hooks/useContract';
+import type { Market, Position } from '@/types/market';
+import { MarketStatus, MarketOutcome } from '@/types/market';
+import { parsePosition, formatStx, calculateOdds } from '@/utils/helpers';
+import { validateMarketId } from '@/utils/validation';
 
 interface PositionWithMarket extends Position {
   market: Market;

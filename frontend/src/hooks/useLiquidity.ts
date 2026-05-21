@@ -24,15 +24,15 @@
 
 import { useState, useCallback } from 'react';
 import { cvToValue, hexToCV } from '@stacks/transactions';
-import { getContractPrincipal, CONTRACT_NAMES } from '../config/contracts';
-import { getNodeUrl } from '../config/network';
+import { getContractPrincipal, CONTRACT_NAMES } from '@/config/contracts';
+import { getNodeUrl } from '@/config/network';
 import type {
   LiquidityPool,
   LPPosition,
   PoolStats,
   FeeConfig,
-} from '../types/liquidity';
-import { calculateSharePercentage, calculatePositionValue, DEFAULT_FEE_CONFIG } from '../types/liquidity';
+} from '@/types/liquidity';
+import { calculateSharePercentage, calculatePositionValue, DEFAULT_FEE_CONFIG } from '@/types/liquidity';
 
 /**
  * Get liquidity pool contract configuration

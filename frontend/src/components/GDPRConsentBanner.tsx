@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { GDPRComplianceService } from '../services/GDPRComplianceService';
+import { GDPRComplianceService } from '@/services/GDPRComplianceService';
 
 interface GDPRConsentBannerProps {
   onConsent?: (consent: { analytics: boolean; marketing: boolean; personalization: boolean }) => void;

@@ -1,4 +1,4 @@
-import { MarketUpdate, OrderBookUpdate } from '../types/websocket';
+import { MarketUpdate, OrderBookUpdate } from '@/types/websocket';
 
 export interface PollingConfig {
   interval: number;

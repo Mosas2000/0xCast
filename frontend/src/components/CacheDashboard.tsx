@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { cacheManager } from '../utils/cache';
-import { marketCacheService } from '../services/MarketCacheService';
+import { cacheManager } from '@/utils/cache';
+import { marketCacheService } from '@/services/MarketCacheService';
 
 interface CacheStats {
   memoryCacheSize: number;

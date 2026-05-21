@@ -1,5 +1,5 @@
-import { cacheManager } from '../utils/cache';
-import type { Market } from '../types/market';
+import { cacheManager } from '@/utils/cache';
+import type { Market } from '@/types/market';
 
 interface MarketCacheConfig {
   marketTTL: number;

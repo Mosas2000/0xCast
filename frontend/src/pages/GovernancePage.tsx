@@ -6,17 +6,17 @@
  */
 
 import { useState } from 'react';
-import { useWallet } from '../components/WalletProvider';
+import { useWallet } from '@/components/WalletProvider';
 import { 
   useGovernance, 
   formatVotingPower, 
   calculateVotePercentage,
-} from '../hooks/useGovernance';
-import { useGovernanceActions } from '../hooks/useGovernanceActions';
-import { ProposalCard } from '../components/ProposalCard';
-import { CreateProposalModal } from '../components/CreateProposalModal';
-import type { Proposal, VoteType, ProposalStatus } from '../types/governance';
-import { validateMarketId } from '../utils/validation';
+} from '@/hooks/useGovernance';
+import { useGovernanceActions } from '@/hooks/useGovernanceActions';
+import { ProposalCard } from '@/components/ProposalCard';
+import { CreateProposalModal } from '@/components/CreateProposalModal';
+import type { Proposal, VoteType, ProposalStatus } from '@/types/governance';
+import { validateMarketId } from '@/utils/validation';
 
 export function GovernancePage() {
   const { isConnected, connect, address } = useWallet();

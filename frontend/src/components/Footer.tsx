@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Logo } from './Logo';
-import { useNetwork } from '../contexts/NetworkContext';
-import { getExplorerAddressUrl } from '../utils/transactions';
+import { useNetwork } from '@/contexts/NetworkContext';
+import { getExplorerAddressUrl } from '@/utils/transactions';
 
 export function Footer() {
   const { network, contractAddress } = useNetwork();

@@ -1,4 +1,4 @@
-import { PortfolioPosition, RebalancingRecommendation } from '../types/portfolio';
+import { PortfolioPosition, RebalancingRecommendation } from '@/types/portfolio';
 
 export class PortfolioHelpers {
   static formatCurrency(amount: number, currency: string = 'USD'): string {

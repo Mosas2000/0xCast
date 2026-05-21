@@ -1,6 +1,6 @@
-import { getReferralCodeFromUrl } from '../utils/referralUtils';
-import { GDPRComplianceService } from '../services/GDPRComplianceService';
-import { SecureStorageV2Service } from '../services/SecureStorageV2Service';
+import { getReferralCodeFromUrl } from '@/utils/referralUtils';
+import { GDPRComplianceService } from '@/services/GDPRComplianceService';
+import { SecureStorageV2Service } from '@/services/SecureStorageV2Service';
 
 interface ReferralTrackingContext {
   referralCode: string | null;

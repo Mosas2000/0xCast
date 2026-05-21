@@ -3,7 +3,7 @@ import {
   RebalancingRecommendation,
   PortfolioRecommendation,
   PortfolioOptimizationResult,
-} from '../types/portfolio';
+} from '@/types/portfolio';
 import { PortfolioAnalysisService } from './PortfolioAnalysisService';
 
 export class RecommendationEngineService {

@@ -19,10 +19,10 @@ import {
   parseToMicroAmount,
   formatMicroAmount,
   validateTransactionAmount,
-} from '../hooks/useContract';
-import { validatePrediction } from '../utils/marketValidation';
-import { MarketOutcome, getMarketOutcomeLabel } from '../types/market';
-import type { Market } from '../types/market';
+} from '@/hooks/useContract';
+import { validatePrediction } from '@/utils/marketValidation';
+import { MarketOutcome, getMarketOutcomeLabel } from '@/types/market';
+import type { Market } from '@/types/market';
 
 interface PredictionExampleProps {
   market: Market;

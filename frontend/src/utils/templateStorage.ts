@@ -1,6 +1,6 @@
-import type { TemplateCategory } from '../types/template';
-import { GDPRComplianceService } from '../services/GDPRComplianceService';
-import { SecureStorageV2Service } from '../services/SecureStorageV2Service';
+import type { TemplateCategory } from '@/types/template';
+import { GDPRComplianceService } from '@/services/GDPRComplianceService';
+import { SecureStorageV2Service } from '@/services/SecureStorageV2Service';
 
 export class TemplateCache {
   private static cache: Map<string, any> = new Map();

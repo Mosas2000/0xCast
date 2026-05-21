@@ -1,6 +1,6 @@
 import React from 'react';
-import { useLiquidityRewards } from '../hooks/useLiquidityRewards';
-import { formatRewardAmount } from '../utils/liquidityRewardsCalculator';
+import { useLiquidityRewards } from '@/hooks/useLiquidityRewards';
+import { formatRewardAmount } from '@/utils/liquidityRewardsCalculator';
 
 interface RewardHistoryChartProps {
   marketId?: number;

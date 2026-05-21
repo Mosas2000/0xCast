@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useMemo } from 'react';
-import { MarketCard } from '../components/MarketCard';
-import { useMarkets } from '../hooks/useMarkets';
-import { useRecentlyViewed } from '../contexts/RecentlyViewedContext';
-import type { Market } from '../types/market';
+import { MarketCard } from '@/components/MarketCard';
+import { useMarkets } from '@/hooks/useMarkets';
+import { useRecentlyViewed } from '@/contexts/RecentlyViewedContext';
+import type { Market } from '@/types/market';
 
 export function RecentlyViewedPage() {
   const { markets, isLoading, error, refetch } = useMarkets();

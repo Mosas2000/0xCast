@@ -1,6 +1,6 @@
 import React from 'react';
-import { getAllTemplates } from '../config/templates';
-import type { TemplateCategory } from '../types/template';
+import { getAllTemplates } from '@/config/templates';
+import type { TemplateCategory } from '@/types/template';
 
 interface TemplateSelectionProps {
   onSelectTemplate: (templateId: TemplateCategory) => void;

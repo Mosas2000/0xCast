@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
 import { openContractCall } from '@stacks/connect';
 import { uintCV, stringUtf8CV, listCV, PostConditionMode } from '@stacks/transactions';
-import { useWallet } from '../components/WalletProvider';
-import { useNetwork } from '../contexts/NetworkContext';
-import { MARKET_MULTI_CONTRACT } from '../config/contracts';
+import { useWallet } from '@/components/WalletProvider';
+import { useNetwork } from '@/contexts/NetworkContext';
+import { MARKET_MULTI_CONTRACT } from '@/config/contracts';
 import { useContractPause } from './useContractPause';
 
 export interface CreateMultiMarketInput {

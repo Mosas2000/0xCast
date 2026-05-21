@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { formatRewardAmount } from '../utils/liquidityRewardsCalculator';
+import { formatRewardAmount } from '@/utils/liquidityRewardsCalculator';
 
 interface RewardNotificationProps {
   amount: number;

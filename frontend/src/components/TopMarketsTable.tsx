@@ -6,7 +6,7 @@
 
 import { memo } from 'react';
 import { Link } from 'react-router-dom';
-import type { MarketStats } from '../types/analytics';
+import type { MarketStats } from '@/types/analytics';
 import { MarketBar } from './charts/MarketDistributionChart';
 
 interface TopMarketsTableProps {

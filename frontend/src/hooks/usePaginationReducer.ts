@@ -1,5 +1,5 @@
 import { useReducer, useCallback } from 'react';
-import { PaginationState, PaginationAction } from '../types/reducers';
+import { PaginationState, PaginationAction } from '@/types/reducers';
 
 const initialState: PaginationState = {
   page: 1,

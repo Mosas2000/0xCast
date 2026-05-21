@@ -6,8 +6,8 @@
  */
 
 import { memo } from 'react';
-import type { MarketResolution } from '../types/oracle';
-import { formatBlocksToTime } from '../types/oracle';
+import type { MarketResolution } from '@/types/oracle';
+import { formatBlocksToTime } from '@/types/oracle';
 
 interface ResolutionCardProps {
   resolution: MarketResolution;

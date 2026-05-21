@@ -6,12 +6,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useAnalytics } from '../hooks/useAnalytics';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { StatsCard, StatsGrid } from './StatsCard';
 import { VolumeChart, CategoryPieChart, ActivityChart } from './charts';
 import { TimeRangeSelector, TimeRangeDropdown } from './TimeRangeSelector';
 import { LoadingState } from './Loading';
-import type { TimeRange } from '../types/analytics';
+import type { TimeRange } from '@/types/analytics';
 
 interface AdminMetrics {
   totalUsers: number;

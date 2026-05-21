@@ -6,7 +6,7 @@ import {
   removeWatchlistId,
   saveWatchlistIds,
   toggleWatchlistId,
-} from '../utils/watchlist';
+} from '@/utils/watchlist';
 
 interface WatchlistContextValue {
   marketIds: number[];

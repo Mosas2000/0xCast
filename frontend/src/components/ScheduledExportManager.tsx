@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useScheduledExports } from '../hooks/useScheduledExports';
-import type { ScheduledExport, ExportType, ExportSchedule } from '../types/export';
+import { useScheduledExports } from '@/hooks/useScheduledExports';
+import type { ScheduledExport, ExportType, ExportSchedule } from '@/types/export';
 
 export default function ScheduledExportManager() {
   const {

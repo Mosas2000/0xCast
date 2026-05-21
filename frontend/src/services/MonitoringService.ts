@@ -1,4 +1,4 @@
-import { logger, type LogEntry } from '../utils/logger';
+import { logger, type LogEntry } from '@/utils/logger';
 import type { LogData } from '@/types/common';
 
 export interface PerformanceMetric {

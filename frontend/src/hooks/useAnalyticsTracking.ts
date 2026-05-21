@@ -5,8 +5,8 @@
  */
 
 import { useEffect, useCallback, useRef } from 'react';
-import { useWallet } from '../components/WalletProvider';
-import { getAnalyticsService } from '../services/AnalyticsService';
+import { useWallet } from '@/components/WalletProvider';
+import { getAnalyticsService } from '@/services/AnalyticsService';
 
 export function useAnalyticsTracking() {
   const { address, isConnected } = useWallet();

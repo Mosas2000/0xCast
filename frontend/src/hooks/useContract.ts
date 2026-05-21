@@ -34,12 +34,12 @@ import {
 import { 
   CONTRACT_NAMES,
   getContractPrincipal as getContract,
-} from '../config/contracts';
-import { getNodeUrl } from '../config/network';
-import { useWallet } from '../components/WalletProvider';
-import { useNetwork } from '../contexts/NetworkContext';
-import { parseContractError, getUserFriendlyContractError } from '../utils/contractErrorHandler';
-import { errorLoggingService } from '../services/ErrorLoggingService';
+} from '@/config/contracts';
+import { getNodeUrl } from '@/config/network';
+import { useWallet } from '@/components/WalletProvider';
+import { useNetwork } from '@/contexts/NetworkContext';
+import { parseContractError, getUserFriendlyContractError } from '@/utils/contractErrorHandler';
+import { errorLoggingService } from '@/services/ErrorLoggingService';
 
 // Type for optional Clarity values (someCV or noneCV)
 export type OptionalClarityValue = ReturnType<typeof someCV> | ReturnType<typeof noneCV>;

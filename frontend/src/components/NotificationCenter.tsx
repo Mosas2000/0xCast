@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useNotifications } from '../hooks/useNotifications';
-import type { Notification, NotificationStatus, NotificationType } from '../types/notifications';
+import { useNotifications } from '@/hooks/useNotifications';
+import type { Notification, NotificationStatus, NotificationType } from '@/types/notifications';
 
 interface NotificationCenterProps {
   userId: string;

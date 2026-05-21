@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FilterPreset, MarketFilters } from '../types/filters';
-import { GDPRComplianceService } from '../services/GDPRComplianceService';
-import { SecureStorageV2Service } from '../services/SecureStorageV2Service';
+import { FilterPreset, MarketFilters } from '@/types/filters';
+import { GDPRComplianceService } from '@/services/GDPRComplianceService';
+import { SecureStorageV2Service } from '@/services/SecureStorageV2Service';
 
 const STORAGE_KEY = '0xcast_filter_presets';
 

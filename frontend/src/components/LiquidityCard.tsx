@@ -4,8 +4,8 @@
  * Displays liquidity pool information and user position.
  */
 
-import type { LiquidityPool, LPPosition } from '../types/liquidity';
-import { formatStxAmount } from '../types/liquidity';
+import type { LiquidityPool, LPPosition } from '@/types/liquidity';
+import { formatStxAmount } from '@/types/liquidity';
 
 interface LiquidityCardProps {
   pool: LiquidityPool;

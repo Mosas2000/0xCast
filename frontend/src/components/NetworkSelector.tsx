@@ -5,8 +5,8 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { useNetwork } from '../contexts/NetworkContext';
-import { NetworkType, NETWORK_CONFIGS } from '../types/network';
+import { useNetwork } from '@/contexts/NetworkContext';
+import { NetworkType, NETWORK_CONFIGS } from '@/types/network';
 
 interface NetworkSelectorProps {
   variant?: 'dropdown' | 'toggle' | 'compact';

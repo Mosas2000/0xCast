@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { getRealtimeDataManager } from '../services/RealtimeDataManager';
-import { MarketUpdate, OrderBookUpdate, TradeUpdate } from '../types/websocket';
+import { getRealtimeDataManager } from '@/services/RealtimeDataManager';
+import { MarketUpdate, OrderBookUpdate, TradeUpdate } from '@/types/websocket';
 
 export function useRealtimeMarketData(marketId: string) {
   const [marketData, setMarketData] = useState<MarketUpdate | null>(null);

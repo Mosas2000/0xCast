@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { useRealtimeMarketData, useRealtimeOrderBook, useRealtimeTrades, useRealtimePrice, useRealtimeConnection } from '../hooks/useRealtimeMarket';
-import { MarketUpdate, OrderBookUpdate, TradeUpdate } from '../types/websocket';
+import { useRealtimeMarketData, useRealtimeOrderBook, useRealtimeTrades, useRealtimePrice, useRealtimeConnection } from '@/hooks/useRealtimeMarket';
+import { MarketUpdate, OrderBookUpdate, TradeUpdate } from '@/types/websocket';
 
 interface RealtimeMarketCardProps {
   marketId: string;

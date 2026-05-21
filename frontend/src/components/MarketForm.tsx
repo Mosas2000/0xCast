@@ -8,17 +8,17 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import type { 
   CreateMarketFormData, 
   MarketCategory
-} from '../types/market';
+} from '@/types/market';
 import { 
   MARKET_CATEGORIES, 
   MARKET_DURATIONS, 
   CATEGORY_METADATA 
-} from '../types/market';
+} from '@/types/market';
 import { 
   validateMarketForm, 
   formatBlocksToTime,
   suggestQuestionImprovements 
-} from '../utils/marketValidation';
+} from '@/utils/marketValidation';
 
 interface MarketFormProps {
   onSubmit: (data: CreateMarketFormData) => void;

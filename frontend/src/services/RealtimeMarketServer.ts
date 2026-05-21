@@ -1,4 +1,4 @@
-import { WebSocketServerConfig, WebSocketMessage, MarketUpdate, OrderBookUpdate, TradeUpdate, WebSocketConnection } from '../types/websocket';
+import { WebSocketServerConfig, WebSocketMessage, MarketUpdate, OrderBookUpdate, TradeUpdate, WebSocketConnection } from '@/types/websocket';
 
 export class RealtimeMarketServer {
   private connections: Map<string, WebSocketConnection> = new Map();

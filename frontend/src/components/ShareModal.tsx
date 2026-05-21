@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useCallback } from 'react';
-import { formatStx } from '../utils/helpers';
+import { formatStx } from '@/utils/helpers';
 
 interface ShareModalProps {
   isOpen: boolean;

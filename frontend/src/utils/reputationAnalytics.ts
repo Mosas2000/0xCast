@@ -5,7 +5,7 @@ import {
   KYCStatus,
   UserReputation,
   Badge,
-} from '../types/reputation';
+} from '@/types/reputation';
 
 export interface ReputationMetrics {
   averageScore: number;

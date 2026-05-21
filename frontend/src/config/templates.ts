@@ -5,7 +5,7 @@ import {
   TEMPLATE_TIPS,
   type MarketTemplate,
   type TemplateCategory,
-} from '../types/template';
+} from '@/types/template';
 
 export const marketTemplates: Record<TemplateCategory, MarketTemplate> = {
   [TEMPLATE_CATEGORIES.CRYPTO_PRICE]: {

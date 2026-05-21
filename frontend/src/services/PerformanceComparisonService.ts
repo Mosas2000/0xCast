@@ -1,4 +1,4 @@
-import { PortfolioPosition, PerformanceComparison, PerformanceDataPoint } from '../types/portfolio';
+import { PortfolioPosition, PerformanceComparison, PerformanceDataPoint } from '@/types/portfolio';
 
 export class PerformanceComparisonService {
   static compareWithBenchmark(

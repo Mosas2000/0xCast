@@ -1,4 +1,4 @@
-import { NotificationType } from '../types/notifications';
+import { NotificationType } from '@/types/notifications';
 
 export interface EmailTemplate {
   subject: string;

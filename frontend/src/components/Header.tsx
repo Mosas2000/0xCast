@@ -3,11 +3,11 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Logo } from './Logo';
 import { useWallet } from './WalletProvider';
-import { formatAddress } from '../utils/helpers';
+import { formatAddress } from '@/utils/helpers';
 import { NetworkSelector } from './NetworkSelector';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import { LanguageSwitcher } from './LanguageSwitcher';
-import { useNetwork } from '../contexts/NetworkContext';
+import { useNetwork } from '@/contexts/NetworkContext';
 
 interface NavItemProps {
   path: string;

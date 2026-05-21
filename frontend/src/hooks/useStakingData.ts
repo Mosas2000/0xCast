@@ -1,8 +1,8 @@
 // Hook for fetching real staking data from the oxcast contract
 import { useState, useEffect, useCallback } from 'react';
 import { cvToJSON, fetchCallReadOnlyFunction, principalCV } from '@stacks/transactions';
-import { CONTRACT_NAMES, getContractAddress } from '../config/contracts';
-import { useNetwork } from '../contexts/NetworkContext';
+import { CONTRACT_NAMES, getContractAddress } from '@/config/contracts';
+import { useNetwork } from '@/contexts/NetworkContext';
 
 export interface StakingData {
   totalStaked: bigint;

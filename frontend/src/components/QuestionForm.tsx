@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import type { ValidationState } from '../types/template';
+import type { ValidationState } from '@/types/template';
 import {
   getQuestionSuggestions,
   formatDurationLabel,
   formatEndDate,
-} from '../utils/templateValidation';
+} from '@/utils/templateValidation';
 
 interface QuestionFormProps {
   question: string;

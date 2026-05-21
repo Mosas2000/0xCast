@@ -6,7 +6,7 @@
  */
 
 import { memo } from 'react';
-import type { OracleStats } from '../types/oracle';
+import type { OracleStats } from '@/types/oracle';
 
 interface OracleCardProps {
   oracle: OracleStats;

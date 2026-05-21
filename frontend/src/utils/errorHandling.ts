@@ -30,7 +30,7 @@
  *    <ErrorMessage error={error} onDismiss={clearError} />
  */
 
-export { ErrorBoundary } from '../components/ErrorBoundary';
-export { PageErrorBoundary } from '../components/PageErrorBoundary';
-export { ErrorMessage } from '../components/ErrorMessage';
-export { useErrorHandler } from '../hooks/useErrorHandler';
+export { ErrorBoundary } from '@/components/ErrorBoundary';
+export { PageErrorBoundary } from '@/components/PageErrorBoundary';
+export { ErrorMessage } from '@/components/ErrorMessage';
+export { useErrorHandler } from '@/hooks/useErrorHandler';

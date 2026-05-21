@@ -1,4 +1,4 @@
-import type { ExportTransaction, ExportPosition, ExportPortfolio, ExportReward } from '../types/export';
+import type { ExportTransaction, ExportPosition, ExportPortfolio, ExportReward } from '@/types/export';
 
 export class ExportValidator {
   static validateTransactions(transactions: unknown[]): transactions is ExportTransaction[] {

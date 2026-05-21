@@ -1,8 +1,8 @@
-import { DataRetentionService } from '../services/DataRetentionService';
-import { SecureStorageService } from '../services/SecureStorageService';
-import { SecureStorageV2Service } from '../services/SecureStorageV2Service';
-import { StorageMigrationService } from '../services/StorageMigrationService';
-import { GDPRComplianceService } from '../services/GDPRComplianceService';
+import { DataRetentionService } from '@/services/DataRetentionService';
+import { SecureStorageService } from '@/services/SecureStorageService';
+import { SecureStorageV2Service } from '@/services/SecureStorageV2Service';
+import { StorageMigrationService } from '@/services/StorageMigrationService';
+import { GDPRComplianceService } from '@/services/GDPRComplianceService';
 
 export class GDPRInitializer {
   private static initialized = false;

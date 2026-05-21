@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { getFocusableElements } from '../utils/accessibility';
+import { getFocusableElements } from '@/utils/accessibility';
 
 interface UseFocusTrapOptions {
   enabled?: boolean;

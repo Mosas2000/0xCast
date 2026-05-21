@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { OXC_TOKEN, TOKEN_DISTRIBUTION, TOKEN_UTILITIES } from '../config/token';
+import { OXC_TOKEN, TOKEN_DISTRIBUTION, TOKEN_UTILITIES } from '@/config/token';
 
 export function TokenPage() {
   const distributionColors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];

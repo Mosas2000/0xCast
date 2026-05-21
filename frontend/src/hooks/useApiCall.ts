@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
-import { ApiError } from '../utils/apiErrors';
-import { withRetry, RetryConfig } from '../utils/retry';
-import { errorLoggingService } from '../services/ErrorLoggingService';
+import { ApiError } from '@/utils/apiErrors';
+import { withRetry, RetryConfig } from '@/utils/retry';
+import { errorLoggingService } from '@/services/ErrorLoggingService';
 
 interface UseApiCallOptions<T> {
   onSuccess?: (data: T) => void;

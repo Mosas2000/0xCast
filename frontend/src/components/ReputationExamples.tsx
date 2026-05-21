@@ -1,11 +1,11 @@
 import React from 'react';
-import { ReputationManager } from '../services/ReputationManager';
-import { reputationAnalytics } from '../utils/reputationAnalytics';
+import { ReputationManager } from '@/services/ReputationManager';
+import { reputationAnalytics } from '@/utils/reputationAnalytics';
 import {
   calculateTrustScore,
   getReputationColor,
   getReputationDescription,
-} from '../utils/reputationUtils';
+} from '@/utils/reputationUtils';
 
 const manager = ReputationManager.getInstance();
 
@@ -327,7 +327,7 @@ const ExampleTrustCalculation: React.FC = () => {
     <div className="border rounded-lg p-4 bg-gray-50">
       <h2 className="text-xl font-semibold mb-4">Example 6: Trust Score Calculation</h2>
       <pre className="bg-white p-3 rounded overflow-auto text-sm">
-        {`import { calculateTrustScore } from '../utils/reputationUtils';
+        {`import { calculateTrustScore } from '@/utils/reputationUtils';
 
 // Calculate trust score for clean user
 const trustScore = calculateTrustScore(

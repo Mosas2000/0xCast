@@ -1,5 +1,5 @@
 // Format utilities for staking display
-import { OXC_CONFIG } from '../config/token';
+import { OXC_CONFIG } from '@/config/token';
 
 // Format OXC amount with proper decimals
 export function formatOxcAmount(amount: bigint, decimals: number = 2): string {

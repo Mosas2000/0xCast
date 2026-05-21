@@ -1,6 +1,6 @@
 import React, { useState, memo } from 'react';
-import { useReferral } from '../hooks/useReferral';
-import { createReferralLink, generateShareMessage } from '../utils/referralUtils';
+import { useReferral } from '@/hooks/useReferral';
+import { createReferralLink, generateShareMessage } from '@/utils/referralUtils';
 
 interface ReferralCardProps {
   userAddress: string | null;

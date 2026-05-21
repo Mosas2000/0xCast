@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
-import type { ScheduledExport, ExportSchedule } from '../types/export';
-import { GDPRComplianceService } from '../services/GDPRComplianceService';
-import { SecureStorageV2Service } from '../services/SecureStorageV2Service';
+import type { ScheduledExport, ExportSchedule } from '@/types/export';
+import { GDPRComplianceService } from '@/services/GDPRComplianceService';
+import { SecureStorageV2Service } from '@/services/SecureStorageV2Service';
 
 interface UseScheduledExportsReturn {
   exports: ScheduledExport[];

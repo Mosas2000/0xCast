@@ -1,4 +1,4 @@
-import { rateLimitService } from '../services/RateLimitService';
+import { rateLimitService } from '@/services/RateLimitService';
 
 export interface RateLimitContext {
   userId: string;

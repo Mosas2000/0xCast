@@ -1,5 +1,5 @@
 import React from 'react';
-import { ApiError, ErrorCode } from '../utils/apiErrors';
+import { ApiError, ErrorCode } from '@/utils/apiErrors';
 
 interface ErrorDisplayProps {
   error: ApiError | Error | null;

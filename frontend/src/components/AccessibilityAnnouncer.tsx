@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { ScreenReaderAnnouncement } from '../types/accessibility';
+import type { ScreenReaderAnnouncement } from '@/types/accessibility';
 
 interface AccessibilityAnnouncerProps {
   announcement?: ScreenReaderAnnouncement;

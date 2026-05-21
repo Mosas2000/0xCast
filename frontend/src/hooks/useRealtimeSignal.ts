@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useApi } from './useApi';
-import { getRealtimeWsUrl } from '../utils/realtime';
+import { getRealtimeWsUrl } from '@/utils/realtime';
 
 interface UseRealtimeSignalOptions {
   enabled?: boolean;

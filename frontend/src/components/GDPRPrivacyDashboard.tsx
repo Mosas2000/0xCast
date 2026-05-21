@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { GDPRComplianceService, DataProcessingActivity } from '../services/GDPRComplianceService';
-import { DataExportService } from '../services/DataExportService';
-import { DataDeletionService } from '../services/DataDeletionService';
-import { DataRetentionService } from '../services/DataRetentionService';
+import { GDPRComplianceService, DataProcessingActivity } from '@/services/GDPRComplianceService';
+import { DataExportService } from '@/services/DataExportService';
+import { DataDeletionService } from '@/services/DataDeletionService';
+import { DataRetentionService } from '@/services/DataRetentionService';
 
 interface GDPRPrivacyDashboardProps {
   userId: string;

@@ -4,7 +4,7 @@
  * Displays a list of user's transaction history with status indicators.
  */
 import { useState } from 'react';
-import { useNetwork } from '../contexts/NetworkContext';
+import { useNetwork } from '@/contexts/NetworkContext';
 import {
   type Transaction,
   TransactionStatus,
@@ -12,7 +12,7 @@ import {
   getStatusColor,
   getStatusLabel,
   getExplorerUrl,
-} from '../utils/transactions';
+} from '@/utils/transactions';
 
 interface TransactionHistoryProps {
   transactions: Transaction[];

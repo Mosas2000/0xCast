@@ -5,7 +5,7 @@
  */
 
 import { useReducer } from 'react';
-import { formatVotingPower } from '../hooks/useGovernance';
+import { formatVotingPower } from '@/hooks/useGovernance';
 
 interface CreateProposalModalProps {
   isOpen: boolean;

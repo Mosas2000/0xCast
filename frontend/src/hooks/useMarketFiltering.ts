@@ -6,21 +6,21 @@
  */
 import { useMemo, useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import type { Market } from '../types/market';
-import { MarketStatus } from '../types/market';
+import type { Market } from '@/types/market';
+import { MarketStatus } from '@/types/market';
 import {
   TimeRange,
   VolumeRange,
   VOLUME_THRESHOLDS,
-} from '../types/filters';
-import { GDPRComplianceService } from '../services/GDPRComplianceService';
+} from '@/types/filters';
+import { GDPRComplianceService } from '@/services/GDPRComplianceService';
 import {
   MarketCategory,
   SortOption,
   categorizeMarket,
   getCategoryConfig,
-} from '../utils/marketCategories';
-import { loadWatchlistIds } from '../utils/watchlist';
+} from '@/utils/marketCategories';
+import { loadWatchlistIds } from '@/utils/watchlist';
 
 interface UseMarketFilteringOptions {
   markets: Market[];

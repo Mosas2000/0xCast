@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useMultiMarkets } from '../hooks/useMultiMarkets';
-import { useMultiStake } from '../hooks/useMultiStake';
-import { useRealtimeSignal } from '../hooks/useRealtimeSignal';
-import { formatStx } from '../utils/helpers';
-import { validateAmount } from '../utils/validation';
+import { useMultiMarkets } from '@/hooks/useMultiMarkets';
+import { useMultiStake } from '@/hooks/useMultiStake';
+import { useRealtimeSignal } from '@/hooks/useRealtimeSignal';
+import { formatStx } from '@/utils/helpers';
+import { validateAmount } from '@/utils/validation';
 import { MIN_STAKE, MAX_STAKE } from '../constants';
-import { useWallet } from '../components/WalletProvider';
+import { useWallet } from '@/components/WalletProvider';
 
 export function MultiTradePage() {
   const { id } = useParams<{ id: string }>();

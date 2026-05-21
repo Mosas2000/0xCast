@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useCallback } from 'react';
-import { logger } from '../utils/logger';
+import { logger } from '@/utils/logger';
 
 interface TransactionIdContextType {
   transactionId: string | null;

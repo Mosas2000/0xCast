@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react';
-import { useNetwork } from '../contexts/NetworkContext';
+import { useNetwork } from '@/contexts/NetworkContext';
 
 interface TestnetWarningBannerProps {
   dismissible?: boolean;

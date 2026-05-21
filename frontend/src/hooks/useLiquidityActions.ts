@@ -45,12 +45,12 @@
 import { useCallback, useState } from 'react';
 import { openContractCall } from '@stacks/connect';
 import { uintCV, PostConditionMode, Pc } from '@stacks/transactions';
-import { getContractPrincipal, CONTRACT_NAMES } from '../config/contracts';
-import { useWallet } from '../components/WalletProvider';
+import { getContractPrincipal, CONTRACT_NAMES } from '@/config/contracts';
+import { useWallet } from '@/components/WalletProvider';
 import { safeBigIntToNumber } from './useContract';
 import { createRateLimitMiddleware } from '../middleware/rateLimitMiddleware';
-import { parseContractError, getUserFriendlyContractError } from '../utils/contractErrorHandler';
-import { errorLoggingService } from '../services/ErrorLoggingService';
+import { parseContractError, getUserFriendlyContractError } from '@/utils/contractErrorHandler';
+import { errorLoggingService } from '@/services/ErrorLoggingService';
 
 function getLiquidityPoolContract() {
   return getContractPrincipal(CONTRACT_NAMES.LIQUIDITY_POOL);

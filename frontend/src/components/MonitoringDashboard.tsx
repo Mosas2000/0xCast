@@ -1,5 +1,5 @@
 import React, { useReducer, useEffect, memo } from 'react';
-import { monitoringService } from '../services/MonitoringService';
+import { monitoringService } from '@/services/MonitoringService';
 
 interface MonitoringDashboardProps {
   refreshInterval?: number;

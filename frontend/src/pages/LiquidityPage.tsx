@@ -6,13 +6,13 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useWallet } from '../components/WalletProvider';
-import { useLiquidity } from '../hooks/useLiquidity';
-import { useLiquidityActions } from '../hooks/useLiquidityActions';
-import { useLiquidityRewards } from '../hooks/useLiquidityRewards';
-import { LiquidityCard, LiquidityCardSkeleton } from '../components/LiquidityCard';
-import type { LiquidityPool, LPPosition, PendingRewards } from '../types/liquidity';
-import { formatStxAmount, validateLiquidityAmount } from '../types/liquidity';
+import { useWallet } from '@/components/WalletProvider';
+import { useLiquidity } from '@/hooks/useLiquidity';
+import { useLiquidityActions } from '@/hooks/useLiquidityActions';
+import { useLiquidityRewards } from '@/hooks/useLiquidityRewards';
+import { LiquidityCard, LiquidityCardSkeleton } from '@/components/LiquidityCard';
+import type { LiquidityPool, LPPosition, PendingRewards } from '@/types/liquidity';
+import { formatStxAmount, validateLiquidityAmount } from '@/types/liquidity';
 
 type TabType = 'pools' | 'positions' | 'rewards';
 

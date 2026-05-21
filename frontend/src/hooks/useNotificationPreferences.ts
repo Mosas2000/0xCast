@@ -1,11 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
-import { NotificationService } from '../services/NotificationService';
+import { NotificationService } from '@/services/NotificationService';
 import type {
   NotificationPreference,
   NotificationType,
   NotificationChannel,
   NotificationFrequency,
-} from '../types/notifications';
+} from '@/types/notifications';
 
 interface UseNotificationPreferencesReturn {
   preferences: NotificationPreference[];

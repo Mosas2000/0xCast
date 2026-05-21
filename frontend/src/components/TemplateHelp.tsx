@@ -1,6 +1,6 @@
 import React from 'react';
-import type { TemplateCategory } from '../types/template';
-import { getTemplate, marketTemplates } from '../config/templates';
+import type { TemplateCategory } from '@/types/template';
+import { getTemplate, marketTemplates } from '@/config/templates';
 
 interface TemplateHelpProps {
   templateId: TemplateCategory | null;

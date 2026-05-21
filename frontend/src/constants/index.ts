@@ -5,8 +5,8 @@ import {
   getContractAddress,
   getContractIdentifier,
   CONTRACT_NAMES,
-} from '../config/contracts';
-import { getApiUrl } from '../config/network';
+} from '@/config/contracts';
+import { getApiUrl } from '@/config/network';
 
 // Contract deployed on Stacks (uses unified config)
 export const CONTRACT_ADDRESS = MARKET_CONTRACT.address;

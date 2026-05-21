@@ -2,7 +2,7 @@ import type {
   LiquidityPosition,
   HistoricalReward,
   MarketVolume,
-} from '../utils/liquidityRewardsCalculator';
+} from '@/utils/liquidityRewardsCalculator';
 import { GDPRComplianceService } from './GDPRComplianceService';
 import { SecureStorageV2Service } from './SecureStorageV2Service';
 

@@ -42,7 +42,7 @@
  */
 
 import { ContractError, ApiError, ErrorCode } from './apiErrors';
-import { errorLoggingService } from '../services/ErrorLoggingService';
+import { errorLoggingService } from '@/services/ErrorLoggingService';
 
 /**
  * Result type for contract call operations

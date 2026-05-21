@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { cvToJSON, fetchCallReadOnlyFunction, uintCV, principalCV } from '@stacks/transactions';
-import type { Position } from '../types/market';
-import { parsePosition } from '../utils/helpers';
-import { CONTRACT_NAMES, getContractAddress } from '../config/contracts';
-import { useNetwork } from '../contexts/NetworkContext';
+import type { Position } from '@/types/market';
+import { parsePosition } from '@/utils/helpers';
+import { CONTRACT_NAMES, getContractAddress } from '@/config/contracts';
+import { useNetwork } from '@/contexts/NetworkContext';
 
 export function usePosition(marketId: number | null, userAddress: string | null) {
   const { stacksNetwork, network } = useNetwork();

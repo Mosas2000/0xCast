@@ -1,4 +1,4 @@
-import type { Market } from '../types/market';
+import type { Market } from '@/types/market';
 import type {
   CategoryData,
   MarketHealthStats,
@@ -6,8 +6,8 @@ import type {
   TimeRange,
   UserActivityData,
   VolumeDataPoint,
-} from '../types/analytics';
-import { CATEGORY_COLORS } from '../types/analytics';
+} from '@/types/analytics';
+import { CATEGORY_COLORS } from '@/types/analytics';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

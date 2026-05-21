@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
-import { logger, type LogEntry, type LogLevel } from '../utils/logger';
-import { monitoringService } from '../services/MonitoringService';
+import { logger, type LogEntry, type LogLevel } from '@/utils/logger';
+import { monitoringService } from '@/services/MonitoringService';
 
 interface UseLoggerReturn {
   debug: (message: string, context?: Record<string, unknown>) => void;

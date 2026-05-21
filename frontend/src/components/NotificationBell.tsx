@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNotifications } from '../hooks/useNotifications';
+import { useNotifications } from '@/hooks/useNotifications';
 import NotificationCenter from './NotificationCenter';
 
 interface NotificationBellProps {

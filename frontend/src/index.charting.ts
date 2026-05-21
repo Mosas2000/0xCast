@@ -22,7 +22,10 @@ export { CrosshairToolComponent, MeasurementToolComponent, MeasurementToolbar, C
 export { ResponsiveChartWrapper, MobileChartControls, TouchGestureHandler, CompactIndicatorPanel, VerticalChartLayout, HorizontalChartLayout, FullscreenChartContainer, AdaptiveToolbar } from '@/components/ResponsiveChart';
 
 // Hooks
-export { useAdvancedChart, useTechnicalIndicators, useDrawingTools, useChartZoomPan } from '@/hooks/useChartingHooks';
+export { useChartState } from '@/hooks/useChartState';
+export { useChartIndicators } from '@/hooks/useChartIndicators';
+export { useChartDrawing } from '@/hooks/useChartDrawing';
+export { useChartRendering } from '@/hooks/useChartRendering';
 
 // Examples
 export { AdvancedChartingExample, SimpleChartExample, MobileChartExample, RealtimeChartExample } from '@/examples/AdvancedChartingExamples';

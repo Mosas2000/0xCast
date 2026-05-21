@@ -5,7 +5,7 @@ import {
   SuspiciousActivity,
   FraudRiskLevel,
   FraudAlert,
-} from '../types/reputation';
+} from '@/types/reputation';
 
 export function calculateReputationPercentage(score: ReputationScore): number {
   return Math.min(100, Math.max(0, score.score));

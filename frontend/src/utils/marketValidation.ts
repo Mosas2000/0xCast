@@ -8,7 +8,7 @@
  */
 
 import { ValidationError } from './apiErrors';
-import { MarketStatus, MarketOutcome, isMarketStatus, isMarketOutcome } from '../types/market';
+import { MarketStatus, MarketOutcome, isMarketStatus, isMarketOutcome } from '@/types/market';
 
 /**
  * Minimum market title length

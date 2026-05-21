@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useNotificationPreferences } from '../hooks/useNotificationPreferences';
-import type { NotificationType, NotificationChannel, NotificationFrequency } from '../types/notifications';
+import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
+import type { NotificationType, NotificationChannel, NotificationFrequency } from '@/types/notifications';
 
 const NOTIFICATION_TYPES: NotificationType[] = [
   'price_movement',

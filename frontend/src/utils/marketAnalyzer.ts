@@ -1,4 +1,4 @@
-import { MarketUpdate, OrderBookUpdate, TradeUpdate } from '../types/websocket';
+import { MarketUpdate, OrderBookUpdate, TradeUpdate } from '@/types/websocket';
 
 export interface MarketStats {
   high: number;
