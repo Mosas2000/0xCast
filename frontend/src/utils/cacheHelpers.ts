@@ -1,6 +1,6 @@
 import { cacheManager } from './cache';
-import { GDPRComplianceService } from '../services/GDPRComplianceService';
-import { SecureStorageV2Service } from '../services/SecureStorageV2Service';
+import { GDPRComplianceService } from '@/services/GDPRComplianceService';
+import { SecureStorageV2Service } from '@/services/SecureStorageV2Service';
 
 export function isCacheAvailable(): boolean {
   try {
