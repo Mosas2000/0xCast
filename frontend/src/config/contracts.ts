@@ -2,7 +2,7 @@
 // This file serves as the single source of truth for all contract addresses
 
 import { STACKS_MAINNET, STACKS_TESTNET } from '@stacks/network';
-import { loadNetworkPreference } from '../utils/networkUtils';
+import { loadNetworkPreference } from '@/utils/networkUtils';
 
 export type NetworkType = 'mainnet' | 'testnet';
 
