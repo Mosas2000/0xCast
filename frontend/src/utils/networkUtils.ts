@@ -10,9 +10,9 @@ import {
   NETWORK_CONFIGS, 
   DEFAULT_NETWORK, 
   NETWORK_STORAGE_KEY 
-} from '../types/network';
-import { GDPRComplianceService } from '../services/GDPRComplianceService';
-import { SecureStorageV2Service } from '../services/SecureStorageV2Service';
+} from '@/types/network';
+import { GDPRComplianceService } from '@/services/GDPRComplianceService';
+import { SecureStorageV2Service } from '@/services/SecureStorageV2Service';
 
 /**
  * Get Stacks network instance for the given network type

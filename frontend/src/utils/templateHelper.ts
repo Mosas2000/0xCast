@@ -1,4 +1,4 @@
-import type { MarketTemplate, TemplateCategory } from '../types/template';
+import type { MarketTemplate, TemplateCategory } from '@/types/template';
 
 export interface TemplateComparison {
   templateId: TemplateCategory;

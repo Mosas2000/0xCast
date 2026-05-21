@@ -9,8 +9,8 @@ export interface StakeHistoryEntry {
   timestamp: number;
 }
 
-import { GDPRComplianceService } from '../services/GDPRComplianceService';
-import { SecureStorageV2Service } from '../services/SecureStorageV2Service';
+import { GDPRComplianceService } from '@/services/GDPRComplianceService';
+import { SecureStorageV2Service } from '@/services/SecureStorageV2Service';
 
 const STAKE_HISTORY_KEY = '0xcast-stake-history';
 const MAX_HISTORY = 200;

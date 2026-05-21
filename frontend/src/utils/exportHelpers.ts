@@ -1,4 +1,4 @@
-import { ExportFormat } from '../types/export';
+import { ExportFormat } from '@/types/export';
 import i18n from '../i18n/config';
 import { formatDate as formatDateI18n, formatDateTime as formatDateTimeI18n } from './i18n/formatters';
 

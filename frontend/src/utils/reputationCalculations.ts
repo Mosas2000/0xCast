@@ -1,4 +1,4 @@
-import { ReputationScore, ReputationLevel, Badge, SuspiciousActivity } from '../types/reputation';
+import { ReputationScore, ReputationLevel, Badge, SuspiciousActivity } from '@/types/reputation';
 
 export class ReputationCalculator {
   private static readonly WEIGHTS = {

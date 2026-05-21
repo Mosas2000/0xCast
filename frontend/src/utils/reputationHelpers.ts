@@ -1,4 +1,4 @@
-import { FraudAlert, UserReputation } from '../types/reputation';
+import { FraudAlert, UserReputation } from '@/types/reputation';
 
 export class ReputationEventBus {
   private listeners: Map<string, Set<(data: any) => void>> = new Map();

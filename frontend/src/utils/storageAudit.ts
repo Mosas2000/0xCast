@@ -1,6 +1,6 @@
-import { SecureStorageV2Service } from '../services/SecureStorageV2Service';
-import { StorageMigrationService } from '../services/StorageMigrationService';
-import { PIIDetectionService } from '../services/PIIDetectionService';
+import { SecureStorageV2Service } from '@/services/SecureStorageV2Service';
+import { StorageMigrationService } from '@/services/StorageMigrationService';
+import { PIIDetectionService } from '@/services/PIIDetectionService';
 
 export interface AuditFinding {
   severity: 'critical' | 'high' | 'medium' | 'low';

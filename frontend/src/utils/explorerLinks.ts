@@ -7,7 +7,7 @@
  * @module explorerLinks
  */
 
-import { getExplorerUrls, type NetworkType } from '../config/network';
+import { getExplorerUrls, type NetworkType } from '@/config/network';
 
 // Re-export NetworkType for convenience
 export type { NetworkType };

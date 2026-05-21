@@ -1,4 +1,4 @@
-import { NotificationType, NotificationChannel } from '../types/notifications';
+import { NotificationType, NotificationChannel } from '@/types/notifications';
 
 export class NotificationHelpers {
   static getNotificationTitle(type: NotificationType, data?: Record<string, any>): string {
