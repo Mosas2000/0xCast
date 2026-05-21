@@ -30,7 +30,7 @@ export class ExportValidator {
     );
   }
 
-  static validatePortfolio(portfolio: any): portfolio is ExportPortfolio {
+  static validatePortfolio(portfolio: unknown): portfolio is ExportPortfolio {
     return (
       typeof portfolio.totalValue === 'number' &&
       typeof portfolio.totalInvested === 'number' &&
