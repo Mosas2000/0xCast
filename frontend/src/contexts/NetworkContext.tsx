@@ -7,7 +7,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { StacksNetwork } from '@stacks/network';
-import { NetworkType, type NetworkConfig, NETWORK_CONFIGS } from '../types/network';
+import { NetworkType, type NetworkConfig, NETWORK_CONFIGS } from '@/types/network';
 import { 
   getStacksNetwork, 
   loadNetworkPreference, 
@@ -16,7 +16,7 @@ import {
   getContractName,
   isMainnet,
   isTestnet,
-} from '../utils/networkUtils';
+} from '@/utils/networkUtils';
 
 interface NetworkContextType {
   network: NetworkType;
