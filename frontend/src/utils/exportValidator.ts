@@ -1,7 +1,7 @@
 import type { ExportTransaction, ExportPosition, ExportPortfolio, ExportReward } from '../types/export';
 
 export class ExportValidator {
-  static validateTransactions(transactions: any[]): transactions is ExportTransaction[] {
+  static validateTransactions(transactions: unknown[]): transactions is ExportTransaction[] {
     if (!Array.isArray(transactions)) return false;
 
     return transactions.every(t =>
@@ -15,7 +15,7 @@ export class ExportValidator {
     );
   }
 
-  static validatePositions(positions: any[]): positions is ExportPosition[] {
+  static validatePositions(positions: unknown[]): positions is ExportPosition[] {
     if (!Array.isArray(positions)) return false;
 
     return positions.every(p =>
@@ -30,7 +30,7 @@ export class ExportValidator {
     );
   }
 
-  static validatePortfolio(portfolio: any): portfolio is ExportPortfolio {
+  static validatePortfolio(portfolio: unknown): portfolio is ExportPortfolio {
     return (
       typeof portfolio.totalValue === 'number' &&
       typeof portfolio.totalInvested === 'number' &&
@@ -42,7 +42,7 @@ export class ExportValidator {
     );
   }
 
-  static validateRewards(rewards: any[]): rewards is ExportReward[] {
+  static validateRewards(rewards: unknown[]): rewards is ExportReward[] {
     if (!Array.isArray(rewards)) return false;
 
     return rewards.every(r =>
@@ -78,7 +78,7 @@ export class ExportValidator {
     return year >= 1900 && year <= currentYear;
   }
 
-  static getValidationErrors(data: any, type: string): string[] {
+  static getValidationErrors(data: unknown, type: string): string[] {
     const errors: string[] = [];
 
     switch (type) {

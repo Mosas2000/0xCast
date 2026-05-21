@@ -262,14 +262,14 @@ export function mergeOrderBooks(oldBook: OrderBookUpdate, newBook: OrderBookUpda
   };
 }
 
-function mergeOrderLevels(old: Array<{ price: number; amount: number }>, _new: Array<{ price: number; amount: number }>): Array<{ price: number; amount: number }> {
+function mergeOrderLevels(old: Array<{ price: number; amount: number }>, updates: Array<{ price: number; amount: number }>): Array<{ price: number; amount: number }> {
   const map = new Map<number, number>();
 
   old.forEach(({ price, amount }) => {
     map.set(price, amount);
   });
 
-  _new.forEach(({ price, amount }) => {
+  updates.forEach(({ price, amount }) => {
     if (amount === 0) {
       map.delete(price);
     } else {
