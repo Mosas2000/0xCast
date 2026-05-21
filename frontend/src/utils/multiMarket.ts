@@ -1,4 +1,4 @@
-import type { MultiMarket, MultiOutcomeOption } from '../types/market';
+import type { MultiMarket, MultiOutcomeOption } from '@/types/market';
 
 const BASIS_POINTS_DIVISOR = 10000;
 const MICROSTX_PER_STX = 1_000_000;

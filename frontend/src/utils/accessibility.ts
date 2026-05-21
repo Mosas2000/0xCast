@@ -4,7 +4,7 @@
  * Helper functions for accessibility features
  */
 
-import type { ScreenReaderAnnouncement } from '../types/accessibility';
+import type { ScreenReaderAnnouncement } from '@/types/accessibility';
 
 /**
  * Announce message to screen readers
