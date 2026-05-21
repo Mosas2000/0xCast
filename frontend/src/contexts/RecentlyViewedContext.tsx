@@ -6,7 +6,7 @@ import {
   removeRecentlyViewedMarket,
   saveRecentlyViewedEntries,
   type RecentlyViewedMarketEntry,
-} from '../utils/recentlyViewed';
+} from '@/utils/recentlyViewed';
 
 interface RecentlyViewedContextValue {
   entries: RecentlyViewedMarketEntry[];
