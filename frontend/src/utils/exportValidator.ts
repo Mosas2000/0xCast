@@ -78,7 +78,7 @@ export class ExportValidator {
     return year >= 1900 && year <= currentYear;
   }
 
-  static getValidationErrors(data: any, type: string): string[] {
+  static getValidationErrors(data: unknown, type: string): string[] {
     const errors: string[] = [];
 
     switch (type) {
