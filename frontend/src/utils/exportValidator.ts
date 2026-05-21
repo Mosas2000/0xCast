@@ -1,7 +1,7 @@
 import type { ExportTransaction, ExportPosition, ExportPortfolio, ExportReward } from '../types/export';
 
 export class ExportValidator {
-  static validateTransactions(transactions: any[]): transactions is ExportTransaction[] {
+  static validateTransactions(transactions: unknown[]): transactions is ExportTransaction[] {
     if (!Array.isArray(transactions)) return false;
 
     return transactions.every(t =>
