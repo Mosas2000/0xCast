@@ -15,7 +15,7 @@ export class ExportValidator {
     );
   }
 
-  static validatePositions(positions: any[]): positions is ExportPosition[] {
+  static validatePositions(positions: unknown[]): positions is ExportPosition[] {
     if (!Array.isArray(positions)) return false;
 
     return positions.every(p =>
