@@ -1,4 +1,4 @@
-import type { TemplateCategory } from '../types/template';
+import type { TemplateCategory } from '@/types/template';
 
 export const QUESTION_TEMPLATES = {
   crypto_price: {
