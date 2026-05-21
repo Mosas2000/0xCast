@@ -42,7 +42,7 @@ export class ExportValidator {
     );
   }
 
-  static validateRewards(rewards: any[]): rewards is ExportReward[] {
+  static validateRewards(rewards: unknown[]): rewards is ExportReward[] {
     if (!Array.isArray(rewards)) return false;
 
     return rewards.every(r =>
