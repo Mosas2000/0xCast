@@ -1,3 +1,5 @@
+import type { JsonValue } from './common';
+
 export interface MarketUpdate {
   marketId: string;
   price: number;
@@ -37,7 +39,7 @@ export interface TradeUpdate {
 export interface WebSocketMessage {
   type: 'subscribe' | 'unsubscribe' | 'update' | 'error' | 'ping' | 'pong';
   channel?: string;
-  data?: any;
+  data?: JsonValue;
   error?: string;
   sequence?: number;
 }
