@@ -1,3 +1,5 @@
+import type { JsonValue } from './common';
+
 export type SyncAction = 'create' | 'update' | 'delete';
 export type ConflictResolution = 'local' | 'remote' | 'merge' | 'manual';
 export type SyncStatus = 'synced' | 'pending' | 'syncing' | 'error' | 'offline';
@@ -8,7 +10,7 @@ export interface SyncEntity {
   localVersion: number;
   remoteVersion: number;
   lastSyncTime: number;
-  data: Record<string, any>;
+  data: Record<string, JsonValue>;
   hash: string;
 }
 
@@ -18,11 +20,11 @@ export interface SyncConflict {
   entityType: string;
   localVersion: number;
   remoteVersion: number;
-  localData: Record<string, any>;
-  remoteData: Record<string, any>;
+  localData: Record<string, JsonValue>;
+  remoteData: Record<string, JsonValue>;
   timestamp: number;
   resolution?: ConflictResolution;
-  resolvedData?: Record<string, any>;
+  resolvedData?: Record<string, JsonValue>;
 }
 
 export interface QueuedAction {
@@ -30,7 +32,7 @@ export interface QueuedAction {
   entityId: string;
   entityType: string;
   action: SyncAction;
-  payload: Record<string, any>;
+  payload: Record<string, JsonValue>;
   timestamp: number;
   retryCount: number;
   maxRetries: number;
@@ -61,7 +63,7 @@ export interface SyncConfig {
 export interface SyncEvent {
   type: 'sync_start' | 'sync_complete' | 'sync_error' | 'conflict_detected' | 'action_queued' | 'action_synced' | 'offline' | 'online';
   timestamp: number;
-  data?: Record<string, any>;
+  data?: Record<string, JsonValue>;
   error?: string;
 }
 
@@ -81,14 +83,14 @@ export interface DataSnapshot {
   id: string;
   timestamp: number;
   entityType: string;
-  data: Record<string, any>;
+  data: Record<string, JsonValue>;
   hash: string;
 }
 
 export interface SyncDiff {
   fields: Record<string, {
-    local: any;
-    remote: any;
+    local: JsonValue;
+    remote: JsonValue;
   }>;
   added: string[];
   removed: string[];
