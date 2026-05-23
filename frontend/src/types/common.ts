@@ -27,3 +27,13 @@ export interface JsonObject {
   [key: string]: JsonValue;
 }
 export type JsonArray = JsonValue[];
+
+export type LogData = Record<string, string | number | boolean | null | undefined>;
+
+export interface CacheEntry<T> {
+  value: T;
+  timestamp: number;
+  ttl: number;
+}
+
+export type EventCallback<T> = (data?: T) => void;
