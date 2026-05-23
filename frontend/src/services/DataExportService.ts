@@ -1,5 +1,8 @@
 import { GDPRComplianceService } from './GDPRComplianceService';
 import { SecureStorageService } from './SecureStorageService';
+import type { JsonValue, JsonObject } from '@/types/common';
+
+type ExportData = Record<string, JsonValue>;
 
 export interface ExportFormat {
   type: 'json' | 'csv' | 'pdf';
@@ -58,11 +61,11 @@ export class DataExportService {
     }
   }
 
-  private static collectUserData(request: ExportRequest): Record<string, any> {
-    const data: Record<string, any> = {
+  private static collectUserData(request: ExportRequest): ExportData {
+    const data: ExportData = {
       exportDate: new Date().toISOString(),
       userId: request.userId,
-      consent: GDPRComplianceService.getUserConsent(),
+      consent: GDPRComplianceService.getUserConsent() as JsonValue,
     };
 
     if (typeof localStorage === 'undefined') {
@@ -100,7 +103,7 @@ export class DataExportService {
     return data;
   }
 
-  private static getTransactions(): any[] {
+  private static getTransactions(): JsonValue[] {
     try {
       if (typeof localStorage === 'undefined') return [];
       const stored = localStorage.getItem('tx_history');
@@ -110,7 +113,7 @@ export class DataExportService {
     }
   }
 
-  private static getStakeHistory(): any[] {
+  private static getStakeHistory(): JsonValue[] {
     try {
       if (typeof localStorage === 'undefined') return [];
       const stored = localStorage.getItem('stake_history');
@@ -120,8 +123,8 @@ export class DataExportService {
     }
   }
 
-  private static getPreferences(): Record<string, any> {
-    const preferences: Record<string, any> = {};
+  private static getPreferences(): Record<string, JsonValue> {
+    const preferences: Record<string, JsonValue> = {};
     
     try {
       if (typeof localStorage === 'undefined') return preferences;
@@ -151,7 +154,7 @@ export class DataExportService {
   }
 
   private static exportAsJSON(
-    data: Record<string, any>,
+    data: ExportData,
     request: ExportRequest
   ): ExportResult {
     try {
@@ -183,7 +186,7 @@ export class DataExportService {
   }
 
   private static exportAsCSV(
-    data: Record<string, any>,
+    data: ExportData,
     request: ExportRequest
   ): ExportResult {
     try {
@@ -212,8 +215,8 @@ export class DataExportService {
   }
 
   private static exportAsPDF(
-    data: Record<string, any>,
-    request: ExportRequest
+    data: ExportData,
+    _request: ExportRequest
   ): ExportResult {
     return {
       success: false,
@@ -222,10 +225,10 @@ export class DataExportService {
   }
 
   private static flattenObject(
-    obj: Record<string, any>,
+    obj: Record<string, JsonValue>,
     prefix: string = ''
-  ): Record<string, any> {
-    const result: Record<string, any> = {};
+  ): Record<string, string | number | boolean> {
+    const result: Record<string, string | number | boolean> = {};
 
     for (const [key, value] of Object.entries(obj)) {
       const newKey = prefix ? `${prefix}.${key}` : key;
@@ -233,18 +236,18 @@ export class DataExportService {
       if (value === null || value === undefined) {
         result[newKey] = '';
       } else if (typeof value === 'object' && !Array.isArray(value)) {
-        Object.assign(result, this.flattenObject(value, newKey));
+        Object.assign(result, this.flattenObject(value as Record<string, JsonValue>, newKey));
       } else if (Array.isArray(value)) {
         result[newKey] = JSON.stringify(value);
       } else {
-        result[newKey] = value;
+        result[newKey] = value as string | number | boolean;
       }
     }
 
     return result;
   }
 
-  private static formatCSVValue(value: any): string {
+  private static formatCSVValue(value: string | number | boolean): string {
     if (value === null || value === undefined) {
       return '';
     }
