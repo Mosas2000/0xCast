@@ -95,7 +95,7 @@ export class SecureStorageV2Service {
     }
   }
 
-  static async getItem<T = any>(key: string): Promise<T | null> {
+  static async getItem<T extends JsonValue = JsonValue>(key: string): Promise<T | null> {
     try {
       await this.initialize();
 
@@ -121,7 +121,7 @@ export class SecureStorageV2Service {
         return null;
       }
 
-      return stored.value;
+      return stored.value as T;
     } catch (error) {
       console.error(`Failed to retrieve ${key}:`, error);
       return null;
