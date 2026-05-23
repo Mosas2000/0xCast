@@ -1,3 +1,5 @@
+import type { Market, Prediction } from './market';
+
 export interface ReferralCode {
   code: string;
   owner: string;
@@ -193,7 +195,7 @@ export type ReferralHookReturn = {
 
 export type ReferralIntegrationHookReturn = {
   recordRewardOnAction: (actionAmount: number, actionType: string) => Promise<void>;
-  triggerRewardIfReferred: (market: any, prediction: any) => Promise<void>;
+  triggerRewardIfReferred: (market: Market, prediction: Prediction) => Promise<void>;
   isPending: boolean;
   lastError: string | null;
   rewards: ReferralTransaction[];
