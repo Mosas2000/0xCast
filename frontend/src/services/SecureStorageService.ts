@@ -64,7 +64,7 @@ export class SecureStorageService {
     }
   }
 
-  static getItem<T = any>(key: string): T | null {
+  static getItem<T extends JsonValue = JsonValue>(key: string): T | null {
     try {
       if (typeof localStorage === 'undefined') return null;
 
@@ -84,7 +84,7 @@ export class SecureStorageService {
         return null;
       }
 
-      return entry.value;
+      return entry.value as T;
     } catch (error) {
       console.error('Failed to retrieve data:', error);
       return null;
