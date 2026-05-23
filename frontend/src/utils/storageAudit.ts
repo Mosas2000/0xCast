@@ -85,7 +85,7 @@ export class StorageAudit {
       );
 
       if (isSensitiveKey) {
-        let parsedValue: any;
+        let parsedValue: unknown;
         try {
           parsedValue = JSON.parse(value);
         } catch {
@@ -93,7 +93,9 @@ export class StorageAudit {
         }
 
         const detection = PIIDetectionService.detectPII(
-          typeof parsedValue === 'object' ? parsedValue : { value: parsedValue }
+          typeof parsedValue === 'object' && parsedValue !== null && !Array.isArray(parsedValue)
+            ? (parsedValue as Record<string, string | number | boolean | null | undefined>)
+            : { value: String(parsedValue) }
         );
 
         if (detection.hasPII) {
