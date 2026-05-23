@@ -9,9 +9,9 @@ export interface ExtendedValidationResult extends ValidationResult {
 
 export abstract class BaseValidator<T> {
   protected validateField(
-    value: any,
+    value: unknown,
     fieldName: string,
-    validator: (val: any) => boolean,
+    validator: (val: unknown) => boolean,
     errorMessage?: string
   ): string | null {
     if (!validator(value)) {
@@ -24,7 +24,7 @@ export abstract class BaseValidator<T> {
     return checks.filter((error): error is string => error !== null);
   }
 
-  abstract isValid(data: any): boolean;
-  abstract validate(data: any): ValidationResult | ExtendedValidationResult;
-  abstract sanitize(data: any): T | null;
+  abstract isValid(data: unknown): boolean;
+  abstract validate(data: unknown): ValidationResult | ExtendedValidationResult;
+  abstract sanitize(data: unknown): T | null;
 }
