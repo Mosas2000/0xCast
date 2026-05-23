@@ -1,20 +1,21 @@
 import { FraudAlert, UserReputation } from '@/types/reputation';
+import type { JsonValue } from '@/types/common';
 
 export class ReputationEventBus {
-  private listeners: Map<string, Set<(data: any) => void>> = new Map();
+  private listeners: Map<string, Set<(data: JsonValue) => void>> = new Map();
 
-  on(event: string, callback: (data: any) => void): void {
+  on(event: string, callback: (data: JsonValue) => void): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
     this.listeners.get(event)?.add(callback);
   }
 
-  off(event: string, callback: (data: any) => void): void {
+  off(event: string, callback: (data: JsonValue) => void): void {
     this.listeners.get(event)?.delete(callback);
   }
 
-  emit(event: string, data: any): void {
+  emit(event: string, data: JsonValue): void {
     this.listeners.get(event)?.forEach((callback) => {
       try {
         callback(data);
@@ -36,10 +37,10 @@ export class ReputationLogger {
     timestamp: number;
     level: string;
     message: string;
-    data?: any;
+    data?: JsonValue;
   }> = [];
 
-  static log(level: 'info' | 'warn' | 'error', message: string, data?: any): void {
+  static log(level: 'info' | 'warn' | 'error', message: string, data?: JsonValue): void {
     const entry = {
       timestamp: Date.now(),
       level,
@@ -76,17 +77,17 @@ export class ReputationLogger {
 }
 
 export class ReputationCache {
-  private cache: Map<string, { value: any; expiresAt: number }> = new Map();
+  private cache: Map<string, { value: JsonValue; expiresAt: number }> = new Map();
   private readonly defaultTTL = 5 * 60 * 1000;
 
-  set(key: string, value: any, ttl: number = this.defaultTTL): void {
+  set(key: string, value: JsonValue, ttl: number = this.defaultTTL): void {
     this.cache.set(key, {
       value,
       expiresAt: Date.now() + ttl,
     });
   }
 
-  get(key: string): any | null {
+  get(key: string): JsonValue | null {
     const entry = this.cache.get(key);
 
     if (!entry) {
