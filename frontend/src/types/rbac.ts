@@ -1,3 +1,5 @@
+import type { JsonValue } from './common';
+
 export enum Permission {
   CREATE_MARKET = 'create_market',
   EDIT_MARKET = 'edit_market',
@@ -73,8 +75,8 @@ export interface AuditLog {
   action: string;
   resource: string;
   resourceId: string;
-  oldValue?: any;
-  newValue?: any;
+  oldValue?: JsonValue;
+  newValue?: JsonValue;
   status: 'success' | 'failure';
   timestamp: number;
   ipAddress?: string;
