@@ -1,6 +1,8 @@
+import type { JsonValue } from '@/types/common';
+
 export interface StoredData {
   key: string;
-  value: any;
+  value: JsonValue;
   timestamp: number;
   expiresAt?: number;
   encrypted: boolean;
@@ -39,7 +41,7 @@ export class IndexedDBService {
     });
   }
 
-  static async setItem(key: string, value: any, expiresIn?: number): Promise<void> {
+  static async setItem(key: string, value: JsonValue, expiresIn?: number): Promise<void> {
     await this.initialize();
 
     if (!this.db) {
