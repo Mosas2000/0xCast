@@ -66,7 +66,7 @@ export class IndexedDBService {
     });
   }
 
-  static async getItem<T = any>(key: string): Promise<T | null> {
+  static async getItem<T extends JsonValue = JsonValue>(key: string): Promise<T | null> {
     await this.initialize();
 
     if (!this.db) {
@@ -92,7 +92,7 @@ export class IndexedDBService {
           return;
         }
 
-        resolve(data.value);
+        resolve(data.value as T);
       };
 
       request.onerror = () => reject(new Error('Failed to retrieve data'));
