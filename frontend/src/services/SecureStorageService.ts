@@ -1,5 +1,6 @@
 import { GDPRComplianceService } from './GDPRComplianceService';
 import { PIIDetectionService } from './PIIDetectionService';
+import type { JsonValue } from '@/types/common';
 
 export interface StorageOptions {
   requireConsent?: boolean;
@@ -9,7 +10,7 @@ export interface StorageOptions {
 }
 
 export interface StorageEntry {
-  value: any;
+  value: JsonValue;
   timestamp: number;
   expiresAt?: number;
   category: string;
@@ -19,7 +20,7 @@ export interface StorageEntry {
 export class SecureStorageService {
   private static readonly PREFIX = 'secure_';
 
-  static setItem(key: string, value: any, options: StorageOptions = {}): boolean {
+  static setItem(key: string, value: JsonValue, options: StorageOptions = {}): boolean {
     try {
       if (typeof localStorage === 'undefined') return false;
 
@@ -30,7 +31,9 @@ export class SecureStorageService {
       } = options;
 
       const detection = PIIDetectionService.detectPII(
-        typeof value === 'object' ? value : { value }
+        typeof value === 'object' && value !== null && !Array.isArray(value)
+          ? (value as Record<string, string | number | boolean | null | undefined>)
+          : { value: String(value) }
       );
 
       if (detection.requiresConsent && requireConsent) {
