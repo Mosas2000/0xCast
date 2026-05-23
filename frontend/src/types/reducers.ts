@@ -2,6 +2,8 @@
  * Common Types for useReducer Pattern
  */
 
+import type { JsonValue } from './common';
+
 export type AsyncState<T> = {
   data: T | null;
   loading: boolean;
@@ -55,13 +57,13 @@ export type FilterAction<T> =
 
 export type ModalState = {
   isOpen: boolean;
-  data: any | null;
+  data: JsonValue | null;
 };
 
 export type ModalAction =
-  | { type: 'OPEN'; payload?: any }
+  | { type: 'OPEN'; payload?: JsonValue }
   | { type: 'CLOSE' }
-  | { type: 'SET_DATA'; payload: any };
+  | { type: 'SET_DATA'; payload: JsonValue };
 
 export type ListState<T> = {
   items: T[];
