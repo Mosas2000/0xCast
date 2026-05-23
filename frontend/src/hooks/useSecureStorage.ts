@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { SecureStorageV2Service } from '@/services/SecureStorageV2Service';
 import { StorageMigrationService } from '@/services/StorageMigrationService';
 import { EncryptionService } from '@/services/EncryptionService';
+import type { JsonValue } from '@/types/common';
 
 export interface SecureStorageStatus {
   initialized: boolean;
@@ -68,7 +69,7 @@ export function useSecureStorage() {
   }, []);
 
   const setItem = useCallback(
-    async (key: string, value: any, options?: Parameters<typeof SecureStorageV2Service.setItem>[2]) => {
+    async (key: string, value: JsonValue, options?: Parameters<typeof SecureStorageV2Service.setItem>[2]) => {
       return SecureStorageV2Service.setItem(key, value, options);
     },
     []
