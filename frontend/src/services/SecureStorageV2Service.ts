@@ -2,6 +2,7 @@ import { EncryptionService, type EncryptedData } from './EncryptionService';
 import { IndexedDBService } from './IndexedDBService';
 import { GDPRComplianceService } from './GDPRComplianceService';
 import { PIIDetectionService } from './PIIDetectionService';
+import type { JsonValue } from '@/types/common';
 
 export interface SecureStorageOptions {
   encrypt?: boolean;
@@ -35,7 +36,7 @@ export class SecureStorageV2Service {
 
   static async setItem(
     key: string,
-    value: any,
+    value: JsonValue,
     options: SecureStorageOptions = {}
   ): Promise<boolean> {
     try {
@@ -49,7 +50,9 @@ export class SecureStorageV2Service {
       } = options;
 
       const detection = PIIDetectionService.detectPII(
-        typeof value === 'object' ? value : { value }
+        typeof value === 'object' && value !== null && !Array.isArray(value)
+          ? (value as Record<string, string | number | boolean | null | undefined>)
+          : { value: String(value) }
       );
 
       if (detection.requiresConsent && requireConsent) {
@@ -72,7 +75,7 @@ export class SecureStorageV2Service {
         expiresAt: expiresIn ? Date.now() + expiresIn : undefined,
       };
 
-      let dataToStore: any;
+      let dataToStore: JsonValue;
 
       if (encrypt) {
         const encrypted = await EncryptionService.encryptObject({
@@ -247,7 +250,7 @@ export class SecureStorageV2Service {
 
   private static async getItemWithMetadata(
     key: string
-  ): Promise<{ value: any; metadata: StorageMetadata } | null> {
+  ): Promise<{ value: JsonValue; metadata: StorageMetadata } | null> {
     try {
       const stored = await IndexedDBService.getItem(key);
       if (!stored) return null;
@@ -263,7 +266,7 @@ export class SecureStorageV2Service {
     }
   }
 
-  private static isEncryptedData(value: any): value is EncryptedData {
+  private static isEncryptedData(value: unknown): value is EncryptedData {
     return (
       typeof value === 'object' &&
       value !== null &&
