@@ -1,3 +1,5 @@
+import type { JsonValue } from './common';
+
 export type Timeframe = '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '1d' | '1w' | '1M';
 
 export interface OHLCV {
@@ -133,7 +135,7 @@ export interface AnalysisPattern {
 
 export interface ChartEvent {
   type: 'candle_hover' | 'candle_click' | 'timeframe_change' | 'indicator_add' | 'indicator_remove' | 'tool_add' | 'tool_remove';
-  data: any;
+  data: JsonValue;
   timestamp: number;
 }
 
