@@ -2,10 +2,12 @@
  * Sync analytics and reporting for synchronization system
  */
 
+export type SyncEventData = Record<string, string | number | boolean | null | undefined>;
+
 export interface SyncAnalyticsEvent {
   type: string;
   timestamp: number;
-  data: Record<string, any>;
+  data: SyncEventData;
 }
 
 export interface SyncAnalyticsReport {
@@ -26,7 +28,7 @@ export class SyncAnalyticsService {
   private events: SyncAnalyticsEvent[] = [];
   private maxEvents: number = 10000;
 
-  recordEvent(type: string, data: Record<string, any>): void {
+  recordEvent(type: string, data: SyncEventData = {}): void {
     const event: SyncAnalyticsEvent = {
       type,
       timestamp: Date.now(),
