@@ -3,8 +3,10 @@ import {
   AnalyticsService,
   getAnalyticsService,
   initializeAnalytics,
+  isEventPropertyValue,
   type AnalyticsProvider,
   type AnalyticsEvent,
+  type EventPropertyValue,
   type UserProperties,
 } from '../AnalyticsService';
 
@@ -260,6 +262,35 @@ describe('AnalyticsService', () => {
       expect(mockProvider.events[0].name).toBe('custom_event');
       expect(mockProvider.events[0].properties?.customProp1).toBe('value1');
       expect(mockProvider.events[0].properties?.customProp2).toBe(42);
+    });
+  });
+
+  describe('EventPropertyValue type guard', () => {
+    it('accepts valid property values', () => {
+      const validValues: unknown[] = ['string', 42, true, false, null, undefined];
+      validValues.forEach(v => {
+        expect(isEventPropertyValue(v)).toBe(true);
+      });
+    });
+
+    it('rejects objects and arrays', () => {
+      const invalidValues: unknown[] = [{}, [], new Date(), () => {}];
+      invalidValues.forEach(v => {
+        expect(isEventPropertyValue(v)).toBe(false);
+      });
+    });
+
+    it('event properties conform to EventPropertyValue', () => {
+      const props: Record<string, EventPropertyValue> = {
+        marketId: 1,
+        outcome: 'yes',
+        amount: 1000,
+        active: true,
+        extra: null,
+      };
+      service.trackEvent('typed_event', props);
+      expect(mockProvider.events).toHaveLength(1);
+      expect(mockProvider.events[0].properties?.marketId).toBe(1);
     });
   });
 });

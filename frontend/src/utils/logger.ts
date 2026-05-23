@@ -1,10 +1,12 @@
+import type { LogData } from '@/types/common';
+
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
 export interface LogEntry {
   timestamp: number;
   level: LogLevel;
   message: string;
-  context?: Record<string, any>;
+  context?: LogData;
   requestId?: string;
   userId?: string;
   transactionId?: string;
@@ -84,7 +86,7 @@ class Logger {
   private createEntry(
     level: LogLevel,
     message: string,
-    context?: Record<string, any>
+    context?: LogData
   ): LogEntry {
     const entry: LogEntry = {
       timestamp: Date.now(),
@@ -111,7 +113,7 @@ class Logger {
   private log(
     level: LogLevel,
     message: string,
-    context?: Record<string, any>
+    context?: LogData
   ): void {
     if (!this.shouldLog(level)) return;
 
@@ -172,23 +174,23 @@ class Logger {
     return parts.join(' ');
   }
 
-  debug(message: string, context?: Record<string, any>): void {
+  debug(message: string, context?: LogData): void {
     this.log('debug', message, context);
   }
 
-  info(message: string, context?: Record<string, any>): void {
+  info(message: string, context?: LogData): void {
     this.log('info', message, context);
   }
 
-  warn(message: string, context?: Record<string, any>): void {
+  warn(message: string, context?: LogData): void {
     this.log('warn', message, context);
   }
 
-  error(message: string, context?: Record<string, any>): void {
+  error(message: string, context?: LogData): void {
     this.log('error', message, context);
   }
 
-  fatal(message: string, context?: Record<string, any>): void {
+  fatal(message: string, context?: LogData): void {
     this.log('fatal', message, context);
   }
 

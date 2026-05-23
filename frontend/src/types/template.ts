@@ -41,7 +41,7 @@ export interface TemplateValidationRule {
   field: string;
   rule: string;
   message: string;
-  validator: (value: any) => boolean;
+  validator: (value: unknown) => boolean;
 }
 
 export interface ValidationState {

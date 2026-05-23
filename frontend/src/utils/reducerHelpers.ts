@@ -6,13 +6,13 @@ export function createAction<T extends string, P = void>(
   type: T
 ): P extends void ? { type: T } : { type: T; payload: P } {
   return ((payload?: P) =>
-    payload === undefined ? { type } : { type, payload }) as any;
+    payload === undefined ? { type } : { type, payload }) as P extends void ? { type: T } : { type: T; payload: P };
 }
 
-export function combineReducers<S extends Record<string, any>>(
-  reducers: { [K in keyof S]: (state: S[K], action: any) => S[K] }
+export function combineReducers<S extends Record<string, unknown>>(
+  reducers: { [K in keyof S]: (state: S[K], action: { type: string }) => S[K] }
 ) {
-  return (state: S, action: any): S => {
+  return (state: S, action: { type: string }): S => {
     const nextState = {} as S;
     let hasChanged = false;
 
@@ -31,7 +31,7 @@ export function combineReducers<S extends Record<string, any>>(
 
 export function createReducer<S, A extends { type: string }>(
   initialState: S,
-  handlers: Record<string, (state: S, action: any) => S>
+  handlers: Record<string, (state: S, action: A) => S>
 ) {
   return (state: S = initialState, action: A): S => {
     if (handlers.hasOwnProperty(action.type)) {

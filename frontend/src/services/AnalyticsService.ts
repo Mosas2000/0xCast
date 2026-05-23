@@ -1,13 +1,18 @@
-/**
- * Analytics Service
- * 
- * Centralized service for tracking user behavior and platform metrics
- * Supports multiple analytics providers (Mixpanel, Amplitude, custom)
- */
+export type EventPropertyValue = string | number | boolean | null | undefined;
+
+export function isEventPropertyValue(value: unknown): value is EventPropertyValue {
+  return (
+    value === null ||
+    value === undefined ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  );
+}
 
 export interface AnalyticsEvent {
   name: string;
-  properties?: Record<string, any>;
+  properties?: Record<string, EventPropertyValue>;
   timestamp?: number;
 }
 
@@ -19,7 +24,11 @@ export interface UserProperties {
   totalPredictions?: number;
   totalStaked?: number;
   winRate?: number;
-  [key: string]: any;
+  sessionId?: string;
+  network?: string;
+  theme?: string;
+  language?: string;
+  [key: string]: EventPropertyValue;
 }
 
 export interface AnalyticsProvider {
@@ -77,9 +86,6 @@ export class AnalyticsService {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  /**
-   * Initialize analytics with user ID
-   */
   initialize(userId: string, userProperties?: UserProperties): void {
     if (!this.isEnabled) return;
 
@@ -90,10 +96,7 @@ export class AnalyticsService {
     });
   }
 
-  /**
-   * Track a user action
-   */
-  trackEvent(eventName: string, properties?: Record<string, any>): void {
+  trackEvent(eventName: string, properties?: Record<string, EventPropertyValue>): void {
     if (!this.isEnabled) return;
 
     this.provider.track({
@@ -107,9 +110,6 @@ export class AnalyticsService {
     });
   }
 
-  /**
-   * Track market creation
-   */
   trackMarketCreated(marketId: number, question: string, category: string): void {
     this.trackEvent('market_created', {
       marketId,
@@ -118,9 +118,6 @@ export class AnalyticsService {
     });
   }
 
-  /**
-   * Track market prediction
-   */
   trackPrediction(marketId: number, outcome: 'yes' | 'no', amount: number): void {
     this.trackEvent('prediction_made', {
       marketId,
@@ -129,9 +126,6 @@ export class AnalyticsService {
     });
   }
 
-  /**
-   * Track market resolution
-   */
   trackMarketResolved(marketId: number, outcome: 'yes' | 'no' | 'disputed'): void {
     this.trackEvent('market_resolved', {
       marketId,
@@ -139,9 +133,6 @@ export class AnalyticsService {
     });
   }
 
-  /**
-   * Track winnings claimed
-   */
   trackWinningsClaimed(marketId: number, amount: number): void {
     this.trackEvent('winnings_claimed', {
       marketId,
@@ -149,19 +140,13 @@ export class AnalyticsService {
     });
   }
 
-  /**
-   * Track page view
-   */
-  trackPageView(pageName: string, properties?: Record<string, any>): void {
+  trackPageView(pageName: string, properties?: Record<string, EventPropertyValue>): void {
     this.trackEvent('page_view', {
       page: pageName,
       ...properties,
     });
   }
 
-  /**
-   * Track wallet connection
-   */
   trackWalletConnected(walletType: string, address: string): void {
     this.trackEvent('wallet_connected', {
       walletType,
@@ -169,17 +154,15 @@ export class AnalyticsService {
     });
   }
 
-  /**
-   * Track wallet disconnection
-   */
   trackWalletDisconnected(): void {
     this.trackEvent('wallet_disconnected');
   }
 
-  /**
-   * Track error
-   */
-  trackError(errorName: string, errorMessage: string, context?: Record<string, any>): void {
+  trackError(
+    errorName: string,
+    errorMessage: string,
+    context?: Record<string, EventPropertyValue>
+  ): void {
     this.trackEvent('error_occurred', {
       errorName,
       errorMessage,
@@ -187,19 +170,16 @@ export class AnalyticsService {
     });
   }
 
-  /**
-   * Track feature usage
-   */
-  trackFeatureUsage(featureName: string, properties?: Record<string, any>): void {
+  trackFeatureUsage(
+    featureName: string,
+    properties?: Record<string, EventPropertyValue>
+  ): void {
     this.trackEvent('feature_used', {
       feature: featureName,
       ...properties,
     });
   }
 
-  /**
-   * Track search
-   */
   trackSearch(query: string, resultsCount: number): void {
     this.trackEvent('search_performed', {
       query,
@@ -207,9 +187,6 @@ export class AnalyticsService {
     });
   }
 
-  /**
-   * Track filter applied
-   */
   trackFilterApplied(filterType: string, filterValue: string): void {
     this.trackEvent('filter_applied', {
       filterType,
@@ -217,9 +194,6 @@ export class AnalyticsService {
     });
   }
 
-  /**
-   * Track sort applied
-   */
   trackSortApplied(sortBy: string, sortOrder: 'asc' | 'desc'): void {
     this.trackEvent('sort_applied', {
       sortBy,
@@ -227,9 +201,6 @@ export class AnalyticsService {
     });
   }
 
-  /**
-   * Track time spent on page
-   */
   trackTimeSpent(pageName: string, timeInSeconds: number): void {
     this.trackEvent('time_spent', {
       page: pageName,
@@ -237,9 +208,6 @@ export class AnalyticsService {
     });
   }
 
-  /**
-   * Update user properties
-   */
   updateUserProperties(properties: UserProperties): void {
     if (!this.isEnabled) return;
 
@@ -249,38 +217,25 @@ export class AnalyticsService {
     });
   }
 
-  /**
-   * Reset analytics (logout)
-   */
   reset(): void {
     this.currentUserId = null;
     this.sessionId = this.generateSessionId();
     this.provider.reset();
   }
 
-  /**
-   * Enable/disable analytics
-   */
   setEnabled(enabled: boolean): void {
     this.isEnabled = enabled;
   }
 
-  /**
-   * Get current session ID
-   */
   getSessionId(): string {
     return this.sessionId;
   }
 
-  /**
-   * Get current user ID
-   */
   getCurrentUserId(): string | null {
     return this.currentUserId;
   }
 }
 
-// Singleton instance
 let analyticsInstance: AnalyticsService | null = null;
 
 export function getAnalyticsService(): AnalyticsService {
@@ -290,7 +245,10 @@ export function getAnalyticsService(): AnalyticsService {
   return analyticsInstance;
 }
 
-export function initializeAnalytics(provider?: AnalyticsProvider, enabled?: boolean): AnalyticsService {
+export function initializeAnalytics(
+  provider?: AnalyticsProvider,
+  enabled?: boolean
+): AnalyticsService {
   analyticsInstance = new AnalyticsService(provider, enabled);
   return analyticsInstance;
 }

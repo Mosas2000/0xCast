@@ -1,4 +1,5 @@
 import { GDPRComplianceService } from './GDPRComplianceService';
+import type { JsonValue } from '@/types/common';
 
 export interface RetentionPolicy {
   category: string;
@@ -12,7 +13,7 @@ export interface DataItem {
   category: string;
   createdAt: number;
   lastAccessed?: number;
-  data: any;
+  data: JsonValue;
 }
 
 export class DataRetentionService {

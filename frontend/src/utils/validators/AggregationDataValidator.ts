@@ -3,7 +3,7 @@ import { BaseValidator, ValidationResult } from './BaseValidator';
 import { CommonValidators } from './commonValidators';
 
 export class AggregationDataValidator extends BaseValidator<AggregatedPrice> {
-  isValid(price: any): boolean {
+  isValid(price: unknown): boolean {
     if (!CommonValidators.isValidObject(price)) return false;
 
     return (
@@ -16,7 +16,7 @@ export class AggregationDataValidator extends BaseValidator<AggregatedPrice> {
     );
   }
 
-  validate(price: any): ValidationResult {
+  validate(price: unknown): ValidationResult {
     const errors: string[] = [];
 
     if (!CommonValidators.isValidObject(price)) {
@@ -41,7 +41,7 @@ export class AggregationDataValidator extends BaseValidator<AggregatedPrice> {
     };
   }
 
-  sanitize(price: any): AggregatedPrice | null {
+  sanitize(price: unknown): AggregatedPrice | null {
     if (!CommonValidators.isValidObject(price)) return null;
 
     const sanitized: AggregatedPrice = {
@@ -49,7 +49,7 @@ export class AggregationDataValidator extends BaseValidator<AggregatedPrice> {
       timestamp: CommonValidators.sanitizeTimestamp(price.timestamp),
       sources: CommonValidators.sanitizeArray<string>(
         price.sources,
-        (s: any) => typeof s === 'string'
+        (s: unknown) => typeof s === 'string'
       ),
       confidence: CommonValidators.sanitizeNumber(price.confidence, 0.5, 0, 1),
       consensusReached: Boolean(price.consensusReached),

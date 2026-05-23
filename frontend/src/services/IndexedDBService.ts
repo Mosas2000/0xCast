@@ -1,6 +1,8 @@
+import type { JsonValue } from '@/types/common';
+
 export interface StoredData {
   key: string;
-  value: any;
+  value: JsonValue;
   timestamp: number;
   expiresAt?: number;
   encrypted: boolean;
@@ -39,7 +41,7 @@ export class IndexedDBService {
     });
   }
 
-  static async setItem(key: string, value: any, expiresIn?: number): Promise<void> {
+  static async setItem(key: string, value: JsonValue, expiresIn?: number): Promise<void> {
     await this.initialize();
 
     if (!this.db) {
@@ -64,7 +66,7 @@ export class IndexedDBService {
     });
   }
 
-  static async getItem<T = any>(key: string): Promise<T | null> {
+  static async getItem<T extends JsonValue = JsonValue>(key: string): Promise<T | null> {
     await this.initialize();
 
     if (!this.db) {
@@ -90,7 +92,7 @@ export class IndexedDBService {
           return;
         }
 
-        resolve(data.value);
+        resolve(data.value as T);
       };
 
       request.onerror = () => reject(new Error('Failed to retrieve data'));

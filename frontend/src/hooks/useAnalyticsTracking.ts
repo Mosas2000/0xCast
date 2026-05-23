@@ -100,33 +100,29 @@ export function useAnalyticsTracking() {
     [analyticsService]
   );
 
-  // Track feature usage
   const trackFeatureUsage = useCallback(
-    (featureName: string, properties?: Record<string, any>) => {
+    (featureName: string, properties?: Record<string, EventPropertyValue>) => {
       analyticsService.trackFeatureUsage(featureName, properties);
     },
     [analyticsService]
   );
 
-  // Track error
   const trackError = useCallback(
-    (errorName: string, errorMessage: string, context?: Record<string, any>) => {
+    (errorName: string, errorMessage: string, context?: Record<string, EventPropertyValue>) => {
       analyticsService.trackError(errorName, errorMessage, context);
     },
     [analyticsService]
   );
 
-  // Track custom event
   const trackEvent = useCallback(
-    (eventName: string, properties?: Record<string, any>) => {
+    (eventName: string, properties?: Record<string, EventPropertyValue>) => {
       analyticsService.trackEvent(eventName, properties);
     },
     [analyticsService]
   );
 
-  // Update user properties
   const updateUserProperties = useCallback(
-    (properties: Record<string, any>) => {
+    (properties: Record<string, EventPropertyValue>) => {
       analyticsService.updateUserProperties(properties);
     },
     [analyticsService]

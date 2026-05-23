@@ -1,13 +1,14 @@
 import { useCallback, useMemo } from 'react';
 import { logger, type LogEntry, type LogLevel } from '@/utils/logger';
 import { monitoringService } from '@/services/MonitoringService';
+import type { LogData } from '@/types/common';
 
 interface UseLoggerReturn {
-  debug: (message: string, context?: Record<string, unknown>) => void;
-  info: (message: string, context?: Record<string, unknown>) => void;
-  warn: (message: string, context?: Record<string, unknown>) => void;
-  error: (message: string, context?: Record<string, unknown>) => void;
-  fatal: (message: string, context?: Record<string, unknown>) => void;
+  debug: (message: string, context?: LogData) => void;
+  info: (message: string, context?: LogData) => void;
+  warn: (message: string, context?: LogData) => void;
+  error: (message: string, context?: LogData) => void;
+  fatal: (message: string, context?: LogData) => void;
   setRequestId: (id: string) => void;
   setUserId: (id: string) => void;
   setTransactionId: (id: string) => void;
@@ -23,24 +24,24 @@ interface UseLoggerReturn {
     name: string,
     value: number,
     unit?: 'ms' | 'bytes' | 'count',
-    context?: Record<string, unknown>
+    context?: LogData
   ) => void;
-  trackError: (type: string, message: string, context?: Record<string, unknown>) => void;
-  trackUserAction: (action: string, context?: Record<string, unknown>) => void;
+  trackError: (type: string, message: string, context?: LogData) => void;
+  trackUserAction: (action: string, context?: LogData) => void;
   trackContractCall: (
     contract: string,
     functionName: string,
     duration: number,
     success: boolean,
-    context?: Record<string, unknown>
+    context?: LogData
   ) => void;
-  trackPageView: (page: string, context?: Record<string, unknown>) => void;
-  trackButtonClick: (button: string, context?: Record<string, unknown>) => void;
+  trackPageView: (page: string, context?: LogData) => void;
+  trackButtonClick: (button: string, context?: LogData) => void;
   trackTransaction: (
     type: string,
     status: string,
     duration: number,
-    context?: Record<string, unknown>
+    context?: LogData
   ) => void;
 }
 
@@ -50,35 +51,35 @@ export function useLogger(component?: string): UseLoggerReturn {
   }, [component]);
 
   const debug = useCallback(
-    (message: string, ctx?: Record<string, unknown>) => {
+    (message: string, ctx?: LogData) => {
       logger.debug(message, { ...context, ...ctx });
     },
     [context]
   );
 
   const info = useCallback(
-    (message: string, ctx?: Record<string, unknown>) => {
+    (message: string, ctx?: LogData) => {
       logger.info(message, { ...context, ...ctx });
     },
     [context]
   );
 
   const warn = useCallback(
-    (message: string, ctx?: Record<string, unknown>) => {
+    (message: string, ctx?: LogData) => {
       logger.warn(message, { ...context, ...ctx });
     },
     [context]
   );
 
   const error = useCallback(
-    (message: string, ctx?: Record<string, unknown>) => {
+    (message: string, ctx?: LogData) => {
       logger.error(message, { ...context, ...ctx });
     },
     [context]
   );
 
   const fatal = useCallback(
-    (message: string, ctx?: Record<string, unknown>) => {
+    (message: string, ctx?: LogData) => {
       logger.fatal(message, { ...context, ...ctx });
     },
     [context]
@@ -151,7 +152,7 @@ export function useLogger(component?: string): UseLoggerReturn {
       name: string,
       value: number,
       unit: 'ms' | 'bytes' | 'count' = 'ms',
-      ctx?: Record<string, unknown>
+      ctx?: LogData
     ) => {
       monitoringService.trackPerformance(name, value, unit, { ...context, ...ctx });
     },
@@ -159,14 +160,14 @@ export function useLogger(component?: string): UseLoggerReturn {
   );
 
   const trackError = useCallback(
-    (type: string, message: string, ctx?: Record<string, unknown>) => {
+    (type: string, message: string, ctx?: LogData) => {
       monitoringService.trackError(type, message, { ...context, ...ctx });
     },
     [context]
   );
 
   const trackUserAction = useCallback(
-    (action: string, ctx?: Record<string, unknown>) => {
+    (action: string, ctx?: LogData) => {
       monitoringService.trackUserAction(action, { ...context, ...ctx });
     },
     [context]
@@ -178,7 +179,7 @@ export function useLogger(component?: string): UseLoggerReturn {
       functionName: string,
       duration: number,
       success: boolean,
-      ctx?: Record<string, unknown>
+      ctx?: LogData
     ) => {
       monitoringService.trackContractCall(
         contract,
@@ -192,21 +193,21 @@ export function useLogger(component?: string): UseLoggerReturn {
   );
 
   const trackPageView = useCallback(
-    (page: string, ctx?: Record<string, unknown>) => {
+    (page: string, ctx?: LogData) => {
       monitoringService.trackPageView(page, { ...context, ...ctx });
     },
     [context]
   );
 
   const trackButtonClick = useCallback(
-    (button: string, ctx?: Record<string, unknown>) => {
+    (button: string, ctx?: LogData) => {
       monitoringService.trackButtonClick(button, { ...context, ...ctx });
     },
     [context]
   );
 
   const trackTransaction = useCallback(
-    (type: string, status: string, duration: number, ctx?: Record<string, unknown>) => {
+    (type: string, status: string, duration: number, ctx?: LogData) => {
       monitoringService.trackTransaction(type, status, duration, { ...context, ...ctx });
     },
     [context]

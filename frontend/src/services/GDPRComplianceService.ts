@@ -1,5 +1,21 @@
-import { PIIDetectionService } from './PIIDetectionService';
+import { PIIDetectionService, type PIIValue } from './PIIDetectionService';
 import { SecureStorageV2Service } from './SecureStorageV2Service';
+
+export type ActivityDetails = Record<string, string | number | boolean | null | undefined>;
+
+export interface ConsentHistoryEntry {
+  timestamp: number;
+  previous: {
+    analytics: boolean;
+    marketing: boolean;
+    personalization: boolean;
+  } | null;
+  current: {
+    analytics: boolean;
+    marketing: boolean;
+    personalization: boolean;
+  };
+}
 
 export interface UserConsent {
   necessary: boolean;
@@ -30,7 +46,7 @@ export interface UserData {
   activityLog: Array<{
     action: string;
     timestamp: number;
-    details?: Record<string, any>;
+    details?: ActivityDetails;
   }>;
 }
 
@@ -172,7 +188,7 @@ export class GDPRComplianceService {
       if (typeof localStorage === 'undefined') return;
 
       const stored = localStorage.getItem(CONSENT_HISTORY_KEY);
-      const history: any[] = stored ? JSON.parse(stored) : [];
+      const history: ConsentHistoryEntry[] = stored ? JSON.parse(stored) : [];
 
       history.push({
         timestamp: current.timestamp,
@@ -206,7 +222,7 @@ export class GDPRComplianceService {
   }
 
   static checkConsentForStorage(
-    data: Record<string, any>,
+    data: Record<string, PIIValue>,
     category: 'analytics' | 'marketing' | 'personalization' | 'necessary'
   ): ConsentCheckResult {
     if (category === 'necessary') {
@@ -429,7 +445,7 @@ export class GDPRComplianceService {
     return DATA_PROCESSING_ACTIVITIES.find(a => a.name === name);
   }
 
-  static getConsentHistory(): any[] {
+  static getConsentHistory(): ConsentHistoryEntry[] {
     try {
       if (typeof localStorage === 'undefined') return [];
       const stored = localStorage.getItem(CONSENT_HISTORY_KEY);
@@ -442,7 +458,7 @@ export class GDPRComplianceService {
   static generatePrivacyReport(): {
     status: ReturnType<typeof GDPRComplianceService.getComplianceStatus>;
     processingActivities: DataProcessingActivity[];
-    consentHistory: any[];
+    consentHistory: ConsentHistoryEntry[];
     dataRetentionDays: number;
   } {
     return {

@@ -1,4 +1,6 @@
-import { TemplateCategory, TEMPLATE_CATEGORIES } from '@/types/template';
+import { TemplateCategory } from '@/types/template';
+
+type TemplateEventData = Record<string, string | number | boolean | null | undefined>;
 
 export interface TemplateAnalytics {
   templateId: TemplateCategory;
@@ -28,10 +30,34 @@ export interface ValidationAnalytics {
   successRateAfterError: number;
 }
 
+interface TemplateSession {
+  templateId: TemplateCategory;
+  startTime: number;
+  stepHistory: Array<{ stepId: string; entryTime: number; exitTime: number }>;
+  validationErrors: Array<{ errorType: string; errorMessage: string; timestamp: number }>;
+  completionTime?: number;
+  totalSessionTime?: number;
+  success?: boolean;
+}
+
+interface ValidationAttempt {
+  field: string;
+  error: string;
+  timestamp: number;
+}
+
+declare global {
+  interface Window {
+    gtag?: (command: string, eventName: string, params?: TemplateEventData & { event_category?: string }) => void;
+    amplitude?: {
+      track: (eventName: string, properties?: TemplateEventData & { sessionId?: string }) => void;
+    };
+  }
+}
+
 class TemplateAnalyticsTracker {
   private templateSessions: Map<string, TemplateSession> = new Map();
   private validateAttempts: Map<string, ValidationAttempt[]> = new Map();
-
   private sessionId: string;
 
   constructor() {
@@ -40,7 +66,7 @@ class TemplateAnalyticsTracker {
 
   trackTemplateSelection(templateId: TemplateCategory): void {
     const sessionKey = this.sessionId;
-    
+
     if (!this.templateSessions.has(sessionKey)) {
       this.templateSessions.set(sessionKey, {
         templateId,
@@ -98,8 +124,7 @@ class TemplateAnalyticsTracker {
   }): void {
     const session = this.templateSessions.get(this.sessionId);
     if (session) {
-      const totalTime = Date.now() - session.startTime;
-      session.completionTime = totalTime;
+      session.completionTime = Date.now() - session.startTime;
     }
 
     this.sendEvent('form_completed', {
@@ -112,8 +137,7 @@ class TemplateAnalyticsTracker {
   trackMarketCreated(success: boolean, error?: string): void {
     const session = this.templateSessions.get(this.sessionId);
     if (session) {
-      const totalTime = Date.now() - session.startTime;
-      session.totalSessionTime = totalTime;
+      session.totalSessionTime = Date.now() - session.startTime;
       session.success = success;
     }
 
@@ -124,17 +148,25 @@ class TemplateAnalyticsTracker {
     }
   }
 
-  getSessionAnalytics() {
+  getSessionAnalytics(): {
+    templateId: TemplateCategory;
+    totalTime: number;
+    completionTime: number | undefined;
+    stepCount: number;
+    errorCount: number;
+    success: boolean;
+    steps: Array<{ stepId: string; duration: number }>;
+  } | null {
     const session = this.templateSessions.get(this.sessionId);
     if (!session) return null;
 
     return {
       templateId: session.templateId,
-      totalTime: session.totalSessionTime || Date.now() - session.startTime,
+      totalTime: session.totalSessionTime ?? Date.now() - session.startTime,
       completionTime: session.completionTime,
       stepCount: session.stepHistory.length,
       errorCount: session.validationErrors.length,
-      success: session.success || false,
+      success: session.success ?? false,
       steps: session.stepHistory.map(step => ({
         stepId: step.stepId,
         duration: step.exitTime - step.entryTime,
@@ -142,7 +174,7 @@ class TemplateAnalyticsTracker {
     };
   }
 
-  private sendEvent(eventName: string, eventData?: Record<string, any>): void {
+  private sendEvent(eventName: string, eventData?: TemplateEventData): void {
     if (window.gtag) {
       window.gtag('event', eventName, {
         event_category: 'market_creation_wizard',
@@ -161,22 +193,6 @@ class TemplateAnalyticsTracker {
   resetSession(): void {
     this.sessionId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
-}
-
-interface TemplateSession {
-  templateId: TemplateCategory;
-  startTime: number;
-  stepHistory: Array<{ stepId: string; entryTime: number; exitTime: number }>;
-  validationErrors: Array<{ errorType: string; errorMessage: string; timestamp: number }>;
-  completionTime?: number;
-  totalSessionTime?: number;
-  success?: boolean;
-}
-
-interface ValidationAttempt {
-  field: string;
-  error: string;
-  timestamp: number;
 }
 
 export const analyticsTracker = new TemplateAnalyticsTracker();

@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { Candlestick, ChartScale } from '@/types/charting';
 import { CandlestickRenderer } from '@/services/CandlestickRenderer';
+import type { ChartDataManager } from '@/services/ChartDataManager';
+import type { DrawingToolManager } from '@/services/DrawingToolManager';
 
 interface UseChartRenderingProps {
   canvasRef: React.RefObject<HTMLCanvasElement>;
@@ -11,8 +13,8 @@ interface UseChartRenderingProps {
   candles: Candlestick[];
   scale: ChartScale | null;
   hoveredCandle: Candlestick | null;
-  dataManager: any;
-  drawingManager: any;
+  dataManager: ChartDataManager;
+  drawingManager: DrawingToolManager;
   onScaleChange: (scale: ChartScale) => void;
 }
 

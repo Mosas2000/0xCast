@@ -1,56 +1,56 @@
 export class CommonValidators {
-  static isValidNumber(value: any): boolean {
+  static isValidNumber(value: unknown): boolean {
     return typeof value === 'number' && isFinite(value);
   }
 
-  static isValidPositiveNumber(value: any): boolean {
-    return this.isValidNumber(value) && value >= 0;
+  static isValidPositiveNumber(value: unknown): boolean {
+    return this.isValidNumber(value) && (value as number) >= 0;
   }
 
-  static isValidRatio(value: any): boolean {
-    return this.isValidNumber(value) && value >= 0 && value <= 1;
+  static isValidRatio(value: unknown): boolean {
+    return this.isValidNumber(value) && (value as number) >= 0 && (value as number) <= 1;
   }
 
-  static isValidTimestamp(timestamp: any): boolean {
+  static isValidTimestamp(timestamp: unknown): boolean {
     if (!this.isValidNumber(timestamp)) return false;
     const now = Date.now();
-    return timestamp > 0 && timestamp <= now + 1000;
+    return (timestamp as number) > 0 && (timestamp as number) <= now + 1000;
   }
 
-  static isValidString(value: any, minLength: number = 1, maxLength?: number): boolean {
+  static isValidString(value: unknown, minLength: number = 1, maxLength?: number): boolean {
     if (typeof value !== 'string') return false;
     if (value.length < minLength) return false;
     if (maxLength && value.length > maxLength) return false;
     return true;
   }
 
-  static isValidArray(value: any, minLength: number = 0): boolean {
+  static isValidArray(value: unknown, minLength: number = 0): boolean {
     return Array.isArray(value) && value.length >= minLength;
   }
 
-  static isValidObject(value: any): boolean {
+  static isValidObject(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null;
   }
 
-  static sanitizeNumber(value: any, defaultValue: number = 0, min?: number, max?: number): number {
+  static sanitizeNumber(value: unknown, defaultValue: number = 0, min?: number, max?: number): number {
     let num = Number(value) || defaultValue;
     if (min !== undefined) num = Math.max(min, num);
     if (max !== undefined) num = Math.min(max, num);
     return num;
   }
 
-  static sanitizeString(value: any, defaultValue: string = '', maxLength?: number): string {
+  static sanitizeString(value: unknown, defaultValue: string = '', maxLength?: number): string {
     let str = String(value || defaultValue);
     if (maxLength) str = str.slice(0, maxLength);
     return str;
   }
 
-  static sanitizeTimestamp(value: any, defaultValue?: number): number {
+  static sanitizeTimestamp(value: unknown, defaultValue?: number): number {
     const timestamp = Number(value) || defaultValue || Date.now();
     return Math.min(Date.now(), timestamp);
   }
 
-  static sanitizeArray<T>(value: any, filter?: (item: any) => boolean): T[] {
+  static sanitizeArray<T>(value: unknown, filter?: (item: unknown) => boolean): T[] {
     if (!Array.isArray(value)) return [];
     return filter ? value.filter(filter) : value;
   }

@@ -1,9 +1,11 @@
+import type { JsonValue } from '@/types/common';
+
 export class OracleError extends Error {
   constructor(
     message: string,
     public code: string,
     public statusCode: number = 500,
-    public details?: any
+    public details?: JsonValue
   ) {
     super(message);
     this.name = 'OracleError';
@@ -11,42 +13,42 @@ export class OracleError extends Error {
 }
 
 export class ValidationError extends OracleError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: JsonValue) {
     super(message, 'VALIDATION_ERROR', 400, details);
     this.name = 'ValidationError';
   }
 }
 
 export class ProviderError extends OracleError {
-  constructor(message: string, public providerId: string, details?: any) {
+  constructor(message: string, public providerId: string, details?: JsonValue) {
     super(message, 'PROVIDER_ERROR', 502, details);
     this.name = 'ProviderError';
   }
 }
 
 export class ConsensusError extends OracleError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: JsonValue) {
     super(message, 'CONSENSUS_ERROR', 424, details);
     this.name = 'ConsensusError';
   }
 }
 
 export class TimeoutError extends OracleError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: JsonValue) {
     super(message, 'TIMEOUT_ERROR', 504, details);
     this.name = 'TimeoutError';
   }
 }
 
 export class NetworkError extends OracleError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: JsonValue) {
     super(message, 'NETWORK_ERROR', 503, details);
     this.name = 'NetworkError';
   }
 }
 
 export class FallbackError extends OracleError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: JsonValue) {
     super(message, 'FALLBACK_ERROR', 503, details);
     this.name = 'FallbackError';
   }
@@ -77,7 +79,7 @@ export class ErrorHandler {
     message: string;
     code: string;
     statusCode: number;
-    details?: any;
+    details?: JsonValue;
   } {
     return {
       message: error.message,

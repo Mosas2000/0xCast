@@ -6,21 +6,21 @@ export interface ValidatorConfig {
 
 export interface ValidationContext {
   path?: string;
-  parent?: any;
-  root?: any;
+  parent?: unknown;
+  root?: unknown;
 }
 
-export interface FieldValidationRule<T = any> {
+export interface FieldValidationRule<T = unknown> {
   field: keyof T;
-  validator: (value: any) => boolean;
+  validator: (value: unknown) => boolean;
   errorMessage?: string;
   required?: boolean;
 }
 
-export interface SanitizationRule<T = any> {
+export interface SanitizationRule<T = unknown> {
   field: keyof T;
-  sanitizer: (value: any) => any;
-  defaultValue?: any;
+  sanitizer: (value: unknown) => unknown;
+  defaultValue?: unknown;
 }
 
 export type ValidatorFunction<T> = (value: T) => boolean;

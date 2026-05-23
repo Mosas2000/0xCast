@@ -2,11 +2,22 @@
  * Performance monitoring and optimization for sync system
  */
 
+export type MetricTags = Record<string, string | number | boolean>;
+
+export interface OperationStatistics {
+  count: number;
+  min: number;
+  max: number;
+  avg: number;
+  p95: number;
+  p99: number;
+}
+
 export interface PerformanceMetric {
   name: string;
   duration: number;
   timestamp: number;
-  tags?: Record<string, any>;
+  tags?: MetricTags;
 }
 
 export class PerformanceMonitor {
@@ -23,7 +34,7 @@ export class PerformanceMonitor {
     };
   }
 
-  recordMetric(name: string, duration: number, tags?: Record<string, any>): void {
+  recordMetric(name: string, duration: number, tags?: MetricTags): void {
     const metric: PerformanceMetric = {
       name,
       duration,
@@ -47,14 +58,7 @@ export class PerformanceMonitor {
     return this.metrics.get(name) || [];
   }
 
-  getStatistics(name: string): {
-    count: number;
-    min: number;
-    max: number;
-    avg: number;
-    p95: number;
-    p99: number;
-  } {
+  getStatistics(name: string): OperationStatistics {
     const metrics = this.getMetrics(name);
 
     if (metrics.length === 0) {
@@ -73,8 +77,8 @@ export class PerformanceMonitor {
     return { count, min, max, avg, p95, p99 };
   }
 
-  getAllStatistics(): Record<string, any> {
-    const stats: Record<string, any> = {};
+  getAllStatistics(): Record<string, OperationStatistics> {
+    const stats: Record<string, OperationStatistics> = {};
 
     for (const [name] of this.metrics) {
       stats[name] = this.getStatistics(name);

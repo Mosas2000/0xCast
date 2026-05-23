@@ -3,7 +3,7 @@ import { BaseValidator, ValidationResult } from './BaseValidator';
 import { CommonValidators } from './commonValidators';
 
 export class PriceDataValidator extends BaseValidator<OraclePrice> {
-  isValid(price: any): boolean {
+  isValid(price: unknown): boolean {
     if (!CommonValidators.isValidObject(price)) return false;
 
     return (
@@ -14,7 +14,7 @@ export class PriceDataValidator extends BaseValidator<OraclePrice> {
     );
   }
 
-  validate(price: any): ValidationResult {
+  validate(price: unknown): ValidationResult {
     const errors: string[] = [];
 
     if (!CommonValidators.isValidObject(price)) {
@@ -37,7 +37,7 @@ export class PriceDataValidator extends BaseValidator<OraclePrice> {
     };
   }
 
-  sanitize(price: any): OraclePrice | null {
+  sanitize(price: unknown): OraclePrice | null {
     if (!CommonValidators.isValidObject(price)) return null;
 
     const sanitized: OraclePrice = {
@@ -54,13 +54,13 @@ export class PriceDataValidator extends BaseValidator<OraclePrice> {
     return sanitized;
   }
 
-  validateArray(prices: any[]): {
+  validateArray(prices: unknown[]): {
     valid: OraclePrice[];
-    invalid: any[];
+    invalid: unknown[];
     errors: string[];
   } {
     const valid: OraclePrice[] = [];
-    const invalid: any[] = [];
+    const invalid: unknown[] = [];
     const errors: string[] = [];
 
     if (!Array.isArray(prices)) {
@@ -70,7 +70,7 @@ export class PriceDataValidator extends BaseValidator<OraclePrice> {
 
     prices.forEach((price, index) => {
       if (this.isValid(price)) {
-        valid.push(price);
+        valid.push(price as OraclePrice);
       } else {
         invalid.push(price);
         errors.push(`Invalid price at index ${index}`);

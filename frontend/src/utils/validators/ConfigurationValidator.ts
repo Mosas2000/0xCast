@@ -1,39 +1,39 @@
 import { BaseValidator, ValidationResult } from './BaseValidator';
 import { CommonValidators } from './commonValidators';
 
-export class ConfigurationValidator extends BaseValidator<any> {
+export class ConfigurationValidator extends BaseValidator<Record<string, unknown>> {
   private static readonly MARKET_ID_PATTERN = /^[a-zA-Z0-9\/-]+$/;
   private static readonly MAX_TIMEFRAME = 86400000;
 
-  static isValidMarketId(marketId: any): boolean {
+  static isValidMarketId(marketId: unknown): boolean {
     return (
       CommonValidators.isValidString(marketId, 1, 256) &&
-      this.MARKET_ID_PATTERN.test(marketId)
+      this.MARKET_ID_PATTERN.test(marketId as string)
     );
   }
 
-  static isValidProviderId(providerId: any): boolean {
+  static isValidProviderId(providerId: unknown): boolean {
     return CommonValidators.isValidString(providerId, 1, 128);
   }
 
-  static isValidThreshold(threshold: any): boolean {
+  static isValidThreshold(threshold: unknown): boolean {
     return CommonValidators.isValidRatio(threshold);
   }
 
-  static isValidTimeframe(timeframe: any): boolean {
+  static isValidTimeframe(timeframe: unknown): boolean {
     return (
       CommonValidators.isValidPositiveNumber(timeframe) &&
-      timeframe > 0 &&
-      timeframe < this.MAX_TIMEFRAME
+      (timeframe as number) > 0 &&
+      (timeframe as number) < this.MAX_TIMEFRAME
     );
   }
 
-  isValid(config: any): boolean {
+  isValid(config: unknown): boolean {
     if (!CommonValidators.isValidObject(config)) return false;
     return this.validate(config).valid;
   }
 
-  validate(config: any): ValidationResult {
+  validate(config: unknown): ValidationResult {
     const errors: string[] = [];
 
     if (!CommonValidators.isValidObject(config)) {
@@ -48,9 +48,11 @@ export class ConfigurationValidator extends BaseValidator<any> {
     }
 
     if (config.providers && Array.isArray(config.providers)) {
-      config.providers.forEach((provider: any, index: number) => {
-        if (!ConfigurationValidator.isValidProviderId(provider.id)) {
-          errors.push(`Invalid provider ID at index ${index}`);
+      config.providers.forEach((provider: unknown, index: number) => {
+        if (typeof provider === 'object' && provider !== null && 'id' in provider) {
+          if (!ConfigurationValidator.isValidProviderId((provider as { id: unknown }).id)) {
+            errors.push(`Invalid provider ID at index ${index}`);
+          }
         }
       });
     }
@@ -61,8 +63,8 @@ export class ConfigurationValidator extends BaseValidator<any> {
     };
   }
 
-  sanitize(config: any): any | null {
+  sanitize(config: unknown): Record<string, unknown> | null {
     if (!CommonValidators.isValidObject(config)) return null;
-    return config;
+    return config as Record<string, unknown>;
   }
 }

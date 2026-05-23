@@ -3,7 +3,7 @@ import { BaseValidator, ExtendedValidationResult } from './BaseValidator';
 import { CommonValidators } from './commonValidators';
 
 export class ProviderHealthValidator extends BaseValidator<ProviderHealth> {
-  isValid(health: any): boolean {
+  isValid(health: unknown): boolean {
     if (!CommonValidators.isValidObject(health)) return false;
 
     return (
@@ -17,7 +17,7 @@ export class ProviderHealthValidator extends BaseValidator<ProviderHealth> {
     );
   }
 
-  validate(health: any): ExtendedValidationResult {
+  validate(health: unknown): ExtendedValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -57,7 +57,7 @@ export class ProviderHealthValidator extends BaseValidator<ProviderHealth> {
     };
   }
 
-  sanitize(health: any): ProviderHealth | null {
+  sanitize(health: unknown): ProviderHealth | null {
     if (!CommonValidators.isValidObject(health)) return null;
 
     const sanitized: ProviderHealth = {

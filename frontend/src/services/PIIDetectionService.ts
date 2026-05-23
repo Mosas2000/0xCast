@@ -1,7 +1,9 @@
+export type PIIValue = string | number | boolean | null | undefined;
+
 export interface PIIField {
   type: 'email' | 'phone' | 'address' | 'name' | 'ssn' | 'creditCard' | 'ipAddress' | 'walletAddress' | 'custom';
   field: string;
-  value: any;
+  value: PIIValue;
   sensitive: boolean;
 }
 
@@ -25,7 +27,7 @@ export class PIIDetectionService {
     'ipAddress', 'walletAddress', 'userId', 'username'
   ];
 
-  static detectPII(data: Record<string, any>): PIIDetectionResult {
+  static detectPII(data: Record<string, PIIValue>): PIIDetectionResult {
     const fields: PIIField[] = [];
 
     for (const [key, value] of Object.entries(data)) {
@@ -44,7 +46,7 @@ export class PIIDetectionService {
     };
   }
 
-  private static detectFieldPII(field: string, value: any): PIIField | null {
+  private static detectFieldPII(field: string, value: PIIValue): PIIField | null {
     const fieldLower = field.toLowerCase();
     const valueStr = String(value);
 
@@ -106,8 +108,8 @@ export class PIIDetectionService {
     }
   }
 
-  static sanitizeData(data: Record<string, any>): Record<string, any> {
-    const result: Record<string, any> = {};
+  static sanitizeData(data: Record<string, PIIValue>): Record<string, PIIValue> {
+    const result: Record<string, PIIValue> = {};
     const detection = this.detectPII(data);
 
     for (const [key, value] of Object.entries(data)) {
@@ -122,7 +124,7 @@ export class PIIDetectionService {
     return result;
   }
 
-  static validateConsent(data: Record<string, any>, hasConsent: boolean): boolean {
+  static validateConsent(data: Record<string, PIIValue>, hasConsent: boolean): boolean {
     const detection = this.detectPII(data);
     if (!detection.requiresConsent) {
       return true;

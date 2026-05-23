@@ -1,6 +1,15 @@
 import { GDPRComplianceService } from './GDPRComplianceService';
 import { SecureStorageService } from './SecureStorageService';
 
+export interface DeletionLogEntry {
+  userId: string;
+  scope: string;
+  reason: string | undefined;
+  deletedCount: number;
+  errorCount: number;
+  timestamp: number;
+}
+
 export interface DeletionRequest {
   userId: string;
   scope: 'all' | 'pii' | 'analytics' | 'marketing' | 'preferences';
@@ -165,7 +174,7 @@ export class DataDeletionService {
       if (typeof localStorage === 'undefined') return;
 
       const existing = localStorage.getItem(DELETION_LOG_KEY);
-      const log: any[] = existing ? JSON.parse(existing) : [];
+      const log: DeletionLogEntry[] = existing ? JSON.parse(existing) : [];
 
       log.push({
         userId: request.userId,
@@ -183,7 +192,7 @@ export class DataDeletionService {
     }
   }
 
-  static getDeletionLog(): any[] {
+  static getDeletionLog(): DeletionLogEntry[] {
     try {
       if (typeof localStorage === 'undefined') return [];
       const stored = localStorage.getItem(DELETION_LOG_KEY);
