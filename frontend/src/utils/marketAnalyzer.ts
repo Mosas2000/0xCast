@@ -254,7 +254,7 @@ export class MarketAnalyzer {
   }
 
   static detectPumpAndDump(trades: TradeUpdate[], timeWindow: number = 60000): boolean {
-    if (trades.length < 10) return false;
+    if (trades.length < 3) return false;
 
     const now = Date.now();
     const recentTrades = trades.filter((t) => now - t.timestamp <= timeWindow);

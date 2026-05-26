@@ -26,7 +26,7 @@ export function isValidationError(error: unknown): boolean {
   if (error instanceof Error) {
     return (
       error.name === 'ValidationError' ||
-      error.message.includes('validation')
+      error.message.toLowerCase().includes('validation')
     );
   }
   return false;

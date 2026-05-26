@@ -53,9 +53,11 @@ export class StorageErrorHandler {
   static getStorageSize(): number {
     try {
       let total = 0;
-      for (const key in localStorage) {
-        if (localStorage.hasOwnProperty(key)) {
-          total += localStorage[key].length + key.length;
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key !== null) {
+          const value = localStorage.getItem(key) ?? '';
+          total += key.length + value.length;
         }
       }
       return total;
@@ -74,11 +76,17 @@ export class StorageErrorHandler {
     const now = Date.now();
 
     try {
-      for (const key in localStorage) {
-        if (!localStorage.hasOwnProperty(key)) continue;
+      const keysToCheck: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key) keysToCheck.push(key);
+      }
 
+      for (const key of keysToCheck) {
         try {
-          const item = JSON.parse(localStorage[key]);
+          const raw = localStorage.getItem(key);
+          if (!raw) continue;
+          const item = JSON.parse(raw);
           if (item.timestamp && now - item.timestamp > maxAge) {
             localStorage.removeItem(key);
             cleaned++;

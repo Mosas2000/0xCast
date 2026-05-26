@@ -163,7 +163,7 @@ export function validateAccountLinkingPhone(phone: string): boolean {
 
 export function validateWalletAddress(address: string): boolean {
   if (address.startsWith('S')) {
-    return /^S[0-9A-Z]{33}$/.test(address);
+    return /^S[0-9A-Z]{38,40}$/.test(address);
   }
   return /^(0x)?[0-9a-fA-F]{40}$/.test(address);
 }

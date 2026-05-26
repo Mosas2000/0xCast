@@ -4,15 +4,15 @@ export class CommonValidators {
   }
 
   static isValidPositiveNumber(value: unknown): boolean {
-    return this.isValidNumber(value) && (value as number) >= 0;
+    return CommonValidators.isValidNumber(value) && (value as number) >= 0;
   }
 
   static isValidRatio(value: unknown): boolean {
-    return this.isValidNumber(value) && (value as number) >= 0 && (value as number) <= 1;
+    return CommonValidators.isValidNumber(value) && (value as number) >= 0 && (value as number) <= 1;
   }
 
   static isValidTimestamp(timestamp: unknown): boolean {
-    if (!this.isValidNumber(timestamp)) return false;
+    if (!CommonValidators.isValidNumber(timestamp)) return false;
     const now = Date.now();
     return (timestamp as number) > 0 && (timestamp as number) <= now + 1000;
   }

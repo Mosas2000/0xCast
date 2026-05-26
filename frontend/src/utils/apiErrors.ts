@@ -368,7 +368,11 @@ export class ValidationError extends ApiError {
  */
 export function isRetryableError(error: unknown): boolean {
   if (error instanceof ApiError) {
-    return error.retryable;
+    return error.retryable ||
+      error.code === ErrorCode.NETWORK_ERROR ||
+      error.code === ErrorCode.TIMEOUT_ERROR ||
+      error.code === ErrorCode.RATE_LIMIT_ERROR ||
+      error.code === ErrorCode.RPC_ERROR;
   }
   return false;
 }

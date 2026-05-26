@@ -125,7 +125,7 @@ export function getContractAddress(networkType: NetworkType): string {
  * Get contract name (same for all networks)
  */
 export function getContractName(): string {
-  return '0xcast-v1';
+  return 'market-core';
 }
 
 /**

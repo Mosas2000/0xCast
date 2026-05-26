@@ -5,8 +5,6 @@
  * All validators return an object with isValid boolean and optional error message.
  */
 
-import i18n from '../i18n/config';
-
 export interface ValidationResult {
   isValid: boolean;
   error?: string;
@@ -37,24 +35,24 @@ export function validateAmount(
   const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
 
   if (isNaN(numAmount)) {
-    return { isValid: false, error: i18n.t('errors:validation.invalidNumber'), code: 'ERR_INVALID_NUMBER' };
+    return { isValid: false, error: 'Please enter a valid number', code: 'ERR_INVALID_NUMBER' };
   }
 
   if (numAmount <= 0) {
-    return { isValid: false, error: i18n.t('errors:validation.nonPositiveAmount'), code: 'ERR_NON_POSITIVE_AMOUNT' };
+    return { isValid: false, error: 'Amount must be greater than zero', code: 'ERR_NON_POSITIVE_AMOUNT' };
   }
 
   if (numAmount < min) {
-    return { isValid: false, error: i18n.t('errors:validation.minStakeRequired', { min }), code: 'ERR_MIN_STAKE_REQUIRED' };
+    return { isValid: false, error: `Minimum amount is ${min} STX`, code: 'ERR_MIN_STAKE_REQUIRED' };
   }
 
   if (numAmount > max) {
-    return { isValid: false, error: i18n.t('errors:validation.maxStakeExceeded', { max }), code: 'ERR_MAX_STAKE_EXCEEDED' };
+    return { isValid: false, error: `Maximum amount is ${max} STX`, code: 'ERR_MAX_STAKE_EXCEEDED' };
   }
 
   const decimalPlaces = (amount.toString().split('.')[1] || '').length;
   if (decimalPlaces > 6) {
-    return { isValid: false, error: i18n.t('errors:validation.tooManyDecimals', { count: 6 }), code: 'ERR_TOO_MANY_DECIMALS' };
+    return { isValid: false, error: 'Maximum 6 decimal places allowed', code: 'ERR_TOO_MANY_DECIMALS' };
   }
 
   return { isValid: true };

@@ -171,3 +171,52 @@ export function createRetryDecorator(config: Partial<RetryConfig> = {}) {
     return descriptor;
   };
 }
+
+export async function retryWithBackoff<T>(
+  operation: () => Promise<T>,
+  options: {
+    maxRetries?: number;
+    initialDelay?: number;
+    maxDelay?: number;
+    jitter?: boolean;
+    shouldRetry?: (error: Error) => boolean;
+    onRetry?: (error: Error, attempt: number) => void;
+  } = {}
+): Promise<T> {
+  const maxRetries = options.maxRetries ?? 3;
+  const initialDelay = options.initialDelay ?? 1000;
+  const maxDelay = options.maxDelay ?? 30000;
+  const jitter = options.jitter ?? false;
+
+  let attempt = 0;
+
+  while (true) {
+    try {
+      return await operation();
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      attempt++;
+
+      const hasRetriesLeft = attempt <= maxRetries;
+      const isRetryable = options.shouldRetry 
+        ? options.shouldRetry(error) 
+        : (error instanceof ApiError ? isRetryableError(error) : true);
+
+      if (!hasRetriesLeft || !isRetryable) {
+        throw error;
+      }
+
+      let delay = initialDelay * Math.pow(2, attempt - 1);
+      if (jitter) {
+        delay = Math.random() * delay;
+      }
+      delay = Math.min(delay, maxDelay);
+
+      if (options.onRetry) {
+        options.onRetry(error, attempt);
+      }
+
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}
