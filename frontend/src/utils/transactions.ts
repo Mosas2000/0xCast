@@ -4,7 +4,6 @@
  * Provides types and functions for tracking transaction status on Stacks blockchain.
  */
 
-import { getExplorerUrls } from '@/config/network';
 import { getTransactionExplorerUrl, getAddressExplorerUrl } from './explorerLinks';
 import type { NetworkType } from '@/types/network';
 import { GDPRComplianceService } from '@/services/GDPRComplianceService';
@@ -62,7 +61,7 @@ export function getTransactionHistory(): Transaction[] {
 
 export async function getTransactionHistorySecure(): Promise<Transaction[]> {
   try {
-    const stored = await SecureStorageV2Service.getItem<Transaction[]>(TX_HISTORY_KEY);
+    const stored = await SecureStorageV2Service.getItem<any>(TX_HISTORY_KEY) as Transaction[] | null;
     if (stored) return stored;
     return getTransactionHistory();
   } catch {
@@ -75,7 +74,7 @@ export async function getTransactionHistorySecure(): Promise<Transaction[]> {
  */
 export function saveTransaction(tx: Transaction): void {
   const consentCheck = GDPRComplianceService.checkConsentForStorage(
-    { transaction: tx },
+    { transaction: tx as any },
     'necessary'
   );
 
@@ -90,7 +89,7 @@ export function saveTransaction(tx: Transaction): void {
 
   localStorage.setItem(TX_HISTORY_KEY, JSON.stringify(limitedHistory));
 
-  SecureStorageV2Service.setItem(TX_HISTORY_KEY, limitedHistory, {
+  SecureStorageV2Service.setItem(TX_HISTORY_KEY, limitedHistory as any, {
     encrypt: true,
     category: 'necessary',
     expiresIn: 365 * 24 * 60 * 60 * 1000,
@@ -131,7 +130,7 @@ export function updateTransactionStatus(
     };
     localStorage.setItem(TX_HISTORY_KEY, JSON.stringify(history));
 
-    SecureStorageV2Service.setItem(TX_HISTORY_KEY, history, {
+    SecureStorageV2Service.setItem(TX_HISTORY_KEY, history as any, {
       encrypt: true,
       category: 'necessary',
       expiresIn: 365 * 24 * 60 * 60 * 1000,
