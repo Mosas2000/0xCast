@@ -27,7 +27,7 @@ import { useState, useCallback } from 'react';
 import { useContract } from './useContract';
 import type { CreateMarketFormData } from '@/types/market';
 import { useContractPause } from './useContractPause';
-import { createRateLimitMiddleware } from '../middleware/rateLimitMiddleware';
+import { createRateLimitMiddleware } from '../middleware/rbacMiddleware';
 import { useWallet } from '@/components/WalletProvider';
 import { parseContractError, getUserFriendlyContractError } from '@/utils/contractErrorHandler';
 import { errorLoggingService } from '@/services/ErrorLoggingService';
@@ -77,12 +77,16 @@ export function useMarketCreation(): UseMarketCreationReturn {
       setState(prev => ({ ...prev, isCreating: true, error: null }));
 
       try {
+        let txId: string | null = null;
         const rateLimitMiddleware = createRateLimitMiddleware(address);
         
         await rateLimitMiddleware(
           'create-market',
           async () => {
-            await createMarketContract(data.question, data.durationBlocks);
+            const result = await createMarketContract(data.question, data.durationBlocks, Number(data.category));
+            if (result) {
+              txId = result;
+            }
           },
           {
             onBlocked: (cooldownMs) => {
@@ -95,6 +99,7 @@ export function useMarketCreation(): UseMarketCreationReturn {
           ...prev,
           isCreating: false,
           success: true,
+          txId,
           error: null,
         }));
       } catch (error) {

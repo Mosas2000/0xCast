@@ -286,3 +286,41 @@ export interface Pool {
   totalShares: number;
   fee: number;
 }
+
+export const MARKET_CATEGORIES = {
+  CRYPTO: 1,
+  SPORTS: 2,
+  POLITICS: 3,
+  ECONOMICS: 4,
+  OTHER: 5,
+} as const;
+
+export type MarketCategory = typeof MARKET_CATEGORIES[keyof typeof MARKET_CATEGORIES];
+
+export const MARKET_DURATIONS = {
+  ONE_DAY: 144,
+  THREE_DAYS: 432,
+  ONE_WEEK: 1008,
+  ONE_MONTH: 4320,
+} as const;
+
+export interface CATEGORY_METADATA_TYPE {
+  id: MarketCategory;
+  label: string;
+  icon: string;
+}
+
+export const CATEGORY_METADATA: Record<MarketCategory, CATEGORY_METADATA_TYPE> = {
+  [MARKET_CATEGORIES.CRYPTO]: { id: MARKET_CATEGORIES.CRYPTO, label: 'Crypto', icon: '🪙' },
+  [MARKET_CATEGORIES.SPORTS]: { id: MARKET_CATEGORIES.SPORTS, label: 'Sports', icon: '⚽' },
+  [MARKET_CATEGORIES.POLITICS]: { id: MARKET_CATEGORIES.POLITICS, label: 'Politics', icon: '🗳️' },
+  [MARKET_CATEGORIES.ECONOMICS]: { id: MARKET_CATEGORIES.ECONOMICS, label: 'Economics', icon: '📈' },
+  [MARKET_CATEGORIES.OTHER]: { id: MARKET_CATEGORIES.OTHER, label: 'Other', icon: '✨' },
+};
+
+export interface CreateMarketFormData {
+  question: string;
+  category: MarketCategory;
+  durationBlocks: number;
+  durationPreset?: string;
+}

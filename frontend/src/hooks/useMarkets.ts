@@ -24,6 +24,7 @@ const REFRESH_INTERVAL_MS = 30000;
 export function useMarkets() {
   const { network, stacksNetwork } = useNetwork();
   const [markets, setMarkets] = useState<Market[]>([]);
+  const [totalMarketsCount, setTotalMarketsCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -35,13 +36,13 @@ export function useMarkets() {
     if (!isMountedRef.current) {
       return;
     }
-    
+
     // Cancel any in-flight request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     abortControllerRef.current = new AbortController();
-    
+
     try {
       // Use the network from context
       const currentNetwork = stacksNetwork;
@@ -60,6 +61,8 @@ export function useMarkets() {
       // Check if component is still mounted before updating state
       if (!isMountedRef.current) return;
 
+      setTotalMarketsCount(totalMarkets);
+
       if (totalMarkets === 0) {
         setMarkets([]);
         setIsLoading(false);
@@ -67,7 +70,10 @@ export function useMarkets() {
       }
 
       const marketPromises = [];
-      for (let i = 0; i < totalMarkets; i++) {
+      const fetchLimit = 20; // Safe limit to prevent RPC rate limits and browser crashes
+      const start = Math.max(0, totalMarkets - fetchLimit);
+
+      for (let i = start; i < totalMarkets; i++) {
         marketPromises.push(
           fetchCallReadOnlyFunction({
             network: currentNetwork,
@@ -81,27 +87,28 @@ export function useMarkets() {
       }
 
       const results = await Promise.all(marketPromises);
-      
+
       // Check if component is still mounted before processing results
       if (!isMountedRef.current) return;
-      
+
       const fetchedMarkets: Market[] = [];
-      
+
       results.forEach((result, index) => {
         const jsonResult = cvToJSON(result);
         if (jsonResult.type === 'some' && jsonResult.value) {
           try {
-            const marketData = parseMarketData(index, jsonResult.value);
+            const marketId = start + index;
+            const marketData = parseMarketData(marketId, jsonResult.value);
             fetchedMarkets.push(marketData);
           } catch (err) {
-            console.error(`Error parsing market ${index}:`, err);
+            console.error(`Error parsing market ${start + index}:`, err);
           }
         }
       });
 
       // Final mount check before state updates
       if (!isMountedRef.current) return;
-      
+
       setMarkets(fetchedMarkets);
       setError(null);
     } catch (err) {
@@ -125,27 +132,27 @@ export function useMarkets() {
   useEffect(() => {
     // Mark component as mounted
     isMountedRef.current = true;
-    
+
     // Reset state on network change
     setIsLoading(true);
     setMarkets([]);
     setError(null);
-    
+
     fetchMarkets();
-    
+
     // Auto-refresh at configured interval
     intervalRef.current = setInterval(fetchMarkets, REFRESH_INTERVAL_MS);
-    
+
     return () => {
       // Mark component as unmounted before cleanup
       isMountedRef.current = false;
-      
+
       // Clear interval
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
-      
+
       // Abort any in-flight requests
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
@@ -154,10 +161,11 @@ export function useMarkets() {
     };
   }, [fetchMarkets, network]);
 
-  return { 
-    markets, 
-    isLoading, 
-    error, 
+  return {
+    markets,
+    totalMarketsCount,
+    isLoading,
+    error,
     refetch: fetchMarkets,
     // Expose current network for debugging
     currentNetwork: network,
