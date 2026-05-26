@@ -590,7 +590,7 @@ export async function getMarketCount() {
   const contract = getContract(CONTRACT_NAMES.MARKET_CORE);
   const apiUrl = getNodeUrl();
 
-  const url = `${apiUrl}/v2/contracts/call-read/${contract.address}/${contract.name}/get-market-count`;
+  const url = `${apiUrl}/v2/contracts/call-read/${contract.address}/${contract.name}/get-market-counter`;
 
   try {
     const response = await fetch(url, {
