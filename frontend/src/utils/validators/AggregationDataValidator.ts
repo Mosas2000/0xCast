@@ -1,4 +1,4 @@
-import { AggregatedPrice } from '@/types/oracle';
+import { AggregatedPrice, OraclePrice } from '@/types/oracle';
 import { BaseValidator, ValidationResult } from './BaseValidator';
 import { CommonValidators } from './commonValidators';
 
@@ -44,16 +44,26 @@ export class AggregationDataValidator extends BaseValidator<AggregatedPrice> {
   sanitize(price: unknown): AggregatedPrice | null {
     if (!CommonValidators.isValidObject(price)) return null;
 
+    const p = price as Record<string, unknown>;
     const sanitized: AggregatedPrice = {
-      value: CommonValidators.sanitizeNumber(price.value, 0, 0),
-      timestamp: CommonValidators.sanitizeTimestamp(price.timestamp),
-      sources: CommonValidators.sanitizeArray<string>(
-        price.sources,
-        (s: unknown) => typeof s === 'string'
+      value: CommonValidators.sanitizeNumber(p.value, 0, 0),
+      timestamp: CommonValidators.sanitizeTimestamp(p.timestamp),
+      sources: CommonValidators.sanitizeArray<OraclePrice>(
+        p.sources,
+        (s: unknown) => {
+          if (!CommonValidators.isValidObject(s)) return false;
+          const src = s as Record<string, unknown>;
+          return (
+            CommonValidators.isValidPositiveNumber(src.value) &&
+            CommonValidators.isValidTimestamp(src.timestamp) &&
+            CommonValidators.isValidString(src.source) &&
+            CommonValidators.isValidRatio(src.confidence)
+          );
+        }
       ),
-      confidence: CommonValidators.sanitizeNumber(price.confidence, 0.5, 0, 1),
-      consensusReached: Boolean(price.consensusReached),
-      method: CommonValidators.sanitizeString(price.method, 'unknown', 64),
+      confidence: CommonValidators.sanitizeNumber(p.confidence, 0.5, 0, 1),
+      consensusReached: Boolean(p.consensusReached),
+      method: CommonValidators.sanitizeString(p.method, 'unknown', 64),
     };
 
     if (sanitized.sources.length === 0) {

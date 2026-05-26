@@ -41,8 +41,9 @@ export class ConfigurationValidator extends BaseValidator<Record<string, unknown
       return { valid: false, errors };
     }
 
-    if (config.consensus && config.consensus.threshold !== undefined) {
-      if (!ConfigurationValidator.isValidThreshold(config.consensus.threshold)) {
+    const c = config as Record<string, any>;
+    if (c.consensus && typeof c.consensus === 'object' && c.consensus.threshold !== undefined) {
+      if (!ConfigurationValidator.isValidThreshold(c.consensus.threshold)) {
         errors.push('Invalid consensus threshold');
       }
     }
