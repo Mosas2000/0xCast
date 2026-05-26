@@ -126,7 +126,7 @@ export const validateTransactionAmount = (microAmount: bigint): { isValid: boole
 
 // Get OXC token contract configuration
 const getTokenContract = () => {
-  return getContract(CONTRACT_NAMES.OXCAST);
+  return getContract(CONTRACT_NAMES.GOVERNANCE_TOKEN);
 };
 
 // Maximum memo length per SIP-010 standard
@@ -172,12 +172,12 @@ export function useContract() {
   
   // Get token contract for current network
   const tokenContract = useMemo(() => {
-    return getContract(CONTRACT_NAMES.OXCAST);
+    return getContract(CONTRACT_NAMES.GOVERNANCE_TOKEN);
   }, []);
 
   // Create a new prediction market
   const createMarket = useCallback(
-    async (question: string, durationBlocks: number) => {
+    async (question: string, durationBlocks: number, category: number = 5) => {
       if (!isConnected || !address) {
         const error = new Error('Wallet not connected');
         errorLoggingService.logError(error, {
@@ -188,41 +188,63 @@ export function useContract() {
       }
       
       try {
-        await openContractCall({
-          network: stacksNetwork,
-          contractAddress: tokenContract.address,
-          contractName: tokenContract.name,
-          functionName: 'create-market',
-          functionArgs: [
-            stringAsciiCV(question),
-            uintCV(durationBlocks),
-          ],
-          postConditionMode: PostConditionMode.Deny,
-          postConditions: [],
-          onFinish: (data) => {
-            console.log('Market created:', data);
-          },
-          onCancel: () => {
-            const cancelError = new Error('Transaction cancelled by user');
-            errorLoggingService.logError(cancelError, {
-              component: 'useContract',
-              action: 'createMarket',
-              additionalData: { question, durationBlocks },
-            });
-            throw cancelError;
-          },
+        // Fetch current block height from the Stacks API
+        const infoResponse = await fetch(`${getNodeUrl()}/v2/info`);
+        const infoData = await infoResponse.json();
+        const currentBlock = Number(infoData.stacks_tip_height || 0);
+
+        if (currentBlock <= 0) {
+          throw new Error('Could not fetch current block height from Stacks node API');
+        }
+
+        const endDate = currentBlock + durationBlocks;
+        // 144 blocks represents ~24 hours as a standard resolution window
+        const resolutionDate = endDate + 144;
+
+        const marketContract = getContract(CONTRACT_NAMES.MARKET_CORE);
+
+        const txId = await new Promise<string>((resolve, reject) => {
+          openContractCall({
+            network: stacksNetwork,
+            contractAddress: marketContract.address,
+            contractName: marketContract.name,
+            functionName: 'create-market',
+            functionArgs: [
+              stringAsciiCV(question),
+              uintCV(endDate),
+              uintCV(resolutionDate),
+              uintCV(category),
+            ],
+            postConditionMode: PostConditionMode.Deny,
+            postConditions: [],
+            onFinish: (data) => {
+              console.log('Market created:', data);
+              resolve(data.txId);
+            },
+            onCancel: () => {
+              const cancelError = new Error('Transaction cancelled by user');
+              errorLoggingService.logError(cancelError, {
+                component: 'useContract',
+                action: 'createMarket',
+                additionalData: { question, durationBlocks, category },
+              });
+              reject(cancelError);
+            },
+          });
         });
+        return txId;
       } catch (error) {
-        const contractError = parseContractError(error, tokenContract.name, 'create-market');
+        const marketContract = getContract(CONTRACT_NAMES.MARKET_CORE);
+        const contractError = parseContractError(error, marketContract.name, 'create-market');
         errorLoggingService.logError(contractError, {
           component: 'useContract',
           action: 'createMarket',
-          additionalData: { question, durationBlocks },
+          additionalData: { question, durationBlocks, category },
         });
         throw contractError;
       }
     },
-    [isConnected, address, stacksNetwork, tokenContract]
+    [isConnected, address, stacksNetwork]
   );
 
   // Place a prediction (YES or NO)
@@ -237,41 +259,45 @@ export function useContract() {
         throw error;
       }
 
-      const outcomeValue = outcome === 'yes' ? 1 : 2;
-
       // Post condition: user sends STX
       const postConditions = [
         Pc.principal(address).willSendEq(amountMicroStx).ustx(),
       ];
 
+      const marketContract = getContract(CONTRACT_NAMES.MARKET_CORE);
+      const functionName = outcome === 'yes' ? 'place-yes-stake' : 'place-no-stake';
+
       try {
-        await openContractCall({
-          network: stacksNetwork,
-          contractAddress: tokenContract.address,
-          contractName: tokenContract.name,
-          functionName: 'predict',
-          functionArgs: [
-            uintCV(marketId),
-            uintCV(outcomeValue),
-            uintCV(safeBigIntToNumber(amountMicroStx, 'amountMicroStx')),
-          ],
-          postConditionMode: PostConditionMode.Deny,
-          postConditions,
-          onFinish: (data) => {
-            console.log('Prediction placed:', data);
-          },
-          onCancel: () => {
-            const cancelError = new Error('Transaction cancelled by user');
-            errorLoggingService.logError(cancelError, {
-              component: 'useContract',
-              action: 'predict',
-              additionalData: { marketId, outcome, amountMicroStx: amountMicroStx.toString() },
-            });
-            throw cancelError;
-          },
+        const txId = await new Promise<string>((resolve, reject) => {
+          openContractCall({
+            network: stacksNetwork,
+            contractAddress: marketContract.address,
+            contractName: marketContract.name,
+            functionName,
+            functionArgs: [
+              uintCV(marketId),
+              uintCV(safeBigIntToNumber(amountMicroStx, 'amountMicroStx')),
+            ],
+            postConditionMode: PostConditionMode.Deny,
+            postConditions,
+            onFinish: (data) => {
+              console.log('Prediction placed:', data);
+              resolve(data.txId);
+            },
+            onCancel: () => {
+              const cancelError = new Error('Transaction cancelled by user');
+              errorLoggingService.logError(cancelError, {
+                component: 'useContract',
+                action: 'predict',
+                additionalData: { marketId, outcome, amountMicroStx: amountMicroStx.toString() },
+              });
+              reject(cancelError);
+            },
+          });
         });
+        return txId;
       } catch (error) {
-        const contractError = parseContractError(error, tokenContract.name, 'predict');
+        const contractError = parseContractError(error, marketContract.name, functionName);
         errorLoggingService.logError(contractError, {
           component: 'useContract',
           action: 'predict',
@@ -280,7 +306,7 @@ export function useContract() {
         throw contractError;
       }
     },
-    [isConnected, address, stacksNetwork, tokenContract]
+    [isConnected, address, stacksNetwork]
   );
 
   // Claim winnings from a resolved market
@@ -295,30 +321,36 @@ export function useContract() {
         throw error;
       }
 
+      const marketContract = getContract(CONTRACT_NAMES.MARKET_CORE);
+
       try {
-        await openContractCall({
-          network: stacksNetwork,
-          contractAddress: tokenContract.address,
-          contractName: tokenContract.name,
-          functionName: 'claim-winnings',
-          functionArgs: [uintCV(marketId)],
-          postConditionMode: PostConditionMode.Allow,
-          postConditions: [],
-          onFinish: (data) => {
-            console.log('Winnings claimed:', data);
-          },
-          onCancel: () => {
-            const cancelError = new Error('Transaction cancelled by user');
-            errorLoggingService.logError(cancelError, {
-              component: 'useContract',
-              action: 'claimWinnings',
-              additionalData: { marketId },
-            });
-            throw cancelError;
-          },
+        const txId = await new Promise<string>((resolve, reject) => {
+          openContractCall({
+            network: stacksNetwork,
+            contractAddress: marketContract.address,
+            contractName: marketContract.name,
+            functionName: 'claim-winnings',
+            functionArgs: [uintCV(marketId)],
+            postConditionMode: PostConditionMode.Allow,
+            postConditions: [],
+            onFinish: (data) => {
+              console.log('Winnings claimed:', data);
+              resolve(data.txId);
+            },
+            onCancel: () => {
+              const cancelError = new Error('Transaction cancelled by user');
+              errorLoggingService.logError(cancelError, {
+                component: 'useContract',
+                action: 'claimWinnings',
+                additionalData: { marketId },
+              });
+              reject(cancelError);
+            },
+          });
         });
+        return txId;
       } catch (error) {
-        const contractError = parseContractError(error, tokenContract.name, 'claim-winnings');
+        const contractError = parseContractError(error, marketContract.name, 'claim-winnings');
         errorLoggingService.logError(contractError, {
           component: 'useContract',
           action: 'claimWinnings',
@@ -327,7 +359,7 @@ export function useContract() {
         throw contractError;
       }
     },
-    [isConnected, address, stacksNetwork, tokenContract]
+    [isConnected, address, stacksNetwork]
   );
 
   // Stake OXC tokens
@@ -347,27 +379,31 @@ export function useContract() {
       ];
 
       try {
-        await openContractCall({
-          network: stacksNetwork,
-          contractAddress: tokenContract.address,
-          contractName: tokenContract.name,
-          functionName: 'stake',
-          functionArgs: [uintCV(safeBigIntToNumber(amountMicroOxc, 'amountMicroOxc'))],
-          postConditionMode: PostConditionMode.Deny,
-          postConditions,
-          onFinish: (data) => {
-            console.log('Tokens staked:', data);
-          },
-          onCancel: () => {
-            const cancelError = new Error('Transaction cancelled by user');
-            errorLoggingService.logError(cancelError, {
-              component: 'useContract',
-              action: 'stakeTokens',
-              additionalData: { amountMicroOxc: amountMicroOxc.toString() },
-            });
-            throw cancelError;
-          },
+        const txId = await new Promise<string>((resolve, reject) => {
+          openContractCall({
+            network: stacksNetwork,
+            contractAddress: tokenContract.address,
+            contractName: tokenContract.name,
+            functionName: 'stake',
+            functionArgs: [uintCV(safeBigIntToNumber(amountMicroOxc, 'amountMicroOxc'))],
+            postConditionMode: PostConditionMode.Deny,
+            postConditions,
+            onFinish: (data) => {
+              console.log('Tokens staked:', data);
+              resolve(data.txId);
+            },
+            onCancel: () => {
+              const cancelError = new Error('Transaction cancelled by user');
+              errorLoggingService.logError(cancelError, {
+                component: 'useContract',
+                action: 'stakeTokens',
+                additionalData: { amountMicroOxc: amountMicroOxc.toString() },
+              });
+              reject(cancelError);
+            },
+          });
         });
+        return txId;
       } catch (error) {
         const contractError = parseContractError(error, tokenContract.name, 'stake');
         errorLoggingService.logError(contractError, {
@@ -394,27 +430,31 @@ export function useContract() {
       }
 
       try {
-        await openContractCall({
-          network: stacksNetwork,
-          contractAddress: tokenContract.address,
-          contractName: tokenContract.name,
-          functionName: 'unstake',
-          functionArgs: [uintCV(safeBigIntToNumber(amountMicroOxc, 'amountMicroOxc'))],
-          postConditionMode: PostConditionMode.Allow,
-          postConditions: [],
-          onFinish: (data) => {
-            console.log('Tokens unstaked:', data);
-          },
-          onCancel: () => {
-            const cancelError = new Error('Transaction cancelled by user');
-            errorLoggingService.logError(cancelError, {
-              component: 'useContract',
-              action: 'unstakeTokens',
-              additionalData: { amountMicroOxc: amountMicroOxc.toString() },
-            });
-            throw cancelError;
-          },
+        const txId = await new Promise<string>((resolve, reject) => {
+          openContractCall({
+            network: stacksNetwork,
+            contractAddress: tokenContract.address,
+            contractName: tokenContract.name,
+            functionName: 'unstake',
+            functionArgs: [uintCV(safeBigIntToNumber(amountMicroOxc, 'amountMicroOxc'))],
+            postConditionMode: PostConditionMode.Allow,
+            postConditions: [],
+            onFinish: (data) => {
+              console.log('Tokens unstaked:', data);
+              resolve(data.txId);
+            },
+            onCancel: () => {
+              const cancelError = new Error('Transaction cancelled by user');
+              errorLoggingService.logError(cancelError, {
+                component: 'useContract',
+                action: 'unstakeTokens',
+                additionalData: { amountMicroOxc: amountMicroOxc.toString() },
+              });
+              reject(cancelError);
+            },
+          });
         });
+        return txId;
       } catch (error) {
         const contractError = parseContractError(error, tokenContract.name, 'unstake');
         errorLoggingService.logError(contractError, {
@@ -471,27 +511,31 @@ export function useContract() {
       ];
 
       try {
-        await openContractCall({
-          network: stacksNetwork,
-          contractAddress: tokenContract.address,
-          contractName: tokenContract.name,
-          functionName: 'transfer',
-          functionArgs: functionArgs,
-          postConditionMode: PostConditionMode.Deny,
-          postConditions,
-          onFinish: (data) => {
-            console.log('Tokens transferred:', data);
-          },
-          onCancel: () => {
-            const cancelError = new Error('Transaction cancelled by user');
-            errorLoggingService.logError(cancelError, {
-              component: 'useContract',
-              action: 'transferTokens',
-              additionalData: { recipient, amountMicroOxc: amountMicroOxc.toString(), memo },
-            });
-            throw cancelError;
-          },
+        const txId = await new Promise<string>((resolve, reject) => {
+          openContractCall({
+            network: stacksNetwork,
+            contractAddress: tokenContract.address,
+            contractName: tokenContract.name,
+            functionName: 'transfer',
+            functionArgs: functionArgs,
+            postConditionMode: PostConditionMode.Deny,
+            postConditions,
+            onFinish: (data) => {
+              console.log('Tokens transferred:', data);
+              resolve(data.txId);
+            },
+            onCancel: () => {
+              const cancelError = new Error('Transaction cancelled by user');
+              errorLoggingService.logError(cancelError, {
+                component: 'useContract',
+                action: 'transferTokens',
+                additionalData: { recipient, amountMicroOxc: amountMicroOxc.toString(), memo },
+              });
+              reject(cancelError);
+            },
+          });
         });
+        return txId;
       } catch (error) {
         const contractError = parseContractError(error, tokenContract.name, 'transfer');
         errorLoggingService.logError(contractError, {
@@ -520,7 +564,7 @@ export function useContract() {
 
 // Read-only contract calls (no wallet needed)
 export async function getMarket(marketId: number) {
-  const contract = getTokenContract();
+  const contract = getContract(CONTRACT_NAMES.MARKET_CORE);
   const apiUrl = getNodeUrl();
 
   const url = `${apiUrl}/v2/contracts/call-read/${contract.address}/${contract.name}/get-market`;
@@ -543,7 +587,7 @@ export async function getMarket(marketId: number) {
 }
 
 export async function getMarketCount() {
-  const contract = getTokenContract();
+  const contract = getContract(CONTRACT_NAMES.MARKET_CORE);
   const apiUrl = getNodeUrl();
 
   const url = `${apiUrl}/v2/contracts/call-read/${contract.address}/${contract.name}/get-market-count`;
