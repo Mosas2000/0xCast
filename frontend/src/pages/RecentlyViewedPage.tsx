@@ -9,6 +9,7 @@ export function RecentlyViewedPage() {
   const { markets, isLoading, error, refetch } = useMarkets();
   const { entries, count, clearRecentlyViewed } = useRecentlyViewed();
 
+
   const recentlyViewedMarkets = useMemo(() => {
     const marketById = new Map(markets.map((market) => [market.id, market]));
     return entries

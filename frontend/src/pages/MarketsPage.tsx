@@ -8,9 +8,10 @@ import { MarketCard } from '@/components/MarketCard';
 import { MarketFilter } from '@/components/MarketFilter';
 import { MarketRecommendations } from '@/components/MarketRecommendations';
 import { getCategoryConfig, CATEGORIES, MarketCategory } from '@/utils/marketCategories';
+import { formatStx } from '@/utils/helpers';
 
 export function MarketsPage() {
-  const { markets, isLoading, error, refetch } = useMarkets();
+  const { markets, totalMarketsCount, isLoading, error, refetch } = useMarkets();
   const { signal, source, isSocketConnected } = useRealtimeSignal({ enabled: true });
   const {
     filteredMarkets,
@@ -21,6 +22,7 @@ export function MarketsPage() {
     timeRange,
     volumeRange,
     onlyWatchlist,
+    isSearching,
     recentSearches,
     setCategory,
     setSortOption,
@@ -39,7 +41,7 @@ export function MarketsPage() {
   const handleSavePreset = () => {
     const name = prompt('Enter a name for this filter preset:');
     if (!name) return;
-    
+
     savePreset({
       name,
       filters: {
@@ -73,7 +75,7 @@ export function MarketsPage() {
             <h1 style={{ fontSize: 36, fontWeight: 700, color: '#fff', margin: 0 }}>
               Markets
             </h1>
-            <Link 
+            <Link
               to="/create-market"
               style={{
                 padding: '12px 24px',
@@ -121,13 +123,21 @@ export function MarketsPage() {
           </p>
         </div>
 
-        {/* Market Stats Summary */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
           gap: 24,
           marginBottom: 48
         }}>
+          <div style={{
+            padding: '24px',
+            background: '#111',
+            border: '1px solid #262626',
+            borderRadius: 16,
+          }}>
+            <div style={{ fontSize: 14, color: '#737373', marginBottom: 8, fontWeight: 500 }}>TOTAL MARKETS</div>
+            <div style={{ fontSize: 32, fontWeight: 700, color: '#fff' }}>{totalMarketsCount}</div>
+          </div>
           <div style={{
             padding: '24px',
             background: '#111',
@@ -154,25 +164,25 @@ export function MarketsPage() {
           }}>
             <div style={{ fontSize: 14, color: '#737373', marginBottom: 8, fontWeight: 500 }}>TOTAL VOLUME</div>
             <div style={{ fontSize: 32, fontWeight: 700, color: '#3B82F6' }}>
-              {Math.round(markets.reduce((acc, m) => acc + m.totalYesStake + m.totalNoStake, 0)).toLocaleString()} STX
+              {formatStx(markets.reduce((acc, m) => acc + m.totalYesStake + m.totalNoStake, 0), 2)}
             </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div style={{ 
-          display: 'flex', 
+        <div style={{
+          display: 'flex',
           flexDirection: 'column',
-          gap: 20, 
+          gap: 20,
           marginBottom: 48
         }}>
           {/* Search */}
           <div style={{ position: 'relative', maxWidth: 500 }}>
             <svg
-              style={{ 
-                position: 'absolute', 
-                left: 16, 
-                top: '50%', 
+              style={{
+                position: 'absolute',
+                left: 16,
+                top: '50%',
                 transform: 'translateY(-50%)',
                 width: 20,
                 height: 20,
@@ -245,7 +255,7 @@ export function MarketsPage() {
                   <span>{preset.icon || '🔖'}</span>
                   <span>{preset.name}</span>
                 </button>
-                
+
                 {/* Delete button only for custom presets (not default ones) */}
                 {!['trending', 'new', 'ending'].includes(preset.id) && (
                   <button
@@ -371,23 +381,23 @@ export function MarketsPage() {
         )}
 
         {/* Category Quick Filter Chips */}
-        <div style={{ 
-          display: 'flex', 
-          gap: 10, 
-          marginBottom: 24, 
+        <div style={{
+          display: 'flex',
+          gap: 10,
+          marginBottom: 24,
           overflowX: 'auto',
           paddingBottom: 8,
           scrollbarWidth: 'none',
           msOverflowStyle: 'none'
         }}>
-          {CATEGORIES.filter(cat => 
+          {CATEGORIES.filter(cat =>
             cat.value === MarketCategory.ALL || counts.byCategory[cat.value] > 0
           ).map((cat) => {
             const isSelected = category === cat.value;
-            const count = cat.value === MarketCategory.ALL 
-              ? counts.all 
+            const count = cat.value === MarketCategory.ALL
+              ? counts.all
               : counts.byCategory[cat.value];
-            
+
             return (
               <button
                 key={cat.value}
@@ -426,10 +436,10 @@ export function MarketsPage() {
 
         {/* Active filters indicator */}
         {(category !== 'all' || searchQuery) && (
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 12, 
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
             marginBottom: 24,
             flexWrap: 'wrap'
           }}>
@@ -552,7 +562,7 @@ export function MarketsPage() {
             color: '#f87171'
           }}>
             <p>{error}</p>
-            <button 
+            <button
               onClick={refetch}
               style={{
                 marginTop: 12,
@@ -634,14 +644,14 @@ export function MarketsPage() {
               fontSize: 32
             }}>
               {category !== 'all' ? activeCategory.icon : '🔍'}
-            </div>              
+            </div>
             <h3 style={{ fontSize: 24, fontWeight: 600, color: '#fff', marginBottom: 12 }}>
-              {category !== 'all' 
+              {category !== 'all'
                 ? `No ${activeCategory.label} Markets`
                 : 'No markets found'}
             </h3>
             <p style={{ fontSize: 16, color: '#737373', marginBottom: 32 }}>
-              {searchQuery 
+              {searchQuery
                 ? `No markets matching "${searchQuery}" in ${category !== 'all' ? activeCategory.label : 'any category'}`
                 : category !== 'all'
                   ? `There are no ${activeCategory.label.toLowerCase()} markets at the moment`
@@ -682,7 +692,7 @@ export function MarketsPage() {
               </div>
             ) : (
               <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-                <Link 
+                <Link
                   to="/create-market"
                   style={{
                     padding: '14px 28px',

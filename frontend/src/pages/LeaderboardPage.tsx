@@ -181,7 +181,7 @@ export function LeaderboardPage() {
                     {/* Total Volume */}
                     <td className="py-4 px-4 text-right">
                       <span className="font-semibold text-blue-600 dark:text-blue-400">
-                        {formatStx(entry.totalVolume)} STX
+                        {formatStx(entry.totalVolume)}
                       </span>
                     </td>
                   </tr>

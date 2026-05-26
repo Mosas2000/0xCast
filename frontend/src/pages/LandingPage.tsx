@@ -12,7 +12,7 @@ import type { Market } from '@/types/market';
 
 export function LandingPage() {
   const { connect, isConnected } = useWallet();
-  const { markets, isLoading } = useMarkets();
+  const { markets, totalMarketsCount, isLoading } = useMarkets();
   const { network, contractAddress } = useNetwork();
   const { entries: recentlyViewedEntries } = useRecentlyViewed();
 
@@ -49,14 +49,14 @@ export function LandingPage() {
   return (
     <div style={{ paddingTop: 72 }}>
       {/* Hero Section */}
-      <section style={{ 
+      <section style={{
         background: 'linear-gradient(to bottom, #000, #0a0a0a)',
         paddingTop: 80,
         paddingBottom: 80
       }}>
-        <div style={{ 
-          maxWidth: 1200, 
-          margin: '0 auto', 
+        <div style={{
+          maxWidth: 1200,
+          margin: '0 auto',
           padding: '0 24px',
           textAlign: 'center'
         }}>
@@ -120,8 +120,8 @@ export function LandingPage() {
             margin: '0 auto 64px'
           }}>
             {isConnected ? (
-              <Link 
-                to="/markets" 
+              <Link
+                to="/markets"
                 style={{
                   display: 'block',
                   padding: '16px 32px',
@@ -136,7 +136,7 @@ export function LandingPage() {
                 Explore Markets
               </Link>
             ) : (
-              <button 
+              <button
                 type="button"
                 onClick={() => connect()}
                 style={{
@@ -153,24 +153,6 @@ export function LandingPage() {
                 Get Started
               </button>
             )}
-              <a
-                href={getExplorerAddressUrl(contractAddress, network)}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                display: 'block',
-                padding: '16px 32px',
-                background: 'transparent',
-                color: '#fff',
-                border: '1px solid #404040',
-                borderRadius: 12,
-                fontWeight: 600,
-                textDecoration: 'none',
-                textAlign: 'center'
-              }}
-            >
-              View Contract
-            </a>
           </div>
 
           {/* Stats */}
@@ -188,7 +170,7 @@ export function LandingPage() {
               border: '1px solid #262626'
             }}>
               <p style={{ fontSize: 36, fontWeight: 700, color: '#fff', marginBottom: 8 }}>
-                {markets.length}
+                {totalMarketsCount}
               </p>
               <p style={{ fontSize: 14, color: '#737373' }}>Markets</p>
             </div>
@@ -219,14 +201,14 @@ export function LandingPage() {
       </section>
 
       {/* How It Works */}
-      <section style={{ 
+      <section style={{
         background: '#0a0a0a',
         paddingTop: 96,
         paddingBottom: 96
       }}>
-        <div style={{ 
-          maxWidth: 1200, 
-          margin: '0 auto', 
+        <div style={{
+          maxWidth: 1200,
+          margin: '0 auto',
           padding: '0 24px'
         }}>
           <div style={{ textAlign: 'center', marginBottom: 64 }}>
@@ -244,7 +226,7 @@ export function LandingPage() {
             gap: 32
           }}>
             {howItWorks.map((item) => (
-              <div 
+              <div
                 key={item.step}
                 style={{
                   padding: '40px 32px',
@@ -292,29 +274,29 @@ export function LandingPage() {
       </section>
 
       {/* Create Market CTA */}
-      <section style={{ 
+      <section style={{
         background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)',
         paddingTop: 64,
         paddingBottom: 64
       }}>
-        <div style={{ 
-          maxWidth: 1200, 
-          margin: '0 auto', 
+        <div style={{
+          maxWidth: 1200,
+          margin: '0 auto',
           padding: '0 24px',
           textAlign: 'center'
         }}>
           <div style={{ fontSize: '48px', marginBottom: '20px' }}>✨</div>
-          <h2 style={{ 
-            fontSize: 36, 
-            fontWeight: 700, 
-            color: '#fff', 
-            marginBottom: 16 
+          <h2 style={{
+            fontSize: 36,
+            fontWeight: 700,
+            color: '#fff',
+            marginBottom: 16
           }}>
             Create Your Own Market
           </h2>
-          <p style={{ 
-            fontSize: 18, 
-            color: '#E0E7FF', 
+          <p style={{
+            fontSize: 18,
+            color: '#E0E7FF',
             marginBottom: 32,
             maxWidth: '600px',
             margin: '0 auto 32px',
@@ -360,20 +342,20 @@ export function LandingPage() {
       </section>
 
       {/* Featured Markets */}
-      <section style={{ 
+      <section style={{
         background: '#000',
         paddingTop: 96,
         paddingBottom: 96
       }}>
-        <div style={{ 
-          maxWidth: 1200, 
-          margin: '0 auto', 
+        <div style={{
+          maxWidth: 1200,
+          margin: '0 auto',
           padding: '0 24px'
         }}>
-          <div style={{ 
-            display: 'flex', 
+          <div style={{
+            display: 'flex',
             flexWrap: 'wrap',
-            justifyContent: 'space-between', 
+            justifyContent: 'space-between',
             alignItems: 'center',
             gap: 24,
             marginBottom: 48
@@ -384,7 +366,7 @@ export function LandingPage() {
               </h2>
               <p style={{ fontSize: 16, color: '#737373' }}>Top markets by volume</p>
             </div>
-            <Link 
+            <Link
               to="/markets"
               style={{
                 padding: '12px 24px',
@@ -457,7 +439,7 @@ export function LandingPage() {
               <p style={{ fontSize: 16, color: '#737373', marginBottom: 32 }}>
                 Markets will appear here once they are created
               </p>
-              <Link 
+              <Link
                 to="/markets"
                 style={{
                   display: 'inline-block',
@@ -478,20 +460,20 @@ export function LandingPage() {
 
       {/* Recently Viewed */}
       {recentlyViewedMarkets.length > 0 && (
-        <section style={{ 
+        <section style={{
           background: '#0a0a0a',
           paddingTop: 96,
           paddingBottom: 96
         }}>
-          <div style={{ 
-            maxWidth: 1200, 
-            margin: '0 auto', 
+          <div style={{
+            maxWidth: 1200,
+            margin: '0 auto',
             padding: '0 24px'
           }}>
-            <div style={{ 
-              display: 'flex', 
+            <div style={{
+              display: 'flex',
               flexWrap: 'wrap',
-              justifyContent: 'space-between', 
+              justifyContent: 'space-between',
               alignItems: 'center',
               gap: 24,
               marginBottom: 48
@@ -502,7 +484,7 @@ export function LandingPage() {
                 </h2>
                 <p style={{ fontSize: 16, color: '#737373' }}>Jump back into the markets you opened most recently</p>
               </div>
-              <Link 
+              <Link
                 to="/recently-viewed"
                 style={{
                   padding: '12px 24px',
@@ -537,14 +519,14 @@ export function LandingPage() {
       )}
 
       {/* Security Section */}
-      <section style={{ 
+      <section style={{
         background: '#0a0a0a',
         paddingTop: 96,
         paddingBottom: 96
       }}>
-        <div style={{ 
-          maxWidth: 900, 
-          margin: '0 auto', 
+        <div style={{
+          maxWidth: 900,
+          margin: '0 auto',
           padding: '0 24px',
           textAlign: 'center'
         }}>
@@ -594,14 +576,14 @@ export function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section style={{ 
+      <section style={{
         background: '#000',
         paddingTop: 96,
         paddingBottom: 96
       }}>
-        <div style={{ 
-          maxWidth: 700, 
-          margin: '0 auto', 
+        <div style={{
+          maxWidth: 700,
+          margin: '0 auto',
           padding: '0 24px',
           textAlign: 'center'
         }}>
@@ -611,9 +593,9 @@ export function LandingPage() {
           <p style={{ fontSize: 18, color: '#737373', marginBottom: 40 }}>
             Join the future of decentralized prediction markets
           </p>
-          
+
           {isConnected ? (
-            <Link 
+            <Link
               to="/markets"
               style={{
                 display: 'inline-block',
@@ -629,7 +611,7 @@ export function LandingPage() {
               Start Trading
             </Link>
           ) : (
-            <button 
+            <button
               type="button"
               onClick={() => connect()}
               style={{
