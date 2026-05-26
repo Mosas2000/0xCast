@@ -27,7 +27,7 @@ import { useState, useCallback } from 'react';
 import { useContract } from './useContract';
 import type { CreateMarketFormData } from '@/types/market';
 import { useContractPause } from './useContractPause';
-import { createRateLimitMiddleware } from '../middleware/rbacMiddleware';
+import { createRateLimitMiddleware } from '../middleware/rateLimitMiddleware';
 import { useWallet } from '@/components/WalletProvider';
 import { parseContractError, getUserFriendlyContractError } from '@/utils/contractErrorHandler';
 import { errorLoggingService } from '@/services/ErrorLoggingService';

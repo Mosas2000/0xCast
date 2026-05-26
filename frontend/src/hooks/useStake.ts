@@ -7,7 +7,7 @@ import { useWallet } from '@/components/WalletProvider';
 import { validateAmount, validateMarketId } from '@/utils/validation';
 import { addStakeHistoryEntry, type StakeOutcome } from '@/utils/stakeHistory';
 import { useContractPause } from './useContractPause';
-import { createRateLimitMiddleware } from '../middleware/rbacMiddleware';
+import { createRateLimitMiddleware } from '../middleware/rateLimitMiddleware';
 import { parseContractError, getUserFriendlyContractError } from '@/utils/contractErrorHandler';
 import { errorLoggingService } from '@/services/ErrorLoggingService';
 
@@ -72,7 +72,42 @@ export function useStake(): UseStakeReturn {
         
         await rateLimitMiddleware(
           'stake',
-          async () => {},
+          async () => {
+            const stakeMicroStx = stxToMicroStx(amount);
+
+            const postConditions = [
+              Pc.principal(address).willSendEq(stakeMicroStx).ustx(),
+            ];
+
+            const txIdResult = await new Promise<string>((resolve, reject) => {
+              openContractCall({
+                contractAddress: MARKET_CONTRACT.address,
+                contractName: MARKET_CONTRACT.name,
+                functionName,
+                functionArgs: [uintCV(marketId), uintCV(stakeMicroStx)],
+                postConditionMode: PostConditionMode.Deny,
+                postConditions,
+                onFinish: (data) => {
+                  setTxId(data.txId);
+                  addStakeHistoryEntry({
+                    txId: data.txId,
+                    marketId,
+                    userAddress: address,
+                    outcome,
+                    amountStx: amount,
+                    timestamp: Date.now(),
+                  });
+                  refetchPauseState();
+                  onSuccess?.();
+                  resolve(data.txId);
+                },
+                onCancel: () => {
+                  reject(new Error('Transaction cancelled'));
+                },
+              });
+            });
+            return txIdResult;
+          },
           {
             onBlocked: (cooldownMs) => {
               throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(cooldownMs / 1000)} seconds.`);
@@ -83,38 +118,7 @@ export function useStake(): UseStakeReturn {
           }
         );
 
-        const stakeMicroStx = stxToMicroStx(amount);
-
-        const postConditions = [
-          Pc.principal(address).willSendEq(stakeMicroStx).ustx(),
-        ];
-
-        await openContractCall({
-          contractAddress: MARKET_CONTRACT.address,
-          contractName: MARKET_CONTRACT.name,
-          functionName,
-          functionArgs: [uintCV(marketId), uintCV(stakeMicroStx)],
-          postConditionMode: PostConditionMode.Deny,
-          postConditions,
-          onFinish: (data) => {
-            setTxId(data.txId);
-            addStakeHistoryEntry({
-              txId: data.txId,
-              marketId,
-              userAddress: address,
-              outcome,
-              amountStx: amount,
-              timestamp: Date.now(),
-            });
-            setIsLoading(false);
-            refetchPauseState();
-            onSuccess?.();
-          },
-          onCancel: () => {
-            setError('Transaction cancelled');
-            setIsLoading(false);
-          },
-        });
+        setIsLoading(false);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to place stake');
         setIsLoading(false);

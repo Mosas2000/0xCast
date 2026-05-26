@@ -48,7 +48,7 @@ import { uintCV, PostConditionMode, Pc } from '@stacks/transactions';
 import { getContractPrincipal, CONTRACT_NAMES } from '@/config/contracts';
 import { useWallet } from '@/components/WalletProvider';
 import { safeBigIntToNumber } from './useContract';
-import { createRateLimitMiddleware } from '../middleware/rbacMiddleware';
+import { createRateLimitMiddleware } from '../middleware/rateLimitMiddleware';
 import { parseContractError, getUserFriendlyContractError } from '@/utils/contractErrorHandler';
 import { errorLoggingService } from '@/services/ErrorLoggingService';
 
@@ -102,29 +102,28 @@ export function useLiquidityActions(): UseLiquidityActionsReturn {
       const contract = getLiquidityPoolContract();
 
       try {
-        await openContractCall({
-          contractAddress: contract.address,
-          contractName: contract.name,
-          functionName,
-          functionArgs,
-          postConditionMode,
-          postConditions,
-          onFinish: (data) => {
-            console.log(`${functionName} completed:`, data);
-            setState({
-              isSubmitting: false,
-              error: null,
-              txId: data.txId,
-              success: true,
-            });
-          },
-          onCancel: () => {
-            setState(prev => ({
-              ...prev,
-              isSubmitting: false,
-              error: 'Transaction cancelled',
-            }));
-          },
+        const txId = await new Promise<string>((resolve, reject) => {
+          openContractCall({
+            contractAddress: contract.address,
+            contractName: contract.name,
+            functionName,
+            functionArgs,
+            postConditionMode,
+            postConditions,
+            onFinish: (data) => {
+              console.log(`${functionName} completed:`, data);
+              resolve(data.txId);
+            },
+            onCancel: () => {
+              reject(new Error('Transaction cancelled'));
+            },
+          });
+        });
+        setState({
+          isSubmitting: false,
+          error: null,
+          txId,
+          success: true,
         });
       } catch (error) {
         const contractError = parseContractError(error, contract.name, functionName);
