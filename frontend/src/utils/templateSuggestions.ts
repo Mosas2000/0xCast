@@ -102,7 +102,8 @@ export const generateQuestionFromTemplate = (
   patternIndex: number = 0,
   placeholdersMap?: Record<string, string>
 ): string => {
-  const templates = QUESTION_TEMPLATES[templateId];
+  if (templateId === 'custom') return '';
+  const templates = QUESTION_TEMPLATES[templateId as keyof typeof QUESTION_TEMPLATES];
   if (!templates) return '';
 
   const patterns = templates.patterns;
@@ -117,9 +118,9 @@ export const generateQuestionFromTemplate = (
   });
 
   const remainingPlaceholders = question.match(/{[^}]+}/g) || [];
-  remainingPlaceholders.forEach(placeholder => {
+  remainingPlaceholders.forEach((placeholder: string) => {
     const key = placeholder.slice(1, -1);
-    const options = templates.placeholders[key as keyof typeof templates.placeholders];
+    const options = templates.placeholders[key as keyof typeof templates.placeholders] as string[] | undefined;
     if (Array.isArray(options)) {
       const randomOption = options[Math.floor(Math.random() * options.length)];
       question = question.replace(placeholder, randomOption);
@@ -131,7 +132,7 @@ export const generateQuestionFromTemplate = (
 
 export const getSuggestionFor = (
   field: 'question' | 'duration' | 'category',
-  currentValue?: any
+  _currentValue?: unknown
 ): string => {
   const suggestions = {
     question: [

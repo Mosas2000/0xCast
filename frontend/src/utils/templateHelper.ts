@@ -1,4 +1,4 @@
-import type { MarketTemplate, TemplateCategory } from '@/types/template';
+import type { TemplateCategory } from '@/types/template';
 
 export interface TemplateComparison {
   templateId: TemplateCategory;
@@ -86,7 +86,7 @@ export interface TemplateRecommendation {
 
 export const recommendTemplate = (
   question: string,
-  category?: string
+  _category?: string
 ): TemplateRecommendation[] => {
   const recommendations: Array<{
     templateId: TemplateCategory;

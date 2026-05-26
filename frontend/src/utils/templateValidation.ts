@@ -1,4 +1,4 @@
-import type { TemplateValidationRule, ValidationState } from '@/types/template';
+import type { ValidationState } from '@/types/template';
 import { QUESTION_VALIDATION_RULES } from '@/types/template';
 
 export const validateQuestion = (question: string): { valid: boolean; errors: string[]; suggestions: string[] } => {

@@ -40,15 +40,9 @@ interface TemplateSession {
   success?: boolean;
 }
 
-interface ValidationAttempt {
-  field: string;
-  error: string;
-  timestamp: number;
-}
-
 declare global {
   interface Window {
-    gtag?: (command: string, eventName: string, params?: TemplateEventData & { event_category?: string }) => void;
+    gtag?: (...args: any[]) => void;
     amplitude?: {
       track: (eventName: string, properties?: TemplateEventData & { sessionId?: string }) => void;
     };
@@ -57,7 +51,6 @@ declare global {
 
 class TemplateAnalyticsTracker {
   private templateSessions: Map<string, TemplateSession> = new Map();
-  private validateAttempts: Map<string, ValidationAttempt[]> = new Map();
   private sessionId: string;
 
   constructor() {
