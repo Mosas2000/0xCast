@@ -12,6 +12,9 @@ export interface SyncEntity {
   lastSyncTime: number;
   data: Record<string, JsonValue>;
   hash: string;
+  type?: string;
+  isSynced?: boolean;
+  conflictCount?: number;
 }
 
 export interface SyncConflict {
@@ -25,6 +28,7 @@ export interface SyncConflict {
   timestamp: number;
   resolution?: ConflictResolution;
   resolvedData?: Record<string, JsonValue>;
+  type?: string;
 }
 
 export interface QueuedAction {
@@ -77,6 +81,16 @@ export interface SyncMetrics {
   averageSyncTime: number;
   lastSyncTime: number;
   dataSize: number;
+  totalSyncs?: number;
+  totalConflicts?: number;
+  resolvedConflicts?: number;
+  pendingConflicts?: number;
+  totalActions?: number;
+  processedActions?: number;
+  failedActions?: number;
+  avgSyncTime?: number;
+  successRate?: number;
+  lastErrorTime?: number;
 }
 
 export interface DataSnapshot {

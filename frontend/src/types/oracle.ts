@@ -342,3 +342,18 @@ export interface MonitoringAlert {
   message: string;
   resolved: boolean;
 }
+
+/**
+ * Oracle provider health status
+ */
+export interface ProviderHealth {
+  id: string;
+  successRate: number;
+  uptime: number;
+  averageLatency: number;
+  responseCount: number;
+  errorCount: number;
+  lastResponseTime: number;
+  healthScore: number;
+}
+

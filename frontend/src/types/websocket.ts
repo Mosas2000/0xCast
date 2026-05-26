@@ -9,6 +9,8 @@ export interface MarketUpdate {
   timestamp: number;
   high24h: number;
   low24h: number;
+  bid?: number;
+  ask?: number;
 }
 
 export interface OrderBookLevel {
