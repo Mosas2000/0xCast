@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { ApiError } from '@/utils/apiErrors';
 import { withRetry, RetryConfig } from '@/utils/retry';
 import { errorLoggingService } from '@/services/ErrorLoggingService';
@@ -9,12 +9,16 @@ interface UseApiCallOptions<T> {
   retry?: Partial<RetryConfig>;
   logErrors?: boolean;
   component?: string;
+  maxRetries?: number;
+  retryDelay?: number;
+  immediate?: boolean;
 }
 
 interface UseApiCallResult<T> {
   data: T | null;
   error: ApiError | null;
   isLoading: boolean;
+  loading: boolean;
   execute: (...args: unknown[]) => Promise<T | null>;
   reset: () => void;
 }
@@ -27,21 +31,35 @@ export function useApiCall<T>(
   const [error, setError] = useState<ApiError | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const apiFunctionRef = useRef(apiFunction);
+  apiFunctionRef.current = apiFunction;
+
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+
   const execute = useCallback(
     async (...args: unknown[]): Promise<T | null> => {
       setIsLoading(true);
       setError(null);
 
+      const currentOptions = optionsRef.current;
+      const currentApiFunction = apiFunctionRef.current;
+
       try {
-        const result = options.retry
-          ? await withRetry(() => apiFunction(...args), options.retry)
-          : await apiFunction(...args);
+        const retryConfig = currentOptions.retry || (currentOptions.maxRetries !== undefined ? {
+          maxAttempts: currentOptions.maxRetries,
+          initialDelayMs: currentOptions.retryDelay || 1000,
+        } : undefined);
+
+        const result = retryConfig
+          ? await withRetry(() => currentApiFunction(...args), retryConfig)
+          : await currentApiFunction(...args);
 
         setData(result);
         setIsLoading(false);
 
-        if (options.onSuccess) {
-          options.onSuccess(result);
+        if (currentOptions.onSuccess) {
+          currentOptions.onSuccess(result);
         }
 
         return result;
@@ -50,22 +68,28 @@ export function useApiCall<T>(
         setError(apiError);
         setIsLoading(false);
 
-        if (options.logErrors !== false) {
+        if (currentOptions.logErrors !== false) {
           errorLoggingService.logError(apiError, {
-            component: options.component,
-            action: apiFunction.name,
+            component: currentOptions.component,
+            action: currentApiFunction.name,
           });
         }
 
-        if (options.onError) {
-          options.onError(apiError);
+        if (currentOptions.onError) {
+          currentOptions.onError(apiError);
         }
 
         return null;
       }
     },
-    [apiFunction, options]
+    []
   );
+
+  useEffect(() => {
+    if (optionsRef.current.immediate) {
+      execute();
+    }
+  }, [execute]);
 
   const reset = useCallback(() => {
     setData(null);
@@ -77,6 +101,7 @@ export function useApiCall<T>(
     data,
     error,
     isLoading,
+    loading: isLoading,
     execute,
     reset,
   };

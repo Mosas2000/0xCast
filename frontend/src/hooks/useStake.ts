@@ -7,7 +7,7 @@ import { useWallet } from '@/components/WalletProvider';
 import { validateAmount, validateMarketId } from '@/utils/validation';
 import { addStakeHistoryEntry, type StakeOutcome } from '@/utils/stakeHistory';
 import { useContractPause } from './useContractPause';
-import { createRateLimitMiddleware } from '../middleware/rateLimitMiddleware';
+import { createRateLimitMiddleware } from '../middleware/rbacMiddleware';
 import { parseContractError, getUserFriendlyContractError } from '@/utils/contractErrorHandler';
 import { errorLoggingService } from '@/services/ErrorLoggingService';
 

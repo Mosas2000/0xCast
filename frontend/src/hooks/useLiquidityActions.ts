@@ -48,7 +48,7 @@ import { uintCV, PostConditionMode, Pc } from '@stacks/transactions';
 import { getContractPrincipal, CONTRACT_NAMES } from '@/config/contracts';
 import { useWallet } from '@/components/WalletProvider';
 import { safeBigIntToNumber } from './useContract';
-import { createRateLimitMiddleware } from '../middleware/rateLimitMiddleware';
+import { createRateLimitMiddleware } from '../middleware/rbacMiddleware';
 import { parseContractError, getUserFriendlyContractError } from '@/utils/contractErrorHandler';
 import { errorLoggingService } from '@/services/ErrorLoggingService';
 

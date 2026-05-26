@@ -22,6 +22,7 @@ function getCurrentNetworkFromStorage(): NetworkType {
 // Contract names
 export const CONTRACT_NAMES = {
   MARKET_CORE: 'market-core',
+  MARKET_STATS: 'market-stats',
   OXCAST: 'oxcast',
   GOVERNANCE_CORE: 'governance-core',
   GOVERNANCE_TOKEN: 'governance-token',
@@ -75,8 +76,13 @@ export function getContractAddress(contractName: ContractName, network?: Network
   const activeNetwork = network ?? getActiveNetwork();
   const addresses = CONTRACT_ADDRESSES[activeNetwork];
   
-  // OXC token uses the token deployer address
-  if (contractName === CONTRACT_NAMES.OXCAST) {
+  // Token and liquidity pools/rewards use the token deployer address
+  if (
+    contractName === CONTRACT_NAMES.OXCAST ||
+    contractName === CONTRACT_NAMES.GOVERNANCE_TOKEN ||
+    contractName === CONTRACT_NAMES.LIQUIDITY_POOL ||
+    contractName === CONTRACT_NAMES.LIQUIDITY_REWARDS
+  ) {
     return addresses.token;
   }
   

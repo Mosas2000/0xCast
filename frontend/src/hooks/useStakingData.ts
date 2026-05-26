@@ -31,20 +31,25 @@ export function useStakingData(userAddress: string | null) {
     setError(null);
 
     try {
-      const contractAddress = getContractAddress(CONTRACT_NAMES.OXCAST, network);
+      const tokenContractAddress = getContractAddress(CONTRACT_NAMES.GOVERNANCE_TOKEN, network);
       
-      // Fetch total staked
-      const totalStakedResult = await fetchCallReadOnlyFunction({
-        network: stacksNetwork,
-        contractAddress,
-        contractName: CONTRACT_NAMES.OXCAST,
-        functionName: 'get-total-staked',
-        functionArgs: [],
-        senderAddress: contractAddress,
-      });
+      let totalStaked = 0n;
+      try {
+        // Fetch total staked
+        const totalStakedResult = await fetchCallReadOnlyFunction({
+          network: stacksNetwork,
+          contractAddress: tokenContractAddress,
+          contractName: CONTRACT_NAMES.GOVERNANCE_TOKEN,
+          functionName: 'get-total-staked',
+          functionArgs: [],
+          senderAddress: tokenContractAddress,
+        });
 
-      const totalStakedJson = cvToJSON(totalStakedResult);
-      const totalStaked = BigInt(totalStakedJson.value?.value || '0');
+        const totalStakedJson = cvToJSON(totalStakedResult);
+        totalStaked = BigInt(totalStakedJson.value?.value || '0');
+      } catch (e) {
+        console.warn('Staking contract get-total-staked failed or not deployed, defaulting to 0');
+      }
 
       let userStaked = 0n;
       let userLockedUntil = 0;
@@ -52,34 +57,42 @@ export function useStakingData(userAddress: string | null) {
 
       // Fetch user-specific data if address provided
       if (userAddress) {
-        // Fetch user stake
-        const userStakeResult = await fetchCallReadOnlyFunction({
-          network: stacksNetwork,
-          contractAddress,
-          contractName: CONTRACT_NAMES.OXCAST,
-          functionName: 'get-stake',
-          functionArgs: [principalCV(userAddress)],
-          senderAddress: contractAddress,
-        });
+        try {
+          // Fetch user stake
+          const userStakeResult = await fetchCallReadOnlyFunction({
+            network: stacksNetwork,
+            contractAddress: tokenContractAddress,
+            contractName: CONTRACT_NAMES.GOVERNANCE_TOKEN,
+            functionName: 'get-stake',
+            functionArgs: [principalCV(userAddress)],
+            senderAddress: tokenContractAddress,
+          });
 
-        const userStakeJson = cvToJSON(userStakeResult);
-        if (userStakeJson.value) {
-          userStaked = BigInt(userStakeJson.value.amount?.value || '0');
-          userLockedUntil = Number(userStakeJson.value['locked-until']?.value || '0');
+          const userStakeJson = cvToJSON(userStakeResult);
+          if (userStakeJson.value) {
+            userStaked = BigInt(userStakeJson.value.amount?.value || '0');
+            userLockedUntil = Number(userStakeJson.value['locked-until']?.value || '0');
+          }
+        } catch (e) {
+          console.warn('Staking contract get-stake failed or not deployed, defaulting to 0');
         }
 
-        // Fetch user OXC balance
-        const balanceResult = await fetchCallReadOnlyFunction({
-          network: stacksNetwork,
-          contractAddress,
-          contractName: CONTRACT_NAMES.OXCAST,
-          functionName: 'get-balance',
-          functionArgs: [principalCV(userAddress)],
-          senderAddress: contractAddress,
-        });
+        try {
+          // Fetch user governance token balance
+          const balanceResult = await fetchCallReadOnlyFunction({
+            network: stacksNetwork,
+            contractAddress: tokenContractAddress,
+            contractName: CONTRACT_NAMES.GOVERNANCE_TOKEN,
+            functionName: 'get-balance',
+            functionArgs: [principalCV(userAddress)],
+            senderAddress: tokenContractAddress,
+          });
 
-        const balanceJson = cvToJSON(balanceResult);
-        userBalance = BigInt(balanceJson.value?.value || '0');
+          const balanceJson = cvToJSON(balanceResult);
+          userBalance = BigInt(balanceJson.value?.value || '0');
+        } catch (e) {
+          console.error('Failed to fetch governance token balance:', e);
+        }
       }
 
       // Fetch current block height from API
