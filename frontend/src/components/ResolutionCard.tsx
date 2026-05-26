@@ -29,7 +29,7 @@ const ResolutionCardBase = ({
   canDispute = false,
   canFinalize = false,
   isSubmitting = false,
-}: ResolutionCardProps) {
+}: ResolutionCardProps) => {
   const inDisputePeriod = !resolution.finalized && currentBlock <= resolution.disputeEnd;
   const blocksRemaining = Math.max(0, resolution.disputeEnd - currentBlock);
   

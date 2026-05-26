@@ -15,10 +15,39 @@ import {
   CATEGORY_METADATA 
 } from '@/types/market';
 import { 
-  validateMarketForm, 
-  formatBlocksToTime,
-  suggestQuestionImprovements 
-} from '@/utils/marketValidation';
+  validateMarketForm as baseValidateMarketForm, 
+  getQuestionSuggestions as suggestQuestionImprovements 
+} from '@/utils/templateValidation';
+import { formatBlocksToTime } from '@/utils/stakingHelpers';
+
+const categoryMap: Record<number, string> = {
+  1: 'crypto',
+  2: 'sports',
+  3: 'politics',
+  4: 'economics',
+  5: 'other'
+};
+
+const validateMarketForm = (formData: CreateMarketFormData) => {
+  const categoryString = categoryMap[formData.category] || 'other';
+  const result = baseValidateMarketForm(
+    formData.question,
+    formData.durationBlocks,
+    categoryString
+  );
+  
+  const errors: { question?: string; category?: string; duration?: string } = {};
+  if (result.question.error) errors.question = result.question.error;
+  if (result.category.error) errors.category = result.category.error;
+  if (result.duration.error) errors.duration = result.duration.error;
+  
+  const isValid = result.question.valid && result.category.valid && result.duration.valid;
+  
+  return {
+    isValid,
+    errors,
+  };
+};
 
 interface MarketFormProps {
   onSubmit: (data: CreateMarketFormData) => void;

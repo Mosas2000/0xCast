@@ -36,11 +36,6 @@ export function Footer() {
             <ul className="space-y-3">
               <li><Link to="/markets" className="text-neutral-600 dark:text-neutral-500 hover:text-black dark:hover:text-white text-sm transition-colors">Markets</Link></li>
               <li><Link to="/portfolio" className="text-neutral-600 dark:text-neutral-500 hover:text-black dark:hover:text-white text-sm transition-colors">Portfolio</Link></li>
-              <li>
-                <a href={getExplorerAddressUrl(contractAddress, network)} target="_blank" rel="noopener noreferrer" className="text-neutral-600 dark:text-neutral-500 hover:text-black dark:hover:text-white text-sm transition-colors">
-                  Contract
-                </a>
-              </li>
             </ul>
           </div>
 
