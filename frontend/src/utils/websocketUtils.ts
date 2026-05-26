@@ -1,4 +1,4 @@
-import { MarketUpdate, OrderBookUpdate, TradeUpdate } from '@/types/websocket';
+import { MarketUpdate, OrderBookUpdate, TradeUpdate, OrderBookLevel } from '@/types/websocket';
 
 export interface MarketDataSnapshot {
   marketId: string;
@@ -262,7 +262,7 @@ export function mergeOrderBooks(oldBook: OrderBookUpdate, newBook: OrderBookUpda
   };
 }
 
-function mergeOrderLevels(old: Array<{ price: number; amount: number }>, updates: Array<{ price: number; amount: number }>): Array<{ price: number; amount: number }> {
+function mergeOrderLevels(old: OrderBookLevel[], updates: OrderBookLevel[]): OrderBookLevel[] {
   const map = new Map<number, number>();
 
   old.forEach(({ price, amount }) => {
@@ -277,9 +277,19 @@ function mergeOrderLevels(old: Array<{ price: number; amount: number }>, updates
     }
   });
 
-  return Array.from(map.entries())
+  const sortedLevels = Array.from(map.entries())
     .map(([price, amount]) => ({ price, amount }))
     .sort((a, b) => b.price - a.price);
+
+  let cumulativeTotal = 0;
+  return sortedLevels.map((level) => {
+    cumulativeTotal += level.amount;
+    return {
+      price: level.price,
+      amount: level.amount,
+      total: cumulativeTotal,
+    };
+  });
 }
 
 export function detectPriceAnomaly(currentPrice: number, historicalPrices: number[], threshold: number = 3): boolean {
