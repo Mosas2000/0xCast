@@ -1,10 +1,18 @@
 import { MemoryRouter } from 'react-router-dom';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { MarketCard } from '../MarketCard';
 import { WatchlistProvider } from '../../contexts/WatchlistContext';
 import { MarketStatus, MarketOutcome } from '../../types/market';
 import { loadWatchlistIds, saveWatchlistIds } from '../../utils/watchlist';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: 'en', changeLanguage: vi.fn() },
+  }),
+  initReactI18next: { type: '3rdParty', init: () => {} },
+}));
 
 const market = {
   id: 7,
@@ -39,10 +47,10 @@ describe('MarketCard watchlist control', () => {
 
     expect(screen.getByRole('link', { name: /open market/i })).toHaveAttribute('href', '/trade/7');
 
-    const button = screen.getByRole('button', { name: 'Add to watchlist' });
+    const button = screen.getByRole('button', { name: 'markets:actions.addToWatchlist' });
     fireEvent.click(button);
 
-    expect(screen.getByRole('button', { name: 'Remove from watchlist' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'markets:actions.removeFromWatchlist' })).toBeTruthy();
     await waitFor(() => {
       expect(loadWatchlistIds()).toEqual([7]);
     });

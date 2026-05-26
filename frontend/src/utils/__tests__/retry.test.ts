@@ -118,7 +118,7 @@ describe('retryWithBackoff', () => {
   });
 
   it('should retry timeout errors', async () => {
-    const timeoutError = new ApiError('Timeout', ErrorCode.TIMEOUT);
+    const timeoutError = new ApiError('Timeout', ErrorCode.TIMEOUT_ERROR);
     const fn = vi
       .fn()
       .mockRejectedValueOnce(timeoutError)

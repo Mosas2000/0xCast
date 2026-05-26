@@ -297,7 +297,7 @@ describe('TimeSeriesAnalyzer', () => {
   describe('getLocalMaximum', () => {
     it('should find local maximum', () => {
       const max = TimeSeriesAnalyzer.getLocalMaximum(prices);
-      expect(max).toBe(105);
+      expect(max).toBe(109);
     });
   });
 

@@ -6,7 +6,15 @@ import { WatchlistProvider } from '../../contexts/WatchlistContext';
 import { MarketStatus, MarketOutcome } from '../../types/market';
 import { saveWatchlistIds } from '../../utils/watchlist';
 
-vi.mock('../../hooks/useMarkets', () => ({
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: 'en', changeLanguage: vi.fn() },
+  }),
+  initReactI18next: { type: '3rdParty', init: () => {} },
+}));
+
+vi.mock('@/hooks/useMarkets', () => ({
   useMarkets: () => ({
     markets: [
       {

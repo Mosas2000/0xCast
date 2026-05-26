@@ -62,18 +62,23 @@ Object.defineProperty(window, 'ResizeObserver', {
   value: MockResizeObserver,
 });
 
-// Mock localStorage
+// Mock localStorage with a functional Map-backed implementation.
+// vi.fn() bare stubs return `undefined` by default, which breaks any code that
+// actually reads from storage. Using a Map keeps data consistent within a test.
+const localStorageStore = new Map<string, string>();
+
 const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-  length: 0,
-  key: vi.fn(),
+  getItem: vi.fn((key: string): string | null => localStorageStore.get(key) ?? null),
+  setItem: vi.fn((key: string, value: string): void => { localStorageStore.set(key, String(value)); }),
+  removeItem: vi.fn((key: string): void => { localStorageStore.delete(key); }),
+  clear: vi.fn((): void => { localStorageStore.clear(); }),
+  get length(): number { return localStorageStore.size; },
+  key: vi.fn((index: number): string | null => Array.from(localStorageStore.keys())[index] ?? null),
 };
 
 Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
+  writable: true,
 });
 
 // Mock scrollTo

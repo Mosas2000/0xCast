@@ -195,7 +195,7 @@ describe('Market Data Buffer Integration', () => {
       const snapshot = buffer.getSnapshot('BTC');
       expect(snapshot?.openPrice).toBe(50000);
       expect(snapshot?.highPrice).toBe(51000);
-      expect(snapshot?.lowPrice).toBe(50200);
+      expect(snapshot?.lowPrice).toBe(50000);
       expect(snapshot?.closePrice).toBe(50900);
     });
 

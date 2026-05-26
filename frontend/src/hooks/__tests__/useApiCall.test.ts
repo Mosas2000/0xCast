@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 import { useApiCall } from '../useApiCall';
 import { ApiError, ErrorCode } from '../../utils/apiErrors';
 
@@ -17,14 +17,18 @@ describe('useApiCall', () => {
     expect(result.current.error).toBeNull();
     expect(result.current.data).toBeNull();
 
-    result.current.execute();
+    let executePromise: any;
+    act(() => {
+      executePromise = result.current.execute();
+    });
 
     expect(result.current.loading).toBe(true);
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await executePromise;
     });
 
+    expect(result.current.loading).toBe(false);
     expect(result.current.data).toEqual({ data: 'success' });
     expect(result.current.error).toBeNull();
     expect(apiFunction).toHaveBeenCalledTimes(1);
@@ -36,12 +40,11 @@ describe('useApiCall', () => {
 
     const { result } = renderHook(() => useApiCall(apiFunction));
 
-    result.current.execute();
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.execute();
     });
 
+    expect(result.current.loading).toBe(false);
     expect(result.current.error).toBe(error);
     expect(result.current.data).toBeNull();
   });
@@ -56,15 +59,11 @@ describe('useApiCall', () => {
       useApiCall(apiFunction, { maxRetries: 2, retryDelay: 100 })
     );
 
-    result.current.execute();
+    await act(async () => {
+      await result.current.execute();
+    });
 
-    await waitFor(
-      () => {
-        expect(result.current.loading).toBe(false);
-      },
-      { timeout: 3000 }
-    );
-
+    expect(result.current.loading).toBe(false);
     expect(result.current.data).toEqual({ data: 'success' });
     expect(apiFunction).toHaveBeenCalledTimes(2);
   });
@@ -77,12 +76,11 @@ describe('useApiCall', () => {
       useApiCall(apiFunction, { maxRetries: 2 })
     );
 
-    result.current.execute();
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.execute();
     });
 
+    expect(result.current.loading).toBe(false);
     expect(result.current.error).toBe(error);
     expect(apiFunction).toHaveBeenCalledTimes(1);
   });
@@ -92,15 +90,16 @@ describe('useApiCall', () => {
 
     const { result } = renderHook(() => useApiCall(apiFunction));
 
-    result.current.execute();
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.execute();
     });
 
+    expect(result.current.loading).toBe(false);
     expect(result.current.data).toEqual({ data: 'success' });
 
-    result.current.reset();
+    act(() => {
+      result.current.reset();
+    });
 
     expect(result.current.data).toBeNull();
     expect(result.current.error).toBeNull();
@@ -112,12 +111,11 @@ describe('useApiCall', () => {
 
     const { result } = renderHook(() => useApiCall(apiFunction));
 
-    result.current.execute('arg1', 'arg2', 123);
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.execute('arg1', 'arg2', 123);
     });
 
+    expect(result.current.loading).toBe(false);
     expect(apiFunction).toHaveBeenCalledWith('arg1', 'arg2', 123);
   });
 
@@ -131,8 +129,10 @@ describe('useApiCall', () => {
 
     const { result } = renderHook(() => useApiCall(apiFunction));
 
-    result.current.execute();
-    result.current.execute();
+    await act(async () => {
+      result.current.execute();
+      result.current.execute();
+    });
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -149,12 +149,11 @@ describe('useApiCall', () => {
       useApiCall(apiFunction, { onSuccess })
     );
 
-    result.current.execute();
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.execute();
     });
 
+    expect(result.current.loading).toBe(false);
     expect(onSuccess).toHaveBeenCalledWith({ data: 'success' });
   });
 
@@ -165,12 +164,11 @@ describe('useApiCall', () => {
 
     const { result } = renderHook(() => useApiCall(apiFunction, { onError }));
 
-    result.current.execute();
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.execute();
     });
 
+    expect(result.current.loading).toBe(false);
     expect(onError).toHaveBeenCalledWith(error);
   });
 

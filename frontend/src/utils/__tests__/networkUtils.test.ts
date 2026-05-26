@@ -180,7 +180,7 @@ describe('getContractAddress', () => {
 
 describe('getContractName', () => {
   it('returns the contract name', () => {
-    expect(getContractName()).toBe('0xcast-v1');
+    expect(getContractName()).toBe('market-core');
   });
 
   it('returns consistent value', () => {

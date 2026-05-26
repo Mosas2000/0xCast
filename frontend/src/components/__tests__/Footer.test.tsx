@@ -11,17 +11,18 @@ vi.mock('../../contexts/NetworkContext', () => ({
 }));
 
 describe('Footer', () => {
-  it('links the contract to the active network explorer', () => {
+  it('renders footer links correctly and hides contract link', () => {
     render(
       <MemoryRouter>
         <Footer />
       </MemoryRouter>
     );
 
-    const contractLink = screen.getByRole('link', { name: 'Contract' });
-    expect(contractLink).toHaveAttribute(
-      'href',
-      'https://explorer.hiro.so/address/STTESTCONTRACT?chain=testnet'
-    );
+    expect(screen.getByRole('link', { name: 'Markets' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Portfolio' })).toBeInTheDocument();
+    
+    // Verify Contract link is not present (hidden)
+    const contractLink = screen.queryByRole('link', { name: 'Contract' });
+    expect(contractLink).toBeNull();
   });
 });

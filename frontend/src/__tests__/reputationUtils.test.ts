@@ -87,15 +87,15 @@ describe('Reputation Utilities', () => {
   });
 
   it('should calculate days until KYC expiry', () => {
-    const futureDate = Date.now() + 60 * 24 * 60 * 60 * 1000;
-    const days = calculateDaysUntilKYCExpiry(futureDate);
+    const approvedAt = Date.now() - (365 - 60) * 24 * 60 * 60 * 1000;
+    const days = calculateDaysUntilKYCExpiry(approvedAt);
     expect(days).toBeGreaterThan(50);
     expect(days).toBeLessThanOrEqual(60);
   });
 
   it('should detect KYC expiry soon', () => {
-    const soon = Date.now() + 20 * 24 * 60 * 60 * 1000;
-    const notSoon = Date.now() + 100 * 24 * 60 * 60 * 1000;
+    const soon = Date.now() - (365 - 20) * 24 * 60 * 60 * 1000;
+    const notSoon = Date.now() - (365 - 100) * 24 * 60 * 60 * 1000;
 
     expect(isKYCExpiringSoon(soon, 30)).toBe(true);
     expect(isKYCExpiringSoon(notSoon, 30)).toBe(false);

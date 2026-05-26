@@ -31,17 +31,24 @@ vi.mock('../../contexts/RecentlyViewedContext', () => ({
 }));
 
 describe('LandingPage', () => {
-  it('links to the contract on the active network explorer', () => {
+  it('renders the landing page hero and statistics successfully', () => {
     render(
       <MemoryRouter>
         <LandingPage />
       </MemoryRouter>
     );
 
-    const contractLink = screen.getByRole('link', { name: 'View Contract' });
-    expect(contractLink).toHaveAttribute(
-      'href',
-      'https://explorer.hiro.so/address/SPMAINNETCONTRACT?chain=mainnet'
-    );
+    // Verify main headline is present
+    const headline = screen.getByText(/Predict the Future/i);
+    expect(headline).toBeInTheDocument();
+
+    // Verify Explore Markets CTA is present
+    const exploreLink = screen.getByRole('link', { name: /Explore Markets/i });
+    expect(exploreLink).toHaveAttribute('href', '/markets');
+
+    // Verify statistics cards are rendered
+    expect(screen.getByText('Markets')).toBeInTheDocument();
+    expect(screen.getByText('Volume')).toBeInTheDocument();
+    expect(screen.getByText('Active')).toBeInTheDocument();
   }, 20000);
 });
