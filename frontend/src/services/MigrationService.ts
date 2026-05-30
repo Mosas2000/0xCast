@@ -102,6 +102,13 @@ export class MigrationService {
     return 1;
   }
 
+  private extractAddress(addressInput: string): string {
+    if (addressInput.includes('.')) {
+      return addressInput.split('.')[0];
+    }
+    return addressInput;
+  }
+
   async getMigration(migrationId: number): Promise<Migration | null> {
     return null;
   }
