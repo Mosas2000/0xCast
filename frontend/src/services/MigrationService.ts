@@ -129,7 +129,37 @@ export class MigrationService {
   }
 
   async getMigration(migrationId: number): Promise<Migration | null> {
-    return null;
+    try {
+      const contractAddress = this.extractAddress(this.migrationContract.address);
+      const response = await callReadOnlyFunction({
+        contractAddress,
+        contractName: this.migrationContract.name,
+        functionName: 'get-migration',
+        functionArgs: [uintCV(migrationId)],
+        network: this.network,
+        senderAddress: contractAddress,
+      });
+
+      if (response.ok && response.value) {
+        const result = cvToValue(response.value);
+        if (result && typeof result === 'object') {
+          const migration = result as any;
+          return {
+            migrationId,
+            version: migration.version || 0,
+            description: migration.description || '',
+            executed: migration.executed || false,
+            executedAt: migration['executed-at'] || undefined,
+            executedBy: migration['executed-by'] || undefined,
+            rollbackAvailable: migration['rollback-available'] || false,
+          };
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error(`Failed to get migration ${migrationId}:`, error);
+      return null;
+    }
   }
 
   async getMigrationData(migrationId: number): Promise<MigrationData | null> {
