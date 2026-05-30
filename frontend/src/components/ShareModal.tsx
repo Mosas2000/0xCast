@@ -146,6 +146,7 @@ export function ShareModal({
               <button
                 onClick={shareToReddit}
                 className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors"
+                aria-label="Share on Reddit"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.385 4.859-7.181 4.859-3.796 0-7.182-2.165-7.182-4.859a3.5 3.5 0 0 1 .476-1.84c-.424-.355-.641-.89-.641-1.427 0-.968.786-1.754 1.754-1.754.418 0 .801.134 1.122.357 1.191-.857 2.844-1.416 4.665-1.489l.812-3.827c.207-.026.426-.026.607 0l2.94.625c.321-.586.922-.961 1.6-.961z" />
