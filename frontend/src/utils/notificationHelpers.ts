@@ -1,4 +1,5 @@
 import { NotificationType, NotificationChannel } from '@/types/notifications';
+import { ArrayHelpers } from './arrayHelpers';
 
 export class NotificationHelpers {
   static getNotificationTitle(type: NotificationType, data?: Record<string, any>): string {
