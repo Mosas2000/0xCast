@@ -176,16 +176,16 @@ export function DrawingToolbar({
 
       {isDrawing && (
         <div className="toolbar-actions">
-          <button onClick={onStopDrawing} className="stop-btn">
+          <button onClick={onStopDrawing} className="stop-btn" aria-label="Stop drawing">
             Stop Drawing
           </button>
           {onUndo && (
-            <button onClick={onUndo} className="undo-btn" title="Undo">
+            <button onClick={onUndo} className="undo-btn" title="Undo" aria-label="Undo last action">
               ↶
             </button>
           )}
           {onRedo && (
-            <button onClick={onRedo} className="redo-btn" title="Redo">
+            <button onClick={onRedo} className="redo-btn" title="Redo" aria-label="Redo last action">
               ↷
             </button>
           )}
