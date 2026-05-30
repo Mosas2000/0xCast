@@ -35,7 +35,7 @@ export function DrawingToolsPanel({
       <div className="panel-header">
         <h3>Drawing Tools</h3>
         {tools.length > 0 && (
-          <button className="clear-all-btn" onClick={onClearAll}>
+          <button className="clear-all-btn" onClick={onClearAll} aria-label="Clear all drawings">
             Clear All
           </button>
         )}
@@ -98,6 +98,7 @@ export function DrawingToolsPanel({
                     e.stopPropagation();
                     onRemoveTool(tool.id);
                   }}
+                  aria-label={`Remove ${tool.type} drawing`}
                 >
                   ×
                 </button>
@@ -175,16 +176,16 @@ export function DrawingToolbar({
 
       {isDrawing && (
         <div className="toolbar-actions">
-          <button onClick={onStopDrawing} className="stop-btn">
+          <button onClick={onStopDrawing} className="stop-btn" aria-label="Stop drawing">
             Stop Drawing
           </button>
           {onUndo && (
-            <button onClick={onUndo} className="undo-btn" title="Undo">
+            <button onClick={onUndo} className="undo-btn" title="Undo" aria-label="Undo last action">
               ↶
             </button>
           )}
           {onRedo && (
-            <button onClick={onRedo} className="redo-btn" title="Redo">
+            <button onClick={onRedo} className="redo-btn" title="Redo" aria-label="Redo last action">
               ↷
             </button>
           )}

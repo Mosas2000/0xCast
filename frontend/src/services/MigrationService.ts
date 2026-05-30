@@ -1,5 +1,13 @@
 import { openContractCall } from '@stacks/connect';
-import { uintCV, stringUtf8CV, bufferCV, boolCV, PostConditionMode } from '@stacks/transactions';
+import {
+  uintCV,
+  stringUtf8CV,
+  bufferCV,
+  boolCV,
+  PostConditionMode,
+  callReadOnlyFunction,
+  cvToValue,
+} from '@stacks/transactions';
 
 export interface Migration {
   migrationId: number;
@@ -18,9 +26,11 @@ export interface MigrationData {
 
 export class MigrationService {
   private migrationContract: { address: string; name: string };
+  private network: any;
 
-  constructor(migrationContract: { address: string; name: string }) {
+  constructor(migrationContract: { address: string; name: string }, network?: any) {
     this.migrationContract = migrationContract;
+    this.network = network;
   }
 
   async registerMigration(
@@ -89,22 +99,141 @@ export class MigrationService {
   }
 
   async getCurrentVersion(): Promise<number> {
-    return 1;
+    try {
+      const contractAddress = this.extractAddress(this.migrationContract.address);
+      const response = await callReadOnlyFunction({
+        contractAddress,
+        contractName: this.migrationContract.name,
+        functionName: 'get-current-version',
+        functionArgs: [],
+        network: this.network,
+        senderAddress: contractAddress,
+      });
+
+      if (response.ok && typeof response.value === 'object') {
+        const value = cvToValue(response.value);
+        return typeof value === 'number' ? value : 1;
+      }
+      return 1;
+    } catch (error) {
+      console.error('Failed to get current version:', error);
+      return 1;
+    }
+  }
+
+  private extractAddress(addressInput: string): string {
+    if (addressInput.includes('.')) {
+      return addressInput.split('.')[0];
+    }
+    return addressInput;
   }
 
   async getMigration(migrationId: number): Promise<Migration | null> {
-    return null;
+    try {
+      const contractAddress = this.extractAddress(this.migrationContract.address);
+      const response = await callReadOnlyFunction({
+        contractAddress,
+        contractName: this.migrationContract.name,
+        functionName: 'get-migration',
+        functionArgs: [uintCV(migrationId)],
+        network: this.network,
+        senderAddress: contractAddress,
+      });
+
+      if (response.ok && response.value) {
+        const result = cvToValue(response.value);
+        if (result && typeof result === 'object') {
+          const migration = result as any;
+          return {
+            migrationId,
+            version: migration.version || 0,
+            description: migration.description || '',
+            executed: migration.executed || false,
+            executedAt: migration['executed-at'] || undefined,
+            executedBy: migration['executed-by'] || undefined,
+            rollbackAvailable: migration['rollback-available'] || false,
+          };
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error(`Failed to get migration ${migrationId}:`, error);
+      return null;
+    }
   }
 
   async getMigrationData(migrationId: number): Promise<MigrationData | null> {
-    return null;
+    try {
+      const contractAddress = this.extractAddress(this.migrationContract.address);
+      const response = await callReadOnlyFunction({
+        contractAddress,
+        contractName: this.migrationContract.name,
+        functionName: 'get-migration-data',
+        functionArgs: [uintCV(migrationId)],
+        network: this.network,
+        senderAddress: contractAddress,
+      });
+
+      if (response.ok && response.value) {
+        const result = cvToValue(response.value);
+        if (result && typeof result === 'object') {
+          const data = result as any;
+          return {
+            dataHash: data['data-hash'] || new Uint8Array(),
+            dataSize: data['data-size'] || 0,
+          };
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error(`Failed to get migration data ${migrationId}:`, error);
+      return null;
+    }
   }
 
   async isMigrationExecuted(migrationId: number): Promise<boolean> {
-    return false;
+    try {
+      const contractAddress = this.extractAddress(this.migrationContract.address);
+      const response = await callReadOnlyFunction({
+        contractAddress,
+        contractName: this.migrationContract.name,
+        functionName: 'is-migration-executed',
+        functionArgs: [uintCV(migrationId)],
+        network: this.network,
+        senderAddress: contractAddress,
+      });
+
+      if (response.ok && typeof response.value === 'object') {
+        const value = cvToValue(response.value);
+        return value === true;
+      }
+      return false;
+    } catch (error) {
+      console.error(`Failed to check migration execution ${migrationId}:`, error);
+      return false;
+    }
   }
 
   async getMigrationCount(): Promise<number> {
-    return 0;
+    try {
+      const contractAddress = this.extractAddress(this.migrationContract.address);
+      const response = await callReadOnlyFunction({
+        contractAddress,
+        contractName: this.migrationContract.name,
+        functionName: 'get-migration-count',
+        functionArgs: [],
+        network: this.network,
+        senderAddress: contractAddress,
+      });
+
+      if (response.ok && typeof response.value === 'object') {
+        const value = cvToValue(response.value);
+        return typeof value === 'number' ? value : 0;
+      }
+      return 0;
+    } catch (error) {
+      console.error('Failed to get migration count:', error);
+      return 0;
+    }
   }
 }

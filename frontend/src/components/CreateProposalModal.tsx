@@ -148,6 +148,7 @@ export function CreateProposalModal({
             cursor: 'pointer',
             padding: '4px',
           }}
+          aria-label="Close modal"
         >
           ×
         </button>

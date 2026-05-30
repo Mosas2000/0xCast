@@ -1,7 +1,26 @@
-# Accessibility Testing Checklist - Issue #160
+# Accessibility Testing Checklist
 
 ## Overview
-Use this checklist to verify that aria-describedby attributes are working correctly across all form components.
+This checklist covers accessibility testing for form components (Issue #160) and icon-only buttons (Issue #158).
+
+## Issue #158: Icon-Only Buttons ARIA Labels
+
+### Components Fixed
+- [x] ShareModal - Social share buttons
+- [x] MobileBottomSheet - Snap point buttons
+- [x] DrawingToolsPanel - Tool action buttons
+- [x] NotificationCenter - Filter and close buttons
+- [x] CreateProposalModal - Close button
+- [x] PoolPositionRow - Liquidity action buttons
+
+### Testing Requirements
+- [ ] All icon-only buttons have descriptive aria-label
+- [ ] Toggle buttons have aria-pressed state
+- [ ] Decorative icons have aria-hidden="true"
+- [ ] Screen readers announce button purpose clearly
+- [ ] Button labels are concise and descriptive
+
+## Issue #160: Form Error Announcements
 
 ## General Testing
 
