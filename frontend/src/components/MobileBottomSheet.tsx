@@ -85,6 +85,8 @@ export function MobileBottomSheet({
                       ? 'bg-blue-500'
                       : 'bg-neutral-300 dark:bg-neutral-700'
                   }`}
+                  aria-label={`Snap to position ${index + 1}`}
+                  aria-pressed={currentSnap === index}
                 />
               ))}
             </div>
