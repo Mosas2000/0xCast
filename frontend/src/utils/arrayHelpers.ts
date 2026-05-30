@@ -1,3 +1,9 @@
+export interface Notification {
+  type: string;
+  message: string;
+  createdAt: string | Date;
+}
+
 export class ArrayHelpers {
   static deduplicate<T>(
     items: T[],
