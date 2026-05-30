@@ -35,7 +35,7 @@ export function DrawingToolsPanel({
       <div className="panel-header">
         <h3>Drawing Tools</h3>
         {tools.length > 0 && (
-          <button className="clear-all-btn" onClick={onClearAll}>
+          <button className="clear-all-btn" onClick={onClearAll} aria-label="Clear all drawings">
             Clear All
           </button>
         )}
