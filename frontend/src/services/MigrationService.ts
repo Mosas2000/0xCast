@@ -192,7 +192,26 @@ export class MigrationService {
   }
 
   async isMigrationExecuted(migrationId: number): Promise<boolean> {
-    return false;
+    try {
+      const contractAddress = this.extractAddress(this.migrationContract.address);
+      const response = await callReadOnlyFunction({
+        contractAddress,
+        contractName: this.migrationContract.name,
+        functionName: 'is-migration-executed',
+        functionArgs: [uintCV(migrationId)],
+        network: this.network,
+        senderAddress: contractAddress,
+      });
+
+      if (response.ok && typeof response.value === 'object') {
+        const value = cvToValue(response.value);
+        return value === true;
+      }
+      return false;
+    } catch (error) {
+      console.error(`Failed to check migration execution ${migrationId}:`, error);
+      return false;
+    }
   }
 
   async getMigrationCount(): Promise<number> {
