@@ -201,18 +201,10 @@ export class NotificationHelpers {
   }
 
   static deduplicateNotifications(notifications: any[]): any[] {
-    const seen = new Set<string>();
-    const deduplicated: any[] = [];
-
-    for (const notification of notifications) {
-      const key = `${notification.type}_${notification.message}_${notification.createdAt}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        deduplicated.push(notification);
-      }
-    }
-
-    return deduplicated;
+    return ArrayHelpers.deduplicate(
+      notifications,
+      (notification) => `${notification.type}_${notification.message}_${notification.createdAt}`
+    );
   }
 
   static sortNotifications(notifications: any[], sortBy: 'date' | 'priority' = 'date'): any[] {
