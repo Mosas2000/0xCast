@@ -98,6 +98,7 @@ export function DrawingToolsPanel({
                     e.stopPropagation();
                     onRemoveTool(tool.id);
                   }}
+                  aria-label={`Remove ${tool.type} drawing`}
                 >
                   ×
                 </button>
