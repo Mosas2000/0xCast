@@ -9,6 +9,10 @@ export class ArrayHelpers {
     items: T[],
     keyExtractor: (item: T) => string
   ): T[] {
+    if (items.length === 0) {
+      return [];
+    }
+
     const seen = new Set<string>();
     const deduplicated: T[] = [];
 
