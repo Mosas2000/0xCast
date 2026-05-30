@@ -1,4 +1,5 @@
 import { NotificationType, NotificationChannel } from '@/types/notifications';
+import { ArrayHelpers } from './arrayHelpers';
 
 export class NotificationHelpers {
   static getNotificationTitle(type: NotificationType, data?: Record<string, any>): string {
@@ -200,37 +201,29 @@ export class NotificationHelpers {
   }
 
   static deduplicateNotifications(notifications: any[]): any[] {
-    const seen = new Set<string>();
-    const deduplicated: any[] = [];
-
-    for (const notification of notifications) {
-      const key = `${notification.type}_${notification.message}_${notification.createdAt}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        deduplicated.push(notification);
-      }
-    }
-
-    return deduplicated;
+    return ArrayHelpers.deduplicate(
+      notifications,
+      (notification) => `${notification.type}_${notification.message}_${notification.createdAt}`
+    );
   }
 
   static sortNotifications(notifications: any[], sortBy: 'date' | 'priority' = 'date'): any[] {
-    const sorted = [...notifications];
-
     if (sortBy === 'date') {
-      sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    } else if (sortBy === 'priority') {
-      const priorityOrder = { high: 0, medium: 1, low: 2 };
-      sorted.sort((a, b) => {
-        const priorityA = priorityOrder[this.getPriorityLabel(a.type)] || 2;
-        const priorityB = priorityOrder[this.getPriorityLabel(b.type)] || 2;
-        if (priorityA !== priorityB) {
-          return priorityA - priorityB;
-        }
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      });
+      return ArrayHelpers.sortByDate(
+        notifications,
+        (notification) => notification.createdAt,
+        'desc'
+      );
     }
 
-    return sorted;
+    const priorityOrder = { high: 0, medium: 1, low: 2 };
+    return ArrayHelpers.sortBy(notifications, (a, b) => {
+      const priorityA = priorityOrder[this.getPriorityLabel(a.type)] || 2;
+      const priorityB = priorityOrder[this.getPriorityLabel(b.type)] || 2;
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
   }
 }

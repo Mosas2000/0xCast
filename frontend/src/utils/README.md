@@ -1,248 +1,100 @@
-# Utility Modules
+# Utility Functions
 
-This directory contains utility functions and classes used throughout the 0xCast application.
+## ArrayHelpers
 
-## Error Handling
+Generic utility functions for working with arrays. These functions are type-safe and can be used with any array of objects.
 
-### apiErrors.ts
+### Methods
 
-Provides structured error classes and utilities for handling API and blockchain errors.
+#### `deduplicate<T>(items: T[], keyExtractor: (item: T) => string): T[]`
 
-**Key Exports:**
-- `ErrorCode` - Enum of all error types
-- `ApiError` - Base error class with retry support
-- `ContractError` - Smart contract specific errors with Clarity code mapping
-- `ValidationError` - Input validation errors
-- `isRetryableError()` - Check if an error can be retried
-- `getRetryDelay()` - Get recommended retry delay
-- `getUserFriendlyMessage()` - Extract user-facing error message
+Removes duplicate items from an array based on a key extraction function.
 
-**Example:**
 ```typescript
-import { ApiError, ErrorCode } from '@/utils/apiErrors';
+const items = [
+  { id: 1, name: 'Alice' },
+  { id: 2, name: 'Bob' },
+  { id: 1, name: 'Alice' }
+];
 
-try {
-  await fetchData();
-} catch (error) {
-  const apiError = ApiError.fromError(error);
-  if (apiError.retryable) {
-    await delay(getRetryDelay(apiError));
-    await fetchData(); // Retry
-  }
-}
+const unique = ArrayHelpers.deduplicate(items, (item) => String(item.id));
 ```
 
-### contractErrorHandler.ts
+#### `sortBy<T>(items: T[], compareFn: (a: T, b: T) => number): T[]`
 
-Utilities for handling smart contract errors with automatic parsing and logging.
+Sorts an array using a custom comparison function. Returns a new array without mutating the original.
 
-**Key Exports:**
-- `handleContractCall()` - Wrap contract calls with error handling
-- `parseContractError()` - Parse errors into ContractError objects
-- `getUserFriendlyContractError()` - Get user-facing error message
-- `isTransactionRejection()` - Check if user cancelled transaction
-- `isInsufficientFunds()` - Check for insufficient balance
-- `extractTxId()` - Extract transaction ID from error
-
-**Example:**
 ```typescript
-import { handleContractCall } from '@/utils/contractErrorHandler';
-
-const result = await handleContractCall(
-  'market-core',
-  'create-market',
-  async () => openContractCall({...}),
-  {
-    onSuccess: (data) => console.log('Success:', data),
-    onError: (error) => toast.error(error.message)
-  }
-);
-
-if (result.success) {
-  console.log('Transaction:', result.txId);
-}
+const items = [{ value: 3 }, { value: 1 }, { value: 2 }];
+const sorted = ArrayHelpers.sortBy(items, (a, b) => a.value - b.value);
 ```
 
-## Contract Utilities
+#### `sortByDate<T>(items: T[], dateExtractor: (item: T) => Date | string, order?: 'asc' | 'desc'): T[]`
 
-### contractUtils.ts
+Sorts an array by date field. Default order is descending.
 
-Helper functions for working with smart contracts.
-
-**Key Features:**
-- Contract address formatting
-- Function argument encoding
-- Post-condition builders
-
-## Formatting Utilities
-
-### formatters.ts
-
-Functions for formatting data for display.
-
-**Key Features:**
-- Number formatting (currency, percentages)
-- Date/time formatting
-- Address truncation
-- Token amount formatting
-
-## Validation Utilities
-
-### validators.ts
-
-Input validation functions.
-
-**Key Features:**
-- Address validation
-- Amount validation
-- String sanitization
-- Form field validation
-
-### marketValidation.ts
-
-Comprehensive validation utilities for market-related data.
-
-**Key Exports:**
-- `validateMarketTitle()` - Validate market title length and characters
-- `validateMarketDescription()` - Validate market description
-- `validateMarketDuration()` - Validate duration in blocks
-- `validatePredictionAmount()` - Validate prediction amounts
-- `validateMarketOutcome()` - Validate outcome enum values
-- `validateMarketStatus()` - Validate status enum values
-- `validateStacksAddress()` - Validate Stacks address format
-- `validateMarketEndTime()` - Validate end time is in future
-- `validateMarketCreation()` - Validate complete market creation data
-- `validatePrediction()` - Validate complete prediction data
-
-**Constants:**
-- `MIN_TITLE_LENGTH` / `MAX_TITLE_LENGTH` - Title length limits
-- `MIN_DESCRIPTION_LENGTH` / `MAX_DESCRIPTION_LENGTH` - Description limits
-- `MIN_PREDICTION_AMOUNT` / `MAX_PREDICTION_AMOUNT` - Amount limits
-- `MIN_MARKET_DURATION_BLOCKS` / `MAX_MARKET_DURATION_BLOCKS` - Duration limits
-
-**Example:**
 ```typescript
-import { validateMarketCreation } from '@/utils/marketValidation';
+const items = [
+  { createdAt: '2024-01-01' },
+  { createdAt: '2024-03-01' }
+];
 
-const data = {
-  title: 'Will BTC reach $100k?',
-  description: 'Market resolves YES if Bitcoin reaches $100,000',
-  durationBlocks: 144
-};
-
-const result = validateMarketCreation(data);
-if (!result.isValid) {
-  toast.error(result.error);
-  return;
-}
-
-// Proceed with market creation
-await createMarket(data);
+const sorted = ArrayHelpers.sortByDate(items, (item) => item.createdAt, 'desc');
 ```
 
-## WebSocket Utilities
+#### `sortByPriority<T>(items: T[], priorityExtractor: (item: T) => number, order?: 'asc' | 'desc'): T[]`
 
-### websocketUtils.ts
+Sorts an array by priority value. Default order is ascending.
 
-WebSocket connection management and message handling.
-
-**Key Features:**
-- Auto-reconnection
-- Message queuing
-- Connection state management
-- Event subscriptions
-
-## Best Practices
-
-### Error Handling
-
-1. **Always use structured errors:**
-   ```typescript
-   // Good
-   throw new ValidationError('Invalid amount', 'amount', value);
-   
-   // Bad
-   throw new Error('Invalid amount');
-   ```
-
-2. **Parse contract errors:**
-   ```typescript
-   // Good
-   const error = parseContractError(rawError, 'market-core', 'predict');
-   
-   // Bad
-   console.error(rawError);
-   ```
-
-3. **Check error types before retrying:**
-   ```typescript
-   if (isRetryableError(error) && !isTransactionRejection(error)) {
-     // Retry logic
-   }
-   ```
-
-### Type Safety
-
-1. **Use TypeScript types:**
-   ```typescript
-   // Good
-   const result: ContractCallResult<MarketData> = await handleContractCall(...);
-   
-   // Bad
-   const result: any = await handleContractCall(...);
-   ```
-
-2. **Validate inputs:**
-   ```typescript
-   if (!isValidAddress(address)) {
-     throw new ValidationError('Invalid address', 'address', address);
-   }
-   ```
-
-### Performance
-
-1. **Memoize expensive operations:**
-   ```typescript
-   const formatted = useMemo(() => formatLargeNumber(value), [value]);
-   ```
-
-2. **Debounce user input:**
-   ```typescript
-   const debouncedSearch = useMemo(
-     () => debounce(handleSearch, 300),
-     []
-   );
-   ```
-
-## Testing
-
-All utility functions should have corresponding unit tests in the `__tests__` directory.
-
-**Example test structure:**
 ```typescript
-describe('parseContractError', () => {
-  it('should parse Clarity error codes', () => {
-    const error = new Error('(err u101)');
-    const result = parseContractError(error, 'market-core', 'predict');
-    expect(result.errorCode).toBe(101);
-    expect(result.message).toBe('Market not found.');
-  });
-});
+const items = [
+  { priority: 3 },
+  { priority: 1 }
+];
+
+const sorted = ArrayHelpers.sortByPriority(items, (item) => item.priority);
 ```
 
-## Contributing
+#### `groupBy<T, K>(items: T[], keyExtractor: (item: T) => K): Record<K, T[]>`
 
-When adding new utilities:
+Groups array items by a key.
 
-1. Add comprehensive JSDoc documentation
-2. Include usage examples in comments
-3. Write unit tests
-4. Update this README
-5. Follow existing naming conventions
-6. Export from index.ts if appropriate
+```typescript
+const items = [
+  { category: 'fruit', name: 'apple' },
+  { category: 'vegetable', name: 'carrot' }
+];
 
-## Related Documentation
+const grouped = ArrayHelpers.groupBy(items, (item) => item.category);
+```
 
-- [Error Handling Guide](../../docs/error-handling.md)
-- [Contract Integration](../../docs/integration-guide.md)
-- [API Reference](../../docs/api-reference.md)
+#### `filterUnique<T>(items: T[], keyExtractor?: (item: T) => string): T[]`
+
+Filters array to unique values. For primitive arrays, no key extractor is needed.
+
+```typescript
+const numbers = [1, 2, 2, 3];
+const unique = ArrayHelpers.filterUnique(numbers);
+```
+
+#### `chunk<T>(items: T[], size: number): T[][]`
+
+Splits an array into chunks of specified size.
+
+```typescript
+const items = [1, 2, 3, 4, 5];
+const chunks = ArrayHelpers.chunk(items, 2);
+```
+
+#### `partition<T>(items: T[], predicate: (item: T) => boolean): [T[], T[]]`
+
+Partitions an array into two arrays based on a predicate function.
+
+```typescript
+const numbers = [1, 2, 3, 4, 5];
+const [even, odd] = ArrayHelpers.partition(numbers, (n) => n % 2 === 0);
+```
+
+## NotificationHelpers
+
+Utility functions specific to notification handling. Uses ArrayHelpers internally for deduplication and sorting operations.
