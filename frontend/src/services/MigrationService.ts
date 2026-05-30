@@ -99,7 +99,26 @@ export class MigrationService {
   }
 
   async getCurrentVersion(): Promise<number> {
-    return 1;
+    try {
+      const contractAddress = this.extractAddress(this.migrationContract.address);
+      const response = await callReadOnlyFunction({
+        contractAddress,
+        contractName: this.migrationContract.name,
+        functionName: 'get-current-version',
+        functionArgs: [],
+        network: this.network,
+        senderAddress: contractAddress,
+      });
+
+      if (response.ok && typeof response.value === 'object') {
+        const value = cvToValue(response.value);
+        return typeof value === 'number' ? value : 1;
+      }
+      return 1;
+    } catch (error) {
+      console.error('Failed to get current version:', error);
+      return 1;
+    }
   }
 
   private extractAddress(addressInput: string): string {
