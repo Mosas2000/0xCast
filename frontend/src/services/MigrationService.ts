@@ -1,5 +1,13 @@
 import { openContractCall } from '@stacks/connect';
-import { uintCV, stringUtf8CV, bufferCV, boolCV, PostConditionMode } from '@stacks/transactions';
+import {
+  uintCV,
+  stringUtf8CV,
+  bufferCV,
+  boolCV,
+  PostConditionMode,
+  callReadOnlyFunction,
+  cvToValue,
+} from '@stacks/transactions';
 
 export interface Migration {
   migrationId: number;
