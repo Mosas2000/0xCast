@@ -215,6 +215,25 @@ export class MigrationService {
   }
 
   async getMigrationCount(): Promise<number> {
-    return 0;
+    try {
+      const contractAddress = this.extractAddress(this.migrationContract.address);
+      const response = await callReadOnlyFunction({
+        contractAddress,
+        contractName: this.migrationContract.name,
+        functionName: 'get-migration-count',
+        functionArgs: [],
+        network: this.network,
+        senderAddress: contractAddress,
+      });
+
+      if (response.ok && typeof response.value === 'object') {
+        const value = cvToValue(response.value);
+        return typeof value === 'number' ? value : 0;
+      }
+      return 0;
+    } catch (error) {
+      console.error('Failed to get migration count:', error);
+      return 0;
+    }
   }
 }
