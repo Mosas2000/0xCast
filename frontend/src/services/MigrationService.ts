@@ -26,9 +26,11 @@ export interface MigrationData {
 
 export class MigrationService {
   private migrationContract: { address: string; name: string };
+  private network: any;
 
-  constructor(migrationContract: { address: string; name: string }) {
+  constructor(migrationContract: { address: string; name: string }, network?: any) {
     this.migrationContract = migrationContract;
+    this.network = network;
   }
 
   async registerMigration(
