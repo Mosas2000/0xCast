@@ -85,6 +85,7 @@ export function PoolPositionRow({
             onClick={onAddLiquidity}
             className="px-3 py-1.5 text-xs font-medium text-emerald-400 bg-emerald-500/10 rounded-lg hover:bg-emerald-500/20 transition-colors"
             title="Add liquidity"
+            aria-label="Add liquidity to pool"
           >
             +
           </button>
@@ -94,6 +95,7 @@ export function PoolPositionRow({
             onClick={onRemoveLiquidity}
             className="px-3 py-1.5 text-xs font-medium text-red-400 bg-red-500/10 rounded-lg hover:bg-red-500/20 transition-colors"
             title="Remove liquidity"
+            aria-label="Remove liquidity from pool"
           >
             −
           </button>
