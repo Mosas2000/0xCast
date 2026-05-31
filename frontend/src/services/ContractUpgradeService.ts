@@ -98,7 +98,26 @@ export class ContractUpgradeService {
   }
 
   async getImplementation(): Promise<string | null> {
-    return null;
+    try {
+      const contractAddress = this.extractAddress(this.proxyContract.address);
+      const response = await callReadOnlyFunction({
+        contractAddress,
+        contractName: this.proxyContract.name,
+        functionName: 'get-implementation',
+        functionArgs: [],
+        network: this.network,
+        senderAddress: contractAddress,
+      });
+
+      if (response.ok && response.value) {
+        const value = cvToValue(response.value);
+        return typeof value === 'string' ? value : null;
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to get implementation:', error);
+      return null;
+    }
   }
 
   private extractAddress(addressInput: string): string {
