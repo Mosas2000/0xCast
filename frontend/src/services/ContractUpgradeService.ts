@@ -313,6 +313,30 @@ export class ContractUpgradeService {
     };
   }
 
+  async getUpgradeMetadata(): Promise<{
+    owner: string | null;
+    current: string | null;
+    pending: UpgradeProposal | null;
+    timelock: number | null;
+    count: number;
+  }> {
+    const [owner, current, pending, timelock, count] = await Promise.all([
+      this.getOwner(),
+      this.getImplementation(),
+      this.getPendingUpgrade(),
+      this.getUpgradeTimelock(),
+      this.getUpgradeCount(),
+    ]);
+
+    return {
+      owner,
+      current,
+      pending,
+      timelock,
+      count,
+    };
+  }
+
   private extractAddress(addressInput: string): string {
     if (addressInput.includes('.')) {
       return addressInput.split('.')[0];
