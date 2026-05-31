@@ -266,6 +266,20 @@ export class ContractUpgradeService {
     return pending !== null;
   }
 
+  async canExecuteUpgrade(): Promise<boolean> {
+    const pending = await this.getPendingUpgrade();
+    if (!pending) {
+      return false;
+    }
+
+    const timelock = await this.getUpgradeTimelock();
+    if (timelock === null) {
+      return false;
+    }
+
+    return true;
+  }
+
   private extractAddress(addressInput: string): string {
     if (addressInput.includes('.')) {
       return addressInput.split('.')[0];
