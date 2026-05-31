@@ -298,6 +298,21 @@ export class ContractUpgradeService {
     return principalRegex.test(address);
   }
 
+  async compareImplementations(): Promise<{
+    current: string | null;
+    pending: UpgradeProposal | null;
+    same: boolean;
+  }> {
+    const current = await this.getImplementation();
+    const pending = await this.getPendingUpgrade();
+
+    return {
+      current,
+      pending,
+      same: current === pending?.newImplementation,
+    };
+  }
+
   private extractAddress(addressInput: string): string {
     if (addressInput.includes('.')) {
       return addressInput.split('.')[0];
