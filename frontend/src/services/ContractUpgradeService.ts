@@ -161,7 +161,35 @@ export class ContractUpgradeService {
   }
 
   async getUpgradeHistory(upgradeId: number): Promise<UpgradeHistory | null> {
-    return null;
+    try {
+      const contractAddress = this.extractAddress(this.proxyContract.address);
+      const response = await callReadOnlyFunction({
+        contractAddress,
+        contractName: this.proxyContract.name,
+        functionName: 'get-upgrade-history',
+        functionArgs: [uintCV(upgradeId)],
+        network: this.network,
+        senderAddress: contractAddress,
+      });
+
+      if (response.ok && response.value) {
+        const result = cvToValue(response.value);
+        if (result && typeof result === 'object') {
+          const history = result as any;
+          return {
+            upgradeId,
+            fromImplementation: history['from-implementation'] || '',
+            toImplementation: history['to-implementation'] || '',
+            upgradedAt: history['upgraded-at'] || 0,
+            upgradedBy: history['upgraded-by'] || '',
+          };
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error(`Failed to get upgrade history ${upgradeId}:`, error);
+      return null;
+    }
   }
 
   async getUpgradeCount(): Promise<number> {
