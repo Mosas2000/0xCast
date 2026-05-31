@@ -260,4 +260,16 @@ export class ContractUpgradeService {
       return null;
     }
   }
+
+  async isUpgradePending(): Promise<boolean> {
+    const pending = await this.getPendingUpgrade();
+    return pending !== null;
+  }
+
+  private extractAddress(addressInput: string): string {
+    if (addressInput.includes('.')) {
+      return addressInput.split('.')[0];
+    }
+    return addressInput;
+  }
 }
