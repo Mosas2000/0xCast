@@ -128,7 +128,36 @@ export class ContractUpgradeService {
   }
 
   async getPendingUpgrade(): Promise<UpgradeProposal | null> {
-    return null;
+    try {
+      const contractAddress = this.extractAddress(this.proxyContract.address);
+      const response = await callReadOnlyFunction({
+        contractAddress,
+        contractName: this.proxyContract.name,
+        functionName: 'get-pending-implementation',
+        functionArgs: [],
+        network: this.network,
+        senderAddress: contractAddress,
+      });
+
+      if (response.ok && response.value) {
+        const result = cvToValue(response.value);
+        if (result && typeof result === 'object') {
+          return {
+            newImplementation: result as string,
+            proposedAt: 0,
+            proposedBy: '',
+            timelockExpires: 0,
+          };
+        }
+        if (result === null) {
+          return null;
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to get pending upgrade:', error);
+      return null;
+    }
   }
 
   async getUpgradeHistory(upgradeId: number): Promise<UpgradeHistory | null> {
