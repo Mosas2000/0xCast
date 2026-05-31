@@ -280,6 +280,15 @@ export class ContractUpgradeService {
     return true;
   }
 
+  async getUpgradeHistoryBatch(startId: number, count: number): Promise<(UpgradeHistory | null)[]> {
+    const results: (UpgradeHistory | null)[] = [];
+    for (let i = startId; i < startId + count; i++) {
+      const history = await this.getUpgradeHistory(i);
+      results.push(history);
+    }
+    return results;
+  }
+
   private extractAddress(addressInput: string): string {
     if (addressInput.includes('.')) {
       return addressInput.split('.')[0];
