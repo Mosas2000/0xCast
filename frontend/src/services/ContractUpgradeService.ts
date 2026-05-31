@@ -26,9 +26,11 @@ export interface UpgradeHistory {
 
 export class ContractUpgradeService {
   private proxyContract: { address: string; name: string };
+  private network: any;
 
-  constructor(proxyContract: { address: string; name: string }) {
+  constructor(proxyContract: { address: string; name: string }, network?: any) {
     this.proxyContract = proxyContract;
+    this.network = network;
   }
 
   async proposeUpgrade(newImplementation: string, userAddress: string): Promise<void> {
