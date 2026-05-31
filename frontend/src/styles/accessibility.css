@@ -1,53 +1,3 @@
-/**
- * Accessibility Styles
- * 
- * Enhanced focus indicators and keyboard navigation styles
- */
-
-/* Focus visible styles for keyboard navigation */
-*:focus-visible {
-  outline: 2px solid #3B82F6;
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-/* Remove default focus outline for mouse users */
-*:focus:not(:focus-visible) {
-  outline: none;
-}
-
-/* Enhanced focus for dropdown buttons */
-[role="button"]:focus-visible,
-button:focus-visible {
-  outline: 2px solid #3B82F6;
-  outline-offset: 2px;
-}
-
-/* Enhanced focus for dropdown options */
-[role="option"]:focus-visible {
-  outline: 2px solid #3B82F6;
-  outline-offset: -2px;
-  background-color: rgba(59, 130, 246, 0.1);
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  *:focus-visible {
-    outline-width: 3px;
-    outline-color: currentColor;
-  }
-}
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* Screen reader only content */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -60,67 +10,57 @@ button:focus-visible {
   border-width: 0;
 }
 
-/* Skip to main content link */
-.skip-to-main {
-  position: absolute;
-  top: -40px;
-  left: 0;
-  background: #3B82F6;
-  color: white;
-  padding: 8px 16px;
-  text-decoration: none;
-  border-radius: 0 0 4px 0;
-  z-index: 100;
+.sr-only-focusable:focus,
+.sr-only-focusable:active {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
 }
 
-.skip-to-main:focus {
-  top: 0;
-}
-
-/* Keyboard navigation indicators */
-.keyboard-nav-active *:focus {
-  outline: 2px solid #3B82F6;
+.focus-visible:focus {
+  outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
 
-/* Dropdown specific styles */
-[role="listbox"] {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-[role="listbox"]:focus {
+.focus-visible:focus:not(:focus-visible) {
   outline: none;
 }
 
-[role="option"] {
+[role="button"],
+[role="link"] {
   cursor: pointer;
-  user-select: none;
 }
 
-[role="option"][aria-selected="true"] {
-  font-weight: 500;
-}
-
-/* Loading state for dropdowns */
-[aria-busy="true"] {
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-/* Disabled state */
 [aria-disabled="true"] {
-  opacity: 0.5;
   cursor: not-allowed;
-  pointer-events: none;
+  opacity: 0.5;
 }
 
-/* Live region for announcements */
-[role="status"],
-[role="alert"] {
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.skip-link {
   position: absolute;
-  left: -10000px;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
+  top: -40px;
+  left: 0;
+  background: #000;
+  color: #fff;
+  padding: 8px;
+  text-decoration: none;
+  z-index: 100;
+}
+
+.skip-link:focus {
+  top: 0;
 }
