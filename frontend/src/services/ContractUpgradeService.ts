@@ -289,6 +289,15 @@ export class ContractUpgradeService {
     return results;
   }
 
+  async validateImplementationAddress(address: string): Promise<boolean> {
+    if (!address || typeof address !== 'string') {
+      return false;
+    }
+
+    const principalRegex = /^(ST|SM)[A-Z0-9]+$/i;
+    return principalRegex.test(address);
+  }
+
   private extractAddress(addressInput: string): string {
     if (addressInput.includes('.')) {
       return addressInput.split('.')[0];
