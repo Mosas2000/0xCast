@@ -214,4 +214,50 @@ export class ContractUpgradeService {
       return 0;
     }
   }
+
+  async getUpgradeTimelock(): Promise<number | null> {
+    try {
+      const contractAddress = this.extractAddress(this.proxyContract.address);
+      const response = await callReadOnlyFunction({
+        contractAddress,
+        contractName: this.proxyContract.name,
+        functionName: 'get-upgrade-timelock',
+        functionArgs: [],
+        network: this.network,
+        senderAddress: contractAddress,
+      });
+
+      if (response.ok && typeof response.value === 'object') {
+        const value = cvToValue(response.value);
+        return typeof value === 'number' ? value : null;
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to get upgrade timelock:', error);
+      return null;
+    }
+  }
+
+  async getOwner(): Promise<string | null> {
+    try {
+      const contractAddress = this.extractAddress(this.proxyContract.address);
+      const response = await callReadOnlyFunction({
+        contractAddress,
+        contractName: this.proxyContract.name,
+        functionName: 'get-owner',
+        functionArgs: [],
+        network: this.network,
+        senderAddress: contractAddress,
+      });
+
+      if (response.ok && response.value) {
+        const value = cvToValue(response.value);
+        return typeof value === 'string' ? value : null;
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to get owner:', error);
+      return null;
+    }
+  }
 }
