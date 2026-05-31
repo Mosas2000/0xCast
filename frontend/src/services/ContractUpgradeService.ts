@@ -347,6 +347,15 @@ export class ContractUpgradeService {
     return address !== current;
   }
 
+  async getLastUpgradeRecord(): Promise<UpgradeHistory | null> {
+    const count = await this.getUpgradeCount();
+    if (count === 0) {
+      return null;
+    }
+
+    return this.getUpgradeHistory(count - 1);
+  }
+
   private extractAddress(addressInput: string): string {
     if (addressInput.includes('.')) {
       return addressInput.split('.')[0];
