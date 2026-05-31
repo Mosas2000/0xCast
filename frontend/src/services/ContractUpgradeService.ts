@@ -101,6 +101,13 @@ export class ContractUpgradeService {
     return null;
   }
 
+  private extractAddress(addressInput: string): string {
+    if (addressInput.includes('.')) {
+      return addressInput.split('.')[0];
+    }
+    return addressInput;
+  }
+
   async getPendingUpgrade(): Promise<UpgradeProposal | null> {
     return null;
   }
