@@ -193,6 +193,25 @@ export class ContractUpgradeService {
   }
 
   async getUpgradeCount(): Promise<number> {
-    return 0;
+    try {
+      const contractAddress = this.extractAddress(this.proxyContract.address);
+      const response = await callReadOnlyFunction({
+        contractAddress,
+        contractName: this.proxyContract.name,
+        functionName: 'get-upgrade-count',
+        functionArgs: [],
+        network: this.network,
+        senderAddress: contractAddress,
+      });
+
+      if (response.ok && typeof response.value === 'object') {
+        const value = cvToValue(response.value);
+        return typeof value === 'number' ? value : 0;
+      }
+      return 0;
+    } catch (error) {
+      console.error('Failed to get upgrade count:', error);
+      return 0;
+    }
   }
 }
