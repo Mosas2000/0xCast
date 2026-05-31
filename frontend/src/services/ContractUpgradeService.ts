@@ -337,6 +337,16 @@ export class ContractUpgradeService {
     };
   }
 
+  async isImplementationValid(address: string): Promise<boolean> {
+    const isValid = await this.validateImplementationAddress(address);
+    if (!isValid) {
+      return false;
+    }
+
+    const current = await this.getImplementation();
+    return address !== current;
+  }
+
   private extractAddress(addressInput: string): string {
     if (addressInput.includes('.')) {
       return addressInput.split('.')[0];
