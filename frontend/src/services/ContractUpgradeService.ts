@@ -1,5 +1,13 @@
 import { openContractCall } from '@stacks/connect';
-import { uintCV, principalCV, bufferCV, stringUtf8CV, PostConditionMode } from '@stacks/transactions';
+import {
+  uintCV,
+  principalCV,
+  bufferCV,
+  stringUtf8CV,
+  PostConditionMode,
+  callReadOnlyFunction,
+  cvToValue,
+} from '@stacks/transactions';
 
 export interface UpgradeProposal {
   newImplementation: string;
