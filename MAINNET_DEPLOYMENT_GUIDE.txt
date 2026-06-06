@@ -1,0 +1,291 @@
+===========================================
+0xCast MAINNET DEPLOYMENT GUIDE
+Full Platform Deployment
+===========================================
+
+OVERVIEW
+--------
+This guide walks through deploying all 15 missing contracts to Stacks mainnet.
+Current status: Only oxcast.clar is deployed
+Goal: Deploy all contracts for full platform functionality
+
+DEPLOYER WALLET
+---------------
+Address: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
+Network: Stacks Mainnet
+Mnemonic: Stored in settings/Mainnet.toml
+
+IMPORTANT: Check wallet balance before deploying!
+Command: curl "https://api.mainnet.hiro.so/extended/v1/address/SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60/balances"
+
+CONTRACTS TO DEPLOY (15 total)
+-------------------------------
+Batch 0 - Infrastructure (3 contracts):
+  1. access-control.clar - RBAC system
+  2. rate-limiter.clar - Rate limiting
+  3. market-fees.clar - Fee management
+
+Batch 1 - Governance (2 contracts):
+  4. governance-token.clar - CAST token
+  5. governance-core.clar - Proposals & voting
+
+Batch 2 - Oracle (2 contracts):
+  6. oracle-reputation.clar - Oracle scoring
+  7. oracle-integration.clar - Price feeds
+
+Batch 3 - Liquidity (3 contracts):
+  8. liquidity-pool.clar - AMM pools
+  9. liquidity-rewards.clar - LP rewards
+  10. amm-pool.clar - AMM implementation
+
+Batch 4 - Advanced Markets (2 contracts):
+  11. market-core.clar - Advanced market features
+  12. market-multi.clar - Multi-outcome markets
+
+Batch 5 - Referral (2 contracts):
+  13. referral-core.clar - Referral tracking
+  14. referral-integration.clar - Referral integration
+
+Batch 6 - Upgrades (3 contracts):
+  15. proxy-core.clar - Proxy pattern
+  16. migration-manager.clar - Contract upgrades
+  17. state-snapshot.clar - State snapshots
+
+ESTIMATED COSTS
+---------------
+Average cost per contract: ~50,000-150,000 microSTX (0.05-0.15 STX)
+Total for 15 contracts: ~0.75-2.25 STX
+Buffer recommended: 5 STX total in wallet
+
+Current STX price: ~$0.50-1.50 per STX (check current market)
+Estimated USD cost: $2-15 USD total
+
+DEPLOYMENT STEPS
+----------------
+
+STEP 1: PRE-DEPLOYMENT CHECKS
+------------------------------
+[ ] Verify all contracts compile without errors
+    Command: clarinet check
+    
+[ ] Run test suite to ensure contracts work
+    Command: npm test
+    
+[ ] Check deployer wallet has sufficient STX (minimum 5 STX recommended)
+    Command: curl "https://api.mainnet.hiro.so/extended/v1/address/SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60/balances"
+    
+[ ] Backup mnemonic securely (already in Mainnet.toml but verify it's safe)
+
+[ ] Review 113 Clarity warnings and document accepted risks
+    These are "potentially unchecked data" warnings - not blockers but review them
+
+STEP 2: GENERATE DEPLOYMENT PLAN
+---------------------------------
+We have two deployment options:
+
+Option A: Full deployment (all 15 contracts at once)
+   File: deployments/full-platform-mainnet-plan.yaml
+   Command: clarinet deployments generate --manifest full-platform-mainnet-plan.yaml
+
+Option B: Phased deployment (deploy by feature batch)
+   Deploy Batch 0, test, then Batch 1, test, etc.
+   Safer but requires multiple deployment sessions
+
+RECOMMENDED: Option B (Phased deployment)
+
+STEP 3: DEPLOY BATCH 0 (Infrastructure)
+----------------------------------------
+cd /Users/macosbigsur/Documents/Code/Stacks-project/0xCast
+
+# Generate deployment transactions
+clarinet deployments generate --manifest full-platform-mainnet-plan.yaml
+
+# Review the generated plan
+cat deployments/full-platform-mainnet-plan.yaml
+
+# Apply batch 0 only (first 3 contracts)
+clarinet deployments apply --manifest full-platform-mainnet-plan.yaml --batch 0
+
+# Wait for transactions to confirm (check Stacks Explorer)
+# https://explorer.hiro.so/txid/YOUR_TX_ID?chain=mainnet
+
+STEP 4: VERIFY BATCH 0 DEPLOYMENT
+----------------------------------
+Check each contract on Stacks Explorer:
+- https://explorer.hiro.so/address/SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60?chain=mainnet
+
+Verify contracts appear:
+[ ] access-control
+[ ] rate-limiter  
+[ ] market-fees
+
+STEP 5: DEPLOY REMAINING BATCHES
+---------------------------------
+Repeat for each batch:
+
+# Batch 1 - Governance
+clarinet deployments apply --manifest full-platform-mainnet-plan.yaml --batch 1
+# Wait and verify
+
+# Batch 2 - Oracle
+clarinet deployments apply --manifest full-platform-mainnet-plan.yaml --batch 2
+# Wait and verify
+
+# Batch 3 - Liquidity
+clarinet deployments apply --manifest full-platform-mainnet-plan.yaml --batch 3
+# Wait and verify
+
+# Batch 4 - Advanced Markets
+clarinet deployments apply --manifest full-platform-mainnet-plan.yaml --batch 4
+# Wait and verify
+
+# Batch 5 - Referral
+clarinet deployments apply --manifest full-platform-mainnet-plan.yaml --batch 5
+# Wait and verify
+
+# Batch 6 - Upgrades
+clarinet deployments apply --manifest full-platform-mainnet-plan.yaml --batch 6
+# Wait and verify
+
+STEP 6: UPDATE FRONTEND CONFIGURATION
+--------------------------------------
+After all contracts deploy successfully:
+
+1. Verify all contract addresses on Explorer
+
+2. Update frontend/src/config/contracts.ts if needed
+   (Already configured for SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60)
+
+3. Revert the App.tsx changes (uncomment disabled routes)
+   Command: git revert d3f2c87
+   Or manually uncomment the routes
+
+4. Test frontend against deployed contracts
+   Command: cd frontend && npm run dev
+
+STEP 7: POST-DEPLOYMENT VERIFICATION
+-------------------------------------
+[ ] All 15 contracts visible on Stacks Explorer
+
+[ ] Frontend can interact with each contract
+
+[ ] Test key functions:
+    - Create governance proposal
+    - Register oracle
+    - Add liquidity
+    - Create multi-outcome market
+    
+[ ] Monitor for any runtime errors
+
+[ ] Update README.md with deployment addresses
+
+TROUBLESHOOTING
+---------------
+
+Issue: "Insufficient funds"
+Solution: Add more STX to deployer wallet
+
+Issue: "Transaction rejected"
+Solution: Check nonce issues, wait for pending txs to confirm
+
+Issue: "Contract already exists"
+Solution: Contract may already be deployed, check Explorer
+
+Issue: Rate limit errors (429)
+Solution: Wait 60 seconds between batches, or use different API endpoint
+
+Issue: Clarity compilation errors
+Solution: Run clarinet check and fix errors before deploying
+
+ROLLBACK PLAN
+-------------
+If deployment fails or issues found:
+
+1. Contracts on mainnet are immutable - cannot be deleted
+2. Can deploy new versions with different names
+3. Can use migration-manager to upgrade implementations
+4. Frontend can be rolled back to disable broken features
+
+SECURITY CONSIDERATIONS
+-----------------------
+⚠️  CRITICAL: Before mainnet deployment
+
+[ ] Professional security audit recommended
+[ ] Review all 113 Clarity warnings
+[ ] Test all contract interactions on testnet first
+[ ] Have incident response plan ready
+[ ] Monitor contract activity after launch
+[ ] Consider bug bounty program
+
+ALTERNATIVE: TESTNET FIRST
+---------------------------
+HIGHLY RECOMMENDED: Deploy to testnet first
+
+1. Update settings/Testnet.toml with testnet deployer
+2. Create testnet deployment plan
+3. Deploy all contracts to testnet
+4. Test thoroughly for 1-2 weeks
+5. Fix any issues found
+6. Then deploy to mainnet
+
+Testnet deployment command:
+clarinet deployments apply --testnet
+
+MONITORING POST-DEPLOYMENT
+--------------------------
+After deployment, monitor:
+
+1. Transaction volume per contract
+2. Error rates
+3. Gas usage patterns  
+4. User feedback
+5. Contract interactions
+
+Tools:
+- Stacks Explorer: https://explorer.hiro.so
+- Hiro Platform: https://platform.hiro.so
+- Contract logs and events
+
+COST BREAKDOWN ESTIMATE
+------------------------
+Contract deployment fees (15 contracts × 0.1 STX): ~1.5 STX
+Safety buffer: 3.5 STX
+Recommended wallet balance: 5 STX minimum
+
+At $1/STX = $5 USD total cost
+At $2/STX = $10 USD total cost
+
+TIMELINE ESTIMATE
+-----------------
+Batch deployment (recommended approach):
+- Batch 0: 15 minutes (deploy + verify)
+- Batch 1: 15 minutes
+- Batch 2: 15 minutes
+- Batch 3: 15 minutes
+- Batch 4: 15 minutes
+- Batch 5: 15 minutes
+- Batch 6: 15 minutes
+
+Total: ~2 hours (including verification time)
+
+Single deployment: 30 minutes (less safe)
+
+SUPPORT RESOURCES
+-----------------
+Clarinet docs: https://docs.hiro.so/clarinet
+Stacks docs: https://docs.stacks.co
+Discord: Stacks Discord community
+Forum: https://forum.stacks.org
+
+CONTACT
+-------
+For issues during deployment, document:
+1. Error message
+2. Transaction ID
+3. Block height
+4. Contract name
+5. Deployer address
+
+===========================================
+END OF DEPLOYMENT GUIDE
+===========================================

@@ -1,95 +1,145 @@
 ---
-id: 0
-name: Mainnet deployment - Full Platform
+id: 1
+name: Full Platform Mainnet Deployment
 network: mainnet
-stacks-node: "https://api.mainnet.hiro.so"
+stacks-node: "https://stacks-node-api.mainnet.stacks.co"
 bitcoin-node: "http://blockstack:blockstacksystem@bitcoin.blockstack.com:8332"
 plan:
   batches:
+    # Batch 0: Core infrastructure contracts (no dependencies)
     - id: 0
       transactions:
         - contract-publish:
             contract-name: access-control
             expected-sender: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
-            cost: 50000
             path: contracts/access-control.clar
             anchor-block-only: true
             clarity-version: 3
         - contract-publish:
             contract-name: rate-limiter
             expected-sender: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
-            cost: 50000
             path: contracts/rate-limiter.clar
             anchor-block-only: true
             clarity-version: 3
         - contract-publish:
             contract-name: market-fees
             expected-sender: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
-            cost: 50000
             path: contracts/market-fees.clar
             anchor-block-only: true
             clarity-version: 3
+      epoch: "3.2"
+    
+    # Batch 1: Governance contracts
+    - id: 1
+      transactions:
         - contract-publish:
             contract-name: governance-token
             expected-sender: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
-            cost: 50000
             path: contracts/governance-token.clar
             anchor-block-only: true
             clarity-version: 3
         - contract-publish:
             contract-name: governance-core
             expected-sender: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
-            cost: 50000
             path: contracts/governance-core.clar
             anchor-block-only: true
             clarity-version: 3
+      epoch: "3.2"
+    
+    # Batch 2: Oracle contracts
+    - id: 2
+      transactions:
         - contract-publish:
             contract-name: oracle-reputation
             expected-sender: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
-            cost: 50000
             path: contracts/oracle-reputation.clar
             anchor-block-only: true
             clarity-version: 3
         - contract-publish:
             contract-name: oracle-integration
             expected-sender: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
-            cost: 50000
             path: contracts/oracle-integration.clar
             anchor-block-only: true
             clarity-version: 3
+      epoch: "3.2"
+    
+    # Batch 3: Liquidity contracts
+    - id: 3
+      transactions:
         - contract-publish:
             contract-name: liquidity-pool
             expected-sender: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
-            cost: 50000
             path: contracts/liquidity-pool.clar
             anchor-block-only: true
             clarity-version: 3
         - contract-publish:
             contract-name: liquidity-rewards
             expected-sender: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
-            cost: 50000
             path: contracts/liquidity-rewards.clar
             anchor-block-only: true
             clarity-version: 3
         - contract-publish:
+            contract-name: amm-pool
+            expected-sender: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
+            path: contracts/amm-pool.clar
+            anchor-block-only: true
+            clarity-version: 3
+      epoch: "3.2"
+    
+    # Batch 4: Advanced market contracts
+    - id: 4
+      transactions:
+        - contract-publish:
             contract-name: market-core
             expected-sender: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
-            cost: 50000
             path: contracts/market-core.clar
             anchor-block-only: true
             clarity-version: 3
         - contract-publish:
             contract-name: market-multi
             expected-sender: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
-            cost: 50000
             path: contracts/market-multi.clar
+            anchor-block-only: true
+            clarity-version: 3
+      epoch: "3.2"
+    
+    # Batch 5: Advanced features
+    - id: 5
+      transactions:
+        - contract-publish:
+            contract-name: referral-core
+            expected-sender: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
+            path: contracts/referral-core.clar
+            anchor-block-only: true
+            clarity-version: 3
+        - contract-publish:
+            contract-name: referral-integration
+            expected-sender: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
+            path: contracts/referral-integration.clar
+            anchor-block-only: true
+            clarity-version: 3
+      epoch: "3.2"
+    
+    # Batch 6: Upgrade infrastructure
+    - id: 6
+      transactions:
+        - contract-publish:
+            contract-name: proxy-core
+            expected-sender: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
+            path: contracts/proxy-core.clar
             anchor-block-only: true
             clarity-version: 3
         - contract-publish:
             contract-name: migration-manager
             expected-sender: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
-            cost: 50000
             path: contracts/migration-manager.clar
             anchor-block-only: true
             clarity-version: 3
+        - contract-publish:
+            contract-name: state-snapshot
+            expected-sender: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
+            path: contracts/state-snapshot.clar
+            anchor-block-only: true
+            clarity-version: 3
       epoch: "3.2"
+
