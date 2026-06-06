@@ -6,19 +6,27 @@ This checklist covers accessibility testing for form components (Issue #160) and
 ## Issue #158: Icon-Only Buttons ARIA Labels
 
 ### Components Fixed
-- [x] ShareModal - Social share buttons
-- [x] MobileBottomSheet - Snap point buttons
-- [x] DrawingToolsPanel - Tool action buttons
-- [x] NotificationCenter - Filter and close buttons
+- [x] ShareModal - Social share buttons (Twitter, Discord, Telegram, Reddit)
+- [x] MobileBottomSheet - Snap point buttons with aria-pressed
+- [x] DrawingToolsPanel - Clear, remove, undo, redo buttons
+- [x] NotificationCenter - Filter and close buttons with aria-pressed
 - [x] CreateProposalModal - Close button
-- [x] PoolPositionRow - Liquidity action buttons
+- [x] PoolPositionRow - Add and remove liquidity buttons
 
 ### Testing Requirements
-- [ ] All icon-only buttons have descriptive aria-label
-- [ ] Toggle buttons have aria-pressed state
-- [ ] Decorative icons have aria-hidden="true"
-- [ ] Screen readers announce button purpose clearly
-- [ ] Button labels are concise and descriptive
+- [x] All icon-only buttons have descriptive aria-label
+- [x] Toggle buttons have aria-pressed state
+- [x] Decorative icons have aria-hidden="true"
+- [x] Screen readers announce button purpose clearly
+- [x] Button labels are concise and descriptive
+
+### Documentation and Resources
+- [x] Comprehensive ARIA labels documentation created
+- [x] Accessibility test suite implemented
+- [x] Helper utilities added for consistent patterns
+- [x] React hooks created for accessibility features
+- [x] CSS utilities added for focus and screen reader support
+- [x] PR template created for future accessibility changes
 
 ## Issue #160: Form Error Announcements
 
