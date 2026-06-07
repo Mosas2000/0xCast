@@ -1,0 +1,18 @@
+---
+id: 12
+name: Retry oracle-integration deployment
+network: mainnet
+stacks-node: "https://api.mainnet.hiro.so"
+bitcoin-node: "http://blockstack:blockstacksystem@bitcoin.blockstack.com:8332"
+plan:
+  batches:
+    - id: 0
+      transactions:
+        - contract-publish:
+            contract-name: oracle-integration
+            expected-sender: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
+            cost: 104930
+            path: contracts/oracle-integration.clar
+            anchor-block-only: true
+            clarity-version: 3
+      epoch: "3.2"
