@@ -20,7 +20,7 @@ interface ResolutionCardProps {
   isSubmitting?: boolean;
 }
 
-const ResolutionCardBase = ({
+const ResolutionCardBase: React.FC<ResolutionCardProps> = ({
   resolution,
   marketQuestion,
   currentBlock = 0,
@@ -29,7 +29,7 @@ const ResolutionCardBase = ({
   canDispute = false,
   canFinalize = false,
   isSubmitting = false,
-}: ResolutionCardProps) {
+}) => {
   const inDisputePeriod = !resolution.finalized && currentBlock <= resolution.disputeEnd;
   const blocksRemaining = Math.max(0, resolution.disputeEnd - currentBlock);
   
