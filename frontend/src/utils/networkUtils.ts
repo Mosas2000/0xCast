@@ -112,9 +112,9 @@ export function isTestnet(networkType: NetworkType): boolean {
  * Get contract address for the given network
  */
 export function getContractAddress(networkType: NetworkType): string {
-  // Mainnet contract address
+  // Mainnet contract address - all contracts deployed to this address
   if (networkType === NetworkType.MAINNET) {
-    return 'SP31PKQVQZVZCK3FM3NH67CGD6G1FMR17VQVS2W5T';
+    return 'SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60';
   }
   
   // Testnet contract address (placeholder - update with actual testnet deployment)
@@ -125,7 +125,7 @@ export function getContractAddress(networkType: NetworkType): string {
  * Get contract name (same for all networks)
  */
 export function getContractName(): string {
-  return '0xcast-v1';
+  return 'oxcast';
 }
 
 /**

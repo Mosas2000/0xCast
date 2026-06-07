@@ -23,20 +23,16 @@ const WatchlistPage = lazy(() => import('./pages/WatchlistPage').then(m => ({ de
 const RecentlyViewedPage = lazy(() => import('./pages/RecentlyViewedPage').then(m => ({ default: m.RecentlyViewedPage })));
 const TokenPage = lazy(() => import('./pages/TokenPage').then(m => ({ default: m.TokenPage })));
 const StakingPage = lazy(() => import('./pages/StakingPage').then(m => ({ default: m.StakingPage })));
-// Temporarily disabled - requires undeployed governance-core contract
-// const GovernancePage = lazy(() => import('./pages/GovernancePage').then(m => ({ default: m.GovernancePage })));
+const GovernancePage = lazy(() => import('./pages/GovernancePage').then(m => ({ default: m.GovernancePage })));
 const TransactionHistoryPage = lazy(() => import('./pages/TransactionHistoryPage').then(m => ({ default: m.TransactionHistoryPage })));
 const CreateMarketPage = lazy(() => import('./pages/CreateMarketPage').then(m => ({ default: m.CreateMarketPage })));
-// Temporarily disabled - requires undeployed oracle-integration contract
-// const OraclePage = lazy(() => import('./pages/OraclePage').then(m => ({ default: m.OraclePage })));
-// Temporarily disabled - requires undeployed liquidity-pool contract
-// const LiquidityPage = lazy(() => import('./pages/LiquidityPage').then(m => ({ default: m.LiquidityPage })));
+const OraclePage = lazy(() => import('./pages/OraclePage').then(m => ({ default: m.OraclePage })));
+const LiquidityPage = lazy(() => import('./pages/LiquidityPage').then(m => ({ default: m.LiquidityPage })));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
 const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage').then(m => ({ default: m.LeaderboardPage })));
-// Temporarily disabled - requires undeployed market-multi contract
-// const MultiMarketsPage = lazy(() => import('./pages/MultiMarketsPage').then(m => ({ default: m.MultiMarketsPage })));
-// const MultiTradePage = lazy(() => import('./pages/MultiTradePage').then(m => ({ default: m.MultiTradePage })));
-// const CreateMultiMarketPage = lazy(() => import('./pages/CreateMultiMarketPage').then(m => ({ default: m.CreateMultiMarketPage })));
+const MultiMarketsPage = lazy(() => import('./pages/MultiMarketsPage').then(m => ({ default: m.MultiMarketsPage })));
+const MultiTradePage = lazy(() => import('./pages/MultiTradePage').then(m => ({ default: m.MultiTradePage })));
+const CreateMultiMarketPage = lazy(() => import('./pages/CreateMultiMarketPage').then(m => ({ default: m.CreateMultiMarketPage })));
 
 function App() {
   useEffect(() => {
@@ -99,12 +95,11 @@ function App() {
                           <StakingPage />
                         </PageErrorBoundary>
                       } />
-                      {/* Temporarily disabled - requires undeployed governance-core contract */}
-                      {/* <Route path="/governance" element={
+                      <Route path="/governance" element={
                         <PageErrorBoundary pageName="Governance">
                           <GovernancePage />
                         </PageErrorBoundary>
-                      } /> */}
+                      } />
                       <Route path="/transactions" element={
                         <PageErrorBoundary pageName="Transactions">
                           <TransactionHistoryPage />
@@ -115,18 +110,16 @@ function App() {
                           <CreateMarketPage />
                         </PageErrorBoundary>
                       } />
-                      {/* Temporarily disabled - requires undeployed oracle-integration contract */}
-                      {/* <Route path="/oracle" element={
+                      <Route path="/oracle" element={
                         <PageErrorBoundary pageName="Oracle">
                           <OraclePage />
                         </PageErrorBoundary>
-                      } /> */}
-                      {/* Temporarily disabled - requires undeployed liquidity-pool contract */}
-                      {/* <Route path="/liquidity" element={
+                      } />
+                      <Route path="/liquidity" element={
                         <PageErrorBoundary pageName="Liquidity">
                           <LiquidityPage />
                         </PageErrorBoundary>
-                      } /> */}
+                      } />
                       <Route path="/analytics" element={
                         <PageErrorBoundary pageName="Analytics">
                           <AnalyticsPage />
@@ -137,22 +130,21 @@ function App() {
                           <LeaderboardPage />
                         </PageErrorBoundary>
                       } />
-                      {/* Temporarily disabled - requires undeployed market-multi contract */}
-                      {/* <Route path="/multi-markets" element={
+                      <Route path="/multi-markets" element={
                         <PageErrorBoundary pageName="Multi Markets">
                           <MultiMarketsPage />
                         </PageErrorBoundary>
-                      } /> */}
-                      {/* <Route path="/multi-trade/:id" element={
+                      } />
+                      <Route path="/multi-trade/:id" element={
                         <PageErrorBoundary pageName="Multi Trade">
                           <MultiTradePage />
                         </PageErrorBoundary>
-                      } /> */}
-                      {/* <Route path="/create-multi-market" element={
+                      } />
+                      <Route path="/create-multi-market" element={
                         <PageErrorBoundary pageName="Create Multi Market">
                           <CreateMultiMarketPage />
                         </PageErrorBoundary>
-                      } /> */}
+                      } />
                     </Routes>
                   </Suspense>
                 </main>
