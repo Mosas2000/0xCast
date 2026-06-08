@@ -1,4 +1,4 @@
-import { QueuedAction, SyncAction } from '@/types/sync';
+import type { QueuedAction, SyncAction } from '@/types/sync';
 import type { UnknownRecord } from '@/types/common';
 
 export class ActionQueueService {

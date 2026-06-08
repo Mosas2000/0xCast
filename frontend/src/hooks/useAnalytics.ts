@@ -7,7 +7,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useMarkets } from './useMarkets';
 import { useWallet } from '@/components/WalletProvider';
-import { MarketStatus, MarketOutcome } from '@/types/market';
+import { MarketStatus } from '@/types/market';
+import { MarketOutcome } from '@/types/market';
 import type {
   PlatformStats,
   MarketStats,

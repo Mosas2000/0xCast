@@ -1,4 +1,5 @@
-import { Permission, AccessControl, PermissionCheck, RoleContext, Role } from '@/types/rbac';
+import type { AccessControl, RoleContext, Role } from '@/types/rbac';
+import { Permission, PermissionCheck } from '@/types/rbac';
 import { RoleHierarchyManager } from '@/services/RoleHierarchyManager';
 import { PermissionMatrixManager } from '@/services/PermissionMatrixManager';
 

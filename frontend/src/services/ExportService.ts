@@ -1,6 +1,7 @@
 import type { ExportTransaction, ExportPosition, ExportPortfolio, ExportReward, TaxReport } from '@/types/export';
 import { convertToCSV, convertToJSON, downloadFile, getMimeType, formatDate, formatCurrency } from './exportHelpers';
-import type { ExportFormat, ExportType } from '@/types/export';
+import type { ExportType } from '@/types/export';
+import { ExportFormat } from '@/types/export';
 
 export class ExportService {
   static async generateTransactionExport(

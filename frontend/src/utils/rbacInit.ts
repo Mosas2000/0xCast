@@ -4,7 +4,8 @@ import { PermissionMatrixManager } from '@/services/PermissionMatrixManager';
 import { RoleAssignmentService } from '@/services/RoleAssignmentService';
 import { AuditLogger } from '@/services/AuditLogger';
 import { RBACAPIService } from '@/services/RBACAPIService';
-import { Permission, RoleType } from '@/types/rbac';
+import { Permission } from '@/types/rbac';
+import { RoleType } from '@/types/rbac';
 
 export interface RBACServiceContainer {
   accessControl: AccessControlService;

@@ -1,5 +1,4 @@
-import React from 'react';
-import { TechnicalIndicator } from '@/types/charting';
+import type { TechnicalIndicator } from '@/types/charting';
 
 interface IndicatorsListProps {
   indicators: TechnicalIndicator[];

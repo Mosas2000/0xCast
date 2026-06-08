@@ -1,4 +1,3 @@
-import React from 'react';
 import { RoleAssignmentService } from '@/services/RoleAssignmentService';
 import { RoleHierarchyManager } from '@/services/RoleHierarchyManager';
 import { RoleAssignmentUI, BulkAssignmentUI } from '../RoleAssignmentUI';

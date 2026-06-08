@@ -1,4 +1,3 @@
-import React from 'react';
 
 type Section = 'overview' | 'roles' | 'assignments' | 'resources' | 'audit';
 

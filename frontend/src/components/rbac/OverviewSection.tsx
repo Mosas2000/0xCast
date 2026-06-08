@@ -1,4 +1,3 @@
-import React from 'react';
 import { StatisticsGrid } from './StatisticsGrid';
 import { QuickActions } from './QuickActions';
 import { SystemInformation } from './SystemInformation';

@@ -175,14 +175,18 @@ export function canClaimWinnings(status: MarketStatus, outcome?: MarketOutcome):
 export interface Market {
   id: string;
   title: string;
+  question?: string; // Alias for title, used by some components
   description: string;
   creator: string;
   endTime: number;
   resolved: boolean;
   outcome?: number;
+  status?: MarketStatus; // Market status enum
   totalVolume: number;
   currentPrice: number;
   category?: string;
+  totalYesStake?: number; // Total YES stakes
+  totalNoStake?: number; // Total NO stakes
 }
 
 /**
@@ -285,4 +289,72 @@ export interface Pool {
   reserveB: number;
   totalShares: number;
   fee: number;
+}
+
+
+/**
+ * Market Categories
+ */
+export const MARKET_CATEGORIES = [
+  'crypto',
+  'sports',
+  'politics',
+  'entertainment',
+  'technology',
+  'weather',
+  'other',
+] as const;
+
+export type MarketCategory = typeof MARKET_CATEGORIES[number];
+
+/**
+ * Market Durations (in blocks, ~10 min per block)
+ */
+export const MARKET_DURATIONS = {
+  ONE_HOUR: 6,
+  ONE_DAY: 144,
+  ONE_WEEK: 1008,
+  TWO_WEEKS: 2016,
+  ONE_MONTH: 4320,
+  THREE_MONTHS: 12960,
+  SIX_MONTHS: 25920,
+} as const;
+
+/**
+ * Category Metadata for UI display
+ */
+export const CATEGORY_METADATA: Record<MarketCategory, { label: string; icon: string; color: string }> = {
+  crypto: { label: 'Cryptocurrency', icon: '₿', color: 'orange' },
+  sports: { label: 'Sports', icon: '⚽', color: 'green' },
+  politics: { label: 'Politics', icon: '🏛️', color: 'blue' },
+  entertainment: { label: 'Entertainment', icon: '🎬', color: 'purple' },
+  technology: { label: 'Technology', icon: '💻', color: 'cyan' },
+  weather: { label: 'Weather', icon: '🌤️', color: 'sky' },
+  other: { label: 'Other', icon: '📊', color: 'gray' },
+};
+
+/**
+ * Category Colors for styling
+ */
+export const CATEGORY_COLORS: Record<MarketCategory, string> = {
+  crypto: 'text-orange-400',
+  sports: 'text-green-400',
+  politics: 'text-blue-400',
+  entertainment: 'text-purple-400',
+  technology: 'text-cyan-400',
+  weather: 'text-sky-400',
+  other: 'text-gray-400',
+};
+
+/**
+ * Form data for creating a new market
+ */
+export interface CreateMarketFormData {
+  question: string;
+  description: string;
+  category: MarketCategory;
+  duration: number;
+  endTime?: number;
+  oracleType?: string;
+  template?: string;
 }

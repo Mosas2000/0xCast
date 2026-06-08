@@ -6,7 +6,8 @@ import { useNetwork } from '@/contexts/NetworkContext';
 import { useMarkets } from '@/hooks/useMarkets';
 import { useContract } from '@/hooks/useContract';
 import type { Market, Position } from '@/types/market';
-import { MarketStatus, MarketOutcome } from '@/types/market';
+import { MarketStatus } from '@/types/market';
+import { MarketOutcome } from '@/types/market';
 import { parsePosition, formatStx, calculateOdds } from '@/utils/helpers';
 import { validateMarketId } from '@/utils/validation';
 

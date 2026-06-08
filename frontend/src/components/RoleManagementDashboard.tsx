@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Role, Permission } from '@/types/rbac';
+import type { Role } from '@/types/rbac';
+import { Permission } from '@/types/rbac';
 import { RoleHierarchyManager } from '@/services/RoleHierarchyManager';
 import { PermissionMatrixManager } from '@/services/PermissionMatrixManager';
 

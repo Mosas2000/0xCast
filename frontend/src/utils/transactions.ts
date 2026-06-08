@@ -6,7 +6,7 @@
 
 import { getExplorerUrls } from '@/config/network';
 import { getTransactionExplorerUrl, getAddressExplorerUrl } from './explorerLinks';
-import type { NetworkType } from '@/types/network';
+import { NetworkType } from '@/types/network';
 import { GDPRComplianceService } from '@/services/GDPRComplianceService';
 import { SecureStorageV2Service } from '@/services/SecureStorageV2Service';
 

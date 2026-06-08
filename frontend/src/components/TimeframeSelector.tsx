@@ -1,5 +1,4 @@
-import React from 'react';
-import { Timeframe } from '@/types/charting';
+import type { Timeframe } from '@/types/charting';
 
 interface TimeframeSelectorProps {
   currentTimeframe: Timeframe;

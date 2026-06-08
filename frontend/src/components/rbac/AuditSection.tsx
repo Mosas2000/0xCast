@@ -1,4 +1,3 @@
-import React from 'react';
 import { AuditLogger } from '@/services/AuditLogger';
 import { AuditLogViewer } from '../AuditLogViewer';
 

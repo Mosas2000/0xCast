@@ -1,4 +1,4 @@
-import { SyncConflict, ConflictResolution, SyncDiff } from '@/types/sync';
+import type { SyncConflict, ConflictResolution, SyncDiff } from '@/types/sync';
 import type { UnknownRecord, RecordValue } from '@/types/common';
 
 export class ConflictResolutionService {

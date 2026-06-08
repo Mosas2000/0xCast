@@ -10,7 +10,10 @@ import { useWallet } from '@/components/WalletProvider';
 import { useOracle } from '@/hooks/useOracle';
 import { useOracleActions } from '@/hooks/useOracleActions';
 import type { OracleStats, MarketResolution, Dispute } from '@/types/oracle';
-import { formatDisputeStatus, getDisputeStatusColor, formatBlocksToTime, DISPUTE_STATUS } from '@/types/oracle';
+import { DISPUTE_STATUS } from '@/types/oracle';
+import { getDisputeStatusColor } from '@/types/oracle';
+import { formatDisputeStatus } from '@/types/oracle';
+import { formatBlocksToTime } from '@/types/oracle';
 
 // Tabs for the oracle dashboard
 type TabType = 'overview' | 'oracles' | 'resolutions' | 'disputes' | 'admin';

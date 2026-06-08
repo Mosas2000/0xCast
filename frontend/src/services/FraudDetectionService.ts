@@ -1,4 +1,4 @@
-import { FraudAlert, SuspiciousActivity, SuspiciousActivityType, WashTradingDetection, TransactionPair } from '@/types/reputation';
+import type { FraudAlert, SuspiciousActivity, SuspiciousActivityType, WashTradingDetection, TransactionPair } from '@/types/reputation';
 import type { FraudTransaction, FraudAccount, FraudOrderBookEntry, FraudUserProfile } from '@/types/common';
 
 interface TradingBehavior {

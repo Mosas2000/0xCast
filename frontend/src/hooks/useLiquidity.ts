@@ -32,7 +32,9 @@ import type {
   PoolStats,
   FeeConfig,
 } from '@/types/liquidity';
-import { calculateSharePercentage, calculatePositionValue, DEFAULT_FEE_CONFIG } from '@/types/liquidity';
+import { DEFAULT_FEE_CONFIG } from '@/types/liquidity';
+import { calculatePositionValue } from '@/types/liquidity';
+import { calculateSharePercentage } from '@/types/liquidity';
 
 /**
  * Get liquidity pool contract configuration

@@ -1,4 +1,3 @@
-import React from 'react';
 import { AccessControlService } from '@/services/AccessControlService';
 import { ResourceAccessManager, AccessMatrix } from '../ResourceAccessManager';
 

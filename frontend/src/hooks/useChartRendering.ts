@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Candlestick, ChartScale } from '@/types/charting';
+import type { Candlestick, ChartScale } from '@/types/charting';
 import { CandlestickRenderer } from '@/services/CandlestickRenderer';
 import type { ChartDataManager } from '@/services/ChartDataManager';
 import type { DrawingToolManager } from '@/services/DrawingToolManager';

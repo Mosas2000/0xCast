@@ -1,5 +1,6 @@
 import type { Market, Position } from '@/types/market';
-import { MarketStatus, MarketOutcome } from '@/types/market';
+import { MarketStatus } from '@/types/market';
+import { MarketOutcome } from '@/types/market';
 import { microStxToStx } from '../constants';
 import i18n from '../i18n/config';
 import { formatNumber } from './i18n/formatters';

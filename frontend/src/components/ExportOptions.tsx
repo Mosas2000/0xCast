@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import type { ExportFormat, ExportType, ExportOptions as ExportOptionsType } from '@/types/export';
+import type { ExportType, ExportOptions as ExportOptionsType } from '@/types/export';
+import { ExportFormat } from '@/types/export';
 
 interface ExportOptionsProps {
   exportType: ExportType;

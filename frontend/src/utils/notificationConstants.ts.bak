@@ -1,0 +1,159 @@
+export const NOTIFICATION_TYPES = {
+  PRICE_MOVEMENT: 'price_movement',
+  MARKET_EXPIRY: 'market_expiry',
+  RESOLUTION: 'resolution',
+  LIQUIDITY_REWARD: 'liquidity_reward',
+  PORTFOLIO_UPDATE: 'portfolio_update',
+  SYSTEM_ALERT: 'system_alert',
+  PROMOTION: 'promotion',
+} as const;
+
+export const NOTIFICATION_CHANNELS = {
+  IN_APP: 'in_app',
+  EMAIL: 'email',
+  PUSH: 'push',
+} as const;
+
+export const NOTIFICATION_FREQUENCIES = {
+  IMMEDIATE: 'immediate',
+  HOURLY: 'hourly',
+  DAILY: 'daily',
+  WEEKLY: 'weekly',
+} as const;
+
+export const DEFAULT_NOTIFICATION_PREFERENCES = {
+  [NOTIFICATION_TYPES.PRICE_MOVEMENT]: {
+    [NOTIFICATION_CHANNELS.IN_APP]: {
+      enabled: true,
+      frequency: NOTIFICATION_FREQUENCIES.IMMEDIATE,
+    },
+    [NOTIFICATION_CHANNELS.EMAIL]: {
+      enabled: false,
+      frequency: NOTIFICATION_FREQUENCIES.DAILY,
+    },
+    [NOTIFICATION_CHANNELS.PUSH]: {
+      enabled: true,
+      frequency: NOTIFICATION_FREQUENCIES.IMMEDIATE,
+    },
+  },
+  [NOTIFICATION_TYPES.MARKET_EXPIRY]: {
+    [NOTIFICATION_CHANNELS.IN_APP]: {
+      enabled: true,
+      frequency: NOTIFICATION_FREQUENCIES.IMMEDIATE,
+    },
+    [NOTIFICATION_CHANNELS.EMAIL]: {
+      enabled: true,
+      frequency: NOTIFICATION_FREQUENCIES.IMMEDIATE,
+    },
+    [NOTIFICATION_CHANNELS.PUSH]: {
+      enabled: true,
+      frequency: NOTIFICATION_FREQUENCIES.IMMEDIATE,
+    },
+  },
+  [NOTIFICATION_TYPES.RESOLUTION]: {
+    [NOTIFICATION_CHANNELS.IN_APP]: {
+      enabled: true,
+      frequency: NOTIFICATION_FREQUENCIES.IMMEDIATE,
+    },
+    [NOTIFICATION_CHANNELS.EMAIL]: {
+      enabled: true,
+      frequency: NOTIFICATION_FREQUENCIES.IMMEDIATE,
+    },
+    [NOTIFICATION_CHANNELS.PUSH]: {
+      enabled: true,
+      frequency: NOTIFICATION_FREQUENCIES.IMMEDIATE,
+    },
+  },
+  [NOTIFICATION_TYPES.LIQUIDITY_REWARD]: {
+    [NOTIFICATION_CHANNELS.IN_APP]: {
+      enabled: true,
+      frequency: NOTIFICATION_FREQUENCIES.IMMEDIATE,
+    },
+    [NOTIFICATION_CHANNELS.EMAIL]: {
+      enabled: true,
+      frequency: NOTIFICATION_FREQUENCIES.DAILY,
+    },
+    [NOTIFICATION_CHANNELS.PUSH]: {
+      enabled: true,
+      frequency: NOTIFICATION_FREQUENCIES.IMMEDIATE,
+    },
+  },
+  [NOTIFICATION_TYPES.PORTFOLIO_UPDATE]: {
+    [NOTIFICATION_CHANNELS.IN_APP]: {
+      enabled: true,
+      frequency: NOTIFICATION_FREQUENCIES.DAILY,
+    },
+    [NOTIFICATION_CHANNELS.EMAIL]: {
+      enabled: false,
+      frequency: NOTIFICATION_FREQUENCIES.WEEKLY,
+    },
+    [NOTIFICATION_CHANNELS.PUSH]: {
+      enabled: false,
+      frequency: NOTIFICATION_FREQUENCIES.DAILY,
+    },
+  },
+  [NOTIFICATION_TYPES.SYSTEM_ALERT]: {
+    [NOTIFICATION_CHANNELS.IN_APP]: {
+      enabled: true,
+      frequency: NOTIFICATION_FREQUENCIES.IMMEDIATE,
+    },
+    [NOTIFICATION_CHANNELS.EMAIL]: {
+      enabled: true,
+      frequency: NOTIFICATION_FREQUENCIES.IMMEDIATE,
+    },
+    [NOTIFICATION_CHANNELS.PUSH]: {
+      enabled: true,
+      frequency: NOTIFICATION_FREQUENCIES.IMMEDIATE,
+    },
+  },
+  [NOTIFICATION_TYPES.PROMOTION]: {
+    [NOTIFICATION_CHANNELS.IN_APP]: {
+      enabled: true,
+      frequency: NOTIFICATION_FREQUENCIES.IMMEDIATE,
+    },
+    [NOTIFICATION_CHANNELS.EMAIL]: {
+      enabled: false,
+      frequency: NOTIFICATION_FREQUENCIES.WEEKLY,
+    },
+    [NOTIFICATION_CHANNELS.PUSH]: {
+      enabled: false,
+      frequency: NOTIFICATION_FREQUENCIES.IMMEDIATE,
+    },
+  },
+};
+
+export const NOTIFICATION_PRIORITIES = {
+  HIGH: 'high',
+  MEDIUM: 'medium',
+  LOW: 'low',
+} as const;
+
+export const NOTIFICATION_PRIORITY_MAP = {
+  [NOTIFICATION_TYPES.SYSTEM_ALERT]: NOTIFICATION_PRIORITIES.HIGH,
+  [NOTIFICATION_TYPES.RESOLUTION]: NOTIFICATION_PRIORITIES.HIGH,
+  [NOTIFICATION_TYPES.PRICE_MOVEMENT]: NOTIFICATION_PRIORITIES.MEDIUM,
+  [NOTIFICATION_TYPES.MARKET_EXPIRY]: NOTIFICATION_PRIORITIES.MEDIUM,
+  [NOTIFICATION_TYPES.LIQUIDITY_REWARD]: NOTIFICATION_PRIORITIES.LOW,
+  [NOTIFICATION_TYPES.PORTFOLIO_UPDATE]: NOTIFICATION_PRIORITIES.LOW,
+  [NOTIFICATION_TYPES.PROMOTION]: NOTIFICATION_PRIORITIES.LOW,
+};
+
+export const PRICE_MOVEMENT_THRESHOLDS = {
+  LOW: 2,
+  MEDIUM: 5,
+  HIGH: 10,
+} as const;
+
+export const MARKET_EXPIRY_THRESHOLDS = {
+  DAYS_7: 7,
+  DAYS_3: 3,
+  DAYS_1: 1,
+} as const;
+
+export const NOTIFICATION_RETENTION_DAYS = 30;
+export const NOTIFICATION_MAX_BATCH_SIZE = 50;
+export const NOTIFICATION_RETRY_ATTEMPTS = 3;
+export const NOTIFICATION_RETRY_DELAY_MS = 1000;
+
+export const VAPOR_ID_KEY = 'notification_vapid_key';
+export const SERVICE_WORKER_URL = '/sw.js';

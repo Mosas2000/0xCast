@@ -1,4 +1,3 @@
-import React from 'react';
 import type { ExportProgress as ExportProgressType } from '@/types/export';
 
 interface ExportProgressProps {

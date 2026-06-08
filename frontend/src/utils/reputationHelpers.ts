@@ -1,4 +1,4 @@
-import { FraudAlert, UserReputation } from '@/types/reputation';
+import type { FraudAlert, UserReputation } from '@/types/reputation';
 import type { JsonValue } from '@/types/common';
 
 export class ReputationEventBus {

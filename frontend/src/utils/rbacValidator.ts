@@ -1,4 +1,5 @@
-import { Role, Permission, RoleAssignment } from '@/types/rbac';
+import type { Role, RoleAssignment } from '@/types/rbac';
+import { Permission } from '@/types/rbac';
 
 export class RBACValidator {
   validateRole(role: Role): { valid: boolean; errors: string[] } {

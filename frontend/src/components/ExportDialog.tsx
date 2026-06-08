@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import type { ExportFormat, ExportType, ExportOptions } from '@/types/export';
+import type { ExportType, ExportOptions as ExportOptionsType } from '@/types/export';
+import { ExportFormat } from '@/types/export';
 import type { TransactionData, Portfolio, Position, RewardData } from '@/types/transactions';
 import { useExport } from '@/hooks/useExport';
 import ExportOptions from './ExportOptions';
@@ -36,7 +37,7 @@ export default function ExportDialog({
     setStep('options');
   };
 
-  const handleExportOptionsConfirm = async (options: ExportOptions) => {
+  const handleExportOptionsConfirm = async (options: ExportOptionsType) => {
     setSelectedFormat(options.format);
     setStep('progress');
 
