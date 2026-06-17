@@ -2,7 +2,6 @@ import type { Market, Position } from '@/types/market';
 import { MarketStatus } from '@/types/market';
 import { MarketOutcome } from '@/types/market';
 import { microStxToStx } from '../constants';
-import i18n from '../i18n/config';
 import { formatNumber } from './i18n/formatters';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -26,33 +25,71 @@ function toNumber(value: unknown, fallback = 0): number {
   return fallback;
 }
 
+function toString(value: unknown, fallback = ''): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (isRecord(value) && 'value' in value) {
+    return toString(value.value, fallback);
+  }
+  return fallback;
+}
+
+function toBoolean(value: unknown, fallback = false): boolean {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+  if (isRecord(value) && 'value' in value) {
+    return toBoolean(value.value, fallback);
+  }
+  return fallback;
+}
+
 export function parseMarketData(marketId: number, rawData: unknown): Market {
-  const data = isRecord(rawData) ? rawData : {};
+  let data = isRecord(rawData) ? rawData : {};
+  if (
+    typeof data.type === 'string' &&
+    (data.type === 'tuple' || data.type.startsWith('(tuple')) &&
+    isRecord(data.value)
+  ) {
+    data = data.value;
+  }
 
   return {
-    id: marketId,
-    question: typeof data.question === 'string' ? data.question : '',
-    creator: typeof data.creator === 'string' ? data.creator : '',
+    id: String(marketId),
+    title: toString(data.question),
+    question: toString(data.question),
+    description: toString(data.description),
+    creator: toString(data.creator),
+    endTime: toNumber(data['end-date']),
     endDate: toNumber(data['end-date']),
-    resolutionDate: toNumber(data['resolution-date']),
+    resolved: toBoolean(data.finalized) || toBoolean(data.resolved),
+    outcome: toNumber(data.outcome) as MarketOutcome,
     totalYesStake: toNumber(data['total-yes-stake']),
     totalNoStake: toNumber(data['total-no-stake']),
     status: toNumber(data.status) as MarketStatus,
-    outcome: toNumber(data.outcome) as MarketOutcome,
+    totalVolume: toNumber(data['total-yes-stake']) + toNumber(data['total-no-stake']),
+    currentPrice: 0.5, // Default, should be calculated
     createdAt: toNumber(data['created-at']),
-    paused: data.paused !== undefined ? Boolean(data.paused) : undefined,
   };
 }
 
-export function parsePosition(marketId: number, user: string, rawData: unknown): Position {
-  const data = isRecord(rawData) ? rawData : {};
+export function parsePosition(marketId: string, rawData: unknown): Position {
+  let data = isRecord(rawData) ? rawData : {};
+  if (
+    typeof data.type === 'string' &&
+    (data.type === 'tuple' || data.type.startsWith('(tuple')) &&
+    isRecord(data.value)
+  ) {
+    data = data.value;
+  }
 
   return {
     marketId,
-    user,
-    yesStake: toNumber(data['yes-stake']),
-    noStake: toNumber(data['no-stake']),
-    claimed: Boolean(data.claimed),
+    outcome: toNumber(data.outcome),
+    amount: toNumber(data.amount),
+    shares: toNumber(data.shares),
+    timestamp: toNumber(data.timestamp),
   };
 }
 
@@ -69,7 +106,7 @@ export function calculateOdds(yesStake: number, noStake: number): { yes: number;
 export function formatStx(microStx: number | bigint, decimals: number = 2): string {
   const num = typeof microStx === 'bigint' ? Number(microStx) : microStx;
   const stxAmount = microStxToStx(num);
-  return `${formatNumber(stxAmount, i18n.language, decimals)} STX`;
+  return `${formatNumber(stxAmount, 'en-US', decimals)} STX`;
 }
 
 export function formatAddress(address: string): string {
@@ -78,7 +115,13 @@ export function formatAddress(address: string): string {
 }
 
 export function getStatusLabel(status: MarketStatus): string {
-  return i18n.t(`common:status.${getStatusKey(status)}`);
+  const labels: Record<MarketStatus, string> = {
+    [MarketStatus.ACTIVE]: 'Active',
+    [MarketStatus.RESOLVED]: 'Resolved',
+    [MarketStatus.DISPUTED]: 'Disputed',
+    [MarketStatus.REFUNDED]: 'Refunded',
+  };
+  return labels[status] || 'Unknown';
 }
 
 function getStatusKey(status: MarketStatus): string {
@@ -92,7 +135,12 @@ function getStatusKey(status: MarketStatus): string {
 }
 
 export function getOutcomeLabel(outcome: MarketOutcome): string {
-  return i18n.t(`common:outcome.${getOutcomeKey(outcome)}`);
+  const labels: Record<MarketOutcome, string> = {
+    [MarketOutcome.NONE]: 'None',
+    [MarketOutcome.YES]: 'Yes',
+    [MarketOutcome.NO]: 'No',
+  };
+  return labels[outcome] || 'Unknown';
 }
 
 function getOutcomeKey(outcome: MarketOutcome): string {

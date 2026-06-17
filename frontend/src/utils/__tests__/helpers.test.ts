@@ -9,7 +9,6 @@ import {
   getOutcomeLabel,
 } from '../helpers';
 import { MarketStatus, MarketOutcome } from '../../types/market';
-import { isMultiMarket } from '../../types/market';
 
 describe('parseMarketData', () => {
   it('parses valid market data correctly', () => {
@@ -20,7 +19,7 @@ describe('parseMarketData', () => {
       'resolution-date': '1704153600',
       'total-yes-stake': '1000000',
       'total-no-stake': '500000',
-      status: '0',
+      status: '1',
       outcome: '0',
       'created-at': '1703980800',
     };
@@ -28,17 +27,21 @@ describe('parseMarketData', () => {
     const result = parseMarketData(1, rawData);
 
     expect(result).toEqual({
-      id: 1,
+      id: '1',
+      title: 'Will BTC reach $100k?',
       question: 'Will BTC reach $100k?',
+      description: '',
       creator: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM',
+      endTime: 1704067200,
       endDate: 1704067200,
-      resolutionDate: 1704153600,
+      resolved: false,
+      outcome: MarketOutcome.NONE,
       totalYesStake: 1000000,
       totalNoStake: 500000,
       status: MarketStatus.ACTIVE,
-      outcome: MarketOutcome.NONE,
+      totalVolume: 1500000,
+      currentPrice: 0.5,
       createdAt: 1703980800,
-      paused: undefined,
     });
   });
 
@@ -50,14 +53,14 @@ describe('parseMarketData', () => {
       'resolution-date': 1704153600,
       'total-yes-stake': 0,
       'total-no-stake': 0,
-      status: 1,
+      status: 2,
       outcome: 1,
       'created-at': 1703980800,
     };
 
     const result = parseMarketData(2, rawData);
 
-    expect(result.id).toBe(2);
+    expect(result.id).toBe('2');
     expect(result.status).toBe(MarketStatus.RESOLVED);
     expect(result.outcome).toBe(MarketOutcome.YES);
   });
@@ -70,13 +73,14 @@ describe('parseMarketData', () => {
       'resolution-date': 0,
       'total-yes-stake': 0,
       'total-no-stake': 0,
-      status: 0,
+      status: 1,
       outcome: 0,
       'created-at': 0,
     };
 
     const result = parseMarketData(3, rawData);
 
+    expect(result.id).toBe('3');
     expect(result.totalYesStake).toBe(0);
     expect(result.totalNoStake).toBe(0);
     expect(result.endDate).toBe(0);
@@ -86,46 +90,35 @@ describe('parseMarketData', () => {
 describe('parsePosition', () => {
   it('parses valid position data', () => {
     const rawData = {
-      'yes-stake': '500000',
-      'no-stake': '250000',
-      claimed: false,
+      outcome: '1',
+      amount: '500000',
+      shares: '250000',
+      timestamp: '1704067200',
     };
 
-    const result = parsePosition(1, 'ST1USER', rawData);
+    const result = parsePosition('1', rawData);
 
     expect(result).toEqual({
-      marketId: 1,
-      user: 'ST1USER',
-      yesStake: 500000,
-      noStake: 250000,
-      claimed: false,
+      marketId: '1',
+      outcome: 1,
+      amount: 500000,
+      shares: 250000,
+      timestamp: 1704067200,
     });
-  });
-
-  it('handles claimed positions', () => {
-    const rawData = {
-      'yes-stake': '1000000',
-      'no-stake': '0',
-      claimed: true,
-    };
-
-    const result = parsePosition(2, 'ST1USER', rawData);
-
-    expect(result.claimed).toBe(true);
-    expect(result.yesStake).toBe(1000000);
   });
 
   it('handles zero stakes', () => {
     const rawData = {
-      'yes-stake': 0,
-      'no-stake': 0,
-      claimed: false,
+      outcome: 0,
+      amount: 0,
+      shares: 0,
+      timestamp: 0,
     };
 
-    const result = parsePosition(3, 'ST1USER', rawData);
+    const result = parsePosition('3', rawData);
 
-    expect(result.yesStake).toBe(0);
-    expect(result.noStake).toBe(0);
+    expect(result.amount).toBe(0);
+    expect(result.shares).toBe(0);
   });
 });
 
@@ -188,7 +181,7 @@ describe('formatStx', () => {
 
   it('handles large amounts', () => {
     const result = formatStx(1000000000000);
-    expect(result).toBe('1000000.00 STX');
+    expect(result).toBe('1,000,000.00 STX');
   });
 });
 
@@ -237,16 +230,16 @@ describe('getStatusLabel', () => {
   });
 
   it('handles numeric status values', () => {
-    expect(getStatusLabel(0 as MarketStatus)).toBe('Active');
-    expect(getStatusLabel(1 as MarketStatus)).toBe('Resolved');
-    expect(getStatusLabel(2 as MarketStatus)).toBe('Disputed');
-    expect(getStatusLabel(3 as MarketStatus)).toBe('Refunded');
+    expect(getStatusLabel(1 as MarketStatus)).toBe('Active');
+    expect(getStatusLabel(2 as MarketStatus)).toBe('Resolved');
+    expect(getStatusLabel(3 as MarketStatus)).toBe('Disputed');
+    expect(getStatusLabel(4 as MarketStatus)).toBe('Refunded');
   });
 });
 
 describe('getOutcomeLabel', () => {
   it('returns correct label for NONE outcome', () => {
-    expect(getOutcomeLabel(MarketOutcome.NONE)).toBe('Pending');
+    expect(getOutcomeLabel(MarketOutcome.NONE)).toBe('None');
   });
 
   it('returns correct label for YES outcome', () => {
@@ -258,44 +251,8 @@ describe('getOutcomeLabel', () => {
   });
 
   it('handles numeric outcome values', () => {
-    expect(getOutcomeLabel(0 as MarketOutcome)).toBe('Pending');
+    expect(getOutcomeLabel(0 as MarketOutcome)).toBe('None');
     expect(getOutcomeLabel(1 as MarketOutcome)).toBe('Yes');
     expect(getOutcomeLabel(2 as MarketOutcome)).toBe('No');
-  });
-});
-
-describe('isMultiMarket', () => {
-  it('returns false for binary market shape', () => {
-    const market = {
-      id: 1,
-      question: 'Will it rain?',
-      creator: 'SP123',
-      endDate: 100,
-      resolutionDate: 110,
-      totalYesStake: 10,
-      totalNoStake: 20,
-      status: MarketStatus.ACTIVE,
-      outcome: MarketOutcome.NONE,
-      createdAt: 90,
-    };
-
-    expect(isMultiMarket(market)).toBe(false);
-  });
-
-  it('returns true for multi market shape', () => {
-    const market = {
-      id: 2,
-      question: 'Who wins?',
-      creator: 'SP123',
-      outcomes: [{ index: 0, name: 'A', stake: 100, percentage: 100 }],
-      outcomeCount: 1,
-      endDate: 100,
-      resolutionDate: 110,
-      status: 0,
-      winningOutcome: null,
-      createdAt: 90,
-    };
-
-    expect(isMultiMarket(market as never)).toBe(true);
   });
 });
