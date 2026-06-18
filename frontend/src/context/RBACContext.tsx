@@ -4,7 +4,8 @@ import { RoleAssignmentService } from '@/services/RoleAssignmentService';
 import { AuditLogger } from '@/services/AuditLogger';
 import { RoleHierarchyManager } from '@/services/RoleHierarchyManager';
 import { PermissionMatrixManager } from '@/services/PermissionMatrixManager';
-import { Permission, Role } from '@/types/rbac';
+import type { Role } from '@/types/rbac';
+import { Permission } from '@/types/rbac';
 
 interface RBACContextType {
   accessControl: AccessControlService;

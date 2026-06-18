@@ -13,6 +13,19 @@
 
 0xCast is a decentralized prediction market platform built on Stacks, enabling users to create and trade on binary outcome markets using STX. Leveraging the security of Bitcoin through Stacks' Proof of Transfer consensus, 0xCast provides a trustless, transparent environment for speculation on crypto and financial events.
 
+### 🚀 Mainnet Status
+**✅ ALL 13 SMART CONTRACTS DEPLOYED TO STACKS MAINNET!**
+
+Deployment completed on June 7, 2026. All core functionality is now live on-chain:
+- ✅ Core Markets (oxcast, market-core, market-multi)
+- ✅ Governance (governance-token, governance-core)
+- ✅ Liquidity (liquidity-pool, liquidity-rewards)
+- ✅ Oracle Integration (oracle-integration, oracle-reputation)
+- ✅ Infrastructure (access-control, rate-limiter, market-fees, migration-manager)
+
+**Deployer Address:** `SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60`  
+[View all contracts on Explorer →](https://explorer.hiro.so/address/SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60?chain=mainnet)
+
 ## Features
 
 ### Core Platform

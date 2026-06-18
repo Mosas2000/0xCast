@@ -7,7 +7,7 @@ import type {
   UserActivityData,
   VolumeDataPoint,
 } from '@/types/analytics';
-import { CATEGORY_COLORS } from '@/types/analytics';
+import type { CATEGORY_COLORS } from '@/types/analytics';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

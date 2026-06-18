@@ -1,4 +1,4 @@
-import { OraclePrice, AggregatedPrice } from '@/types/oracle';
+import type { OraclePrice, AggregatedPrice } from '@/types/oracle';
 import type { CacheEntry, LogData } from '@/types/common';
 
 export class CacheService {

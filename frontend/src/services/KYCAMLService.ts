@@ -1,4 +1,4 @@
-import { KYCStatus, AMLCheck } from '@/types/reputation';
+import type { KYCStatus, AMLCheck } from '@/types/reputation';
 import type { KYCDocumentData } from '@/types/common';
 
 interface KYCDocument {

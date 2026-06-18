@@ -1,4 +1,3 @@
-import React from 'react';
 import { initializeRBAC, initializeDefaultPermissions, registerDefaultUsers } from '@/utils/rbacInit';
 import { RBACProvider } from '@/context/RBACContext';
 import { AdminRBACDashboard } from '@/components/AdminRBACDashboard';

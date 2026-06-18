@@ -1,4 +1,4 @@
-import { UserReputation, ReputationScore } from '@/types/reputation';
+import type { UserReputation, ReputationScore } from '@/types/reputation';
 import { ReputationScoringService } from './ReputationScoringService';
 import { KYCAMLService } from './KYCAMLService';
 import { FraudDetectionService } from './FraudDetectionService';

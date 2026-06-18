@@ -1,4 +1,5 @@
-import { Permission, Role, PermissionMatrix } from '@/types/rbac';
+import type { Role } from '@/types/rbac';
+import { Permission, PermissionMatrix } from '@/types/rbac';
 
 export class PermissionMatrixManager {
   private matrices: Map<string, PermissionMatrix>;

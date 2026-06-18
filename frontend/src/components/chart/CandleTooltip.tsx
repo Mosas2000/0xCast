@@ -1,5 +1,4 @@
-import React from 'react';
-import { Candlestick } from '@/types/charting';
+import type { Candlestick } from '@/types/charting';
 
 interface CandleTooltipProps {
   candle: Candlestick | null;

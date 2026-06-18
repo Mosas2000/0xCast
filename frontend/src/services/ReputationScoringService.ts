@@ -1,4 +1,4 @@
-import { ReputationScore, ReputationLevel, ReputationBadge, ReputationAdjustment } from '@/types/reputation';
+import type { ReputationScore, ReputationLevel, ReputationBadge, ReputationAdjustment } from '@/types/reputation';
 import type { UserMetrics } from '@/types/common';
 
 export class ReputationScoringService {

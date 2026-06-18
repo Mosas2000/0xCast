@@ -1,4 +1,4 @@
-import { AuditLog } from '@/types/rbac';
+import type { AuditLog } from '@/types/rbac';
 import type { RecordValue } from '@/types/common';
 
 export class AuditLogger {

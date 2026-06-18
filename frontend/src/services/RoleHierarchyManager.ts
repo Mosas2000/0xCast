@@ -1,4 +1,6 @@
-import { Role, RoleType, Permission, RoleHierarchy } from '@/types/rbac';
+import type { Role, RoleHierarchy } from '@/types/rbac';
+import { Permission } from '@/types/rbac';
+import { RoleType } from '@/types/rbac';
 
 export class RoleHierarchyManager {
   private hierarchy: Map<string, RoleHierarchy>;

@@ -1,4 +1,5 @@
-import { Permission, Role, RoleAssignment, AuditLog } from '@/types/rbac';
+import type { Role, RoleAssignment, AuditLog } from '@/types/rbac';
+import { Permission } from '@/types/rbac';
 import { AccessControlService } from '@/services/AccessControlService';
 import { RoleAssignmentService } from '@/services/RoleAssignmentService';
 import { AuditLogger } from '@/services/AuditLogger';

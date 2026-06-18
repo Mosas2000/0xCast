@@ -1,4 +1,5 @@
-import { Permission, RoleType } from '@/types/rbac';
+import { Permission } from '@/types/rbac';
+import { RoleType } from '@/types/rbac';
 
 export const RBAC_CONSTANTS = {
   ROLE_LEVELS: {

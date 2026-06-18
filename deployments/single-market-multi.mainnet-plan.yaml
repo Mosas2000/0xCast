@@ -1,0 +1,18 @@
+---
+id: 11
+name: Deploy market-multi only
+network: mainnet
+stacks-node: "https://api.mainnet.hiro.so"
+bitcoin-node: "http://blockstack:blockstacksystem@bitcoin.blockstack.com:8332"
+plan:
+  batches:
+    - id: 0
+      transactions:
+        - contract-publish:
+            contract-name: market-multi
+            expected-sender: SP1W6XQZ6XVYGTVW32SJW2ZG48ZJBW9BATRD19N60
+            cost: 46850
+            path: contracts/market-multi.clar
+            anchor-block-only: true
+            clarity-version: 3
+      epoch: "3.2"

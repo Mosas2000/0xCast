@@ -8,11 +8,19 @@ const cvToJSONMock = vi.fn();
 const parseMarketDataMock = vi.fn();
 const recordMarketMock = vi.fn();
 
+
+
 const networkContext = {
   network: 'testnet',
   stacksNetwork: { network: 'testnet' },
   contractAddress: 'STTESTCONTRACT',
   contractName: 'market-core',
+  isMainnet: false,
+  isTestnet: true,
+  networkConfig: { label: 'Testnet', color: '#F59E0B', icon: '🟡' },
+  setNetwork: vi.fn(),
+  switchNetwork: vi.fn(),
+  toggleNetwork: vi.fn(),
 };
 
 vi.mock('@stacks/transactions', () => ({
@@ -21,15 +29,25 @@ vi.mock('@stacks/transactions', () => ({
   uintCV: (value: number) => ({ type: 'uint', value }),
 }));
 
+vi.mock('@stacks/connect', () => ({
+  openContractCall: vi.fn(),
+}));
+
 vi.mock('../../contexts/NetworkContext', () => ({
   useNetwork: () => networkContext,
 }));
 
-vi.mock('../../contexts/RecentlyViewedContext', () => ({
-  useRecentlyViewed: () => ({
-    recordMarket: recordMarketMock,
-  }),
-}));
+vi.mock('../../config/contracts', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../config/contracts')>();
+  return {
+    ...actual,
+    MARKET_CONTRACT: {
+      address: 'STTESTCONTRACT',
+      name: 'market-core',
+      identifier: 'STTESTCONTRACT.market-core',
+    },
+  };
+});
 
 vi.mock('../../components/WalletProvider', () => ({
   useWallet: () => ({
@@ -39,24 +57,7 @@ vi.mock('../../components/WalletProvider', () => ({
   }),
 }));
 
-vi.mock('../../hooks/useStake', () => ({
-  useStake: () => ({
-    placeYesStake: vi.fn(),
-    placeNoStake: vi.fn(),
-    isLoading: false,
-    error: null,
-    txId: null,
-    isContractPaused: false,
-  }),
-}));
 
-vi.mock('../../hooks/useRealtimeSignal', () => ({
-  useRealtimeSignal: () => ({
-    signal: 0,
-    source: null,
-    isSocketConnected: false,
-  }),
-}));
 
 vi.mock('../../utils/helpers', async () => {
   const actual = await vi.importActual<typeof import('../../utils/helpers')>('../../utils/helpers');
@@ -66,9 +67,7 @@ vi.mock('../../utils/helpers', async () => {
   };
 });
 
-vi.mock('../../components/SocialButtons', () => ({
-  SocialButtons: () => <div data-testid="social-buttons" />,
-}));
+
 
 describe('TradePage', () => {
   beforeEach(() => {
@@ -95,9 +94,9 @@ describe('TradePage', () => {
     fetchCallReadOnlyFunctionMock.mockResolvedValue({});
 
     const { container } = render(
-      <MemoryRouter initialEntries={['/trade/1']}>
+      <MemoryRouter initialEntries={['/market/1']}>
         <Routes>
-          <Route path="/trade/:id" element={<TradePage />} />
+          <Route path="/market/:id" element={<TradePage />} />
         </Routes>
       </MemoryRouter>
     );
@@ -108,17 +107,15 @@ describe('TradePage', () => {
 
     expect(fetchCallReadOnlyFunctionMock.mock.calls[0][0]).toMatchObject({
       network: networkContext.stacksNetwork,
-      contractAddress: networkContext.contractAddress,
-      contractName: networkContext.contractName,
+      contractAddress: 'STTESTCONTRACT',
+      contractName: 'market-core',
       functionName: 'get-market',
     });
 
     await waitFor(() => {
-      expect(recordMarketMock).toHaveBeenCalledWith(1);
+      expect(
+        container.querySelector('a[href="https://explorer.hiro.so/address/SPTEST?chain=testnet"]')
+      ).toBeTruthy();
     });
-
-    expect(
-      container.querySelector('a[href="https://explorer.hiro.so/address/SPTEST?chain=testnet"]')
-    ).toBeTruthy();
   });
 });

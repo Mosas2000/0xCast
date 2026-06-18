@@ -1,5 +1,4 @@
-import React from 'react';
-import { Timeframe, DrawingTool } from '@/types/charting';
+import type { Timeframe, DrawingTool } from '@/types/charting';
 
 interface ChartToolbarProps {
   timeframe: Timeframe;
